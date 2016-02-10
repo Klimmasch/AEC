@@ -1,429 +1,363 @@
-function OpenEyeSim( train_time, randomization_i )
-%Main script for launching application
-%   learned_file, file with policy and sparse coding to test if not empty
-%   texture_file: texture settings files
-%   development: 0 - normal, 1 - 8 months, 2 - from 1 to 8 months
-%   development_time in iterations (freeze policy)
-%   train_time in number of iterations
-%   sparse_coding
+%%% Main script for launching application
+%@param trainTime           training time in number of iterations
+%@param randomizationSeed   randomization seed
+%
+% learnedFile:              file with policy and sparse coding to test if not empty
+% textureFile:              texture settings files
+% sparseCodingType:         type of sparse coding approach
+%%%
+function OpenEyeSim(trainTime, randomizationSeed)
 
-learned_file = '';texture_file = 'Textures_New.mat';sparse_coding = 'nonhomeo';
+rng(randomizationSeed);
+learnedFile = '';
+textureFile = 'Textures_New.mat';
+sparseCodingType = 'nonhomeo';
 
-rng(randomization_i);
+% Plotting flag
+% Whether figures should be generated, saved and plotted
+% plotIt:   0 = no plot
+%           1 = plot
+plotIt = uint8(0);
 
-%Init model
-model = config(learned_file, texture_file, train_time, sparse_coding); %instantiate model object
-model_data = Model_test_data();   %create instance of object
+% Learning flag
+% learning: 0 = no model is being learned
+%           1 = model is being learned
+learning = uint8(isempty(learnedFile));
 
-%Predefine testing phases
-testing_window = 0;%1000;
-testing_counter = 0;
+% Predefine testing phases
+testingWindow = uint8(0);
+testingCounter = 0;
 
-%Testing flag
-phase = 'testing' % testing or training, we do this every 10% of learning
+% Save model and conduct testing every saveInterval training iterations (+1)
+saveInterval = 10;
 
-savepath = sprintf('model_%s_%i_%i_%i_%s_%i.mat',datestr(now),train_time,sparse_coding,randomization_i);
-savepath_tests = sprintf('model_tests_%s_%i_%i_%i_%s_%i.mat',datestr(now),train_time,sparse_coding,randomization_i);
+% Testing flag
+% testing or training, we do this every 10% of learning
+% trialPhase: 0 = training
+%             1 = testing
+trialPhase = uint8(0);
 
-%Control Parameters
-vergemax = 16;
-anglenew = 0;     %init new vergence command
-tmpX = zeros(3);
+% Instantiate and initiate model and test_data objects
+model = config(learnedFile, textureFile, trainTime, sparseCodingType);
+modelData = ModelTestdata((trainTime / saveInterval) * testingWindow + 1);
 
-t = 0;  % # of iterations
-status_done = 0;
+if (trainTime <= model.interval)
+    sprintf('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
+    return;
+elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
+    sprintf('Rendering binary \"checkEnvironment\" not present in current dir\n\"%s\"', cd)
+    return;
+end
 
-%image process vars
-patch_size = 8;
+% File management
+savePath = sprintf('model_%s_%i_%i_%i_%s_%i', ...
+                    datestr(now), ...
+                    trainTime, ...
+                    sparseCodingType, ...
+                    randomizationSeed);
+mkdir('results', savePath);
+savePath = strcat('results/', savePath);
 
-Dsratio_L = model.scmodel_Large.Dsratio;     %downsampling ratio (Large scale)
-Dsratio_S = model.scmodel_Small.Dsratio;     %downsampling ratio (Small scale)
+% Control Parameters
+vergeMax = 16;
+angleNew = 0; %init new vergence command
 
-fovea = [128 128];
-fovea_L = patch_size + patch_size^2/2^log2(Dsratio_L);    %fovea size (Large scale)
-fovea_S = patch_size + patch_size^2/2^log2(Dsratio_S);    %fovea size (Small scale)
+% Iteration counter
+t = 0;
+testIter = 0;
 
-s_L = patch_size/Dsratio_L;         %steps of overlap in the ds image
-s_S = patch_size/Dsratio_S;         %steps of overlap in the ds image
+% Image process variables
+patchSize = 8;
 
-nc_L = fovea_L-patch_size+1;                %number of patches per column (slide of 1 px)
-nc_S = fovea_S-patch_size+1;                %number of patches per column (slide of 1 px)
+dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale)
+dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale)
 
-h1 = 240; w1 = 320; pixSize = 1;                 %input image size
+% fovea = [128 128];
+foveaL = patchSize + patchSize^2 / 2^log2(dsRatioL); %fovea size (Large scale)
+foveaS = patchSize + patchSize^2 / 2^log2(dsRatioS); %fovea size (Small scale)
 
-%Camera parameters
-offset = 0;    %vertical offset between left and right (0 in the Simulator!!!)
-f = 257.34;    %focal length [px]
-baseline = 0.056;  %interocular distance (baseline)
+stOvL = patchSize / dsRatioL; %steps of overlap in the ds image
+stOvS = patchSize / dsRatioS; %steps of overlap in the ds image
 
-%Textures
-texture_path = sprintf('config/%s',texture_file);
-texture = load(texture_path);texture = texture.texture;
-n_textures = length(texture);
+ncL = foveaL - patchSize + 1; %number of patches per column (slide of 1 px)
+ncS = foveaS - patchSize + 1; %number of patches per column (slide of 1 px)
 
-current_texture = texture{1};%Choose first texture as initial
+% Prepare index matricies for image patches
+columnIndL = [];
+for kc = 1:stOvL:ncL
+    tmpInd = (kc - 1) * ncL + 1 : stOvL : kc * ncL;
+    columnIndL = [columnIndL tmpInd];
+end
+columnIndS = [];
+for kc = 1:stOvS:ncS
+    tmpInd = (kc - 1) * ncS + 1 : stOvS : kc * ncS;
+    columnIndS = [columnIndS tmpInd];
+end
 
-Zmin = 0.5;     %min depth
-Zmax = 2;       %max depth
+% Camera parameters
+% offset = 0;       %vertical offset between left and right (0 in the Simulator!!!)
+f = 257.34;         %focal length [px]
+baseline = 0.056;   %interocular distance (baseline)
 
-%Object init position [m]
-Z = Zmax;
+% Textures
+texturePath = sprintf('config/%s', textureFile);
+texture = load(texturePath);
+texture = texture.texture;
+nTextures = length(texture);
+currentTexture = texture{1}; %choose first texture as initial
 
-%Starting angle - send here a command
-cmdstr = sprintf('./checkEnvironment %s %s %d %d left.png right.png %d',current_texture,current_texture,Z,Z,anglenew);
-[status, res] = system(cmdstr);   
-tmpX = regexp(res,'*','split');        
+% Object distance to eyes [m]
+objDistMin = 0.5;
+objDistMax = 2;
+objDist = objDistMax; %object init position
 
+%%% Main execution loop
 tic %start time count
-
-while(~status_done) %run until you get the quit signal
-  
-    if (strcmp(phase,'testing'))
-        testing_counter = testing_counter+1; %iteration counter
-        %check # of iterations
-        if (testing_counter > testing_window)
-            phase = 'training'
-            testing_counter = 0;
-            save(savepath_tests,'model_data')
+while (true)
+    if (trialPhase == 0)
+        t = t + 1;
+        if (t > model.trainTime)
+            trialPhase = uint8(1);
         end
 
-        % switch object
-        if (~mod(testing_counter-1,model.Interval) && testing_counter~=1 && t~=1)
-            current_texture = texture{(randi(n_textures,1))};    
-            % random position
-            Z = Zmin+(Zmax-Zmin)*rand(1,1);% random depth                
+        % pick random texture every #interval times
+        if (~mod(t - 1, model.interval))
+            currentTexture = texture{(randi(nTextures, 1))};
+            % random depth
+            objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset vergence to random value
-            anglenew = randi(vergemax,1);% relax the eyes
-            cmdstr = sprintf('./checkEnvironment %s %s %d %d left.png right.png %d',current_texture,current_texture,Z,Z,anglenew);
-            [status, res] = system(cmdstr);                           
-            tmpX = regexp(res,'*','split');                      
-        end            
-    end
-    
-    if (strcmp(phase,'training'))
-        t = t+1; %iteration counter
-        %check # of iterations
-        if (t > model.train_time)
-        %status_done = 1;
-            phase = 'testing'
+            angleNew = randi(vergeMax, 1); % relax the eyes
+            [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
+                                           currentTexture, currentTexture, objDist, objDist, angleNew));
+
+            % Abort execution if error occured
+            if (status)
+                sprintf('Error in checkEnvironment:\n%s', res)
+                return;
+            end
         end
-        
-        % switch object
-        if ~mod(t-1,model.Interval)
-            current_texture = texture{(randi(n_textures,1))};      
-            % random position
-            Z = Zmin+(Zmax-Zmin)*rand(1,1);% random depth                
+    elseif (trialPhase == 1)
+        testingCounter = testingCounter + 1;
+        testIter = testIter + 1;
+        if (testingCounter > testingWindow)
+            if (testingWindow > 0)
+                save(strcat(savePath, '/modelData'), 'modelData');
+            end
+
+            % Exit condition
+            if (t == model.trainTime)
+                break;
+            end
+
+            trialPhase = uint8(0);
+            testingCounter = 0;
+            t = t + 1;
+        end
+
+        % pick random texture every #interval times
+        if (~mod(testingCounter - 1, model.interval))
+            currentTexture = texture{(randi(nTextures, 1))};
+            % random depth
+            objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset vergence to random value
-            anglenew = randi(vergemax,1);% relax the eyes
-            cmdstr = sprintf('./checkEnvironment %s %s %d %d left.png right.png %d',current_texture,current_texture,Z,Z,anglenew);
-            [status, res] = system(cmdstr);                           
-            tmpX = regexp(res,'*','split');              
-        end        
-    end    
-       
-    % READ INPUT IMAGES    
-    ImageLeft = imread('left.png');
-    ImageRight = imread('right.png');                        
-    imgrawLeft = ImageLeft;
-    imgrawRight = ImageRight;
-    h1 = 240;
-    w1 = 320;
-    h2 = 240;
-    w2 = 320;
-        
-    %LEFT image
-        
-    img = imgrawLeft;
-    %convert to gray scale
-    img = .2989*img(:,:,1) +.5870*img(:,:,2) +.1140*img(:,:,3);
-    
-    
-    %SMALL SCALE (16x16)
-        
-    %Downsample image to 8x8 using Gaussian Pyramid
-    img_S = img;
-    for i = 1:log2(Dsratio_S)
-        img_S = impyramid(img_S,'reduce');
-    end
-        
-    %convert to double
-    img_S = double(img_S);
-    
-    %cut fovea in the center
-    [h,w,depth] = size(img_S);
-    img_S = img_S(fix(h/2+1-fovea_S/2):fix(h/2+fovea_S/2), fix(w/2+1-fovea_S/2):fix(w/2+fovea_S/2));
-        
-    %cut patches and store them as col vectors
-    patches = im2col(img_S,[patch_size patch_size],'sliding'); %slide window of 1 px
-    patches_no = im2col(img_S,[patch_size patch_size],'distinct');    %no overlapping patches (for display)
-        
-    %take patches at steps of s (8 px)
-    cols = [];
-    for kc = 1:s_S:nc_S
-        C = (kc-1)*nc_S+1:s_S:kc*nc_S;
-        cols = [cols C];
-    end
-        
-    patches = patches(:,cols);       %81 patches    
+            angleNew = randi(vergeMax, 1); % relax the eyes
+            [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
+                                           currentTexture, currentTexture, objDist, objDist, angleNew));
 
-    %pre-processing steps (0 mean, unit norm)
-    patches = patches - repmat(mean(patches),[size(patches,1) 1]);  %0 mean
-    normp = sqrt(sum(patches.^2));    %patches norm
-    %normalize patches to norm 1
-    normp(normp==0) = eps;      %regularizer
-    patches = patches./repmat(normp,[size(patches,1) 1]); %normalized patches
-        
-        
-    %save patches
-    patchesLeft_S = patches;
-    patchesLeft_Sno = patches_no;
-        
-        
-    %LARGE SCALE (64x64)
-        
-    %Downsample image to 8x8 using Gaussian Pyramid
-    img_L = img;
-    for i = 1:log2(Dsratio_L)
-        img_L = impyramid(img_L,'reduce');
+            % Abort execution if error occured
+            if (status)
+                sprintf('Error in checkEnvironment:\n%s', res)
+                return;
+            end
+        end
     end
-        
-    %convert to double
-    img_L = double(img_L);
-        
-        
-    %cut fovea in the center
-    [h,w,depth] = size(img_L);
-    img_L = img_L(fix(h/2+1-fovea_L/2):fix(h/2+fovea_L/2), fix(w/2+1-fovea_L/2):fix(w/2+fovea_L/2));
-        
-    %cut patches and store them as col vectors
-    patches = im2col(img_L,[patch_size patch_size],'sliding'); %slide window of 1 px
-    patches_no = im2col(img_L,[patch_size patch_size],'distinct');    %no overlapping patches (for display)
-        
-        
-    %take patches at steps of s (8 px)
-    cols = [];
-    for kc = 1:s_L:nc_L
-        C = (kc-1)*nc_L+1:s_L:kc*nc_L;
-        cols = [cols C];
-    end
-        
-    patches = patches(:,cols);       %81 patches
-        
-    patches = patches - repmat(mean(patches),[size(patches,1) 1]);  %0 mean
-    normp = sqrt(sum(patches.^2));    %patches norm
-        
-    %normalize patches to norm 1
-    normp(normp==0) = eps;      %regularizer
-    patches = patches./repmat(normp,[size(patches,1) 1]); %normalized patches
-        
-    %store patch at current disparity k
-    patchesLeft_L = patches;
-    patchesLeft_Lno = patches_no;    
-    
-    %RIGHT image
-    img = imgrawRight;
-    %convert to gray scale
-    img = .2989*img(:,:,1) +.5870*img(:,:,2) +.1140*img(:,:,3);
-           
-    %SMALL SCALE (16x16)
-        
-    %Downsample image to 8x8 using Gaussian Pyramid
-    img_S = img;
-    for i = 1:log2(Dsratio_S)
-        img_S = impyramid(img_S,'reduce');
-    end
-        
-    %convert to double
-    img_S = double(img_S);
-        
-        
-    %cut fovea in the center
-    [h,w,depth] = size(img_S);
-    img_S = img_S(fix(h/2+1-fovea_S/2):fix(h/2+fovea_S/2), fix(w/2+1-fovea_S/2):fix(w/2+fovea_S/2));
-        
-    %cut patches and store them as col vectors
-    patches = im2col(img_S,[patch_size patch_size],'sliding'); %slide window of 1 px
-    patches_no = im2col(img_S,[patch_size patch_size],'distinct');    %no overlapping patches (for display)
-        
-        
-    %take patches at steps of s (8 px)
-    cols = [];
-    for kc = 1:s_S:nc_S
-        C = (kc-1)*nc_S+1:s_S:kc*nc_S;
-        cols = [cols C];
-    end
-        
-    patches = patches(:,cols);       %81 patches
-        
-    patches = patches - repmat(mean(patches),[size(patches,1) 1]);  %0 mean
-    normp = sqrt(sum(patches.^2));    %patches norm
-        
-    %normalize patches to norm 1
-    normp(normp==0) = eps;      %regularizer
-    patches = patches./repmat(normp,[size(patches,1) 1]); %normalized patches
-        
-    %store patch at current disparity k
-    patchesRight_S = patches;
-    patchesRight_Sno = patches_no;
-        
-        
-    %LARGE SCALE (64x64)
-        
-    %Downsample image to 8x8 using Gaussian Pyramid
-    img_L = img;
-    for i = 1:log2(Dsratio_L)
-        img_L = impyramid(img_L,'reduce');
-    end
-        
-    %convert to double
-    img_L = double(img_L);
-        
-        
-    %cut fovea in the center
-    [h,w,depth] = size(img_L);
-    img_L = img_L(fix(h/2+1-fovea_L/2):fix(h/2+fovea_L/2), fix(w/2+1-fovea_L/2):fix(w/2+fovea_L/2));
-        
-    %cut patches and store them as col vectors
-    patches = im2col(img_L,[patch_size patch_size],'sliding'); %slide window of 1 px
-    patches_no = im2col(img_L,[patch_size patch_size],'distinct');    %no overlapping patches (for display)
-        
-        
-    %take patches at steps of s (8 px)
-    cols = [];
-    for kc = 1:s_L:nc_L
-        C = (kc-1)*nc_L+1:s_L:kc*nc_L;
-        cols = [cols C];
-    end
-        
-    patches = patches(:,cols);       %81 patches
-    
-    patches = patches - repmat(mean(patches),[size(patches,1) 1]);  %0 mean
-    normp = sqrt(sum(patches.^2));    %patches norm
 
-    %normalize patches to norm 1
-    normp(normp==0) = eps;      %regularizer
-    patches = patches./repmat(normp,[size(patches,1) 1]); %normalized patches
-        
-    %store patch at current disparity k
-    patchesRight_L = patches;
-    patchesRight_Lno = patches_no;
-            
-    %image patches matrix (input to model)
-    Current_View = {[patchesLeft_L;patchesRight_L] [patchesLeft_S;patchesRight_S]};
-    
-    if (strcmp(phase,'training'))
-    
+    % Read input images
+    imgRawLeft = imread('left.png');
+    imgRawRight = imread('right.png');
+
+    % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
+    [patchesLeftSmall] = preprocessImage(imgRawLeft, foveaS, dsRatioS, patchSize, columnIndS);
+    [patchesLeftLarge] = preprocessImage(imgRawLeft, foveaL, dsRatioL, patchSize, columnIndL);
+    [patchesRightSmall] = preprocessImage(imgRawRight, foveaS, dsRatioS, patchSize, columnIndS);
+    [patchesRightLarge] = preprocessImage(imgRawRight, foveaL, dsRatioL, patchSize, columnIndL);
+
+    % image patches matrix (input to model)
+    currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
+
+    if (trialPhase == 0)
         %Compute Vergence Command
-        fixdepth = (0.5*baseline)/tand(anglenew/2);
-        %save fixaton and object depth    
-        model.Z = [model.Z;Z];
-        model.fixZ =[model.fixZ;fixdepth];
+        fixDepth = (0.5 * baseline) / tand(angleNew / 2);
+        %save fixaton and object depth
+        model.Z(t) = objDist;
+        model.fixZ(t) = fixDepth;
 
         %compute current disparity
-        angledes = 2*atan(baseline/(2*Z)); %desired vergence [rad]
-        disparity = 2*f*tan((angledes-anglenew*pi/180)/2); %current disp [px]      
-        model.disp_hist = [model.disp_hist;disparity];
+        angledes = 2 * atan(baseline / (2 * objDist)); %desired vergence [rad]
+        disparity = 2 * f * tan((angledes - angleNew * pi / 180) / 2); %current disp [px]
+        model.disp_hist(t) = disparity;
 
         %compute current vergence error
-        anglerr = angledes*180/pi-anglenew; %vergence error [deg]
+        anglerr = angledes * 180 / pi - angleNew; %vergence error [deg]
         %save verge error
-        model.vergerr_hist = [model.vergerr_hist;anglerr];
+        model.vergerr_hist(t) = anglerr;
 
         %generate input feature vector from current images
-        [feature,reward,Error,Error_L,Error_S] = model.generateFR(Current_View);
-        model.recerr_hist(t,:) = [Error_L;Error_S];
-        model.verge_actual = [model.verge_actual;anglenew]; %current vergence angle
+        [feature, reward, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
+        model.recerr_hist(t, :) = [errorLarge; errorSmall];
+        model.verge_actual(t) = angleNew; %current vergence angle
 
-        if isempty(model.learned_file)
+        if (learning)
             %train 2 sparse coding models
-            model.scmodel_Large.stepTrain(Current_View{1});
-            model.scmodel_Small.stepTrain(Current_View{2});            
-            command = model.rlmodel.stepTrain(feature,reward,mod(t-1,model.Interval));    
+            model.scmodel_Large.stepTrain(currentView{1});
+            model.scmodel_Small.stepTrain(currentView{2});
+            [command, ~, ~] = model.rlmodel.stepTrain(feature, reward, mod(t - 1, model.interval));
+            %### why calculate relative vergance command after first error measure?
         end
-        
-        if (strcmp(phase,'training'))
-            sprintf('\n Training Iteration = %.3g \n Command = %.3g  Current Vergence = %.3g Vergence Error = %.3g \n Rec Error = %.3g ',t,command,anglenew,anglerr,Error)
-        end
-        
-        anglenew = max(0.01,command+anglenew); %command is relative angle - constrain to positive vergence
+
+        sprintf('Training Iteration = %d\nCommand = %.3g\tCurrent Vergence = %.3g\tVergence Error = %.3g\nRec Error = %.3g', ...
+                t, command, angleNew, anglerr, errorTotal)
+
+        angleNew = max(0.01, command + angleNew); %command is relative angle - constrain to positive vergence
         %safety on control command - RESET TO a new vergence angle
-        if anglenew > vergemax
-            anglenew = randi(vergemax,1);     %relax the eyes
+        if (angleNew > vergeMax)
+            angleNew = randi(vergeMax, 1);     %relax the eyes
         end
-        cmdstr = sprintf('./checkEnvironment %s %s %d %d left.png right.png %d',current_texture,current_texture,Z,Z,anglenew);    
-        % pause(0.1)
-        [status, res] = system(cmdstr);    
-        tmpX = regexp(res,'*','split');  
-        
-        %display % completed for training and save model
-        if(~mod(t,model.train_time/10) && isempty(model.learned_file) )
-            disp([num2str(t/model.train_time*100) '% is finished']);
-            save(savepath,'model')
+        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
+                               currentTexture, currentTexture, objDist, objDist, angleNew));
+
+        % Abort execution if error occured
+        if (status)
+            sprintf('Error in checkEnvironment:\n%s', res)
+            return;
+        end
+
+        % Display per cent completed of training and save model
+        if (~mod(t, model.trainTime / saveInterval) && (learning))
+            sprintf('%g%% is finished', (t / model.trainTime * 100))
+            save(strcat(savePath, '/model'), 'model');
 
             %save Basis
             model.scmodel_Large.saveBasis;
             model.scmodel_Small.saveBasis;
 
             %save Weights
-            model.rlmodel.saveWeights;  %save policy and value net weights            
+            model.rlmodel.saveWeights; %save policy and value net weights
 
-            phase = 'testing'
+            trialPhase = uint8(1);
         end
-      
-    elseif (strcmp(phase,'testing'))
-    
+
+    elseif (trialPhase == 1)
         %Compute Vergence Command
-        fixdepth = (0.5*baseline)/tand(anglenew/2);
-        %save fixaton and object depth    
-        model_data.Z = [model_data.Z;Z];
-        model_data.fixZ =[model_data.fixZ;fixdepth];
+        fixDepth = (0.5 * baseline) / tand(angleNew / 2);
+        %save fixaton and object depth
+        modelData.Z(testIter) = objDist;
+        modelData.fixZ(testIter) = fixDepth;
 
         %compute current disparity
-        angledes = 2*atan(baseline/(2*Z)); %desired vergence [rad]
-        disparity = 2*f*tan((angledes-anglenew*pi/180)/2); %current disp [px]      
-        model_data.disp_hist = [model_data.disp_hist;disparity];
+        angledes = 2 * atan(baseline / (2 * objDist)); %desired vergence [rad]
+        disparity = 2 * f * tan((angledes - angleNew * pi / 180) / 2); %current disp [px]
+        modelData.disp_hist(testIter) = disparity;
 
         %compute current vergence error
-        anglerr = angledes*180/pi-anglenew; %vergence error [deg]
+        anglerr = angledes * 180 / pi - angleNew; %vergence error [deg]
         %save verge error
-        model_data.vergerr_hist = [model_data.vergerr_hist;anglerr];
+        modelData.vergerr_hist(testIter) = anglerr;
 
         %generate input feature vector from current images
-        [feature,reward,Error,Error_L,Error_S] = model.generateFR(Current_View);
-        model_data.recerr_hist(end+1,:) = [Error_L;Error_S];
-        model_data.verge_actual = [model_data.verge_actual;anglenew]; %current vergence angle
+        [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
+        modelData.recerr_hist(testIter, :) = [errorLarge; errorSmall];
+        modelData.verge_actual(testIter) = angleNew; %current vergence angle
 
-        if isempty(model.learned_file)
+        if (learning)
             command = model.rlmodel.softmaxAct(feature);
+            %### why calculate relative vergance command after first error measure?
         end
-        
-        if (strcmp(phase,'testing'))
-            sprintf('\n Testing Iteration = %.3g \n Command = %.3g  Current Vergence = %.3g Vergence Error = %.3g \n Rec Error = %.3g ',testing_counter,command,anglenew,anglerr,Error)
-        end
-        
-        anglenew = max(0.01,command+anglenew); %command is relative angle - constrain to positive vergence
+
+        sprintf('Testing Iteration = %d\nCommand = %.3g\tCurrent Vergence = %.3g\tVergence Error = %.3g\nRec Error = %.3g', ...
+                testingCounter, command, angleNew, anglerr, errorTotal)
+
+        angleNew = max(0.01, command + angleNew); %command is relative angle - constrain to positive vergence
         %safety on control command - RESET TO a new vergence angle
-        if anglenew > vergemax
-            anglenew = randi(vergemax,1);     %relax the eyes
+        if (angleNew > vergeMax)
+            angleNew = randi(vergeMax, 1);     %relax the eyes
         end
-        cmdstr = sprintf('./checkEnvironment %s %s %d %d left.png right.png %d',current_texture,current_texture,Z,Z,anglenew);    
-        % pause(0.1)
-        [status, res] = system(cmdstr);    
-        tmpX = regexp(res,'*','split'); 
-        
-        if ((t >= model.train_time) && (testing_counter+1 > testing_window))
-            status_done = 1
+        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
+                                       currentTexture, currentTexture, objDist, objDist, angleNew));
+
+        % Abort execution if error occured
+        if (status)
+            sprintf('Error in checkEnvironment:\n%s', res)
+            return;
         end
-        
-    end      
+    end
+end
+elapsedTime = toc;
+
+% Total simulation time
+model.simulated_time = elapsedTime / 60;
+sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]', elapsedTime / 3600, elapsedTime / 60, elapsedTime)
+sprintf('Frequency = %.4f [iterations/sec]', trainTime / elapsedTime)
+
+% Plot results
+if (plotIt)
+    model.errPlot();
+    % model.errPlotSave(savePath);
 end
 
-TotT = toc/60; %total simulation time
-sprintf(' Time [min] = %.2f',TotT)
-
-%save model when trained
-save(savepath,'model')
-save(savepath_tests,'model_data')
+% Save results data
+save(strcat(savePath, '/model'), 'model');
+save(strcat(savePath, '/modelData'), 'modelData');
 
 end
 
+%%% Helper functions for image preprocessing
+%% Patch generation
+function [patches] = preprocessImage(img, fovea, downSampling, patchSize, columnIndicies)
+    img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
+    for i = 1:log2(downSampling)
+        img = impyramid(img, 'reduce');
+    end
+
+    % convert to double
+    img = double(img);
+
+    % cut fovea in the center
+    [h, w, ~] = size(img);
+    img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
+              fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
+
+    % cut patches and store them as col vectors
+    patches = im2col(img, [patchSize patchSize], 'sliding');            %slide window of 1 px
+
+    % take patches at steps of s (8 px)
+    patches = patches(:, columnIndicies);                               %81 patches
+
+    % pre-processing steps (0 mean, unit norm)
+    patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
+    normp = sqrt(sum(patches.^2));                                      %patches norm
+
+    % normalize patches to norm 1
+    normp(normp == 0) = eps;                                            %regularizer
+    patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
+end
+
+%% Not overlapping Patch generation
+function patchesNoOv = preprocessImageNoOv(img, fovea, downSampling, patchSize)
+    img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
+    for i = 1:log2(downSampling)
+        img = impyramid(img, 'reduce');
+    end
+
+    % convert to double
+    img = double(img);
+
+    % cut fovea in the center
+    [h, w, ~] = size(img);
+    img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
+              fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
+
+    % cut patches and store them as col vectors
+    % no overlapping patches (for display)
+    patchesNoOv = im2col(img, [patchSize patchSize], 'distinct');
+end

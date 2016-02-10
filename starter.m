@@ -1,1 +1,0 @@
-OpenEyeSim('','Textures_New.mat',0,200,200,'normal',1)
