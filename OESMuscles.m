@@ -7,7 +7,7 @@
 % sparseCodingType:         type of sparse coding approach
 %%%
 
-function OpenEyeSim(trainTime, randomizationSeed)
+function OpenEyeSim(trainTime, randomizationSeed, description)
 
 rng(randomizationSeed);
 learnedFile = '';
@@ -38,8 +38,6 @@ saveInterval = 10;
 %             1 = testing
 trialPhase = uint8(0);
 
-% For incorporation of metabolic Costs
-lambda = 0.9;
 % Instantiate and initiate model and test_data objects
 model = config(learnedFile, textureFile, trainTime, sparseCodingType);
 modelData = ModelTestdata((trainTime / saveInterval) * testingWindow + 1);
@@ -53,11 +51,13 @@ elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
 end
 
 % File management
-savePath = sprintf('model_%s_%i_%i_%i_%s_%i', ...
+% description = 'contin_';
+savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     datestr(now), ...
                     trainTime, ...
                     sparseCodingType, ...
-                    randomizationSeed);
+                    randomizationSeed, ...
+                    description);
 mkdir('results', savePath);
 savePath = strcat('results/', savePath);
 
@@ -117,6 +117,18 @@ objDist = objDistMax; %object init position
 degrees = load('Degrees.mat');    %loads tabular for resulting degrees as 'results_deg'
 metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
+%%% Helper function that maps muscle activities to resulting angle
+function [angle] = getAngle(command)
+    cmd = (command * 10) + 1; % scale commands to table entries
+    angle = interp2(degrees.results_deg, cmd(1), cmd(2)); % interpolate in tabular
+end
+
+%%% Helper function that maps muscle activities to resulting angle
+function [angle] = getMetCost(command)
+    cmd = (command * 10) + 1; % scale commands to table entries
+    angle = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
+end
+
 %%% Main execution loop
 tic %start time count
 while (true)
@@ -132,8 +144,8 @@ while (true)
             % random depth
             objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset muscle activities to random values
-			command = rand(2,1)
-            angleNew = getAngle(command);
+			command = rand(2,1);
+            angleNew = getAngle(command) * 2;
             [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                            currentTexture, currentTexture, objDist, objDist, angleNew));
 
@@ -167,8 +179,8 @@ while (true)
             % random depth
             objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset muscle activities to random values
-			command = rand(2,1)
-            angleNew = getAngle(command);
+			command = rand(2,1);
+            angleNew = getAngle(command) * 2;
             [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                            currentTexture, currentTexture, objDist, objDist, angleNew));
 
@@ -194,46 +206,36 @@ while (true)
     currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
 
     if (trialPhase == 0)
-        %Compute Vergence Command
-        fixDepth = (0.5 * baseline) / tand(angleNew / 2);
-        %save fixaton and object depth
-        model.Z(t) = objDist;
-        model.fixZ(t) = fixDepth;
-
-        %compute current disparity
-        angledes = 2 * atan(baseline / (2 * objDist)); %desired vergence [rad]
-        disparity = 2 * f * tan((angledes - angleNew * pi / 180) / 2); %current disp [px]
-        model.disp_hist(t) = disparity;
-
-        %compute current vergence error
-        anglerr = angledes * 180 / pi - angleNew; %vergence error [deg]
-        %save verge error
-        model.vergerr_hist(t) = anglerr;
-
         %generate input feature vector from current images
         [feature, reward, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-        model.recerr_hist(t, :) = [errorLarge; errorSmall];
-        model.verge_actual(t) = angleNew; %current vergence angle
-
+        feature = [feature; command]; % incorporationg the current muscle activity into feature vector
+        
+        %calculate metabolic costs and reward function
+        metCost = 2 * getMetCost(command);
+        rewardFunction = (model.lambdaMet * reward) + ((1-model.lambdaMet) * - metCost);
+        
         if (learning)
             %train 2 sparse coding models
             model.scmodel_Large.stepTrain(currentView{1});
             model.scmodel_Small.stepTrain(currentView{2});
-            [relativeCommand, paramsC, paramsA] = model.rlmodel.stepTrain(feature, reward, mod(t - 1, model.interval));
+            [relativeCommand, paramsC, paramsA] = model.rlmodel.stepTrain(feature, rewardFunction, mod(t - 1, model.interval));
             %### why calculate relative vergance command after first error measure?
         end
+        
+        relativeCommand %print for debugging
+        
 		% add the change in muscle Activities to current ones
 		command = command + relativeCommand;
-		checkCmd(command)
+		command = checkCmd(command);
 		angleNew = getAngle(command);
-        sprintf('Training Iteration = %d\nCommand = %.3g,%.3g\tCurrent Vergence = %.3g\tVergence Error = %.3g\nRec Error = %.3g', ...
-                t, command(1), command(2), angleNew, anglerr, errorTotal)
 
         %angleNew = max(0.01, command + angleNew); %command is relative angle - constrain to positive vergence
         %safety on control command - RESET TO a new vergence angle
         %if (angleNew > vergeMax)
         %    angleNew = randi(vergeMax, 1);     %relax the eyes
         %end
+        
+        %generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                currentTexture, currentTexture, objDist, objDist, angleNew));
 
@@ -242,7 +244,36 @@ while (true)
             sprintf('Error in checkEnvironment:\n%s', res)
             return;
         end
-
+        %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
+        
+        %Compute desired vergence command, disparity and vergence error
+        fixDepth = (0.5 * baseline) / tand(angleNew / 2);
+        angledes = 2 * atan(baseline / (2 * objDist)); %desired vergence [rad]
+        anglerr = angledes * 180 / pi - angleNew; %vergence error [deg]
+        disparity = 2 * f * tan((angledes - angleNew * pi / 180) / 2); %current disp [px]
+        
+        %save them
+        model.Z(t) = objDist;
+        model.fixZ(t) = fixDepth;
+        model.disp_hist(t) = disparity;
+        model.vergerr_hist(t) = anglerr;
+        model.recerr_hist(t, :) = [errorLarge; errorSmall];
+        model.verge_actual(t) = angleNew; 
+        model.relCmd_hist(t,:) = relativeCommand;
+        model.cmd_hist(t,:) = command;
+        model.reward_hist(t) = rewardFunction;
+        model.td_hist(t) = paramsC(2);
+        model.AC_norm_weights(t,1) = paramsC(1);%norm(v_ji)
+        model.AC_norm_weights(t,2) = paramsA(1);%norm(wp_ji)
+        model.AC_norm_weights(t,3) = paramsA(2);%norm(dwp)
+        model.AC_norm_weights(t,4) = paramsA(3);%norm(wp_kj)
+        model.AC_norm_weights(t,5) = paramsA(4);%norm(dvp)
+        model.AC_norm_weights(t,6) = paramsA(5);%norm(wn_ij)
+        model.AC_norm_weights(t,7) = paramsA(6);%psi' * this.wn_ji
+        
+        sprintf('Training Iteration = %d\nCommand = %.3g,%.3g\tCurrent Vergence = %.3g\tVergence Error = %.3g\nRec Error = %.3g', ...
+                t, command(1), command(2), angleNew, anglerr, errorTotal)
+            
         % Display per cent completed of training and save model
         if (~mod(t, model.trainTime / saveInterval) && (learning))
             sprintf('%g%% is finished', (t / model.trainTime * 100))
@@ -321,18 +352,6 @@ end
 % Save results data
 save(strcat(savePath, '/model'), 'model');
 save(strcat(savePath, '/modelData'), 'modelData');
-
-%%% Helper function that maps muscle activities to resulting angle
-function [angle] = getAngle(command)
-	cmd = (command * 10) + 1; % scale commands to table entries
-	angle = interp2(degrees, cmd(1), cmd(2)); % interpolate in tabular
-end
-
-%%% Helper function that maps muscle activities to resulting angle
-function [angle] = getMetCost(command)
-	cmd = (command * 10) + 1; % scale commands to table entries
-	angle = interp2(metCosts, cmd(1), cmd(2)); % interpolate in tabular
-end
 
 end
 

@@ -72,9 +72,9 @@ classdef ReinforcementLearningCont < handle
             CriticParams = {obj.alpha_v, obj.gamma, obj.xi, obj.S0, obj.weight_range(2)};
             obj.CCritic = CCriticG(CriticParams);
 
-            %ActorParams = {alpha_p, alpha_n, featureDimension, initialWeightRange, actorHiddenType};
+            %ActorParams = {alpha_p, alpha_n, featureDimension, initialWeightRange, actorHiddenType, variance};
             %ActorParams = {0.001, 0.01, 576, 0.22, 'tanh'}; original params
-            ActorParams = {obj.alpha_p, obj.alpha_n, obj.S0, obj.weight_range(1), 'tanh'};
+            ActorParams = {obj.alpha_p, obj.alpha_n, obj.S0, obj.weight_range(1), 'tanh', 'default', obj.Temperature};
             obj.CActor = CActorG(ActorParams);
 
             % load/init

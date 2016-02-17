@@ -49,20 +49,23 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 %setup parameters for reinforcement learning
 Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8]; %vergence angles (discrete policy)
 
-alpha_v = 0.4;                      %learning rate to update the value function | origin 0.05 | Lukas 1, 0.1 | Alex P 0.4
-alpha_n = 0.4;                      %learning rate of natural policy gradient | origin 0.05 | Lukas 0.025 | Alex P 0.4
-alpha_p = 0.4;                      %learning rate to update the policy function | origin 1 | Lukas 0.01 | Alex P 0.4
+alpha_v = 0.9;                      %learning rate to update the value function | origin 0.05 | Lukas 1 | Alex P 0.4
+alpha_n = 0.1;                      %learning rate of natural policy gradient | origin 0.05 | Lukas 0.025 | Alex P 0.4
+alpha_p = 0.01;                      %learning rate to update the policy function | origin 1 | Lukas 0.01 | Alex P 0.4
 xi = 0.3;                           %discount factor | origin ? | Lukas 0.9 | Alex P 0.3
 gamma = 0.01;                       %learning rate to update cumulative value | origin 1
-Temperature = 1;                    %temperature in softmax function in policy network | origin 1
+Temperature = 0.1;                  %temperature in softmax function in policy network | origin 1
+                                    %if policy is continuous, this value
+                                    %serves as variance for the actor
 S0 = PARAMSC_L{3} + PARAMSC_S{3};   %number of neurons in the input layer (Small + Large scale)
-weight_range = [0.4, 0.05];         %maximum initial weight | origin [0.4, 0.05]
+weight_range = [0.1, 0.05];         %maximum initial weight | origin [0.4, 0.05]
 lambda = 0.01;                      %reguralization factor | origin 0.01
-continuous = uint8(0);              %indicates if the policy is discrete or continuous
+continuous = uint8(1);              %indicates if the policy is discrete or continuous
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous};
 
-interval = 10; %period to change a new environment for the eye (10)
-PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, interval};
+interval = 10; 		%period to change a new environment for the eye (10)
+lambdaMet = 0.9;	%proportion of recErr and MetCost for reward function
+PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, interval, lambdaMet};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM); %create instance of object

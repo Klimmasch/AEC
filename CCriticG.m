@@ -19,7 +19,7 @@ classdef CCriticG < handle
             obj.alpha_v = PARAM{1};
             obj.eta = PARAM{2}; % compute J
             obj.gamma = PARAM{3}; % discount
-            obj.input_dim = PARAM{4};
+            obj.input_dim = PARAM{4}+2;%###!
             obj.v_init_range = PARAM{5};
             %
             obj.v_ji = (2*rand(1, obj.input_dim)-1)*obj.v_init_range;%0.12;
