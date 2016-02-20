@@ -25,9 +25,9 @@ classdef CActorG < handle
             % PARAM = {Action, alpha_p, alpha_n, lambda, tau, dimension_Feature, initialWeightRange};
             obj.alpha_p = PARAM{1};
             obj.alpha_n = PARAM{2};
-            obj.input_dim = PARAM{3}+2;%###!
-            obj.hidden_dim = 20;
-            obj.output_dim = 2;
+            obj.input_dim = PARAM{3}+1;%###!
+            obj.hidden_dim = 100; %###!
+            obj.output_dim = 1;
             obj.w_init_range = PARAM{4};
             obj.type_hidden = PARAM{5};
             obj.type_output = PARAM{6};
@@ -112,13 +112,14 @@ classdef CActorG < handle
             dvp = reshape(g(numel(dlogp_wp)+1:end),size(this.wp_kj)); % updates for weigths to output layer
             this.wp_ji = (1-this.regulizer*this.alpha_p)*this.wp_ji; % regularization prev: 0.005
             this.wp_ji = this.wp_ji + dwp;
-            this.wp_kj = (1-this.regulizer*this.alpha_p)*this.wp_kj; % lukas tries to regularize the output weights as well!
+            this.wp_kj = (1-this.regulizer*this.alpha_p)*this.wp_kj; % regularization of output weights (lukas)
             this.wp_kj = this.wp_kj + dvp;
 
             % save results
             params(1) = norm(this.wp_ji, 'fro'); params(2) = norm(dwp, 'fro');
             params(3) = norm(this.wp_kj, 'fro'); params(4) = norm(dvp, 'fro');
             params(5) = norm(this.wn_ji, 'fro'); params(6) = psi' * this.wn_ji;
+            params(7) = norm(g,'fro');
 %             params(3) = norm(this.wp_kj, 'fro');
 %             params(4) = norm(this.wp_kj, 'fro');
 %             params(5) = psi' * this.wn_ji;

@@ -7,7 +7,7 @@
 % sparseCodingType:         type of sparse coding approach
 %%%
 
-function OpenEyeSim(trainTime, randomizationSeed, description)
+function OESMuscles(trainTime, randomizationSeed, description)
 
 rng(randomizationSeed);
 learnedFile = '';
@@ -58,12 +58,12 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     sparseCodingType, ...
                     randomizationSeed, ...
                     description);
-mkdir('results', savePath);
-savePath = strcat('results/', savePath);
+% mkdir('results', savePath);
+savePath = strcat('~/projects/RESULTS/', savePath);
 
 % Control Parameters
-vergeMax = 16;
-angleNew = 0; %init new vergence command
+% vergeMax = 16;
+% angleNew = 0; %init new vergence command
 
 % Iteration counter
 t = 0;
@@ -144,7 +144,8 @@ while (true)
             % random depth
             objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset muscle activities to random values
-			command = rand(2,1);
+			command = 0.0075 + (0.06 - 0.0075) * rand(1,1); % initialization for muscle in between borders of desired actvity
+            command = [0, command]; %try to learn only one dimension
             angleNew = getAngle(command) * 2;
             [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                            currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -179,7 +180,9 @@ while (true)
             % random depth
             objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset muscle activities to random values
-			command = rand(2,1);
+% 			command = rand(2,1);
+            command = 0.0075 + (0.06 - 0.0075) * rand(1,1); % initialization for muscle in between borders of desired actvity
+            command = [0, command]; %try to learn only one dimension
             angleNew = getAngle(command) * 2;
             [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                            currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -208,7 +211,9 @@ while (true)
     if (trialPhase == 0)
         %generate input feature vector from current images
         [feature, reward, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-        feature = [feature; command]; % incorporationg the current muscle activity into feature vector
+        feature = [feature; command(2)*0.01]; % incorporationg the current muscle activity into feature vector
+                                              % and scaling it to the value
+                                              % range of BF activations
         
         %calculate metabolic costs and reward function
         metCost = 2 * getMetCost(command);
@@ -225,10 +230,10 @@ while (true)
         relativeCommand %print for debugging
         
 		% add the change in muscle Activities to current ones
-		command = command + relativeCommand;
-		command = checkCmd(command);
-		angleNew = getAngle(command);
-
+		command(2) = command(2) + relativeCommand;
+		command = checkCmd(command); %restrain motor commands to [0,1]
+		angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
+        
         %angleNew = max(0.01, command + angleNew); %command is relative angle - constrain to positive vergence
         %safety on control command - RESET TO a new vergence angle
         %if (angleNew > vergeMax)
@@ -262,7 +267,10 @@ while (true)
         model.relCmd_hist(t,:) = relativeCommand;
         model.cmd_hist(t,:) = command;
         model.reward_hist(t) = rewardFunction;
+        model.feature_hist(t,:) = feature;
+        model.medCost_hist(t) = metCost;
         model.td_hist(t) = paramsC(2);
+        model.g_hist(t) = paramsA(7);
         model.AC_norm_weights(t,1) = paramsC(1);%norm(v_ji)
         model.AC_norm_weights(t,2) = paramsA(1);%norm(wp_ji)
         model.AC_norm_weights(t,3) = paramsA(2);%norm(dwp)
@@ -310,14 +318,14 @@ while (true)
         [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
         modelData.recerr_hist(testIter, :) = [errorLarge; errorSmall];
         modelData.verge_actual(testIter) = angleNew; %current vergence angle
-
+        feature = [feature; command(2)*0.01];
         if (learning)
             relativeCommand = model.rlmodel.softmaxAct(feature);
             %### why calculate relative vergance command after first error measure?
         end
-		command = command + relativeCommand;
+		command(2) = command(2) + relativeCommand;
 		checkCmd(command)
-		angleNew = getAngle(command);
+		angleNew = getAngle(command) * 2;
         sprintf('Testing Iteration = %d\nCommand = %.3g,%.3g\tCurrent Vergence = %.3g\tVergence Error = %.3g\nRec Error = %.3g', ...
                 testingCounter, command(1), command(2), angleNew, anglerr, errorTotal)
 
