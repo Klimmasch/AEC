@@ -72,7 +72,7 @@ classdef Model < handle
 
             obj.g_hist = zeros(obj.trainTime, 1);          %history of nat gradient change
             obj.td_hist = zeros(obj.trainTime, 1);         %history of td error
-            obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0+1);    %history of feature vector ##!
+            obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);    %history of feature vector ##!
             obj.cmd_hist = zeros(obj.trainTime, 2);        %history of vergence commands
             obj.relCmd_hist = zeros(obj.trainTime, 2);
             obj.AC_norm_weights = zeros(obj.trainTime, 7);

@@ -58,8 +58,9 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     sparseCodingType, ...
                     randomizationSeed, ...
                     description);
-% mkdir('results', savePath);
-savePath = strcat('~/projects/RESULTS/', savePath);
+folder = '~/projects/RESULTS/';
+mkdir(folder, savePath);
+savePath = strcat(folder, savePath);
 
 % Control Parameters
 % vergeMax = 16;
@@ -145,7 +146,7 @@ while (true)
             objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset muscle activities to random values
 			command = 0.0075 + (0.06 - 0.0075) * rand(1,1); % initialization for muscle in between borders of desired actvity
-            command = [0, command]; %try to learn only one dimension
+            command = [0 command]; %try to learn only one dimension
             angleNew = getAngle(command) * 2;
             [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                            currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -182,7 +183,7 @@ while (true)
             % reset muscle activities to random values
 % 			command = rand(2,1);
             command = 0.0075 + (0.06 - 0.0075) * rand(1,1); % initialization for muscle in between borders of desired actvity
-            command = [0, command]; %try to learn only one dimension
+            command = [0 command]; %try to learn only one dimension
             angleNew = getAngle(command) * 2;
             [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                            currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -211,7 +212,7 @@ while (true)
     if (trialPhase == 0)
         %generate input feature vector from current images
         [feature, reward, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-        feature = [feature; command(2)*0.01]; % incorporationg the current muscle activity into feature vector
+        feature = [feature; command'*0.01]; % incorporationg the current muscle activity into feature vector
                                               % and scaling it to the value
                                               % range of BF activations
         
@@ -230,7 +231,7 @@ while (true)
         relativeCommand %print for debugging
         
 		% add the change in muscle Activities to current ones
-		command(2) = command(2) + relativeCommand;
+		command = command + relativeCommand';
 		command = checkCmd(command); %restrain motor commands to [0,1]
 		angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
         
@@ -268,7 +269,7 @@ while (true)
         model.cmd_hist(t,:) = command;
         model.reward_hist(t) = rewardFunction;
         model.feature_hist(t,:) = feature;
-        model.medCost_hist(t) = metCost;
+        model.metCost_hist(t) = metCost;
         model.td_hist(t) = paramsC(2);
         model.g_hist(t) = paramsA(7);
         model.AC_norm_weights(t,1) = paramsC(1);%norm(v_ji)

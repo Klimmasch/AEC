@@ -25,9 +25,9 @@ classdef CActorG < handle
             % PARAM = {Action, alpha_p, alpha_n, lambda, tau, dimension_Feature, initialWeightRange};
             obj.alpha_p = PARAM{1};
             obj.alpha_n = PARAM{2};
-            obj.input_dim = PARAM{3}+1;%###!
+            obj.input_dim = PARAM{3};
             obj.hidden_dim = 100; %###!
-            obj.output_dim = 1;
+            obj.output_dim = 2;
             obj.w_init_range = PARAM{4};
             obj.type_hidden = PARAM{5};
             obj.type_output = PARAM{6};
