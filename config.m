@@ -49,12 +49,12 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 %setup parameters for reinforcement learning
 Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8]; %vergence angles (discrete policy)
 
-alpha_v = 0.9;                      %learning rate to update the value function | origin 0.05 | Lukas 1 | Alex P 0.4
-alpha_n = 0.1;                      %learning rate of natural policy gradient | origin 0.05 | Lukas 0.025 | Alex P 0.4
-alpha_p = 0.01;                      %learning rate to update the policy function | origin 1 | Lukas 0.01 | Alex P 0.4
-xi = 0.3;                           %discount factor | origin ? | Lukas 0.9 | Alex P 0.3
+alpha_v = 0.9;                      %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
+alpha_n = 0.025;                      %learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
+alpha_p = 0.002;                      %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
+xi = 0.3;                           %discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.01;                       %learning rate to update cumulative value | origin 1
-Temperature = 0.0001;             %temperature in softmax function in policy network | origin 1
+Temperature = 0.00001;             %temperature in softmax function in policy network | origin 1
                                     %if policy is continuous, this value
                                     %serves as variance for the actor
 S0 = PARAMSC_L{3} + PARAMSC_S{3} + 2;%number of neurons in the input layer (Small + Large scale + Muscle activities)

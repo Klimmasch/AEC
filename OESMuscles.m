@@ -59,6 +59,7 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     randomizationSeed, ...
                     description);
 folder = '~/projects/RESULTS/';
+folder = './results/';
 mkdir(folder, savePath);
 savePath = strcat(folder, savePath);
 
@@ -196,15 +197,21 @@ while (true)
         end
     end
 
-    % Read input images
+    % Read input images and convert to gray scale
     imgRawLeft = imread('left.png');
     imgRawRight = imread('right.png');
+    imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
+    imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
+    
+    
+    anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
+    imwrite(anaglyph, 'anaglyph.png');
 
     % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
-    [patchesLeftSmall] = preprocessImage(imgRawLeft, foveaS, dsRatioS, patchSize, columnIndS);
-    [patchesLeftLarge] = preprocessImage(imgRawLeft, foveaL, dsRatioL, patchSize, columnIndL);
-    [patchesRightSmall] = preprocessImage(imgRawRight, foveaS, dsRatioS, patchSize, columnIndS);
-    [patchesRightLarge] = preprocessImage(imgRawRight, foveaL, dsRatioL, patchSize, columnIndL);
+    [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
+    [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
+    [patchesRightSmall] = preprocessImage(imgGrayRight, foveaS, dsRatioS, patchSize, columnIndS);
+    [patchesRightLarge] = preprocessImage(imgGrayRight, foveaL, dsRatioL, patchSize, columnIndL);
 
     % image patches matrix (input to model)
     currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
@@ -228,10 +235,10 @@ while (true)
             %### why calculate relative vergance command after first error measure?
         end
         
-        relativeCommand %print for debugging
+        relativeCommand = [0 relativeCommand] %print for debugging
         
 		% add the change in muscle Activities to current ones
-		command = command + relativeCommand';
+		command = command + relativeCommand;
 		command = checkCmd(command); %restrain motor commands to [0,1]
 		angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
         
@@ -376,7 +383,7 @@ end
 %%% Helper functions for image preprocessing
 %% Patch generation
 function [patches] = preprocessImage(img, fovea, downSampling, patchSize, columnIndicies)
-    img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
+%     img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
     for i = 1:log2(downSampling)
         img = impyramid(img, 'reduce');
     end
