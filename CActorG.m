@@ -26,8 +26,8 @@ classdef CActorG < handle
             obj.alpha_p = PARAM{1};
             obj.alpha_n = PARAM{2};
             obj.input_dim = PARAM{3};
-            obj.hidden_dim = 100; %###!
-            obj.output_dim = 1;
+            obj.hidden_dim = 20; %###!
+            obj.output_dim = 2;
             obj.w_init_range = PARAM{4};
             obj.type_hidden = PARAM{5};
             obj.type_output = PARAM{6};
@@ -35,7 +35,7 @@ classdef CActorG < handle
             obj.wp_ji = (2*rand(obj.hidden_dim, obj.input_dim)-1) * obj.w_init_range; %*0.15;
             obj.wp_kj = (2*rand(obj.output_dim, obj.hidden_dim)-1) * obj.w_init_range; %*0.22;
             obj.param_num = 7;
-            obj.regulizer = 0.01;
+            obj.regulizer = 0.005;
             obj.variance = PARAM{7};
 %             obj.covmat = diag(ones(obj.output_dim,1)); 
             obj.covmat = eye(obj.output_dim)*obj.variance; % indicated no correlation between the output values 
@@ -112,7 +112,7 @@ classdef CActorG < handle
             dvp = reshape(g(numel(dlogp_wp)+1:end),size(this.wp_kj)); % updates for weigths to output layer
             this.wp_ji = (1-this.regulizer*this.alpha_p)*this.wp_ji; % regularization prev: 0.005
             this.wp_ji = this.wp_ji + dwp;
-            this.wp_kj = (1-this.regulizer*this.alpha_p)*this.wp_kj; % regularization of output weights (lukas)
+%             this.wp_kj = (1-this.regulizer*this.alpha_p)*this.wp_kj; % regularization of output weights (lukas)
             this.wp_kj = this.wp_kj + dvp;
 
             % save results

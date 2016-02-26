@@ -131,6 +131,8 @@ function [angle] = getMetCost(command)
     angle = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
 end
 
+% command scaling factor
+scalingFactor = 1;
 %%% Main execution loop
 tic %start time count
 while (true)
@@ -204,8 +206,8 @@ while (true)
     imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
     
     
-    anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
-    imwrite(anaglyph, 'anaglyph.png');
+    %anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
+    %imwrite(anaglyph, 'anaglyph.png');
 
     % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
     [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -219,7 +221,7 @@ while (true)
     if (trialPhase == 0)
         %generate input feature vector from current images
         [feature, reward, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-        feature = [feature; command'*0.01]; % incorporationg the current muscle activity into feature vector
+        feature = [feature; command'*scalingFactor]; % incorporationg the current muscle activity into feature vector
                                               % and scaling it to the value
                                               % range of BF activations
         
@@ -235,10 +237,10 @@ while (true)
             %### why calculate relative vergance command after first error measure?
         end
         
-        relativeCommand = [0 relativeCommand] %print for debugging
+        relativeCommand %print for user
         
 		% add the change in muscle Activities to current ones
-		command = command + relativeCommand;
+		command = command + relativeCommand';
 		command = checkCmd(command); %restrain motor commands to [0,1]
 		angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
         
@@ -275,7 +277,7 @@ while (true)
         model.relCmd_hist(t,:) = relativeCommand;
         model.cmd_hist(t,:) = command;
         model.reward_hist(t) = rewardFunction;
-        model.feature_hist(t,:) = feature;
+%         model.feature_hist(t,:) = feature;
         model.metCost_hist(t) = metCost;
         model.td_hist(t) = paramsC(2);
         model.g_hist(t) = paramsA(7);
@@ -326,12 +328,12 @@ while (true)
         [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
         modelData.recerr_hist(testIter, :) = [errorLarge; errorSmall];
         modelData.verge_actual(testIter) = angleNew; %current vergence angle
-        feature = [feature; command(2)*0.01];
+        feature = [feature; command*scalingFactor];
         if (learning)
             relativeCommand = model.rlmodel.softmaxAct(feature);
             %### why calculate relative vergance command after first error measure?
         end
-		command(2) = command(2) + relativeCommand;
+		command = command + relativeCommand';
 		checkCmd(command)
 		angleNew = getAngle(command) * 2;
         sprintf('Testing Iteration = %d\nCommand = %.3g,%.3g\tCurrent Vergence = %.3g\tVergence Error = %.3g\nRec Error = %.3g', ...
