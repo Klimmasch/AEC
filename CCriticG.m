@@ -10,6 +10,7 @@ classdef CCriticG < handle
         z_j_prev;
         J;
     end
+
     methods
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%% initialization
@@ -22,10 +23,11 @@ classdef CCriticG < handle
             obj.input_dim = PARAM{4};%###!
             obj.v_init_range = PARAM{5};
             %
-            obj.v_ji = (2*rand(1, obj.input_dim)-1)*obj.v_init_range;%0.12;
+            obj.v_ji = (2 * rand(1, obj.input_dim) - 1) * obj.v_init_range; %0.12;
             obj.z_j_prev = 0;
             obj.J = 0;
         end
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%% calculates the output of the network from the input feature
         %%% vector
@@ -33,6 +35,7 @@ classdef CCriticG < handle
         function z_j = forward(this, z_i)
             z_j = this.v_ji * z_i;%[z_i;1];%
         end
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%% calculates gradient and updates the weights
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,6 +49,7 @@ classdef CCriticG < handle
             params(1) = norm(this.v_ji, 'fro'); %2 norm of column vector
             params(2) = delta;%z_i;
         end
+
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%% inputs: feature vector, reward
         %%% outputs: gradient for the actor (delta), [normalized weights of

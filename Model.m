@@ -14,8 +14,13 @@ classdef Model < handle
 
         stopSC = 0;
         SCInterval = 1;
-        
-        lambdaMet;	    %proportion of recErr and metCosts for reward function
+
+        lambdaMuscleFB;     %factor of musscle activity feedback to RL feature vector
+        lambdaMet;          %proportion of recErr and metCosts for reward function
+        lambdaRec;          %reconstruction error factor
+        lambdaV;            %value networks input->output weights factor | L1 norm 0.1 | L2 norm 0.04
+        lambdaP1;           %policy networks input->hidden weights factor | L1 norm 0.1 | L2 norm 3.2
+        lambdaP2;           %policy networks hidden->output weights factor | L1 norm 1.2 | L2 norm 430.8
 
         %model data
         recerr_hist;        %history of rec error
@@ -29,10 +34,10 @@ classdef Model < handle
         td_hist;            %history of td error
         feature_hist;       %history of feature vector
         cmd_hist;           %history of vergence commands
-        AC_norm_weights;     %history of norm of the weights of the actor and critic
-        relCmd_hist;         %relativ changes in motor commands
-        reward_hist;         %reward function
-        metCost_hist;	    %metabolic costs
+        AC_norm_weights;    %history of norm of the weights of the actor and critic
+        relCmd_hist;        %relativ changes in motor commands
+        reward_hist;        %reward function
+        metCost_hist;       %metabolic costs
     end
 
     methods
@@ -42,7 +47,12 @@ classdef Model < handle
             obj.trainTime = PARAM{1}{3};
             obj.sparseCodingType = PARAM{1}{4};
             obj.interval = PARAM{1}{5};
-            obj.lambdaMet = PARAM{1}{6};
+            obj.lambdaMuscleFB = PARAM{1}{6};
+            obj.lambdaMet = PARAM{1}{7};
+            obj.lambdaRec = PARAM{1}{8};
+            obj.lambdaV = PARAM{1}{9};
+            obj.lambdaP1 = PARAM{1}{10};
+            obj.lambdaP2 = PARAM{1}{11};
 
             % Discrete or continuous policy
             if (PARAM{3}{14})
@@ -72,9 +82,9 @@ classdef Model < handle
 
             obj.g_hist = zeros(obj.trainTime, 1);          %history of nat gradient change
             obj.td_hist = zeros(obj.trainTime, 1);         %history of td error
-%             obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);    %history of feature vector ##!
+            % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);    %history of feature vector ##!
             obj.cmd_hist = zeros(obj.trainTime, 2);        %history of vergence commands
-            obj.relCmd_hist = zeros(obj.trainTime, 2);
+            obj.relCmd_hist = zeros(obj.trainTime);
             obj.AC_norm_weights = zeros(obj.trainTime, 7);
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);

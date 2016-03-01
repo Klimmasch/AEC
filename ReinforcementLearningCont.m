@@ -33,7 +33,7 @@ classdef ReinforcementLearningCont < handle
         label_act;%intermedia variable to keep track of which action has been chosen
         td; %intermedia variable to keep track of the TD error
         Weights_hist;   %weights history
-        
+
         continuous; %flag whether policy is discrete or continous
 
         % for continuous action space with gaussian policy
@@ -117,26 +117,26 @@ classdef ReinforcementLearningCont < handle
             D = zeros(1, 32);
 
             if (flag_update) % see Eq. 3.4 to 3.12 in thesis
-                this.J = (1-this.gamma) * this.J + this.gamma*reward;
+                this.J = (1-this.gamma) * this.J + this.gamma * reward;
                 delta = reward - this.J + this.xi * val_new - this.val;   %TD error
                 this.td = delta;    %save TD error (Luca)
 
                 dv_val = delta * this.X';
                 this.Weights{2, 1} = this.Weights{2, 1} + this.alpha_v * dv_val;  %value net update
 
-                dlogv_pol = 1/this.Temperature*(this.label_act-this.pol) * this.X';
+                dlogv_pol = 1 / this.Temperature * (this.label_act - this.pol) * this.X';
                 psi = dlogv_pol(:);
 
                 %alphaforg = this.alpha; %learning rate for w (g)
 
-                deltag = delta * psi - psi*(psi'* this.g);
+                deltag = delta * psi - psi * (psi' * this.g);
                 this.g = this.g  +  this.alpha_n * deltag;
 
                 dlambda = this.g;
 
                 dv_pol = reshape(dlambda(1:numel(dlogv_pol)), size(this.Weights{1, 1}));
-                this.Weights{1, 1} = this.Weights{1, 1} * (1-this.alpha_p*this.lambda);
-                this.Weights{1, 1} = this.Weights{1, 1} + this.alpha_p*dv_pol;
+                this.Weights{1, 1} = this.Weights{1, 1} * (1 - this.alpha_p * this.lambda);
+                this.Weights{1, 1} = this.Weights{1, 1} + this.alpha_p * dv_pol;
                 %th2 = 100;
                 %L2norm = norm(this.Weights{1,1},'fro');
                 %if (L2norm > th2)
