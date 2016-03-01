@@ -170,10 +170,14 @@ for iter1 = 1 : (model.trainTime / model.interval)
         feature = feature + command(2) * model.lambdaMuscleFB;
         %% Absolute command feedback # multiplicative
         % feature = feature * (command(2) * model.lambdaMuscleFB);
-        % %% Relative command feedback # additive
-        % feature = feature + model.relCmd_hist(t - 1, :) * model.lambdaMuscleFB;
-        % %% Relative command feedback # multiplicative
-        % feature = feature * (model.relCmd_hist(t - 1, :) * model.lambdaMuscleFB);
+        %% Relative command feedback # additive
+        % if (iter2 > 1)
+        %     feature = feature + model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
+        % end
+        %% Relative command feedback # multiplicative
+        % if (iter2 > 1)
+        %     feature = feature * model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
+        % end
 
         %%% Calculate metabolic costs
         metCost = getMetCost(command) * 2;

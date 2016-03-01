@@ -84,7 +84,7 @@ classdef Model < handle
             obj.td_hist = zeros(obj.trainTime, 1);         %history of td error
             % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);    %history of feature vector ##!
             obj.cmd_hist = zeros(obj.trainTime, 2);        %history of vergence commands
-            obj.relCmd_hist = zeros(obj.trainTime);
+            obj.relCmd_hist = zeros(obj.trainTime, 1);
             obj.AC_norm_weights = zeros(obj.trainTime, 7);
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
