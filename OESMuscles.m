@@ -88,12 +88,12 @@ texturePath = sprintf('config/%s', textureFile);
 texture = load(texturePath);
 texture = texture.texture;
 nTextures = length(texture);
-currentTexture = texture{1}; %choose first texture as initial
+% currentTexture = texture{1}; %choose first texture as initial
 
 % Object distance to eyes [m]
 objDistMin = 0.5;
 objDistMax = 2;
-objDist = objDistMax; %object init position
+% objDist = objDistMax; %object init position
 
 degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
 metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
@@ -219,7 +219,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % add the change in muscle Activities to current ones
         command(2) = command(2) + relativeCommand';
-        command = checkCmd(command);            %restrain motor commands to [0,10]
+        command = checkCmd(command);            %restrain motor commands to [0,1]
         angleNew = getAngle(command) * 2;       %resulting angle is used for both eyes
 
         % generate new view (two pictures) with new vergence angle
