@@ -329,11 +329,13 @@ classdef Model < handle
                  - this.lambdaV * this.l12_weights(:, 1), ...
                  - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
             area(r);
-            plot(this.reward_hist, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+            % TODO: function is delayed by 10 iteration steps
+            % plot(this.reward_hist, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
-            legend('\lambdaRecErr', '\lambdaL1(w_{Vji})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Pkj})', '\lambdametCost', 'Reward');
-            title('Reward composition (L1)')
+            % legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr', 'Reward');
+            legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+            title('Reward composition (L1)');
             plotpath = sprintf('%s/rewardCompL1', savePath);
             saveas(gcf, plotpath, 'png');
         end

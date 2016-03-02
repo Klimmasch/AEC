@@ -29,20 +29,20 @@ loadweights = uint8(~isempty(learnedFile));
 %setup parameters for sparse coding - FINE (small) SCALE
 Basis_num_used = 10;    %number of basis used to encode in sparse mode
 Basis_size = 128;       %size of each (binocular) base vector (200)
-Basis_num = 288;        %total basis number (128)
+Basis_num_fine = 288;   %total basis number (128)
 eta = 0.2;              %learning rate | origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2
 Temperature = 0.01;     %temperature in softmax | origin 0.01
 Dsratio = 2;            %downsampling ratio (target resolution = 8x8)
-PARAMSC_S = {Basis_num_used, Basis_size, Basis_num, eta, Temperature, Dsratio, basisSmall, loadBasis};
+PARAMSC_S = {Basis_num_used, Basis_size, Basis_num_fine, eta, Temperature, Dsratio, basisSmall, loadBasis};
 
 %setup parameters for sparse coding - COARSE (large) SCALE
 Basis_num_used = 10;    %number of basis used to encode in sparse mode
 Basis_size = 128;       %size of each (binocular) base vector (200)
-Basis_num = 288;        %total basis number (128)
+Basis_num_coarse = 288; %total basis number (128)
 eta = 0.2;              %learning rate | origin 0.01 | Lukas 0.1 | Alex P 0.5
 Temperature = 0.01;     %temperature in softmax | origin 0.01
 Dsratio = 8;            %downsampling ratio (target resolution = 8x8)
-PARAMSC_L = {Basis_num_used, Basis_size, Basis_num, eta, Temperature, Dsratio, basisLarge, loadBasis};
+PARAMSC_L = {Basis_num_used, Basis_size, Basis_num_coarse, eta, Temperature, Dsratio, basisLarge, loadBasis};
 
 PARAMSC = {PARAMSC_L, PARAMSC_S};
 
@@ -57,23 +57,22 @@ gamma = 0.01;                       %learning rate to update cumulative value | 
 Temperature = 1e-5;                 %temperature in softmax function in policy network | origin 1
                                     %if policy is continuous, this value
                                     %serves as variance for the actor
-% S0 = PARAMSC_L{3} + PARAMSC_S{3} + 2;%number of neurons in the input layer (Small + Large scale + Muscle activities)
-S0 = PARAMSC_L{3} + PARAMSC_S{3};   %number of neurons in the input layer (Small + Large scale)
+S0 = PARAMSC_L{3} + PARAMSC_S{3} + 1;%number of neurons in the input layer (Small + Large scale + Muscle activities)
 weight_range = [0.05, 0.1];         %maximum initial weight | origin [0.4, 0.05]
 lambda = 0.01;                      %reguralization factor | origin 0.01
 continuous = uint8(1);              %indicates if the policy is discrete or continuous
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous};
 
 interval = 10;                      %period to change a new environment for the eye | origin 10
-lambdaMuscleFB = 0.0001;            %factor of musscle activity feedback to RL feature vector
+lambdaMuscleFB = 1;                 %factor of musscle activity feedback to RL feature vector
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
-lambdaMet = 1;                      %metabolic costs factor
-lambdaRec = 23.8;                   %reconstruction error factor
-lambdaV = 0.1;                      %value networks input->output weights factor | L1 norm 0.1 | L2 norm 0.04
-lambdaP1 = 0.1;                     %policy networks input->hidden weights factor | L1 norm 0.1 | L2 norm 3.2
-lambdaP2 = 1.2;                     %policy networks hidden->output weights factor | L1 norm 1.2 | L2 norm 430.8
+lambdaMet = 0.6;                      %metabolic costs factor
+lambdaRec = 1;                      %reconstruction error factor
+lambdaV = 0;                        %value networks input->output weights factor | L1 norm 0.1 | L2 norm 0.04
+lambdaP1 = 0;                       %policy networks input->hidden weights factor | L1 norm 0.1 | L2 norm 3.2
+lambdaP2 = 0;                       %policy networks hidden->output weights factor | L1 norm 1.2 | L2 norm 430.8
 PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, interval, lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};

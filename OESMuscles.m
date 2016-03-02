@@ -168,8 +168,17 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % feature = [feature; command' * model.lambdaMuscleFB];
 
         %%% Feedback
+        % Absolute command feedback # concatination
+        feature = [feature; command(2) * model.lambdaMuscleFB];
+        % Relative command feedback # concatination
+        % if (iter2 > 1)
+        %     feature = [feature; model.relCmd_hist(t-1) * model.lambdaMuscleFB];
+        % else
+        %     feature = [feature; 0];
+        % end
+
         %% Absolute command feedback # additive
-        feature = feature + command(2) * model.lambdaMuscleFB;
+        % feature = feature + command(2) * model.lambdaMuscleFB;
         %% Absolute command feedback # multiplicative
         % feature = feature * (command(2) * model.lambdaMuscleFB);
         %% Relative command feedback # additive
@@ -253,6 +262,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.AC_norm_weights(t, 5) = paramsA(4); %norm(dvp)
         model.AC_norm_weights(t, 6) = paramsA(5); %norm(wn_ij)
         model.AC_norm_weights(t, 7) = paramsA(6); %psi' * this.wn_ji
+        % TODO: outsource to rlmodel crit and act
         model.l12_weights(t, 1) = sum(sum(abs(model.rlmodel.CCritic.v_ji)));
         model.l12_weights(t, 2) = sum(sum(model.rlmodel.CCritic.v_ji .^ 2));
         model.l12_weights(t, 3) = sum(sum(abs(model.rlmodel.CActor.wp_ji)));
@@ -298,9 +308,6 @@ if (plotNsave)
     copyfile('ReinforcementLearningCont.m', savePath);
     copyfile('CActorG.m', savePath);
 end
-
-% Save results data
-save(strcat(savePath, '/model'), 'model');
 
 %%% Testing procedure
 %%% TODO: implement function or script call here
