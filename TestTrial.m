@@ -9,7 +9,7 @@
 
 function TestTrial(model,fileDescription,seed)
 
-    numberTrials = 1;
+    numberTrials = 1000;
     modelTest = ModelTestData(numberTrials * model.interval);
     folder = './results/';
     savePath = sprintf('TestedModel_%s_%s',datestr(now),fileDescription);

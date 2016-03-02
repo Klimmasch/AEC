@@ -265,7 +265,7 @@ classdef Model < handle
             saveas(gcf, plotpath, 'png');
         end
 
-        % DEPRICATED
+        % DEPRECATED
         %% Train the whole system
         %
         % trainSC indicates whether the sparse coding part will be
