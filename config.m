@@ -65,7 +65,7 @@ continuous = uint8(1);              %indicates if the policy is discrete or cont
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous};
 
 interval = 10;                      %period to change a new environment for the eye | origin 10
-lambdaMuscleFB = 0.1;               %factor of musscle activity feedback to RL feature vector
+lambdaMuscleFB = 0.0001;            %factor of musscle activity feedback to RL feature vector
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]

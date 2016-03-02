@@ -27,7 +27,7 @@ classdef Model < handle
         disp_hist;          %history of disparity
         vergerr_hist;       %history of vergence error
         verge_actual;       %actual vergence angle
-        verge_desired;      %desired vergence angle (output of RL)
+        verge_desired;      %desired vergence angle
         Z;                  %object depth
         fixZ;               %depth of fixation
         g_hist;             %history of nat gradient change
@@ -35,6 +35,7 @@ classdef Model < handle
         feature_hist;       %history of feature vector
         cmd_hist;           %history of vergence commands
         AC_norm_weights;    %history of norm of the weights of the actor and critic
+        l12_weights;        %history of L1/L2, i.e. sum abs, sum pow2 weights of the actor and critic
         relCmd_hist;        %relativ changes in motor commands
         reward_hist;        %reward function
         metCost_hist;       %metabolic costs
@@ -86,6 +87,7 @@ classdef Model < handle
             obj.cmd_hist = zeros(obj.trainTime, 2);        %history of vergence commands
             obj.relCmd_hist = zeros(obj.trainTime, 1);
             obj.AC_norm_weights = zeros(obj.trainTime, 7);
+            obj.l12_weights = zeros(obj.trainTime, 8);
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
         end
@@ -200,7 +202,7 @@ classdef Model < handle
         end
 
         %% Plotting errors and save graphs
-        function errPlotSave(this, savePath)
+        function allPlotSave(this, savePath)
             windowSize = 125;
             if (this.trainTime < windowSize * this.interval)
                 windowSize = round(this.trainTime / this.interval / 5);
@@ -260,8 +262,79 @@ classdef Model < handle
             plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist), recerr_S(windowSize + 1 : end), 'b', 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Reconstruction Error [AU]', 'FontSize', 12);
-            legend('Coarse', 'Fine')
+            legend('Coarse', 'Fine');
             plotpath = sprintf('%s/recErr', savePath);
+            saveas(gcf, plotpath, 'png');
+
+            %% Vergence angle
+            figure;
+            hold on;
+            grid on;
+            plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+            plot(this.verge_actual, 'b', 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('Angle [deg]', 'FontSize', 12);
+            legend('desired', 'actual');
+            title('Vergence');
+            plotpath = sprintf('%s/vergenceAngle', savePath);
+            saveas(gcf, plotpath, 'png');
+
+            %% Muscel graphs
+            figure;
+            hold on;
+            grid on;
+            subplot(3, 1, 1);
+            plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('Value', 'FontSize', 12);
+            title('Absolute Muscel Commands');
+
+            subplot(3, 1, 2);
+            plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('Value', 'FontSize', 12);
+            title('Relative Muscel Commands');
+
+            subplot(3, 1, 3);
+            plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('Value', 'FontSize', 12);
+            title('Metabolic Costs');
+
+            plotpath = sprintf('%s/muscelGraphs', savePath);
+            saveas(gcf, plotpath, 'png');
+
+            %% Weights
+            figure;
+            hold on;
+            grid on;
+            plot(this.l12_weights(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 3), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 5), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 7), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}');
+            title('Model weights')
+            plotpath = sprintf('%s/weights', savePath);
+            saveas(gcf, plotpath, 'png');
+
+            %% Reward
+            figure;
+            hold on;
+            grid on;
+            r = [- this.lambdaMet * this.metCost_hist, ...
+                 - this.lambdaP2 * this.l12_weights(:, 5), ...
+                 - this.lambdaP1 * this.l12_weights(:, 3), ...
+                 - this.lambdaV * this.l12_weights(:, 1), ...
+                 - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
+            area(r);
+            plot(this.reward_hist, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('Value', 'FontSize', 12);
+            legend('\lambdaRecErr', '\lambdaL1(w_{Vji})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Pkj})', '\lambdametCost', 'Reward');
+            title('Reward composition (L1)')
+            plotpath = sprintf('%s/rewardCompL1', savePath);
             saveas(gcf, plotpath, 'png');
         end
 

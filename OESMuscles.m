@@ -13,11 +13,12 @@ learnedFile = '';
 textureFile = 'Textures_New.mat';
 sparseCodingType = 'nonhomeo';
 
-% Plotting flag
+% Plotting and saving flag
 % Whether figures should be generated, saved and plotted
-% plotIt:   0 = no plot
-%           1 = plot
-plotIt = uint8(0);
+% additionally some relevant scripts are backed up
+% plotNsave:    0 = don't do it
+%               1 = do it
+plotNsave = uint8(1);
 
 % Save model and conduct testing every saveInterval training iterations (+1)
 saveInterval = 1000;
@@ -44,7 +45,8 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     randomizationSeed, ...
                     description);
 % folder = '~/projects/RESULTS/';
-folder = './results/';
+% folder = './results/';
+folder = '../results/';
 mkdir(folder, savePath);
 savePath = strcat(folder, savePath);
 
@@ -225,9 +227,9 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         %Compute desired vergence command, disparity and vergence error
         fixDepth = (0.5 * baseline) / tand(angleNew / 2);
-        angledes = 2 * atan(baseline / (2 * objDist));                  %desired vergence [rad]
-        anglerr = angledes * 180 / pi - angleNew;                       %vergence error [deg]
-        disparity = 2 * f * tan((angledes - angleNew * pi / 180) / 2);  %current disp [px]
+        angleDes = 2 * atand(baseline / (2 * objDist));                             %desired vergence [deg]
+        anglerr = angleDes - angleNew;                                              %vergence error [deg]
+        disparity = 2 * f * tan((angleDes * pi / 180 - angleNew * pi / 180) / 2);   %current disp [px]
 
         %save them
         model.Z(t) = objDist;
@@ -236,10 +238,11 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.vergerr_hist(t) = anglerr;
         model.recerr_hist(t, :) = [errorLarge; errorSmall];
         model.verge_actual(t) = angleNew;
+        model.verge_desired(t) = angleDes;
         model.relCmd_hist(t) = relativeCommand;
         model.cmd_hist(t, :) = command;
         model.reward_hist(t) = rewardFunction;
-        % model.feature_hist(t, :) = feature;
+        model.feature_hist(t, :) = feature;
         model.metCost_hist(t) = metCost;
         model.td_hist(t) = paramsC(2);
         model.g_hist(t) = paramsA(7);
@@ -250,6 +253,14 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.AC_norm_weights(t, 5) = paramsA(4); %norm(dvp)
         model.AC_norm_weights(t, 6) = paramsA(5); %norm(wn_ij)
         model.AC_norm_weights(t, 7) = paramsA(6); %psi' * this.wn_ji
+        model.l12_weights(t, 1) = sum(sum(abs(model.rlmodel.CCritic.v_ji)));
+        model.l12_weights(t, 2) = sum(sum(model.rlmodel.CCritic.v_ji .^ 2));
+        model.l12_weights(t, 3) = sum(sum(abs(model.rlmodel.CActor.wp_ji)));
+        model.l12_weights(t, 4) = sum(sum(model.rlmodel.CActor.wp_ji .^ 2));
+        model.l12_weights(t, 5) = sum(sum(abs(model.rlmodel.CActor.wp_kj)));
+        model.l12_weights(t, 6) = sum(sum(model.rlmodel.CActor.wp_kj .^ 2));
+        model.l12_weights(t, 7) = sum(sum(abs(model.rlmodel.CActor.wn_ji)));
+        model.l12_weights(t, 8) = sum(sum(model.rlmodel.CActor.wn_ji .^ 2));
     end
 
     sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error = %.3g', ...
@@ -276,9 +287,16 @@ sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/s
         elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
 
 % Plot results
-if (plotIt)
+if (plotNsave)
     % model.errPlot();
-    model.errPlotSave(savePath);
+    model.allPlotSave(savePath);
+    copyfile('CActorG.m', savePath);
+    copyfile('CCriticG.m', savePath);
+    copyfile('config.m', savePath);
+    copyfile('Model.m', savePath);
+    copyfile('OESMuscles.m', savePath);
+    copyfile('ReinforcementLearningCont.m', savePath);
+    copyfile('CActorG.m', savePath);
 end
 
 % Save results data
