@@ -6,7 +6,7 @@
 % textureFile:              texture settings files
 % sparseCodingType:         type of sparse coding approach
 %%%
-function OESMuscles(trainTime, randomizationSeed, description)
+function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
 rng(randomizationSeed);
 learnedFile = '';
@@ -43,7 +43,7 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     trainTime, ...
                     sparseCodingType, ...
                     randomizationSeed, ...
-                    description);
+                    fileDescription);
 % folder = '~/projects/RESULTS/';
 % folder = './results/';
 folder = '../results/';
@@ -196,19 +196,19 @@ for iter1 = 1 : (model.trainTime / model.interval)
         %%% Calculate reward function
         % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
 
-        %%% Weight L2 regularization
-        % rewardFunction = model.lambdaRec * reward ...
-        %                  - model.lambdaMet * metCost ...
-        %                  - model.lambdaV * (sum(sum(model.rlmodel.CCritic.v_ji .^ 2))) ...
-        %                  - model.lambdaP1 * (sum(sum(model.rlmodel.CActor.wp_ji .^ 2))) ...
-        %                  - model.lambdaP2 * (sum(sum(model.rlmodel.CActor.wp_kj .^ 2)));
-
         %%% Weight L1 regularization
         rewardFunction = model.lambdaRec * reward ...
                          - model.lambdaMet * metCost ...
                          - model.lambdaV * (sum(sum(abs(model.rlmodel.CCritic.v_ji)))) ...
                          - model.lambdaP1 * (sum(sum(abs(model.rlmodel.CActor.wp_ji)))) ...
                          - model.lambdaP2 * (sum(sum(abs(model.rlmodel.CActor.wp_kj))));
+
+        %%% Weight L2 regularization
+        % rewardFunction = model.lambdaRec * reward ...
+        %                  - model.lambdaMet * metCost ...
+        %                  - model.lambdaV * (sum(sum(model.rlmodel.CCritic.v_ji .^ 2))) ...
+        %                  - model.lambdaP1 * (sum(sum(model.rlmodel.CActor.wp_ji .^ 2))) ...
+        %                  - model.lambdaP2 * (sum(sum(model.rlmodel.CActor.wp_kj .^ 2)));
 
         %%% Learning
         % Sparse coding models
@@ -218,9 +218,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
         [relativeCommand, paramsC, paramsA] = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
-        command(2) = command(2) + relativeCommand';
-        command = checkCmd(command);            %restrain motor commands to [0,1]
-        angleNew = getAngle(command) * 2;       %resulting angle is used for both eyes
+        % command = command + relativeCommand';     %two muscels
+        command(2) = command(2) + relativeCommand;  %one muscel
+        command = checkCmd(command);                %restrain motor commands to [0,1]
+        angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
 
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...

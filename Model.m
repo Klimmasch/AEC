@@ -308,15 +308,29 @@ classdef Model < handle
             figure;
             hold on;
             grid on;
-            plot(this.l12_weights(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 3), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 5), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 7), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 3), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 5), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 7), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('\Sigma \midweights\mid', 'FontSize', 12);
             legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}');
             title('Model weights')
-            plotpath = sprintf('%s/weights', savePath);
+            plotpath = sprintf('%s/weightsL1', savePath);
+            saveas(gcf, plotpath, 'png');
+
+            figure;
+            hold on;
+            grid on;
+            plot(this.l12_weights(:, 2), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 4), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 6), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+            plot(this.l12_weights(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('\Sigma weights^{2}', 'FontSize', 12);
+            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}');
+            title('Model weights')
+            plotpath = sprintf('%s/weightsL2', savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Reward
@@ -328,7 +342,7 @@ classdef Model < handle
                  - this.lambdaP1 * this.l12_weights(:, 3), ...
                  - this.lambdaV * this.l12_weights(:, 1), ...
                  - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
-            area(r);
+            area(r, 'LineStyle','none');
             % TODO: function is delayed by 10 iteration steps
             % plot(this.reward_hist, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);

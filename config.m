@@ -64,15 +64,16 @@ continuous = uint8(1);              %indicates if the policy is discrete or cont
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous};
 
 interval = 10;                      %period to change a new environment for the eye | origin 10
-lambdaMuscleFB = 1;                 %factor of musscle activity feedback to RL feature vector
+lambdaMuscleFB = 0.948;             %factor of muscle activity feedback to RL feature vector
+                                    %Proportion (abs MF/feature) | 1% = 0.948 | 5% = 4.524 | 10% = 9.048 | 20% = 18.096 | 30% = 27.145 | 50% = 45.241
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
-lambdaMet = 0.6;                      %metabolic costs factor
-lambdaRec = 1;                      %reconstruction error factor
-lambdaV = 0;                        %value networks input->output weights factor | L1 norm 0.1 | L2 norm 0.04
-lambdaP1 = 0;                       %policy networks input->hidden weights factor | L1 norm 0.1 | L2 norm 3.2
-lambdaP2 = 0;                       %policy networks hidden->output weights factor | L1 norm 1.2 | L2 norm 430.8
+lambdaRec = 7.05;                   %reconstruction error factor
+lambdaMet = 0.22;                   %metabolic costs factor
+lambdaV = 0.008;                    %value networks input->output weights factor | L1 norm 0.008 | L2 norm 0.051
+lambdaP1 = 0.002;                   %policy networks input->hidden weights factor | L1 norm 0.002 | L2 norm 0.05
+lambdaP2 = 0.872;                   %policy networks hidden->output weights factor | L1 norm 0.872 | L2 norm 24.284
 PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, interval, lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
