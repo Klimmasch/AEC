@@ -20,6 +20,12 @@ sparseCodingType = 'nonhomeo';
 %               1 = do it
 plotNsave = uint8(1);
 
+% Testing flag
+% Whether the testing procedure shall be executed in the end
+% testIt:   0 = don't do it
+%           1 = do it
+testIt = uint8(0);
+
 % Save model and conduct testing every saveInterval training iterations (+1)
 saveInterval = 1000;
 if (trainTime < saveInterval)
@@ -255,10 +261,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
         %Compute desired vergence command, disparity and vergence error
-        fixDepth = (0.5 * baseline) / tand(angleNew / 2);
-        angleDes = 2 * atand(baseline / (2 * objDist));                             %desired vergence [deg]
-        anglerr = angleDes - angleNew;                                              %vergence error [deg]
-        disparity = 2 * f * tan((angleDes * pi / 180 - angleNew * pi / 180) / 2);   %current disp [px]
+        fixDepth = (baseline / 2) / tand(angleNew / 2);
+        angleDes = 2 * atand(baseline / (2 * objDist)); %desired vergence [deg]
+        anglerr = angleDes - angleNew;                  %vergence error [deg]
+        disparity = 2 * f * tand(anglerr / 2);          %current disp [px]
 
         %save them
         model.Z(t) = objDist;
@@ -293,8 +299,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.l12_weights(t, 8) = sum(sum(model.rlmodel.CActor.wn_ji .^ 2));
     end
 
-    sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error = %.3g', ...
-            t, command(1), command(2), angleNew, errorTotal, anglerr)
+    sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
+            t, command(1), command(2), angleNew, errorTotal, model.vergerr_hist(t - model.interval + 1 : t))
 
     % Display per cent completed of training and save model
     if (~mod(t, saveInterval))
@@ -330,7 +336,10 @@ if (plotNsave)
 end
 
 %%% Testing procedure
-%%% TODO: implement function or script call here
+if (testIt)
+    TestTrial(model, randomizationSeed, fileDescription, savePath);
+end
+
 end
 
 %%% Saturation function that keeps motor commands in [0, 1]

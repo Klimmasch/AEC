@@ -29,9 +29,9 @@ classdef CActorG < handle
             obj.w_init_range = PARAM{4};
             obj.type_hidden = PARAM{5};
             obj.type_output = PARAM{6};
-            obj.wn_ji = zeros((obj.input_dim)*obj.hidden_dim + (obj.hidden_dim)*obj.output_dim, 1);
-            obj.wp_ji = (2*rand(obj.hidden_dim, obj.input_dim)-1) * obj.w_init_range; %*0.15;
-            obj.wp_kj = (2*rand(obj.output_dim, obj.hidden_dim)-1) * obj.w_init_range; %*0.22;
+            obj.wn_ji = zeros((obj.input_dim) * obj.hidden_dim + (obj.hidden_dim) * obj.output_dim, 1);
+            obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1);
+            obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2);
             obj.param_num = 7;
             obj.regulizer = 0.005;
             obj.variance = PARAM{7};

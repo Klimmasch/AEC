@@ -315,7 +315,7 @@ classdef Model < handle
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('\Sigma \midweights\mid', 'FontSize', 12);
             legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}');
-            title('Model weights')
+            title('Model weights (L1)')
             plotpath = sprintf('%s/weightsL1', savePath);
             saveas(gcf, plotpath, 'png');
 
@@ -329,7 +329,7 @@ classdef Model < handle
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('\Sigma weights^{2}', 'FontSize', 12);
             legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}');
-            title('Model weights')
+            title('Model weights (L2)')
             plotpath = sprintf('%s/weightsL2', savePath);
             saveas(gcf, plotpath, 'png');
 
