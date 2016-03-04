@@ -6,11 +6,11 @@
 %           and metabolic costs
 % No learning occures during this trial and the results are saved in a
 % specified folder (under ./results/) in the file modelTestData.mat.
-function TestTrial(model, randomizationSeed, fileDescription)
+function TestTrial(model, randomizationSeed, fileDescription, savePathMo)
 
-    numberTrials = 1000;
+    numberTrials = 1;
     modelTest = ModelTestData(numberTrials * model.interval, model.interval);
-    folder = './testResults/';
+    folder = strcat(savePathMo, './testResults/');
     savePath = sprintf('TestedModel_%s_%s', datestr(now), fileDescription);
     mkdir(folder, savePath);
     savePath = strcat(folder, savePath);
@@ -213,15 +213,17 @@ function TestTrial(model, randomizationSeed, fileDescription)
             % modelTest.reward_hist(t) = rewardFunction;
             modelTest.metCost_hist(t) = metCost;
 
-            sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error = %.3g', ...
-                    t, command(1), command(2), angleNew, errorTotal, anglerr)
+            % sprintf('Testing Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error = %.3g', ...
+            %         t, command(1), command(2), angleNew, errorTotal, anglerr)
 
             t = t + 1;
         end
+        sprintf('Testing Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nVergence Error = [%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]\nRec Error = %.3g', ...
+                t - 1, command(1), command(2), angleNew, modelTest.vergerr_hist(t - modelTest.interval : t - 1), errorTotal)
     end
     elapsedTime = toc;
     sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
-        elapsedTime / 3600, elapsedTime / 60, elapsedTime, (model.trainTime * numberTrials) / elapsedTime)
+            elapsedTime / 3600, elapsedTime / 60, elapsedTime, t - 1 / elapsedTime)
 
     % Save and plot results data
     save(strcat(savePath, '/modelTestData'), 'modelTest');
