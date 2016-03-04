@@ -213,13 +213,10 @@ function TestTrial(model, randomizationSeed, fileDescription, savePathMo)
             % modelTest.reward_hist(t) = rewardFunction;
             modelTest.metCost_hist(t) = metCost;
 
-            % sprintf('Testing Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error = %.3g', ...
-            %         t, command(1), command(2), angleNew, errorTotal, anglerr)
-
             t = t + 1;
         end
-        sprintf('Testing Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nVergence Error = [%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]\nRec Error = %.3g', ...
-                t - 1, command(1), command(2), angleNew, modelTest.vergerr_hist(t - modelTest.interval : t - 1), errorTotal)
+        sprintf('Testing Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
+            t, command(1), command(2), angleNew, errorTotal, modelTest.vergerr_hist(t - modelTest.interval : t - 1))
     end
     elapsedTime = toc;
     sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...

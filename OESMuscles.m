@@ -281,10 +281,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.l12_weights(t, 8) = sum(sum(model.rlmodel.CActor.wn_ji .^ 2));
     end
 
-    % sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error = %.3g', ...
-    %         t, command(1), command(2), angleNew, errorTotal, anglerr)
-    sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nVergence Error = [%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]\nRec Error = %.3g', ...
-            t, command(1), command(2), angleNew, model.vergerr_hist(t - model.interval + 1 : t), errorTotal)
+    sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
+            t, command(1), command(2), angleNew, errorTotal, model.vergerr_hist(t - model.interval + 1 : t))
 
     % Display per cent completed of training and save model
     if (~mod(t, saveInterval))
