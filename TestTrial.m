@@ -10,7 +10,7 @@ function TestTrial(model, randomizationSeed, fileDescription)
 
     numberTrials = 1000;
     modelTest = ModelTestData(numberTrials * model.interval, model.interval);
-    folder = './results/';
+    folder = './testResults/';
     savePath = sprintf('TestedModel_%s_%s', datestr(now), fileDescription);
     mkdir(folder, savePath);
     savePath = strcat(folder, savePath);
@@ -31,7 +31,7 @@ function TestTrial(model, randomizationSeed, fileDescription)
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
-%     command = [0, 0];   %initialization of muscle commands
+    % command = [0, 0];   %initialization of muscle commands
 
     % Image process variables
     patchSize = 8;
@@ -93,7 +93,7 @@ function TestTrial(model, randomizationSeed, fileDescription)
         objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
         % reset muscle activities to random values
         command = [0, 0];
-        command(2) = muscleInitMin + (muscleInitMax - muscleInitMin) * rand(1,1); %only for one muscle
+        command(2) = muscleInitMin + (muscleInitMax - muscleInitMin) * rand(1, 1); %only for one muscle
         angleNew = getAngle(command) * 2;
 
         %generate two new pictures
@@ -132,7 +132,7 @@ function TestTrial(model, randomizationSeed, fileDescription)
             %%% Feedback
             % Absolute command feedback # concatination
             feature = [feature; command(2) * model.lambdaMuscleFB];
-%             feature = [feature; command' * 0.01]; % just to make it how I trained it before ('ChongsParams')
+            % feature = [feature; command' * 0.01]; % just to make it how I trained it before ('ChongsParams')
             % Relative command feedback # concatination
             % if (iter2 > 1)
             %     feature = [feature; model.relCmd_hist(t-1) * model.lambdaMuscleFB];
@@ -173,11 +173,11 @@ function TestTrial(model, randomizationSeed, fileDescription)
 
 
             % generation of motor command without learning and noise
-%             [relativeCommand, ~, ~] = model.rlmodel.stepTrain(feature, rewardFunction, 0);
+            % [relativeCommand, ~, ~] = model.rlmodel.stepTrain(feature, rewardFunction, 0);
             relativeCommand = model.rlmodel.softmaxAct(feature);
 
-            command = command + relativeCommand';     %two muscels
-%             command(2) = command(2) + relativeCommand;  %one muscel
+            % command = command + relativeCommand';     %two muscels
+            command(2) = command(2) + relativeCommand;  %one muscel
             command = checkCmd(command);                %restrain motor commands to [0,1]
             angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
 
@@ -223,9 +223,8 @@ function TestTrial(model, randomizationSeed, fileDescription)
     sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
         elapsedTime / 3600, elapsedTime / 60, elapsedTime, (model.trainTime * numberTrials) / elapsedTime)
 
-    % Save results data
+    % Save and plot results data
     save(strcat(savePath, '/modelTestData'), 'modelTest');
-    % Plot and save result graphs
     modelTest.testPlotSave(savePath);
 end
 

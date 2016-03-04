@@ -20,6 +20,12 @@ sparseCodingType = 'nonhomeo';
 %               1 = do it
 plotNsave = uint8(1);
 
+% Testing flag
+% Whether the testing procedure shall be executed in the end
+% testIt:   0 = don't do it
+%           1 = do it
+testIt = uint8(0);
+
 % Save model and conduct testing every saveInterval training iterations (+1)
 saveInterval = 1000;
 if (trainTime < saveInterval)
@@ -312,7 +318,10 @@ if (plotNsave)
 end
 
 %%% Testing procedure
-%%% TODO: implement function or script call here
+if (testIt)
+    TestTrial(model, randomizationSeed, fileDescription);
+end
+
 end
 
 %%% Saturation function that keeps motor commands in [0, 1]
