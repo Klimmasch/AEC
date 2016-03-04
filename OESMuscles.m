@@ -139,10 +139,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
     angleNew = getAngle(command) * 2;
     
     % for training of basis functions:
-    b = 1;      % diversity or variance of laplacian dist.
-    range = 5;  % maximum vergence is 5 degree
-    angleDes = 2*atand(baseline/(2*objDist));
-    angleNew = angleDes + trancLaplacian(b, range);
+%    b = 1;      % diversity or variance of laplacian dist.
+%    range = 5;  % maximum vergence is 5 degree
+%    angleDes = 2*atand(baseline/(2*objDist));
+%    angleNew = angleDes + truncLaplacian(b, range);
     
     [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                    currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -239,11 +239,12 @@ for iter1 = 1 : (model.trainTime / model.interval)
         
         % in case you want to train basisfunctions tuned to a specific
         % disparity:
-        angleDes = 2 * atand(baseline / (2 * objDist));                             %desired vergence [deg]
-        angleNew = angleDes + truncLaplacian(b,range);
+%        angleDes = 2 * atand(baseline / (2 * objDist));                             %desired vergence [deg]
+%        angleNew = angleDes + truncLaplacian(b,range);
 %         testLP = [];
 %         for test = 1:10000
 %             testLP = [testLP truncLaplacian(b,range)];
+
 %         end
 % 
 %         figure; hold on; histogram(testLP); hold off;
