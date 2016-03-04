@@ -93,13 +93,12 @@ nTextures = length(texture);
 % Object distance to eyes [m]
 objDistMin = 0.5;
 objDistMax = 2;
-% objDist = objDistMax; %object init position
+
+muscleInitMin = 0.00807;    %minimal initial muscle innervation
+muscleInitMax = 0.07186;    %maximal --"--
 
 degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
 metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
-
-command = [0, 0];
-t = 0;
 
 %%% Helper function that maps muscle activities to resulting angle
 function [angle] = getAngle(command)
@@ -114,6 +113,7 @@ function [tmpMetCost] = getMetCost(command)
 end
 
 %%% Main execution loop
+t = 0;
 tic % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
 
@@ -126,7 +126,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % reset muscle activities to random values
     % initialization for muscle in between borders of desired actvity
     % i.e. min and max stimulus distance
-    command(2) = 0.00807 + (0.07186 - 0.00807) * rand(1,1);
+    command = [0, 0];
+    command(2) = muscleInitMin + (muscleInitMax - muscleInitMin) * rand(1,1); %only for one muscle
     % command(2) = 0.1 * rand(1, 1); % random policy
 
     angleNew = getAngle(command) * 2;

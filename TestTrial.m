@@ -32,7 +32,7 @@ function TestTrial(model, randomizationSeed, fileDescription)
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
-    command = [0, 0];   %initialization of muscle commands
+%     command = [0, 0];   %initialization of muscle commands
 
     % Image process variables
     patchSize = 8;
@@ -93,6 +93,7 @@ function TestTrial(model, randomizationSeed, fileDescription)
         % random depth
         objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
         % reset muscle activities to random values
+        command = [0, 0];
         command(2) = muscleInitMin + (muscleInitMax - muscleInitMin) * rand(1,1); %only for one muscle
         angleNew = getAngle(command) * 2;
 
@@ -113,8 +114,8 @@ function TestTrial(model, randomizationSeed, fileDescription)
             imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
             imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-            % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
-            % imwrite(anaglyph, 'anaglyph.png');
+            anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
+            imwrite(anaglyph, 'anaglyph.png');
 
             % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
             [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -132,6 +133,7 @@ function TestTrial(model, randomizationSeed, fileDescription)
             %%% Feedback
             % Absolute command feedback # concatination
             feature = [feature; command(2) * model.lambdaMuscleFB];
+%             feature = [feature; command' * 0.01]; % just to make it how I trained it before ('ChongsParams')
             % Relative command feedback # concatination
             % if (iter2 > 1)
             %     feature = [feature; model.relCmd_hist(t-1) * model.lambdaMuscleFB];
@@ -171,11 +173,12 @@ function TestTrial(model, randomizationSeed, fileDescription)
             %                  - model.lambdaP2 * (sum(sum(model.rlmodel.CActor.wp_kj .^ 2)));
 
 
-            % generation of motor command without learning
-            [relativeCommand, ~, ~] = model.rlmodel.stepTrain(feature, rewardFunction, 0);
+            % generation of motor command without learning and noise
+%             [relativeCommand, ~, ~] = model.rlmodel.stepTrain(feature, rewardFunction, 0);
+            relativeCommand = model.rlmodel.softmaxAct(feature);
 
-            % command = command + relativeCommand';     %two muscels
-            command(2) = command(2) + relativeCommand;  %one muscel
+            command = command + relativeCommand';     %two muscels
+%             command(2) = command(2) + relativeCommand;  %one muscel
             command = checkCmd(command);                %restrain motor commands to [0,1]
             angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
 
@@ -205,7 +208,8 @@ function TestTrial(model, randomizationSeed, fileDescription)
             modelTest.recerr_hist(t, :) = [errorLarge; errorSmall];
             modelTest.verge_actual(t) = angleNew;
             modelTest.verge_desired(t) = angleDes * 180 / pi;
-            modelTest.relCmd_hist(t, 2) = relativeCommand;
+%             modelTest.relCmd_hist(t, 2) = relativeCommand;          %one muscle
+            modelTest.relCmd_hist(t, :) = relativeCommand;          %two muscles
             modelTest.cmd_hist(t, :) = command;
             % modelTest.reward_hist(t) = rewardFunction;
             modelTest.metCost_hist(t) = metCost;
