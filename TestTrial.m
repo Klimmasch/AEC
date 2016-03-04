@@ -6,7 +6,6 @@
 %           and metabolic costs
 % No learning occures during this trial and the results are saved in a
 % specified folder (under ./results/) in the file modelTestData.mat.
-
 function TestTrial(model, randomizationSeed, fileDescription)
 
     numberTrials = 1000;
@@ -192,10 +191,10 @@ function TestTrial(model, randomizationSeed, fileDescription)
             %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
             %Compute desired vergence command, disparity and vergence error
-            fixDepth = (0.5 * baseline) / tand(angleNew / 2);
-            angleDes = 2 * atand(baseline / (2 * objDist));                             %desired vergence [deg]
-            anglerr = angleDes - angleNew;                                              %vergence error [deg]
-            disparity = 2 * f * tan((angleDes * pi / 180 - angleNew * pi / 180) / 2);   %current disp [px]
+            fixDepth = (baseline / 2) / tand(angleNew / 2);
+            angleDes = 2 * atand(baseline / (2 * objDist)); %desired vergence [deg]
+            anglerr = angleDes - angleNew;                  %vergence error [deg]
+            disparity = 2 * f * tand(anglerr / 2);          %current disp [px]
 
             %save them
             modelTest.Z(t) = objDist;
@@ -204,7 +203,7 @@ function TestTrial(model, randomizationSeed, fileDescription)
             modelTest.vergerr_hist(t) = anglerr;
             modelTest.recerr_hist(t, :) = [errorLarge; errorSmall];
             modelTest.verge_actual(t) = angleNew;
-            modelTest.verge_desired(t) = angleDes * 180 / pi;
+            modelTest.verge_desired(t) = angleDes;
             modelTest.relCmd_hist(t, 2) = relativeCommand;
             modelTest.cmd_hist(t, :) = command;
             % modelTest.reward_hist(t) = rewardFunction;

@@ -236,10 +236,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
         %Compute desired vergence command, disparity and vergence error
-        fixDepth = (0.5 * baseline) / tand(angleNew / 2);
-        angleDes = 2 * atand(baseline / (2 * objDist));                             %desired vergence [deg]
-        anglerr = angleDes - angleNew;                                              %vergence error [deg]
-        disparity = 2 * f * tan((angleDes * pi / 180 - angleNew * pi / 180) / 2);   %current disp [px]
+        fixDepth = (baseline / 2) / tand(angleNew / 2);
+        angleDes = 2 * atand(baseline / (2 * objDist)); %desired vergence [deg]
+        anglerr = angleDes - angleNew;                  %vergence error [deg]
+        disparity = 2 * f * tand(anglerr / 2);          %current disp [px]
 
         %save them
         model.Z(t) = objDist;
