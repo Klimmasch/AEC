@@ -45,8 +45,8 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     randomizationSeed, ...
                     fileDescription);
 % folder = '~/projects/RESULTS/';
-% folder = './results/';
-folder = '../results/';
+folder = './results/';
+% folder = '../results/';
 mkdir(folder, savePath);
 savePath = strcat(folder, savePath);
 
@@ -131,6 +131,13 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % command(2) = 0.1 * rand(1, 1); % random policy
 
     angleNew = getAngle(command) * 2;
+    
+    % for training of basis functions:
+    b = 1;      % diversity or variance of laplacian dist.
+    range = 5;  % maximum vergence is 5 degree
+    angleDes = 2*atand(baseline/(2*objDist));
+    angleNew = angleDes + trancLaplacian(b, range);
+    
     [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                    currentTexture, currentTexture, objDist, objDist, angleNew));
 
@@ -223,7 +230,18 @@ for iter1 = 1 : (model.trainTime / model.interval)
         command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
         angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
-
+        
+        % in case you want to train basisfunctions tuned to a specific
+        % disparity:
+        angleDes = 2 * atand(baseline / (2 * objDist));                             %desired vergence [deg]
+        angleNew = angleDes + truncLaplacian(b,range);
+%         testLP = [];
+%         for test = 1:10000
+%             testLP = [testLP truncLaplacian(b,range)];
+%         end
+% 
+%         figure; hold on; histogram(testLP); hold off;
+        
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -373,4 +391,23 @@ function patchesNoOv = preprocessImageNoOv(img, fovea, downSampling, patchSize)
     % cut patches and store them as col vectors
     % no overlapping patches (for display)
     patchesNoOv = im2col(img, [patchSize patchSize], 'distinct');
+end
+
+%generation of random vergence angles according to truncated Laplace
+%distribution
+function l = truncLaplacian(diversity, range)
+%     see wikipedia for the generation of random numbers according to the
+%     LaPlace distribution via the inversion method
+    r = rand;
+    
+    switch r < 0.5
+        case 1
+            l = 1/diversity*log(2*r);
+        case 0
+            l = -1/diversity*log(2*(1-r));
+    end
+    
+    if abs(l) > range
+        l = 0;
+    end
 end

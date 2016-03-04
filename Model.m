@@ -287,13 +287,13 @@ classdef Model < handle
             plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
-            title('Absolute Muscel Commands');
+            title('Absolute Muscle Commands');
 
             subplot(3, 1, 2);
             plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
-            title('Relative Muscel Commands');
+            title('Relative Muscle Commands');
 
             subplot(3, 1, 3);
             plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
@@ -301,7 +301,7 @@ classdef Model < handle
             ylabel('Value', 'FontSize', 12);
             title('Metabolic Costs');
 
-            plotpath = sprintf('%s/muscelGraphs', savePath);
+            plotpath = sprintf('%s/muscleGraphs', savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Weights
