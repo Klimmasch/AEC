@@ -10,8 +10,6 @@ function TestTrial(model, randomizationSeed, fileDescription, savePathMo)
 
 % TODO: range of disparity ueberpruefen auf relCmd!!
 
-function TestTrial(model, randomizationSeed, fileDescription)
-
     numberTrials = 100;
     modelTest = ModelTestData(numberTrials * model.interval, model.interval);
     folder = strcat(savePathMo, './testResults/');
@@ -274,15 +272,15 @@ end
 %This function goes through all object distances and averages the motor command 
 % and reconstruction error for different vergence errors.
 %TODO what about muscle innervations
-function [avgCmd, avgRecErr] = averageForVergenceErrors(model, objectRange, vergRange)
-    avgCmd = [];
-    avgVergErr = [];
-    focalLength = 257.34;        	%focal length [px]
-    baseline = 0.056;   		%interocular distance (baseline)
-    for objDist = objectRange(1):0.1:objectRange(2)
-        angleDes = 2 * atand(baseline / (2 * objDist));
-        for verg = vergRange(1):0.1:vergeRange(2)
-            relCmd = model.rlmodel.actHard;
-        end
-    end
-end
+% function [avgCmd, avgRecErr] = averageForVergenceErrors(model, objectRange, vergRange)
+%     avgCmd = [];
+%     avgVergErr = [];
+%     focalLength = 257.34;        	%focal length [px]
+%     baseline = 0.056;   		%interocular distance (baseline)
+%     for objDist = objectRange(1):0.1:objectRange(2)
+%         angleDes = 2 * atand(baseline / (2 * objDist));
+%         for verg = vergRange(1):0.1:vergeRange(2)
+%             relCmd = model.rlmodel.actHard;
+%         end
+%     end
+% end
