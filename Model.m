@@ -359,43 +359,75 @@ classdef Model < handle
             % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
-            % baseline = 0.056;
-            % desired_angle_min = 2 * atand(baseline / (2 * 2));
-            % desired_angle_max = 2 * atand(baseline / (2 * 0.5));
-            % angle_min = results_deg(1,1) * 2;
-            % angle_max = results_deg(11,1) * 2;
-            % verg_err_min = desired_angle_min - angle_max;
-            % verg_err_max = desired_angle_max - angle_min;
-            % verg_err_scope = [verg_err_min : 0.4 : verg_err_max];
-            % vpos = verg_err_scope(verg_err_scope >= 0);
-            % vneg = verg_err_scope(verg_err_scope < 0);
+            degrees = load('Degrees.mat');
+            baseline = 0.056;
+            desiredAngleMin = atand(baseline / (2 * 2));
+            desiredAngleMax = atand(baseline / (2 * 0.5));
+            angleMin = degrees.results_deg(1, 1);
+            angleMax = degrees.results_deg(11, 1);
+            vergErrMin = desiredAngleMin - angleMax;
+            vergErrMax = desiredAngleMax - angleMin;
 
-            % actual_response[model.vergerr_hist, model.relCmd_hist];
-            % % http://stackoverflow.com/questions/29845193/merge-similar-points-in-point-cloud-by-its-mean
-            % % histcount?
-            % % sortrows
+            resolution = 10001;
+            approx = spline(1:11, degrees.results_deg(:, 1));
 
-            % resolution = 1001;
-            % approx = spline(1:11, results_deg(:, 1));
+            xValPos = ppval(approx, 1:0.001:11)';
+            yValPos = linspace(0, 1, resolution)';
 
-            % xValPos = ppval(approx, 1:0.01:11)';
-            % yValPos = linspace(0, 1, resolution)';
+            xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
+            yValNeg = linspace(-1, 0, resolution)';
 
-            % xValNeg = flipud(ppval(approx, 1:0.01:11)' * -1);
-            % yValNeg = linspace(-1, 0, resolution)';
+            mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+            dmf = diff(mf(1:2, 1)); % delta in angle
+            indZero = find(mf(:, 2) == 0); % MF == 0_index
+            indMaxFix = find(mf(:, 1) <= desiredAngleMin + dmf & mf(:, 1) >= desiredAngleMin - dmf); % MF(desiredAngleMin)_index
+            indMinFix = find(mf(:, 1) <= desiredAngleMax + dmf & mf(:, 1) >= desiredAngleMax - dmf); % MF(desiredAngleMax)_index
 
-            % perfect_response = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+            % perfect_response := [max_fixation_x, max_fixation_x, min_fixation_x, min_fixation_y]
+            % x = vergenceError, y = deltaMuscelForce
+            perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
+                                     (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
+                                     (mf(indMaxFix, 1) - flipud(mf(indZero : indMaxFix - 1, 1))) * 2, ...
+                                     (mf(indMaxFix, 2) - flipud(mf(indZero : indMaxFix - 1, 2)))];
 
-            % figure;
-            % hold on;
-            % grid on;
-            % plot(perfect_response(:, 1), perfect_response(:, 2), 'LineWidth', 1.3);
-            % xlabel(strcat('Vergence Error \in', sprintf('[%.2g, %.2g]', verg_err_min, verg_err_max)), 'FontSize', 12);
-            % ylabel('\Delta MF \in[-1, 1]', 'FontSize', 12);
-            % % legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
-            % title('\Delta MF(Verg_{error})');
-            % plotpath = sprintf('%s/deltaMFasFktVerErr', savePath);
-            % saveas(gcf, plotpath, 'png');
+            perfectResponseMinFix = [(mf(indMinFix, 1) - flipud(mf(indMinFix : end, 1))) * 2, ...
+                                     (mf(indMinFix, 2) - flipud(mf(indMinFix : end, 2))); ...
+                                     (mf(indMinFix, 1) - flipud(mf(indZero : indMinFix - 1, 1))) * 2, ...
+                                     (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
+
+            perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
+
+            obsWin = 1000;  % observation Window, i.e. plot statistics over last #obsWin iterations
+            nVal = 100;     % #bins of statistics
+            actualResponse = [this.vergerr_hist, this.relCmd_hist];
+            tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
+            deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+            tmp = zeros(nVal, 3);
+
+            for i = 1:nVal
+                tmp(i, 1) = (tmpRsp(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
+                tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+                tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                            & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+            end
+            actualResponseStat = tmp(find(tmp(:, 2)), :);                   % drop zero elements
+            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = [];    % drop NaN elements
+
+            figure;
+            hold on;
+            grid on;
+            plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+            plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+            errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
+            plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            axis([-6, 6, -0.07, 0.07]);
+            xlabel('Vergence Error [deg]', 'FontSize', 12);
+            ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
+            legend('perfect response (fixDist_{max})', 'perfect response (fixDist_{min})', 'actual response');
+            title(strcat('\Delta MF(Vergence_{error}) after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
+            plotpath = sprintf('%s/deltaMFasFktVerErr', savePath);
+            saveas(gcf, plotpath, 'png');
         end
 
         % DEPRECATED
