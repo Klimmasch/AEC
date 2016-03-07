@@ -51,8 +51,8 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     randomizationSeed, ...
                     fileDescription);
 % folder = '~/projects/RESULTS/';
-folder = './results/';
-% folder = '../results/';
+% folder = './results/';
+folder = '../results/';
 mkdir(folder, savePath);
 savePath = strcat(folder, savePath);
 
@@ -137,13 +137,13 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % command(2) = 0.1 * rand(1, 1); % random policy
 
     angleNew = getAngle(command) * 2;
-    
+
     % for training of basis functions:
 %    b = 1;      % diversity or variance of laplacian dist.
 %    range = 5;  % maximum vergence is 5 degree
 %    angleDes = 2*atand(baseline/(2*objDist));
 %    angleNew = angleDes + truncLaplacian(b, range);
-    
+
     [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                    currentTexture, currentTexture, objDist, objDist, angleNew));
 
@@ -229,26 +229,28 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.scmodel_Large.stepTrain(currentView{1});
         model.scmodel_Small.stepTrain(currentView{2});
         % RL model
-        [relativeCommand, paramsC, paramsA] = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
+        relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
         % command = command + relativeCommand';     %two muscels
         command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
         angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
-        
+
         % in case you want to train basisfunctions tuned to a specific
         % disparity:
-%        angleDes = 2 * atand(baseline / (2 * objDist));                             %desired vergence [deg]
-%        angleNew = angleDes + truncLaplacian(b,range);
-%         testLP = [];
-%         for test = 1:10000
-%             testLP = [testLP truncLaplacian(b,range)];
+        % angleDes = 2 * atand(baseline / (2 * objDist)); %desired vergence [deg]
+        % angleNew = angleDes + truncLaplacian(b,range);
+        % testLP = [];
+        % for test = 1:10000
+        %     testLP = [testLP truncLaplacian(b,range)];
 
-%         end
-% 
-%         figure; hold on; histogram(testLP); hold off;
-        
+        % end
+        % figure;
+        % hold on;
+        % histogram(testLP);
+        % hold off;
+
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -280,24 +282,16 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.reward_hist(t) = rewardFunction;
         model.feature_hist(t, :) = feature;
         model.metCost_hist(t) = metCost;
-        model.td_hist(t) = paramsC(2);
-        model.g_hist(t) = paramsA(7);
-        model.AC_norm_weights(t, 1) = paramsC(1); %norm(v_ji)
-        model.AC_norm_weights(t, 2) = paramsA(1); %norm(wp_ji)
-        model.AC_norm_weights(t, 3) = paramsA(2); %norm(dwp)
-        model.AC_norm_weights(t, 4) = paramsA(3); %norm(wp_kj)
-        model.AC_norm_weights(t, 5) = paramsA(4); %norm(dvp)
-        model.AC_norm_weights(t, 6) = paramsA(5); %norm(wn_ij)
-        model.AC_norm_weights(t, 7) = paramsA(6); %psi' * this.wn_ji
-        % TODO: outsource to rlmodel crit and act
-        model.l12_weights(t, 1) = sum(sum(abs(model.rlmodel.CCritic.v_ji)));
-        model.l12_weights(t, 2) = sum(sum(model.rlmodel.CCritic.v_ji .^ 2));
-        model.l12_weights(t, 3) = sum(sum(abs(model.rlmodel.CActor.wp_ji)));
-        model.l12_weights(t, 4) = sum(sum(model.rlmodel.CActor.wp_ji .^ 2));
-        model.l12_weights(t, 5) = sum(sum(abs(model.rlmodel.CActor.wp_kj)));
-        model.l12_weights(t, 6) = sum(sum(model.rlmodel.CActor.wp_kj .^ 2));
-        model.l12_weights(t, 7) = sum(sum(abs(model.rlmodel.CActor.wn_ji)));
-        model.l12_weights(t, 8) = sum(sum(model.rlmodel.CActor.wn_ji .^ 2));
+        model.td_hist(t) = model.rlmodel.CCritic.delta;
+        model.g_hist(t) = model.rlmodel.CActor.params(7);
+        model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
+        model.l12_weights(t, 2) = model.rlmodel.CCritic.params(2);
+        model.l12_weights(t, 3) = model.rlmodel.CActor.params(1);
+        model.l12_weights(t, 4) = model.rlmodel.CActor.params(2);
+        model.l12_weights(t, 5) = model.rlmodel.CActor.params(3);
+        model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
+        model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
+        model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
     end
 
     sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
@@ -409,14 +403,14 @@ function l = truncLaplacian(diversity, range)
 %     see wikipedia for the generation of random numbers according to the
 %     LaPlace distribution via the inversion method
     r = rand;
-    
+
     switch r < 0.5
         case 1
             l = 1/diversity*log(2*r);
         case 0
             l = -1/diversity*log(2*(1-r));
     end
-    
+
     if abs(l) > range
         l = 0;
     end

@@ -69,11 +69,11 @@ lambdaMuscleFB = 0.948;                 %factor of muscle activity feedback to R
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
-lambdaRec = 7.05;                       %reconstruction error factor
-lambdaMet = 0.22;                       %metabolic costs factor
-lambdaV = 0.008;                        %value networks input->output weights factor | L1 norm 0.008 | L2 norm 0.051
-lambdaP1 = 0.002;                       %policy networks input->hidden weights factor | L1 norm 0.002 | L2 norm 0.05
-lambdaP2 = 0.872;                       %policy networks hidden->output weights factor | L1 norm 0.872 | L2 norm 24.284
+lambdaRec = 4.938;                      %reconstruction error factor | 7.05
+lambdaMet = 0.201;                      %metabolic costs factor | 0.22
+lambdaV = 8.5062e-04;                   %value networks input->output weights factor | L1 norm 0.008 | 8.5062e-04 | L2 norm 0.051 | 8.6073e-04
+lambdaP1 = 0.023;                       %policy networks input->hidden weights factor | L1 norm 0.002 | 0.023 | L2 norm 0.05 | 2.619
+lambdaP2 = 0.382;                       %policy networks hidden->output weights factor | L1 norm 0.872 | 0.382 | L2 norm 24.284 | 6.93
 PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, interval, lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};

@@ -179,9 +179,9 @@ classdef ReinforcementLearningCont < handle
         %%% parameters is the intermedia values keeped for debug
         %%% En is the entropy of policy
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function [command, paramsC, paramsA] = stepTrain(this, feature, reward, flag_update)
-            [delta, paramsC] = this.CCritic.train(feature, reward, flag_update);
-            [command, paramsA] = this.CActor.train(feature, delta, flag_update);
+        function command = stepTrain(this, feature, reward, flag_update)
+            this.CCritic.train(feature, reward, flag_update);
+            command = this.CActor.train(feature, this.CCritic.delta, flag_update);
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

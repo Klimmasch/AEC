@@ -4,39 +4,38 @@ classdef Model < handle
         scmodel_Small;      %SparseCoding class
         rlmodel;            %ReinforcementLearning class
 
-        interval;           %period to change a new environment for the eye
+        interval;           %period of eye stimulus change
 
-        learnedFile;        %file with config
-        textureFile;        %texture file that was used
-        trainTime;          %train
+        learnedFile;        %previously learned model
+        textureFile;        %config file containing texture stimulus list
+        trainTime;          %# training iterations
         simulated_time;     %how long did the model take to be learned (min)
-        sparseCodingType;   %type of sparse coding
 
+        sparseCodingType;   %type of sparse coding
         stopSC = 0;
         SCInterval = 1;
 
-        lambdaMuscleFB;     %factor of musscle activity feedback to RL feature vector
-        lambdaMet;          %proportion of recErr and metCosts for reward function
+        lambdaMuscleFB;     %factor of muscle activity feedback to RL feature vector
+        lambdaMet;          %factor of metCosts for reward function
         lambdaRec;          %reconstruction error factor
-        lambdaV;            %value networks input->output weights factor | L1 norm 0.1 | L2 norm 0.04
-        lambdaP1;           %policy networks input->hidden weights factor | L1 norm 0.1 | L2 norm 3.2
-        lambdaP2;           %policy networks hidden->output weights factor | L1 norm 1.2 | L2 norm 430.8
+        lambdaV;            %value networks input->output weights factor
+        lambdaP1;           %policy networks input->hidden weights factor
+        lambdaP2;           %policy networks hidden->output weights factor
 
-        %model data
-        recerr_hist;        %history of rec error
-        disp_hist;          %history of disparity
-        vergerr_hist;       %history of vergence error
+        % Model data history
+        recerr_hist;        %reconstruction error [coarse scale, fine scale]
+        disp_hist;          %disparity
+        vergerr_hist;       %vergence error
         verge_actual;       %actual vergence angle
         verge_desired;      %desired vergence angle
         Z;                  %object depth
-        fixZ;               %depth of fixation
-        g_hist;             %history of nat gradient change
-        td_hist;            %history of td error
-        feature_hist;       %history of feature vector
-        cmd_hist;           %history of vergence commands
-        AC_norm_weights;    %history of norm of the weights of the actor and critic
-        l12_weights;        %history of L1/L2, i.e. sum abs, sum pow2 weights of the actor and critic
+        fixZ;               %fixation depth
+        g_hist;             %natural gradient change
+        td_hist;            %temporal difference (td) error
+        feature_hist;       %feature vector
+        cmd_hist;           %vergence commands
         relCmd_hist;        %relativ changes in motor commands
+        l12_weights;        %L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
         reward_hist;        %reward function
         metCost_hist;       %metabolic costs
     end
@@ -70,23 +69,21 @@ classdef Model < handle
                 obj.scmodel_Large = SparseCoding(PARAM{2}{1});      %coarse scale
                 obj.scmodel_Small = SparseCoding(PARAM{2}{2});      %fine scale
             end
-
             obj.stopSC = obj.trainTime;
 
-            obj.recerr_hist = zeros(obj.trainTime, 2);     %coarse and fine scale error
-            obj.disp_hist = zeros(obj.trainTime, 1);       %saved disparity values
-            obj.vergerr_hist = zeros(obj.trainTime, 1);    %saved vergence values
-            obj.verge_actual = zeros(obj.trainTime, 1);    %saved vergence values
-            obj.verge_desired = zeros(obj.trainTime, 1);   %saved vergence values
-            obj.Z = zeros(obj.trainTime, 1);               %saved object depth
-            obj.fixZ = zeros(obj.trainTime, 1);            %saved fixation depth
+            obj.recerr_hist = zeros(obj.trainTime, 2);
+            obj.disp_hist = zeros(obj.trainTime, 1);
+            obj.vergerr_hist = zeros(obj.trainTime, 1);
+            obj.verge_actual = zeros(obj.trainTime, 1);
+            obj.verge_desired = zeros(obj.trainTime, 1);
+            obj.Z = zeros(obj.trainTime, 1);
+            obj.fixZ = zeros(obj.trainTime, 1);
 
-            obj.g_hist = zeros(obj.trainTime, 1);          %history of nat gradient change
-            obj.td_hist = zeros(obj.trainTime, 1);         %history of td error
-            % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);    %history of feature vector ##!
-            obj.cmd_hist = zeros(obj.trainTime, 2);        %history of vergence commands
+            obj.g_hist = zeros(obj.trainTime, 1);
+            obj.td_hist = zeros(obj.trainTime, 1);
+            % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);
+            obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, 1);
-            obj.AC_norm_weights = zeros(obj.trainTime, 7);
             obj.l12_weights = zeros(obj.trainTime, 8);
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
@@ -100,7 +97,7 @@ classdef Model < handle
            %LARGE SCALE (downsampled version)
            imagesLarge = Images{1};
 
-            imPind = find(sum(imagesLarge .^ 2));  %find non-zero patches (columns)
+            imPind = find(sum(imagesLarge .^ 2)); %find non-zero patches (columns)
             if (isempty(imPind))
                 feature_L = zeros(this.scmodel_Large.Basis_num, 1);
                 reward_L = this.rlmodel.J;
@@ -113,7 +110,6 @@ classdef Model < handle
             Error_L = sum(sum(Error_L .^ 2)) / sum(sum(imagesLarge .^ 2));
 
             reward_L = -Error_L;
-            % feature_L = mean(Coef_L(:, imPind).^2, 2) * 1; %feature vector for large scale (*5), average activation, Eq. 3.1
             feature_L = mean(Coef_L(:, imPind) .^ 2, 2); %feature vector for large scale (*5), average activation, Eq. 3.1
 
             %SMALL SCALE
@@ -132,8 +128,7 @@ classdef Model < handle
             Error_S = sum(sum(Error_S .^ 2)) / sum(sum(imagesSmall .^ 2));
 
             reward_S = -Error_S;
-            % feature_S = mean(Coef_S(:, imPind).^2, 2)*1;  %feature vector for small scale
-            feature_S = mean(Coef_S(:, imPind) .^ 2, 2);  %feature vector for small scale
+            feature_S = mean(Coef_S(:, imPind) .^ 2, 2); %feature vector for small scale
 
             %compute total rec error and reward
             Error = Error_L + Error_S;          %total reconstruction error
@@ -201,7 +196,7 @@ classdef Model < handle
             legend('Coarse', 'Fine');
         end
 
-        %% Plotting errors and save graphs
+        %% Plotting everything and save graphs
         function allPlotSave(this, savePath)
             windowSize = 125;
             if (this.trainTime < windowSize * this.interval)
@@ -352,6 +347,55 @@ classdef Model < handle
             title('Reward composition (L1)');
             plotpath = sprintf('%s/rewardCompL1', savePath);
             saveas(gcf, plotpath, 'png');
+
+            %% delta_MF(Vergence_error)
+            %
+            % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
+            % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
+            % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
+            % actual_distance_max = (baseline / 2) / tand(results_deg(1,1)*2 / 2) = 3.2219 [m]
+            % angle_min @ actual_distance_max = results_deg(1,1) * 2 = 0.9958 deg
+            % angle_max @ actual_distance_min = results_deg(11,1) * 2 = 71.5164 deg
+            % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
+            % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
+
+            % baseline = 0.056;
+            % desired_angle_min = 2 * atand(baseline / (2 * 2));
+            % desired_angle_max = 2 * atand(baseline / (2 * 0.5));
+            % angle_min = results_deg(1,1) * 2;
+            % angle_max = results_deg(11,1) * 2;
+            % verg_err_min = desired_angle_min - angle_max;
+            % verg_err_max = desired_angle_max - angle_min;
+            % verg_err_scope = [verg_err_min : 0.4 : verg_err_max];
+            % vpos = verg_err_scope(verg_err_scope >= 0);
+            % vneg = verg_err_scope(verg_err_scope < 0);
+
+            % actual_response[model.vergerr_hist, model.relCmd_hist];
+            % % http://stackoverflow.com/questions/29845193/merge-similar-points-in-point-cloud-by-its-mean
+            % % histcount?
+            % % sortrows
+
+            % resolution = 1001;
+            % approx = spline(1:11, results_deg(:, 1));
+
+            % xValPos = ppval(approx, 1:0.01:11)';
+            % yValPos = linspace(0, 1, resolution)';
+
+            % xValNeg = flipud(ppval(approx, 1:0.01:11)' * -1);
+            % yValNeg = linspace(-1, 0, resolution)';
+
+            % perfect_response = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+
+            % figure;
+            % hold on;
+            % grid on;
+            % plot(perfect_response(:, 1), perfect_response(:, 2), 'LineWidth', 1.3);
+            % xlabel(strcat('Vergence Error \in', sprintf('[%.2g, %.2g]', verg_err_min, verg_err_max)), 'FontSize', 12);
+            % ylabel('\Delta MF \in[-1, 1]', 'FontSize', 12);
+            % % legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+            % title('\Delta MF(Verg_{error})');
+            % plotpath = sprintf('%s/deltaMFasFktVerErr', savePath);
+            % saveas(gcf, plotpath, 'png');
         end
 
         % DEPRECATED
