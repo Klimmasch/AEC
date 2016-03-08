@@ -125,7 +125,6 @@ classdef CActorG < handle
         end
 
         function cmd = train(this, feature, delta, flag_update)
-            this.params = zeros(1, this.param_num);
             if (flag_update)
                 this.update(delta);
             end

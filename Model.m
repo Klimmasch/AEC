@@ -280,13 +280,13 @@ classdef Model < handle
             grid on;
             subplot(3, 1, 1);
             plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
             title('Absolute Muscle Commands');
 
             subplot(3, 1, 2);
             plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
             title('Relative Muscle Commands');
 
@@ -309,7 +309,7 @@ classdef Model < handle
             plot(this.l12_weights(:, 7), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}');
+            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
             title('Model weights (L1)')
             plotpath = sprintf('%s/weightsL1', savePath);
             saveas(gcf, plotpath, 'png');
@@ -323,7 +323,7 @@ classdef Model < handle
             plot(this.l12_weights(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('\Sigma weights^{2}', 'FontSize', 12);
-            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}');
+            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
             title('Model weights (L2)')
             plotpath = sprintf('%s/weightsL2', savePath);
             saveas(gcf, plotpath, 'png');
@@ -338,12 +338,11 @@ classdef Model < handle
                  - this.lambdaV * this.l12_weights(:, 1), ...
                  - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
             area(r, 'LineStyle','none');
-            % TODO: function is delayed by 10 iteration steps
-            % plot(this.reward_hist, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
-            % legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr', 'Reward');
-            legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+            l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+            % l.FontSize = 7;
+            l.Location = 'southwest';
             title('Reward composition (L1)');
             plotpath = sprintf('%s/rewardCompL1', savePath);
             saveas(gcf, plotpath, 'png');
@@ -396,10 +395,15 @@ classdef Model < handle
                                      (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
 
             perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-
-            obsWin = 1000;  % observation Window, i.e. plot statistics over last #obsWin iterations
-            nVal = 100;     % #bins of statistics
             actualResponse = [this.vergerr_hist, this.relCmd_hist];
+
+            % observation Window, i.e. plot statistics over last #obsWin iterations
+            obsWin = 1000;
+            if (size(actualResponse, 1) < obsWin)
+                obsWin = size(actualResponse, 1);
+            end
+            nVal = 20; % #bins of statistics
+
             tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
             tmp = zeros(nVal, 3);
@@ -411,21 +415,30 @@ classdef Model < handle
                 tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
             end
-            actualResponseStat = tmp(find(tmp(:, 2)), :);                   % drop zero elements
-            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = [];    % drop NaN elements
+            actualResponseStat = tmp;
+            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
             figure;
             hold on;
             grid on;
+            % perfect response to vergence error
             plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
             plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+            % error bars of actual response of the model
             errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
+            % actual response of the model
             plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
+            l.FontSize = 7;
+            l.Orientation = 'horizontal';
+            l.Location = 'southoutside';
+            % axis
+            plot([-6, 6], [0, 0], 'k', 'LineWidth', 0.1);
+            plot([0, 0], [-0.07, 0.07], 'k', 'LineWidth', 0.1);
             axis([-6, 6, -0.07, 0.07]);
-            xlabel('Vergence Error [deg]', 'FontSize', 12);
+            xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            legend('perfect response (fixDist_{max})', 'perfect response (fixDist_{min})', 'actual response');
-            title(strcat('\Delta MF(Vergence_{error}) after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
+            title(strcat('\Delta MF(Vergence_{error}) response after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
             plotpath = sprintf('%s/deltaMFasFktVerErr', savePath);
             saveas(gcf, plotpath, 'png');
         end

@@ -64,16 +64,16 @@ continuous = uint8(1);                  %indicates if the policy is discrete or 
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous};
 
 interval = 10;                          %period to change a new environment for the eye | origin 10
-lambdaMuscleFB = 0.948;                 %factor of muscle activity feedback to RL feature vector
-                                        %Proportion (abs MF/feature) | 1% = 0.948 | 5% = 4.524 | 10% = 9.048 | 20% = 18.096 | 30% = 27.145 | 50% = 45.241
+lambdaMuscleFB = 0.4524;                %factor of muscle activity feedback to RL feature vector
+                                        %Proportion MF/feature | 0.5% = 0.4524 | 1% = 0.9048 | 5% = 4.524 | 10% = 9.048
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
-lambdaRec = 4.938;                      %reconstruction error factor | 7.05
-lambdaMet = 0.201;                      %metabolic costs factor | 0.22
-lambdaV = 8.5062e-04;                   %value networks input->output weights factor | L1 norm 0.008 | 8.5062e-04 | L2 norm 0.051 | 8.6073e-04
-lambdaP1 = 0.023;                       %policy networks input->hidden weights factor | L1 norm 0.002 | 0.023 | L2 norm 0.05 | 2.619
-lambdaP2 = 0.382;                       %policy networks hidden->output weights factor | L1 norm 0.872 | 0.382 | L2 norm 24.284 | 6.93
+lambdaRec = 4.929;                      %reconstruction error factor | 7.05
+lambdaMet = 0.204;                      %metabolic costs factor | 0.22
+lambdaV = 7.0282e-04;                   %value networks input->output weights factor | L1 norm 0.008 | 8.5062e-04 | L2 norm 0.051 | 8.6073e-04
+lambdaP1 = 0.019;                       %policy networks input->hidden weights factor | L1 norm 0.002 | 0.023 | L2 norm 0.05 | 2.619
+lambdaP2 = 0.309;                       %policy networks hidden->output weights factor | L1 norm 0.872 | 0.382 | L2 norm 24.284 | 6.93
 PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, interval, lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};

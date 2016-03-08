@@ -60,16 +60,15 @@ classdef CCriticG < handle
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % function [this.delta, this.params] = train(this, z_i, reward, flag_update)
         function train(this, z_i, reward, flag_update)
-            this.delta = 0;
-            this.params = zeros(1, 2);
             z_j = this.forward(z_i); % calculate internal activity (feature times weights)
             if (flag_update)
                 this.update(z_j, reward);
             end
-            this.z_i_prev = z_i; %[z_i;1];%
+            this.z_i_prev = z_i; %[z_i;1];
             this.z_j_prev = z_j;
 
-            %display(sprintf('critic: \n\t z_j: %03f,\n\t z_j_prev: %03f,\n\t z_i: %d,\n\t z_i_prev: %d,\n\t reward:%f, \n\t delta:%03f',z_j, this.z_j_prev, mean(z_i), mean(this.z_i_prev),reward, delta))
+            % display(sprintf('critic: \n\t z_j: %03f,\n\t z_j_prev: %03f,\n\t z_i: %d,\n\t z_i_prev: %d,\n\t reward:%f, \n\t delta:%03f', ...
+            % z_j, this.z_j_prev, mean(z_i), mean(this.z_i_prev), reward, delta))
         end
     end
 end

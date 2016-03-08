@@ -120,7 +120,7 @@ end
 
 %%% Main execution loop
 t = 0;
-tic % start time count
+tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
 
     % pick random texture every #interval times
@@ -147,7 +147,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
     [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                    currentTexture, currentTexture, objDist, objDist, angleNew));
 
-    % Abort execution if error occured
+    % abort execution if error occured
     if (status)
         sprintf('Error in checkEnvironment:\n%s', res)
         return;
@@ -155,7 +155,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
     for iter2 = 1 : model.interval
         t = t + 1;
-        % Read input images and convert to gray scale
+        % read input images and convert to gray scale
         imgRawLeft = imread('left.png');
         imgRawRight = imread('right.png');
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
@@ -255,7 +255,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                currentTexture, currentTexture, objDist, objDist, angleNew));
 
-        % Abort execution if error occured
+        % abort execution if error occured
         if (status)
             sprintf('Error in checkEnvironment:\n%s', res)
             return;
@@ -263,13 +263,13 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
-        %Compute desired vergence command, disparity and vergence error
-        fixDepth = (baseline / 2) / tand(angleNew / 2);
+        % compute desired vergence command, disparity and vergence error
+        fixDepth = (baseline / 2) / tand(angleNew / 2); %fixation depth [m]
         angleDes = 2 * atand(baseline / (2 * objDist)); %desired vergence [deg]
         anglerr = angleDes - angleNew;                  %vergence error [deg]
         disparity = 2 * f * tand(anglerr / 2);          %current disp [px]
 
-        %save them
+        % save state
         model.Z(t) = objDist;
         model.fixZ(t) = fixDepth;
         model.disp_hist(t) = disparity;
@@ -302,12 +302,12 @@ for iter1 = 1 : (model.trainTime / model.interval)
         sprintf('%g%% is finished', (t / model.trainTime * 100))
         save(strcat(savePath, '/model'), 'model');
 
-        %save Basis
+        % save Basis
         model.scmodel_Large.saveBasis;
         model.scmodel_Small.saveBasis;
 
-        %save Weights
-        model.rlmodel.saveWeights; %save policy and value net weights
+        % save Weights
+        model.rlmodel.saveWeights;
     end
 end
 elapsedTime = toc;
@@ -397,11 +397,10 @@ function patchesNoOv = preprocessImageNoOv(img, fovea, downSampling, patchSize)
     patchesNoOv = im2col(img, [patchSize patchSize], 'distinct');
 end
 
-%generation of random vergence angles according to truncated Laplace
-%distribution
+%% Generation of random vergence angles according to truncated Laplace distribution
 function l = truncLaplacian(diversity, range)
-%     see wikipedia for the generation of random numbers according to the
-%     LaPlace distribution via the inversion method
+    % see wikipedia for the generation of random numbers according to the
+    % LaPlace distribution via the inversion method
     r = rand;
 
     switch r < 0.5
