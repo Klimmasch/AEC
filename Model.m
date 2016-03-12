@@ -38,6 +38,7 @@ classdef Model < handle
         l12_weights;        %L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
         reward_hist;        %reward function
         metCost_hist;       %metabolic costs
+        savePath;           %where all the data are stored
     end
 
     methods
@@ -382,7 +383,7 @@ classdef Model < handle
             indMaxFix = find(mf(:, 1) <= desiredAngleMin + dmf & mf(:, 1) >= desiredAngleMin - dmf); % MF(desiredAngleMin)_index
             indMinFix = find(mf(:, 1) <= desiredAngleMax + dmf & mf(:, 1) >= desiredAngleMax - dmf); % MF(desiredAngleMax)_index
 
-            % perfect_response := [max_fixation_x, max_fixation_x, min_fixation_x, min_fixation_y]
+            % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
             % x = vergenceError, y = deltaMuscelForce
             perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
                                      (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
@@ -396,6 +397,8 @@ classdef Model < handle
 
             perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
             actualResponse = [this.vergerr_hist, this.relCmd_hist];
+%             [vergErrs, relCmds] = generateRelCmds(this, [0.5,1,2], [-5:1:5], 10);
+%             actualResponse = [vergErrs, relCmds];
 
             % observation Window, i.e. plot statistics over last #obsWin iterations
             obsWin = 1000;
@@ -403,9 +406,11 @@ classdef Model < handle
                 obsWin = size(actualResponse, 1);
             end
             nVal = 20; % #bins of statistics
-
-            tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
+            
+%             tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
+            tmpRsp = sortrows(actualResponse);
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+            % tmp = obsWin x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
             tmp = zeros(nVal, 3);
 
             for i = 1:nVal

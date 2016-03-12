@@ -55,6 +55,7 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
 folder = '../results/';
 mkdir(folder, savePath);
 savePath = strcat(folder, savePath);
+model.savePath = savePath;
 
 % Image process variables
 patchSize = 8;

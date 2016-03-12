@@ -3,7 +3,8 @@
 % the model file. These are not trained, but just passively generate a
 % feature vector.
 
-function TrainWithBF(randomizationSeed,trainTime,description,modelBF)
+function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
+    modelBF = load(sprintf('%s/model.mat', pathToBFModel), 'model');
     rng(randomizationSeed);
     learnedFile = '';
     textureFile = 'Textures_New.mat';
@@ -47,8 +48,8 @@ function TrainWithBF(randomizationSeed,trainTime,description,modelBF)
     % Image process variables
     patchSize = 8;
 
-    dsRatioL = modelBF.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
-    dsRatioS = modelBF.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
+    dsRatioL = modelBF.model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
+    dsRatioS = modelBF.model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
 
     % fovea = [128 128];
     foveaL = patchSize + patchSize^2 / 2^log2(dsRatioL); %fovea size (Large scale) | 16
@@ -154,7 +155,7 @@ function TrainWithBF(randomizationSeed,trainTime,description,modelBF)
             currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
 
             % Generate input feature vector from current images
-            [feature, reward, errorTotal, errorLarge, errorSmall] = modelBF.generateFR(currentView);
+            [feature, reward, errorTotal, errorLarge, errorSmall] = modelBF.model.generateFR(currentView);
 
             % % incorporationg the current muscle activity into feature vector
             % % and scaling it to the value
@@ -162,45 +163,56 @@ function TrainWithBF(randomizationSeed,trainTime,description,modelBF)
             % feature = [feature; command' * model.lambdaMuscleFB];
 
             %%% Feedback
-            %% Absolute command feedback # additive
-            feature = feature + command(2) * model.lambdaMuscleFB;
-            %% Absolute command feedback # multiplicative
-            % feature = feature * (command(2) * model.lambdaMuscleFB);
-            %% Relative command feedback # additive
-            % if (iter2 > 1)
-            %     feature = feature + model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
-            % end
-            %% Relative command feedback # multiplicative
-            % if (iter2 > 1)
-            %     feature = feature * model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
-            % end
+        % Absolute command feedback # concatination
+        feature = [feature; command(2) * model.lambdaMuscleFB];
+        % Relative command feedback # concatination
+        % if (iter2 > 1)
+        %     feature = [feature; model.relCmd_hist(t-1) * model.lambdaMuscleFB];
+        % else
+        %     feature = [feature; 0];
+        % end
 
-            %%% Calculate metabolic costs
-            metCost = getMetCost(command) * 2;
+        %% Absolute command feedback # additive
+        % feature = feature + command(2) * model.lambdaMuscleFB;
+        %% Absolute command feedback # multiplicative
+        % feature = feature * (command(2) * model.lambdaMuscleFB);
+        %% Relative command feedback # additive
+        % if (iter2 > 1)
+        %     feature = feature + model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
+        % end
+        %% Relative command feedback # multiplicative
+        % if (iter2 > 1)
+        %     feature = feature * model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
+        % end
 
-            %%% Calculate reward function
-            % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
+        %%% Calculate metabolic costs
+        metCost = getMetCost(command) * 2;
 
-            %%% Weight L2 regularization
-            % rewardFunction = model.lambdaRec * reward ...
-            %                  - model.lambdaMet * metCost ...
-            %                  - model.lambdaV * (sum(sum(model.rlmodel.CCritic.v_ji .^ 2))) ...
-            %                  - model.lambdaP1 * (sum(sum(model.rlmodel.CActor.wp_ji .^ 2))) ...
-            %                  - model.lambdaP2 * (sum(sum(model.rlmodel.CActor.wp_kj .^ 2)));
+        %%% Calculate reward function
+        % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
 
-            %%% Weight L1 regularization
-            rewardFunction = model.lambdaRec * reward ...
-                             - model.lambdaMet * metCost ...
-                             - model.lambdaV * (sum(sum(abs(model.rlmodel.CCritic.v_ji)))) ...
-                             - model.lambdaP1 * (sum(sum(abs(model.rlmodel.CActor.wp_ji)))) ...
-                             - model.lambdaP2 * (sum(sum(abs(model.rlmodel.CActor.wp_kj))));
+        %%% Weight L1 regularization
+        rewardFunction = model.lambdaRec * reward ...
+                         - model.lambdaMet * metCost ...
+                         - model.lambdaV * (sum(sum(abs(model.rlmodel.CCritic.v_ji)))) ...
+                         - model.lambdaP1 * (sum(sum(abs(model.rlmodel.CActor.wp_ji)))) ...
+                         - model.lambdaP2 * (sum(sum(abs(model.rlmodel.CActor.wp_kj))));
 
+        %%% Weight L2 regularization
+        % rewardFunction = model.lambdaRec * reward ...
+        %                  - model.lambdaMet * metCost ...
+        %                  - model.lambdaV * (sum(sum(model.rlmodel.CCritic.v_ji .^ 2))) ...
+        %                  - model.lambdaP1 * (sum(sum(model.rlmodel.CActor.wp_ji .^ 2))) ...
+        %                  - model.lambdaP2 * (sum(sum(model.rlmodel.CActor.wp_kj .^ 2)));
+
+        %%% Learning
+        % Sparse coding models
             %%% Learning
             % Sparse coding models
 %             model.scmodel_Large.stepTrain(currentView{1});
 %             model.scmodel_Small.stepTrain(currentView{2});
             % RL model
-            [relativeCommand, paramsC, paramsA] = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
+            relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
             % add the change in muscle Activities to current ones
             command(2) = command(2) + relativeCommand';
@@ -237,19 +249,20 @@ function TrainWithBF(randomizationSeed,trainTime,description,modelBF)
             model.reward_hist(t) = rewardFunction;
             % model.feature_hist(t, :) = feature;
             model.metCost_hist(t) = metCost;
-            model.td_hist(t) = paramsC(2);
-            model.g_hist(t) = paramsA(7);
-            model.AC_norm_weights(t, 1) = paramsC(1); %norm(v_ji)
-            model.AC_norm_weights(t, 2) = paramsA(1); %norm(wp_ji)
-            model.AC_norm_weights(t, 3) = paramsA(2); %norm(dwp)
-            model.AC_norm_weights(t, 4) = paramsA(3); %norm(wp_kj)
-            model.AC_norm_weights(t, 5) = paramsA(4); %norm(dvp)
-            model.AC_norm_weights(t, 6) = paramsA(5); %norm(wn_ij)
-            model.AC_norm_weights(t, 7) = paramsA(6); %psi' * this.wn_ji
+            model.td_hist(t) = model.rlmodel.CCritic.delta;
+            model.g_hist(t) = model.rlmodel.CActor.params(7);
+            model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
+            model.l12_weights(t, 2) = model.rlmodel.CCritic.params(2);
+            model.l12_weights(t, 3) = model.rlmodel.CActor.params(1);
+            model.l12_weights(t, 4) = model.rlmodel.CActor.params(2);
+            model.l12_weights(t, 5) = model.rlmodel.CActor.params(3);
+            model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
+            model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
+            model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
         end
 
-        sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error = %.3g', ...
-                t, command(1), command(2), angleNew, errorTotal, anglerr)
+        sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
+            t, command(1), command(2), angleNew, errorTotal, model.vergerr_hist(t - model.interval + 1 : t))
 
         % Display per cent completed of training and save model
         if (~mod(t, saveInterval))
