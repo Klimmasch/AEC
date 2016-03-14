@@ -88,7 +88,7 @@ classdef CActorG < handle
             end
             switch this.type_hidden
                 case 'tanh'
-                    delta_j = (1-this.z_j_prev .^ 2) .* (this.wp_kj' * delta_k);
+                    delta_j = (1 - this.z_j_prev .^ 2) .* (this.wp_kj' * delta_k);
             end
             % compatible feature
             % z_j_prev: last activity of hidden layer
