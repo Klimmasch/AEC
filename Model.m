@@ -396,18 +396,23 @@ classdef Model < handle
                                      (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
 
             perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-            actualResponse = [this.vergerr_hist, this.relCmd_hist];
-%             [vergErrs, relCmds] = generateRelCmds(this, [0.5,1,2], [-5:1:5], 10);
-%             actualResponse = [vergErrs, relCmds];
+            % actualResponse = [this.vergerr_hist, this.relCmd_hist];
+
+            %%% generating fixed distances
+            % [vergErrs, relCmds] = generateRelCmds(this, [0.5,1,2], [-5:1:5], 10);
+            vergRange = [-5 : 0.5 : 5];
+            [vergErrs, relCmds] = generateRelCmds(this, [0.5, 2], vergRange, 10)
+            actualResponse = [vergErrs, relCmds];
 
             % observation Window, i.e. plot statistics over last #obsWin iterations
             obsWin = 1000;
             if (size(actualResponse, 1) < obsWin)
                 obsWin = size(actualResponse, 1);
             end
-            nVal = 20; % #bins of statistics
-            
-%             tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
+            % nVal = 20; % #bins of statistics
+            nVal = size(vergRange, 2);
+
+            % tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
             tmpRsp = sortrows(actualResponse);
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
             % tmp = obsWin x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]

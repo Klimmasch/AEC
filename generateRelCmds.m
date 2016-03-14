@@ -1,7 +1,7 @@
 
-%This function goes through all object distances and averages the motor command 
+%This function goes through all object distances and averages the motor command
 % and reconstruction error for different vergence errors.
-%TODO what about muscle innervations? 
+%TODO what about muscle innervations?
 % example usage: averageForVergenceErrors(model, objRange=[0.5, 1, 2], vergRange =
 %   -5:0.5:5, repeat = 10)
 % takes the model, positiones random textures at the distances of 0.5, 1 and 2
@@ -9,10 +9,10 @@
 % muscle commands and repeats that 10 times
 
 function [vergErrs, relCmds] = generateRelCmds(model, objRange, vergRange, repeat)
-    
+
     focalLength = 257.34;        	%focal length [px]
     baseline = 0.056;   		%interocular distance (baseline)
-    
+
     % Image process variables
     patchSize = 8;
 
@@ -46,17 +46,32 @@ function [vergErrs, relCmds] = generateRelCmds(model, objRange, vergRange, repea
     texture = load('config/Textures_New.mat');
     texture = texture.texture;
     nTextures = length(texture);
-    
+
     vergErrs = [];
     relCmds = [];
-    
-    
+
+
     [~, numDists] = size(objRange);
 %     avgCmd = zeros(numDists,1);
-%     
+%
 %     vergences = vergRange(1):0.1:vergRange(2);
     [~, numVergs] = size(vergRange);
 %     avgVergErr = zeros(numVergs,1);
+
+    degrees = load('Degrees.mat');
+    resolution = 10001;
+    approx = spline(1:11, degrees.results_deg(:, 1));
+
+    xValPos = ppval(approx, 1:0.001:11)';
+    yValPos = linspace(0, 1, resolution)';
+
+    xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
+    yValNeg = linspace(-1, 0, resolution)';
+
+    mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    dmf = diff(mf(1:2, 1)); % delta in angle
+    indZero = find(mf(:, 2) == 0); % MF == 0_index
+
     sprintf('starting to generate vergence commands for different vergence errors ...')
     for rep = 1:repeat
         for objDist = 1:numDists
@@ -94,7 +109,12 @@ function [vergErrs, relCmds] = generateRelCmds(model, objRange, vergRange, repea
 
                 % Generate input feature vector from current images
                 [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-                feature = [feature; 0.1 * model.lambdaMuscleFB]; %###!
+
+                indTemp = find(mf(:, 1) <= angleDes + vergRange(verg) + dmf & mf(:, 1) >= angleDes + vergRange(verg) - dmf);
+                if (size(indTemp, 1) < 1)
+                    indTemp = indZero;
+                end
+                feature = [feature; mf(indTemp(1), 2)];
                 relCmd = model.rlmodel.softmaxAct(feature);
 
                 %Traking variables
