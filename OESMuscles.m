@@ -55,6 +55,7 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
 folder = '../results/';
 mkdir(folder, savePath);
 savePath = strcat(folder, savePath);
+model.savePath = savePath;
 
 % Image process variables
 patchSize = 8;
@@ -250,7 +251,6 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % hold on;
         % histogram(testLP);
         % hold off;
-
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                currentTexture, currentTexture, objDist, objDist, angleNew));
