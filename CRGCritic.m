@@ -30,7 +30,10 @@ classdef CRGCritic < handle
             obj.xi = PARAM{4};
             obj.gamma = PARAM{5};
 
+            %restrain to positive values
+%             obj.v_ji = rand(1, obj.input_dim) * obj.v_init_range;
             obj.v_ji = (2 * rand(1, obj.input_dim) - 1) * obj.v_init_range;
+
             obj.J = 0;
             obj.delta = 0;
 
@@ -45,13 +48,12 @@ classdef CRGCritic < handle
 
         function update(this, reward)
             this.J = (1 - this.xi) * this.J + this.xi * reward;
-            this.delta = reward - this.J + this.gamma * this.value - this.value_prev;
+            this.delta = reward - this.J + this.gamma * this.value - this.v_ji * this.feature_prev;
             dv_ji = this.alpha_v * this.delta * this.feature_prev';
             this.v_ji = this.v_ji + dv_ji;
 
             this.params(1) = sum(sum(abs(this.v_ji)));
             this.params(2) = sum(sum(this.v_ji .^ 2));
-            hist(this.v_ji, 20);
         end
 
         function train(this, feature, reward, flag_update)

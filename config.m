@@ -64,13 +64,13 @@ continuous = uint8(1);                  %indicates if the policy is discrete or 
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous};
 
 interval = 10;                          %period to change a new environment for the eye | origin 10
-lambdaMuscleFB = 0.9048;                %factor of muscle activity feedback to RL feature vector
+lambdaMuscleFB = 9.048;                %factor of muscle activity feedback to RL feature vector
                                         %Proportion MF/feature | 0.5% = 0.4524 | 1% = 0.9048 | 5% = 4.524 | 10% = 9.048
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
 lambdaRec = 4.929;                      %reconstruction error factor | 4.929
-lambdaMet = 0;                          %metabolic costs factor | 0.204
+lambdaMet = 0.204;                      %metabolic costs factor | 0.204
 lambdaV = 7.0282e-04;                   %value networks input->output weights factor | L1 norm 7.0282e-04
 lambdaP1 = 0.019;                       %policy networks input->hidden weights factor | L1 norm 0.019
 lambdaP2 = 0.309;                       %policy networks hidden->output weights factor | L1 norm 0.309

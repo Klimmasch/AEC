@@ -121,7 +121,6 @@ function [vergErrs, relCmds] = generateRelCmds(model, objRange, vergRange, repea
                 vergErrs = [vergErrs; vergRange(verg)];
                 relCmds = [relCmds; relCmd];
             end
-            sprintf('\tgoing through different object distances: %d/%d done',objDist, numDists)
         end
         sprintf('number of repetitions: %d/%d done', rep, repeat)
     end
