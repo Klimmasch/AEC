@@ -1,4 +1,4 @@
-%%% Main script for launching application
+%%% Script for running application with pre-learned basis functions
 %@param trainTime           training time in number of iterations
 %@param randomizationSeed   randomization seed
 %
@@ -6,7 +6,7 @@
 % textureFile:              texture settings files
 % sparseCodingType:         type of sparse coding approach
 %%%
-function OESMuscles(trainTime, randomizationSeed, fileDescription)
+function OESMusclesBF(trainTime, randomizationSeed, fileDescription)
 
 rng(randomizationSeed);
 learnedFile = '';
@@ -24,7 +24,7 @@ plotNsave = uint8(1);
 % Whether the testing procedure shall be executed in the end
 % testIt:   0 = don't do it
 %           1 = do it
-testIt = uint8(0);
+testIt = uint8(1);
 
 % Save model and conduct testing every saveInterval training iterations (+1)
 saveInterval = 1000;
@@ -34,6 +34,9 @@ end
 
 % Instantiate and initiate model and test_data objects
 model = config(learnedFile, textureFile, trainTime, sparseCodingType);
+modelBF = load('/tmp/model_11-Mar-2016 20:38:05_100000_110_111_nhomeo_1_trainBF_laplacian_b=1/model.mat');
+model.scmodel_Small.Basis = modelBF.model.scmodel_Small.Basis;
+model.scmodel_Large.Basis = modelBF.model.scmodel_Large.Basis;
 
 if (trainTime <= model.interval)
     sprintf('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
@@ -212,8 +215,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         %%% Learning
         % Sparse coding models
-        model.scmodel_Large.stepTrain(currentView{1});
-        model.scmodel_Small.stepTrain(currentView{2});
+        %model.scmodel_Large.stepTrain(currentView{1});
+        %model.scmodel_Small.stepTrain(currentView{2});
         % RL model
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
@@ -278,18 +281,21 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
         % model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
 %         plot(model.td_hist);
-        figure
-        hold on;
-        plot(sum(model.feature_hist(:,1:end-1),2),'r');
-        plot(model.feature_hist(:,end),'b');
-        title(sprintf('%g', model.feature_hist(end,end)));
-        if (t < trainTime)
-            close all;
-        end
+%         figure
+%         hold on;
+%         plot(sum(model.feature_hist(:,1:end-1),2),'r');
+%         plot(model.feature_hist(:,end),'b');
+%         title(sprintf('%g', model.feature_hist(end,end)));
+%         if (t < trainTime)
+%             close all;
+%         end
     end
 
-    sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
-            t, command(1), command(2), angleNew, errorTotal, model.vergerr_hist(t - model.interval + 1 : t))
+    % sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
+    %         t, command(1), command(2), angleNew, errorTotal, model.vergerr_hist(t - model.interval + 1 : t))
+    sprintf('Training Iteration = %d\nAbs Command =\t[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]\nRel Command = \t[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]\nVer Error =\t[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
+            t, model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t), model.vergerr_hist(t - model.interval + 1 : t))
+
 
     % Display per cent completed of training and save model
     if (~mod(t, saveInterval))
@@ -326,7 +332,8 @@ end
 
 %%% Testing procedure
 if (testIt)
-    TestTrial(model, randomizationSeed, fileDescription);
+    % TestTrial(model, randomizationSeed, fileDescription);
+    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 5);
 end
 
 end

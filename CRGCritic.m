@@ -29,9 +29,8 @@ classdef CRGCritic < handle
             obj.xi = PARAM{4};
             obj.gamma = PARAM{5};
 
-            % restrain to positive values
-            % obj.v_ji = rand(1, obj.input_dim) * obj.v_init_range;
-            obj.v_ji = (2 * rand(1, obj.input_dim) - 1) * obj.v_init_range;
+            obj.v_ji = (2 * rand(1, obj.input_dim) - 1) * obj.v_init_range; % [-1, 1] * v_init_range
+            % obj.v_ji = rand(1, obj.input_dim) * obj.v_init_range; % [0, 1] * v_init_range
 
             obj.J = 0;
             obj.delta = 0;

@@ -422,7 +422,7 @@ classdef Model < handle
 
             % observation Window, i.e. plot statistics over last #obsWin iterations
             obsWin = 1000;
-            if (size(actualResponse, 1) < obsWin)
+            if (size(actualResponse, 1) <= obsWin)
                 obsWin = size(actualResponse, 1) - 1;
             end
             nVal = 20; % #bins of statistics
@@ -457,9 +457,13 @@ classdef Model < handle
             l.Orientation = 'horizontal';
             l.Location = 'southoutside';
             % axis
-            plot([-6, 6], [0, 0], 'k', 'LineWidth', 0.1);
-            plot([0, 0], [-0.07, 0.07], 'k', 'LineWidth', 0.1);
-            axis([-6, 6, -0.07, 0.07]);
+            xmin = -10;
+            xmax = -xmin;
+            ymin = -0.1;
+            ymax = -ymin;
+            plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+            plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
+            axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title(strcat('\Delta MF(Vergence_{error}) response after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
@@ -469,7 +473,7 @@ classdef Model < handle
 
         %% plot & save delta_MF(Vergence_error)
         % observation Window = obsWin, i.e. plot statistics over last #obsWin iterations
-        function deltaMFplotObsWin(this, savePath, obsWin)
+        function deltaMFplotObsWin(this, obsWin)
             % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
             % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
             % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
@@ -516,7 +520,7 @@ classdef Model < handle
             perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
             actualResponse = [this.vergerr_hist, this.relCmd_hist];
 
-            if (size(actualResponse, 1) < obsWin)
+            if (size(actualResponse, 1) <= obsWin)
                 obsWin = size(actualResponse, 1) - 1;
             end
             nVal = 20; % #bins of statistics
@@ -551,27 +555,29 @@ classdef Model < handle
             l.Orientation = 'horizontal';
             l.Location = 'southoutside';
             % axis
-            plot([-6, 6], [0, 0], 'k', 'LineWidth', 0.1);
-            plot([0, 0], [-0.07, 0.07], 'k', 'LineWidth', 0.1);
-            xmin = -6;
-            xmax = 6;
+            xmin = -10;
+            xmax = -xmin;
+            ymin = -0.1;
+            ymax = -ymin;
+            plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+            plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             if (min(actualResponseStat(:, 1)) < xmin)
                 xmin = min(actualResponseStat(:, 1)) - min(actualResponseStat(:, 1)) * 0.1;
             end
             if (max(actualResponseStat(:, 1)) > xmax)
                 xmax = max(actualResponseStat(:, 1)) + max(actualResponseStat(:, 1)) * 0.1;
             end
-            axis([xmin, xmax, -0.07, 0.07]);
+            axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title(strcat('\Delta MF(Vergence_{error}) response after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
-            plotpath = sprintf('%s/deltaMFasFktVerErrObsWin', savePath);
+            plotpath = sprintf('%s/deltaMFasFktVerErrObsWin', this.savePath);
             saveas(gcf, plotpath, 'png');
         end
 
         %% plot & save delta_MF(Vergence_error)
         % startIter, endIter = plot statistics over #startIter : endIter iterations
-        function deltaMFplotStartEnd(this, savePath, startIter, endIter)
+        function deltaMFplotStartEnd(this, startIter, endIter)
             % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
             % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
             % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
@@ -659,21 +665,23 @@ classdef Model < handle
             l.Orientation = 'horizontal';
             l.Location = 'southoutside';
             % axis
-            plot([-6, 6], [0, 0], 'k', 'LineWidth', 0.1);
-            plot([0, 0], [-0.07, 0.07], 'k', 'LineWidth', 0.1);
-            xmin = -6;
-            xmax = 6;
+            xmin = -10;
+            xmax = -xmin;
+            ymin = -0.1;
+            ymax = -ymin;
+            plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+            plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             if (min(actualResponseStat(:, 1)) < xmin)
                 xmin = min(actualResponseStat(:, 1)) - min(actualResponseStat(:, 1)) * 0.1;
             end
             if (max(actualResponseStat(:, 1)) > xmax)
                 xmax = max(actualResponseStat(:, 1)) + max(actualResponseStat(:, 1)) * 0.1;
             end
-            axis([xmin, xmax, -0.07, 0.07]);
+            axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title(strcat('\Delta MF(Vergence_{error}) betweem iteration ', sprintf(' %d and %d', startIter, endIter)));
-            plotpath = sprintf('%s/deltaMFasFktVerErrStartEnd', savePath);
+            plotpath = sprintf('%s/deltaMFasFktVerErrStartEnd', this.savePath);
             saveas(gcf, plotpath, 'png');
         end
 
@@ -681,7 +689,7 @@ classdef Model < handle
         % objRange = range of object distances being tested
         % vergRange = range of vergences being tested
         % repeat = #repetitions of testing procedure
-        function deltaMFplotGenDist(this, savePath, objRange, vergRange, repeat)
+        function deltaMFplotGenDist(this, objRange, vergRange, repeat)
             % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
             % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
             % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
@@ -763,21 +771,23 @@ classdef Model < handle
             l.Orientation = 'horizontal';
             l.Location = 'southoutside';
             % axis
-            plot([-6, 6], [0, 0], 'k', 'LineWidth', 0.1);
-            plot([0, 0], [-0.07, 0.07], 'k', 'LineWidth', 0.1);
-            xmin = -6;
-            xmax = 6;
+            xmin = -10;
+            xmax = -xmin;
+            ymin = -0.1;
+            ymax = -ymin;
+            plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+            plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             if (min(actualResponseStat(:, 1)) < xmin)
                 xmin = min(actualResponseStat(:, 1)) - min(actualResponseStat(:, 1)) * 0.1;
             end
             if (max(actualResponseStat(:, 1)) > xmax)
                 xmax = max(actualResponseStat(:, 1)) + max(actualResponseStat(:, 1)) * 0.1;
             end
-            axis([xmin, xmax, -0.07, 0.07]);
+            axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title('\Delta MF(Vergence_{error}) response at Testing procedure');
-            plotpath = sprintf('%s/deltaMFasFktVerErrGenDist', savePath);
+            plotpath = sprintf('%s/deltaMFasFktVerErrGenDist', this.savePath);
             saveas(gcf, plotpath, 'png');
         end
 

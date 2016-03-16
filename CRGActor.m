@@ -27,7 +27,8 @@ classdef CRGActor < handle
             obj.input_dim = PARAM{1};
             obj.output_dim = PARAM{2};
             obj.w_init_range = PARAM{3};
-            obj.wp_ki = (2 * rand(obj.output_dim, obj.input_dim) - 1) * obj.w_init_range(1);
+            % obj.wp_ki = (2 * rand(obj.output_dim, obj.input_dim) - 1) * obj.w_init_range(1); % [-1, 1] * w_init_range
+            obj.wp_ki = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1); % [0, 1] * w_init_range
 
             obj.beta_p = PARAM{4};
             obj.variance = PARAM{5};
@@ -43,6 +44,7 @@ classdef CRGActor < handle
 
         function update(this, delta)
             psi = ((this.command_prev - this.z_k_prev) * this.z_i_prev) / this.variance;
+            % histogram(psi,100)
             this.wp_ki = this.wp_ki + this.beta_p * delta * psi';
 
             % model state tracking
@@ -52,12 +54,17 @@ classdef CRGActor < handle
 
         function command = act(this, z_i)
             z_k = this.wp_ki * z_i;                 % activity of output layer
-            command = mvnrnd(z_k, this.covmat)';    % perturbation of actor's output
+            % command = mvnrnd(z_k, this.covmat)';    % perturbation of actor's output multivariate version
+            command = mvnrnd(z_k, this.variance)';
 
             % model state tracking
             this.z_i_prev = z_i;
             this.z_k_prev = z_k;
             this.command_prev = command;
+        end
+
+        function command = actHard(this, z_i)
+            command = this.wp_ki * z_i;                 % activity of output layer
         end
 
         function command = train(this, feature, delta, flag_update)

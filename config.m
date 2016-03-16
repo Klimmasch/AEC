@@ -58,7 +58,7 @@ alpha_v = 0.9;                          %learning rate to update the value funct
 alpha_n = 0.025;                        %learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
 alpha_p = 0.002;                        %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
 xi = 0.3;                               %discount factor | origin 0.3 | Alex P 0.3
-gamma = 0.01;                           %learning rate to update cumulative value | origin 1
+gamma = 0.3;                            %learning rate to update cumulative value | origin 1
 variance = 1e-5;                        %variance of action output
                                         %if policy is continuous, this value
                                         %serves as variance for the actor
@@ -82,13 +82,13 @@ muscleInitMin = 0.00807;    %minimal initial muscle innervation
 muscleInitMax = 0.07186;    %maximal --"--
 
 interval = 10;                          %period to change a new environment for the eye | origin 10
-lambdaMuscleFB = 9.048;                 %factor of muscle activity feedback to RL feature vector
+lambdaMuscleFB = 0.9048;                %factor of muscle activity feedback to RL feature vector
                                         %Proportion MF/feature | 0.5% = 0.4524 | 1% = 0.9048 | 5% = 4.524 | 10% = 9.048
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
 lambdaRec = 4.929;                      %reconstruction error factor | 4.929
-lambdaMet = 0.204;                      %metabolic costs factor | 0.204
+lambdaMet = 0;%0.204;                      %metabolic costs factor | 0.204
 lambdaV = 7.0282e-04;                   %value networks input->output weights factor | L1 norm 7.0282e-04
 lambdaP1 = 0.019;                       %policy networks input->hidden weights factor | L1 norm 0.019
 lambdaP2 = 0.309;                       %policy networks hidden->output weights factor | L1 norm 0.309
