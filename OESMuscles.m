@@ -277,19 +277,19 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
         % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
         % model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
-%         plot(model.td_hist);
-        figure
-        hold on;
-        plot(sum(model.feature_hist(:,1:end-1),2),'r');
-        plot(model.feature_hist(:,end),'b');
-        title(sprintf('%g', model.feature_hist(end,end)));
-        if (t < trainTime)
-            close all;
-        end
+        % plot(model.td_hist);
+        % figure
+        % hold on;
+        % plot(sum(model.feature_hist(:,1:end-1),2),'r');
+        % plot(model.feature_hist(:,end),'b');
+        % title(sprintf('%g', model.feature_hist(end,end)));
+        % if (t < trainTime)
+        %     close all;
+        % end
     end
 
-    sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
-            t, command(1), command(2), angleNew, errorTotal, model.vergerr_hist(t - model.interval + 1 : t))
+    sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
+            t, model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t), model.vergerr_hist(t - model.interval + 1 : t))
 
     % Display per cent completed of training and save model
     if (~mod(t, saveInterval))
@@ -326,7 +326,8 @@ end
 
 %%% Testing procedure
 if (testIt)
-    TestTrial(model, randomizationSeed, fileDescription);
+    % TestTrial(model, randomizationSeed, fileDescription);
+    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 5);
 end
 
 end

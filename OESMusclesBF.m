@@ -291,9 +291,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 %         end
     end
 
-    % sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
-    %         t, command(1), command(2), angleNew, errorTotal, model.vergerr_hist(t - model.interval + 1 : t))
-    sprintf('Training Iteration = %d\nAbs Command =\t[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]\nRel Command = \t[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]\nVer Error =\t[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
+    sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
             t, model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t), model.vergerr_hist(t - model.interval + 1 : t))
 
 
