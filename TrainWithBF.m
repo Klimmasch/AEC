@@ -274,7 +274,7 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
             model.scmodel_Small.saveBasis;
 
             %save Weights
-            model.rlmodel.saveWeights; %save policy and value net weights
+            % model.rlmodel.saveWeights; %save policy and value net weights
         end
     end
     elapsedTime = toc;

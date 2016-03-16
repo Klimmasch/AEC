@@ -5,28 +5,33 @@ basisLarge = [];
 weights = [];
 weightsHist = cell(2, 1);
 
-%load parameters of existing model
+% DEPRECATED
+% TODO: update model reload
+%%% Loading existing model
 configpath = sprintf('config/%s', learnedFile);
 if (~isempty(learnedFile))
+    sprintf('Model reloading function is DEPRECATED and therefore currently not fully supported!');
+
     load(configpath);
     basisSmall = model.scmodel_Small.Basis;
     basisLarge = model.scmodel_Large.Basis;
 
-    weights = model.rlmodel.Weights;    %actor-critic NN weights
-    weights{3} = model.rlmodel.J;
-    weights{4} = model.rlmodel.g;       %nat gradient
+    % weights = model.rlmodel.Weights;    %actor-critic NN weights
+    % weights{3} = model.rlmodel.J;
+    % weights{4} = model.rlmodel.g;       %nat gradient
 
-    %weight history saved
-    if (~isempty(model.rlmodel.Weights_hist))
-        weightsHist = model.rlmodel.Weights_hist;
-    else
-        weightsHist = model.rlmodel.Weights;
-    end
+    % % weight history saved
+    % if (~isempty(model.rlmodel.Weights_hist))
+    %     weightsHist = model.rlmodel.Weights_hist;
+    % else
+    %     weightsHist = model.rlmodel.Weights;
+    % end
 end
 loadBasis = uint8(~isempty(learnedFile));
 loadweights = uint8(~isempty(learnedFile));
 
-%setup parameters for sparse coding - FINE (small) SCALE
+%%% Sparce Coding parameters
+% FINE (small) SCALE
 Basis_num_used = 10;    %number of basis used to encode in sparse mode
 Basis_size = 128;       %size of each (binocular) base vector (200)
 Basis_num_fine = 288;   %total basis number (128)
@@ -35,7 +40,7 @@ Temperature = 0.01;     %temperature in softmax | origin 0.01
 Dsratio = 2;            %downsampling ratio (target resolution = 8x8)
 PARAMSC_S = {Basis_num_used, Basis_size, Basis_num_fine, eta, Temperature, Dsratio, basisSmall, loadBasis};
 
-%setup parameters for sparse coding - COARSE (large) SCALE
+% COARSE (large) SCALE
 Basis_num_used = 10;    %number of basis used to encode in sparse mode
 Basis_size = 128;       %size of each (binocular) base vector (200)
 Basis_num_coarse = 288; %total basis number (128)
@@ -46,7 +51,7 @@ PARAMSC_L = {Basis_num_used, Basis_size, Basis_num_coarse, eta, Temperature, Dsr
 
 PARAMSC = {PARAMSC_L, PARAMSC_S};
 
-%setup parameters for reinforcement learning
+%%% Reinforcement Learning parameters
 Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8]; %vergence angles (discrete policy)
 
 alpha_v = 0.9;                          %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
@@ -63,8 +68,21 @@ lambda = 0.01;                          %reguralization factor | origin 0.01
 continuous = uint8(1);                  %indicates if the policy is discrete or continuous
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous};
 
+%%% Model parameters
+% Camera parameters
+% offset = 0;       %vertical offset between left and right (0 in the Simulator!!!)
+f = 257.34;         %focal length [px]
+baseline = 0.056;   %interocular distance
+
+% Object distance to eyes [m]
+objDistMin = 0.5;
+objDistMax = 2;
+
+muscleInitMin = 0.00807;    %minimal initial muscle innervation
+muscleInitMax = 0.07186;    %maximal --"--
+
 interval = 10;                          %period to change a new environment for the eye | origin 10
-lambdaMuscleFB = 9.048;                %factor of muscle activity feedback to RL feature vector
+lambdaMuscleFB = 9.048;                 %factor of muscle activity feedback to RL feature vector
                                         %Proportion MF/feature | 0.5% = 0.4524 | 1% = 0.9048 | 5% = 4.524 | 10% = 9.048
 
 % Reward function parameters, i.e. their proportions to the reward function
@@ -74,7 +92,8 @@ lambdaMet = 0.204;                      %metabolic costs factor | 0.204
 lambdaV = 7.0282e-04;                   %value networks input->output weights factor | L1 norm 7.0282e-04
 lambdaP1 = 0.019;                       %policy networks input->hidden weights factor | L1 norm 0.019
 lambdaP2 = 0.309;                       %policy networks hidden->output weights factor | L1 norm 0.309
-PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, interval, lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2};
+PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, f, baseline, objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
+              lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);

@@ -4,7 +4,15 @@ classdef Model < handle
         scmodel_Small;      %SparseCoding class
         rlmodel;            %ReinforcementLearning class
 
+        f;                  %focal length [px]
+        baseline;           %interocular distance
+        objDistMin;         %object distance to eyes [m]
+        objDistMax;
+        muscleInitMin;      %minimal initial muscle innervation
+        muscleInitMax;      %maximal --"--
         interval;           %period of eye stimulus change
+        desiredAngleMin;    %min/max desired vergence angle
+        desiredAngleMax;
 
         learnedFile;        %previously learned model
         textureFile;        %config file containing texture stimulus list
@@ -47,13 +55,22 @@ classdef Model < handle
             obj.textureFile = PARAM{1}{2};
             obj.trainTime = PARAM{1}{3};
             obj.sparseCodingType = PARAM{1}{4};
-            obj.interval = PARAM{1}{5};
-            obj.lambdaMuscleFB = PARAM{1}{6};
-            obj.lambdaMet = PARAM{1}{7};
-            obj.lambdaRec = PARAM{1}{8};
-            obj.lambdaV = PARAM{1}{9};
-            obj.lambdaP1 = PARAM{1}{10};
-            obj.lambdaP2 = PARAM{1}{11};
+            obj.f = PARAM{1}{5};
+            obj.baseline = PARAM{1}{6};
+            obj.objDistMin = PARAM{1}{7};
+            obj.objDistMax = PARAM{1}{8};
+            obj.muscleInitMin = PARAM{1}{9};
+            obj.muscleInitMax = PARAM{1}{10};
+            obj.interval = PARAM{1}{11};
+            obj.lambdaMuscleFB = PARAM{1}{12};
+            obj.lambdaMet = PARAM{1}{13};
+            obj.lambdaRec = PARAM{1}{14};
+            obj.lambdaV = PARAM{1}{15};
+            obj.lambdaP1 = PARAM{1}{16};
+            obj.lambdaP2 = PARAM{1}{17};
+
+            obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
+            obj.desiredAngleMax = atand(obj.baseline / (2 * obj.objDistMin));
 
             % Discrete or continuous policy
             if (PARAM{3}{14})
@@ -307,11 +324,12 @@ classdef Model < handle
             grid on;
             plot(this.l12_weights(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
             plot(this.l12_weights(:, 3), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 5), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 7), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            % plot(this.l12_weights(:, 5), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+            % plot(this.l12_weights(:, 7), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
+            % legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
+            legend('w_{Vji}', 'w_{Pki}', 'Location', 'best');
             title('Model weights (L1)')
             plotpath = sprintf('%s/weightsL1', this.savePath);
             saveas(gcf, plotpath, 'png');
@@ -321,11 +339,12 @@ classdef Model < handle
             grid on;
             plot(this.l12_weights(:, 2), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
             plot(this.l12_weights(:, 4), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 6), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            % plot(this.l12_weights(:, 6), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+            % plot(this.l12_weights(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('\Sigma weights^{2}', 'FontSize', 12);
-            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
+            % legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
+            legend('w_{Vji}', 'w_{Pki}', 'Location', 'best');
             title('Model weights (L2)')
             plotpath = sprintf('%s/weightsL2', this.savePath);
             saveas(gcf, plotpath, 'png');
@@ -334,15 +353,18 @@ classdef Model < handle
             figure;
             hold on;
             grid on;
+            % r = [- this.lambdaMet * this.metCost_hist, ...
+            %      - this.lambdaP2 * this.l12_weights(:, 5), ...
+            %      - this.lambdaP1 * this.l12_weights(:, 3), ...
+            %      - this.lambdaV * this.l12_weights(:, 1), ...
+            %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
             r = [- this.lambdaMet * this.metCost_hist, ...
-                 - this.lambdaP2 * this.l12_weights(:, 5), ...
-                 - this.lambdaP1 * this.l12_weights(:, 3), ...
-                 - this.lambdaV * this.l12_weights(:, 1), ...
                  - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
             area(r, 'LineStyle','none');
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
-            l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+            % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+            l = legend('\lambdametCost', '\lambdaRecErr');
             % l.FontSize = 7;
             l.Location = 'southwest';
             title('Reward composition (L1)');
@@ -361,13 +383,10 @@ classdef Model < handle
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
             degrees = load('Degrees.mat');
-            baseline = 0.056;
-            desiredAngleMin = atand(baseline / (2 * 2));
-            desiredAngleMax = atand(baseline / (2 * 0.5));
             angleMin = degrees.results_deg(1, 1);
             angleMax = degrees.results_deg(11, 1);
-            vergErrMin = desiredAngleMin - angleMax;
-            vergErrMax = desiredAngleMax - angleMin;
+            vergErrMin = this.desiredAngleMin - angleMax;
+            vergErrMax = this.desiredAngleMax - angleMin;
 
             resolution = 10001;
             approx = spline(1:11, degrees.results_deg(:, 1));
@@ -382,8 +401,8 @@ classdef Model < handle
             mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
             dmf = diff(mf(1:2, 1)); % delta in angle
             indZero = find(mf(:, 2) == 0); % MF == 0_index
-            indMaxFix = find(mf(:, 1) <= desiredAngleMin + dmf & mf(:, 1) >= desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-            indMinFix = find(mf(:, 1) <= desiredAngleMax + dmf & mf(:, 1) >= desiredAngleMax - dmf); % MF(desiredAngleMax)_index
+            indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
+            indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
 
             % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
             % x = vergenceError, y = deltaMuscelForce
@@ -403,13 +422,13 @@ classdef Model < handle
             % observation Window, i.e. plot statistics over last #obsWin iterations
             obsWin = 1000;
             if (size(actualResponse, 1) < obsWin)
-                obsWin = size(actualResponse, 1);
+                obsWin = size(actualResponse, 1) - 1;
             end
             nVal = 20; % #bins of statistics
 
             tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-            % tmp = obsWin x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
+            % tmp = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
             tmp = zeros(nVal, 3);
 
             for i = 1:nVal
@@ -460,13 +479,10 @@ classdef Model < handle
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
             degrees = load('Degrees.mat');
-            baseline = 0.056;
-            desiredAngleMin = atand(baseline / (2 * 2));
-            desiredAngleMax = atand(baseline / (2 * 0.5));
             angleMin = degrees.results_deg(1, 1);
             angleMax = degrees.results_deg(11, 1);
-            vergErrMin = desiredAngleMin - angleMax;
-            vergErrMax = desiredAngleMax - angleMin;
+            vergErrMin = this.desiredAngleMin - angleMax;
+            vergErrMax = this.desiredAngleMax - angleMin;
 
             resolution = 10001;
             approx = spline(1:11, degrees.results_deg(:, 1));
@@ -481,8 +497,8 @@ classdef Model < handle
             mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
             dmf = diff(mf(1:2, 1)); % delta in angle
             indZero = find(mf(:, 2) == 0); % MF == 0_index
-            indMaxFix = find(mf(:, 1) <= desiredAngleMin + dmf & mf(:, 1) >= desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-            indMinFix = find(mf(:, 1) <= desiredAngleMax + dmf & mf(:, 1) >= desiredAngleMax - dmf); % MF(desiredAngleMax)_index
+            indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
+            indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
 
             % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
             % x = vergenceError, y = deltaMuscelForce
@@ -500,13 +516,13 @@ classdef Model < handle
             actualResponse = [this.vergerr_hist, this.relCmd_hist];
 
             if (size(actualResponse, 1) < obsWin)
-                obsWin = size(actualResponse, 1);
+                obsWin = size(actualResponse, 1) - 1;
             end
             nVal = 20; % #bins of statistics
 
             tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-            % tmp = obsWin x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
+            % tmp = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
             tmp = zeros(nVal, 3);
 
             for i = 1:nVal
@@ -565,13 +581,10 @@ classdef Model < handle
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
             degrees = load('Degrees.mat');
-            baseline = 0.056;
-            desiredAngleMin = atand(baseline / (2 * 2));
-            desiredAngleMax = atand(baseline / (2 * 0.5));
             angleMin = degrees.results_deg(1, 1);
             angleMax = degrees.results_deg(11, 1);
-            vergErrMin = desiredAngleMin - angleMax;
-            vergErrMax = desiredAngleMax - angleMin;
+            vergErrMin = this.desiredAngleMin - angleMax;
+            vergErrMax = this.desiredAngleMax - angleMin;
 
             resolution = 10001;
             approx = spline(1:11, degrees.results_deg(:, 1));
@@ -586,8 +599,8 @@ classdef Model < handle
             mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
             dmf = diff(mf(1:2, 1)); % delta in angle
             indZero = find(mf(:, 2) == 0); % MF == 0_index
-            indMaxFix = find(mf(:, 1) <= desiredAngleMin + dmf & mf(:, 1) >= desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-            indMinFix = find(mf(:, 1) <= desiredAngleMax + dmf & mf(:, 1) >= desiredAngleMax - dmf); % MF(desiredAngleMax)_index
+            indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
+            indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
 
             % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
             % x = vergenceError, y = deltaMuscelForce
@@ -617,7 +630,7 @@ classdef Model < handle
 
             tmpRsp = sortrows(actualResponse(startIter : endIter, :));
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-            % tmp = obsWin x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
+            % tmp = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
             tmp = zeros(nVal, 3);
 
             for i = 1:nVal
@@ -678,13 +691,10 @@ classdef Model < handle
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
             degrees = load('Degrees.mat');
-            baseline = 0.056;
-            desiredAngleMin = atand(baseline / (2 * 2));
-            desiredAngleMax = atand(baseline / (2 * 0.5));
             angleMin = degrees.results_deg(1, 1);
             angleMax = degrees.results_deg(11, 1);
-            vergErrMin = desiredAngleMin - angleMax;
-            vergErrMax = desiredAngleMax - angleMin;
+            vergErrMin = this.desiredAngleMin - angleMax;
+            vergErrMax = this.desiredAngleMax - angleMin;
 
             resolution = 10001;
             approx = spline(1:11, degrees.results_deg(:, 1));
@@ -699,8 +709,8 @@ classdef Model < handle
             mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
             dmf = diff(mf(1:2, 1)); % delta in angle
             indZero = find(mf(:, 2) == 0); % MF == 0_index
-            indMaxFix = find(mf(:, 1) <= desiredAngleMin + dmf & mf(:, 1) >= desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-            indMinFix = find(mf(:, 1) <= desiredAngleMax + dmf & mf(:, 1) >= desiredAngleMax - dmf); % MF(desiredAngleMax)_index
+            indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
+            indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
 
             % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
             % x = vergenceError, y = deltaMuscelForce

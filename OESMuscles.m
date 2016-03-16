@@ -84,23 +84,11 @@ for kc = 1:stOvS:ncS
     columnIndS = [columnIndS tmpInd];
 end
 
-% Camera parameters
-% offset = 0;       %vertical offset between left and right (0 in the Simulator!!!)
-f = 257.34;         %focal length [px]
-baseline = 0.056;   %interocular distance (baseline)
-
 % Textures
 texturePath = sprintf('config/%s', textureFile);
 texture = load(texturePath);
 texture = texture.texture;
 nTextures = length(texture);
-
-% Object distance to eyes [m]
-objDistMin = 0.5;
-objDistMax = 2;
-
-muscleInitMin = 0.00807;    %minimal initial muscle innervation
-muscleInitMax = 0.07186;    %maximal --"--
 
 degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
 metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
@@ -126,14 +114,14 @@ for iter1 = 1 : (model.trainTime / model.interval)
     currentTexture = texture{(randi(nTextures, 1))};
 
     % random depth
-    objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
+    objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
 
     % reset muscle activities to random values
     % initialization for muscle in between borders of desired actvity
     % i.e. min and max stimulus distance
     command = [0, 0];
-    command(2) = muscleInitMin + (muscleInitMax - muscleInitMin) * rand(1,1); %only for one muscle
-    % command(1) = muscleInitMin + (muscleInitMax - muscleInitMin) * rand(1,1); %two muscles
+    command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %only for one muscle
+    % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %two muscles
     % command(2) = command(1);
     % command(2) = 0.1 * rand(1, 1); % random policy
 
@@ -205,14 +193,15 @@ for iter1 = 1 : (model.trainTime / model.interval)
         metCost = getMetCost(command) * 2;
 
         %%% Calculate reward function
+        rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
         % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
 
         %%% Weight L1 regularization
-        rewardFunction = model.lambdaRec * reward ...
-                         - model.lambdaMet * metCost ...
-                         - model.lambdaV * (sum(sum(abs(model.rlmodel.CCritic.v_ji)))) ...
-                         - model.lambdaP1 * (sum(sum(abs(model.rlmodel.CActor.wp_ji)))) ...
-                         - model.lambdaP2 * (sum(sum(abs(model.rlmodel.CActor.wp_kj))));
+        % rewardFunction = model.lambdaRec * reward ...
+        %                  - model.lambdaMet * metCost ...
+        %                  - model.lambdaV * (sum(sum(abs(model.rlmodel.CCritic.v_ji)))) ...
+        %                  - model.lambdaP1 * (sum(sum(abs(model.rlmodel.CActor.wp_ji)))) ...
+        %                  - model.lambdaP2 * (sum(sum(abs(model.rlmodel.CActor.wp_kj))));
 
         %%% Weight L2 regularization
         % rewardFunction = model.lambdaRec * reward ...
@@ -260,10 +249,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
         % compute desired vergence command, disparity and vergence error
-        fixDepth = (baseline / 2) / tand(angleNew / 2); %fixation depth [m]
-        angleDes = 2 * atand(baseline / (2 * objDist)); %desired vergence [deg]
-        anglerr = angleDes - angleNew;                  %vergence error [deg]
-        disparity = 2 * f * tand(anglerr / 2);          %current disp [px]
+        fixDepth = (model.baseline / 2) / tand(angleNew / 2);   %fixation depth [m]
+        angleDes = 2 * atand(model.baseline / (2 * objDist));   %desired vergence [deg]
+        anglerr = angleDes - angleNew;                          %vergence error [deg]
+        disparity = 2 * model.f * tand(anglerr / 2);            %current disp [px]
 
         % save state
         model.Z(t) = objDist;
@@ -304,7 +293,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.scmodel_Small.saveBasis();
 
         % save Weights
-        model.rlmodel.saveWeights();
+        % model.rlmodel.saveWeights();
     end
 end
 elapsedTime = toc;
