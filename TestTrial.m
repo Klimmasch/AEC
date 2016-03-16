@@ -6,16 +6,16 @@
 %           and metabolic costs
 % No learning occures during this trial and the results are saved in a
 % specified folder (under ./results/) in the file modelTestData.mat.
-function TestTrial(model, randomizationSeed, fileDescription, savePathMo)
+function TestTrial(model, randomizationSeed, fileDescription)
 
 % TODO: range of disparity ueberpruefen auf relCmd!!
 
     numberTrials = 100;
     modelTest = ModelTestData(numberTrials * model.interval, model.interval);
-    folder = strcat(savePathMo, './testResults/');
-    savePath = sprintf('TestedModel_%s_%s', datestr(now), fileDescription);
-    mkdir(folder, savePath);
-    savePath = strcat(folder, savePath);
+    folder = strcat(model.savePath, './testResults/');
+    testModelDescription = sprintf('TestedModel_%s_%s', datestr(now), fileDescription);
+    mkdir(folder, testModelDescription);
+    modelTest.savePath = strcat(folder, testModelDescription);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%% predefining variables %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -225,8 +225,8 @@ function TestTrial(model, randomizationSeed, fileDescription, savePathMo)
             elapsedTime / 3600, elapsedTime / 60, elapsedTime, t - 1 / elapsedTime)
 
     % Save and plot results data
-    save(strcat(savePath, '/modelTestData'), 'modelTest');
-    modelTest.testPlotSave(savePath);
+    save(strcat(modelTest.savePath, '/modelTestData'), 'modelTest');
+    modelTest.testPlotSave();
 end
 
 %%% Saturation function that keeps motor commands in [0, 1]

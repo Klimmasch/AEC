@@ -44,7 +44,7 @@ elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
 end
 
 % File management
-savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
+modelName = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
                     datestr(now), ...
                     trainTime, ...
                     sparseCodingType, ...
@@ -53,9 +53,8 @@ savePath = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
 % folder = '~/projects/RESULTS/';
 % folder = './results/';
 folder = '../results/';
-mkdir(folder, savePath);
-savePath = strcat(folder, savePath);
-model.savePath = savePath;
+mkdir(folder, modelName);
+model.savePath = strcat(folder, modelName);
 
 % Image process variables
 patchSize = 8;
@@ -95,7 +94,6 @@ texturePath = sprintf('config/%s', textureFile);
 texture = load(texturePath);
 texture = texture.texture;
 nTextures = length(texture);
-% currentTexture = texture{1}; %choose first texture as initial
 
 % Object distance to eyes [m]
 objDistMin = 0.5;
@@ -135,15 +133,17 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % i.e. min and max stimulus distance
     command = [0, 0];
     command(2) = muscleInitMin + (muscleInitMax - muscleInitMin) * rand(1,1); %only for one muscle
+    % command(1) = muscleInitMin + (muscleInitMax - muscleInitMin) * rand(1,1); %two muscles
+    % command(2) = command(1);
     % command(2) = 0.1 * rand(1, 1); % random policy
 
     angleNew = getAngle(command) * 2;
 
-    % for training of basis functions:
-%    b = 1;      % diversity or variance of laplacian dist.
-%    range = 5;  % maximum vergence is 5 degree
-%    angleDes = 2*atand(baseline/(2*objDist));
-%    angleNew = angleDes + truncLaplacian(b, range);
+    % Training of basis functions:
+    % b = 1;      % diversity or variance of laplacian dist.
+    % range = 5;  % maximum vergence is 5 degree
+    % angleDes = 2 * atand(baseline / (2 * objDist));
+    % angleNew = angleDes + truncLaplacian(b, range);
 
     [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                    currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -162,6 +162,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
         imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
+        % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
         % imwrite(anaglyph, 'anaglyph.png');
 
@@ -176,11 +177,6 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % Generate input feature vector from current images
         [feature, reward, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-
-        % % incorporationg the current muscle activity into feature vector
-        % % and scaling it to the value
-        % % range of BF activations
-        % feature = [feature; command' * model.lambdaMuscleFB];
 
         %%% Feedback
         % Absolute command feedback # concatination
@@ -288,11 +284,11 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.l12_weights(t, 2) = model.rlmodel.CCritic.params(2);
         model.l12_weights(t, 3) = model.rlmodel.CActor.params(1);
         model.l12_weights(t, 4) = model.rlmodel.CActor.params(2);
-%         plot(model.td_hist);
         % model.l12_weights(t, 5) = model.rlmodel.CActor.params(3);
         % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
         % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
         % model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
+        % plot(model.td_hist);
     end
 
     sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
@@ -301,14 +297,14 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % Display per cent completed of training and save model
     if (~mod(t, saveInterval))
         sprintf('%g%% is finished', (t / model.trainTime * 100))
-        save(strcat(savePath, '/model'), 'model');
+        save(strcat(model.savePath, '/model'), 'model');
 
         % save Basis
-        model.scmodel_Large.saveBasis;
-        model.scmodel_Small.saveBasis;
+        model.scmodel_Large.saveBasis();
+        model.scmodel_Small.saveBasis();
 
         % save Weights
-        model.rlmodel.saveWeights;
+        model.rlmodel.saveWeights();
     end
 end
 elapsedTime = toc;
@@ -321,19 +317,19 @@ sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/s
 % Plot results
 if (plotNsave)
     % model.errPlot();
-    model.allPlotSave(savePath);
-    copyfile('CActorG.m', savePath);
-    copyfile('CCriticG.m', savePath);
-    copyfile('config.m', savePath);
-    copyfile('Model.m', savePath);
-    copyfile('OESMuscles.m', savePath);
-    copyfile('ReinforcementLearningCont.m', savePath);
-    copyfile('CActorG.m', savePath);
+    model.allPlotSave();
+    copyfile('CActorG.m', model.savePath);
+    copyfile('CCriticG.m', model.savePath);
+    copyfile('config.m', model.savePath);
+    copyfile('Model.m', model.savePath);
+    copyfile('OESMuscles.m', model.savePath);
+    copyfile('ReinforcementLearningCont.m', model.savePath);
+    copyfile('CActorG.m', model.savePath);
 end
 
 %%% Testing procedure
 if (testIt)
-    TestTrial(model, randomizationSeed, fileDescription, savePath);
+    TestTrial(model, randomizationSeed, fileDescription);
 end
 
 end

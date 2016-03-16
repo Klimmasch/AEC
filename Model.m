@@ -198,7 +198,7 @@ classdef Model < handle
         end
 
         %% Plotting everything and save graphs
-        function allPlotSave(this, savePath)
+        function allPlotSave(this)
             windowSize = 125;
             if (this.trainTime < windowSize * this.interval)
                 windowSize = round(this.trainTime / this.interval / 5);
@@ -224,7 +224,7 @@ classdef Model < handle
             ylabel('Vergence Error [deg]', 'FontSize', 12);
             title('Moving Average of the Vergence Error');
             legend('verg err', 'SMA(verg err)');
-            plotpath = sprintf('%s/mvngAvgVergErr', savePath);
+            plotpath = sprintf('%s/mvngAvgVergErr', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Root Mean Squared Error
@@ -245,7 +245,7 @@ classdef Model < handle
             xlabel(sprintf('Iteration # (windowSize=%d)', windowSize * this.interval), 'FontSize', 12);
             ylabel('RMSE Vergence Error [deg]', 'FontSize', 12);
             title('RMSE of the Vergence Error');
-            plotpath = sprintf('%s/rmseVergErr', savePath);
+            plotpath = sprintf('%s/rmseVergErr', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Reconstruction Error
@@ -260,7 +260,7 @@ classdef Model < handle
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Reconstruction Error [AU]', 'FontSize', 12);
             legend('Coarse', 'Fine');
-            plotpath = sprintf('%s/recErr', savePath);
+            plotpath = sprintf('%s/recErr', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Vergence angle
@@ -273,7 +273,7 @@ classdef Model < handle
             ylabel('Angle [deg]', 'FontSize', 12);
             legend('desired', 'actual');
             title('Vergence');
-            plotpath = sprintf('%s/vergenceAngle', savePath);
+            plotpath = sprintf('%s/vergenceAngle', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Muscel graphs
@@ -298,7 +298,7 @@ classdef Model < handle
             ylabel('Value', 'FontSize', 12);
             title('Metabolic Costs');
 
-            plotpath = sprintf('%s/muscleGraphs', savePath);
+            plotpath = sprintf('%s/muscleGraphs', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Weights
@@ -313,7 +313,7 @@ classdef Model < handle
             ylabel('\Sigma \midweights\mid', 'FontSize', 12);
             legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
             title('Model weights (L1)')
-            plotpath = sprintf('%s/weightsL1', savePath);
+            plotpath = sprintf('%s/weightsL1', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             figure;
@@ -327,7 +327,7 @@ classdef Model < handle
             ylabel('\Sigma weights^{2}', 'FontSize', 12);
             legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
             title('Model weights (L2)')
-            plotpath = sprintf('%s/weightsL2', savePath);
+            plotpath = sprintf('%s/weightsL2', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Reward
@@ -346,7 +346,7 @@ classdef Model < handle
             % l.FontSize = 7;
             l.Location = 'southwest';
             title('Reward composition (L1)');
-            plotpath = sprintf('%s/rewardCompL1', savePath);
+            plotpath = sprintf('%s/rewardCompL1', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% delta_MF(Vergence_error)
@@ -443,7 +443,7 @@ classdef Model < handle
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title(strcat('\Delta MF(Vergence_{error}) response after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
-            plotpath = sprintf('%s/deltaMFasFktVerErr', savePath);
+            plotpath = sprintf('%s/deltaMFasFktVerErr', this.savePath);
             saveas(gcf, plotpath, 'png');
         end
 
@@ -548,7 +548,7 @@ classdef Model < handle
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title(strcat('\Delta MF(Vergence_{error}) response after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
-            plotpath = sprintf('%s/deltaMFasFktVerErr', savePath);
+            plotpath = sprintf('%s/deltaMFasFktVerErrObsWin', savePath);
             saveas(gcf, plotpath, 'png');
         end
 
@@ -659,7 +659,7 @@ classdef Model < handle
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title(strcat('\Delta MF(Vergence_{error}) betweem iteration ', sprintf(' %d and %d', startIter, endIter)));
-            plotpath = sprintf('%s/deltaMFasFktVerErr', savePath);
+            plotpath = sprintf('%s/deltaMFasFktVerErrStartEnd', savePath);
             saveas(gcf, plotpath, 'png');
         end
 
@@ -766,7 +766,7 @@ classdef Model < handle
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title('\Delta MF(Vergence_{error}) response at Testing procedure');
-            plotpath = sprintf('%s/deltaMFasFktVerErr', savePath);
+            plotpath = sprintf('%s/deltaMFasFktVerErrGenDist', savePath);
             saveas(gcf, plotpath, 'png');
         end
 
