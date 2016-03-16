@@ -16,7 +16,6 @@ classdef CRGCritic < handle
 
         % input/output tracking of previous time step
         feature_prev;   % feature vector
-        value_prev;     % value output
 
         % model history tracking
         params;
@@ -30,14 +29,13 @@ classdef CRGCritic < handle
             obj.xi = PARAM{4};
             obj.gamma = PARAM{5};
 
-            %restrain to positive values
-%             obj.v_ji = rand(1, obj.input_dim) * obj.v_init_range;
+            % restrain to positive values
+            % obj.v_ji = rand(1, obj.input_dim) * obj.v_init_range;
             obj.v_ji = (2 * rand(1, obj.input_dim) - 1) * obj.v_init_range;
 
             obj.J = 0;
             obj.delta = 0;
 
-            obj.value_prev = 0;
             obj.feature_prev = zeros(obj.input_dim, 1);
             obj.params = zeros(1, 2);
         end
@@ -62,7 +60,6 @@ classdef CRGCritic < handle
                 this.update(reward);
             end
             this.feature_prev = feature;
-            this.value_prev = this.value;
         end
     end
 end

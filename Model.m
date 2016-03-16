@@ -20,8 +20,8 @@ classdef Model < handle
         simulated_time;     %how long did the model take to be learned (min)
 
         sparseCodingType;   %type of sparse coding
-        stopSC = 0;
-        SCInterval = 1;
+        stopSC;
+        SCInterval;
 
         lambdaMuscleFB;     %factor of muscle activity feedback to RL feature vector
         lambdaMet;          %factor of metCosts for reward function
@@ -88,6 +88,7 @@ classdef Model < handle
                 obj.scmodel_Small = SparseCoding(PARAM{2}{2});      %fine scale
             end
             obj.stopSC = obj.trainTime;
+            obj.SCInterval = 1;
 
             obj.recerr_hist = zeros(obj.trainTime, 2);
             obj.disp_hist = zeros(obj.trainTime, 1);
@@ -102,7 +103,7 @@ classdef Model < handle
             % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, 1);
-            obj.l12_weights = zeros(obj.trainTime, 8);
+            obj.l12_weights = zeros(obj.trainTime, 4);
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
         end

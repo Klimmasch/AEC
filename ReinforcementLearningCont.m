@@ -8,7 +8,7 @@ classdef ReinforcementLearningCont < handle
         lambda;         %the regularizatoin factor
         xi;             %discount factor
 
-        Temperature;    %temperature in softmax function in policy network
+        variance;    %temperature in softmax function in policy network
         weight_range;   %maximum initial weight
         S0;             %number of neurons in the input layer
 
@@ -33,7 +33,7 @@ classdef ReinforcementLearningCont < handle
             obj.alpha_p = PARAM{4};
             obj.xi = PARAM{5}; % in continuous case used as gamma
             obj.gamma = PARAM{6}; % in continuous case used as eta
-            obj.Temperature = PARAM{7};
+            obj.variance = PARAM{7};
             obj.lambda = PARAM{8};
             obj.S0 = PARAM{9};
             obj.weight_range = PARAM{10};
@@ -50,9 +50,9 @@ classdef ReinforcementLearningCont < handle
 
             %ActorParams = {alpha_p, alpha_n, featureDimension, initialWeightRange, actorHiddenType, variance};
             %ActorParams = {0.001, 0.01, 576, 0.22, 'tanh'}; original params
-            % ActorParams = {obj.alpha_p, obj.alpha_n, obj.S0, obj.weight_range(2:3), 'tanh', 'default', obj.Temperature};
+            % ActorParams = {obj.alpha_p, obj.alpha_n, obj.S0, obj.weight_range(2:3), 'tanh', 'default', obj.variance};
             % obj.CActor = CActorG(ActorParams);
-            ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.Temperature};
+            ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.variance};
             obj.CActor = CRGActor(ActorParams);
 
             % DEPRECATED
