@@ -107,6 +107,7 @@ end
 
 %%% Main execution loop
 t = 0;
+rewardFunction_prev = -5;
 tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
 
@@ -174,7 +175,12 @@ for iter1 = 1 : (model.trainTime / model.interval)
         metCost = getMetCost(command) * 2;
 
         %%% Calculate reward function
-        rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
+        % delta reward
+        rewardFunctionAbs = model.lambdaRec * reward - model.lambdaMet * metCost;
+        rewardFunction = rewardFunctionAbs - rewardFunction_prev;
+        rewardFunction_prev = rewardFunctionAbs;
+
+        % rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
         % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
 
         %%% Weight L1 regularization

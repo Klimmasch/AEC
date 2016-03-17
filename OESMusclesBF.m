@@ -110,7 +110,7 @@ end
 
 %%% Main execution loop
 t = 0;
-rewardFunction_prev = -1;
+rewardFunction_prev = -5;
 tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
 
