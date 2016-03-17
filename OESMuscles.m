@@ -169,25 +169,6 @@ for iter1 = 1 : (model.trainTime / model.interval)
         %%% Feedback
         % Absolute command feedback # concatination
         feature = [feature; command(2) * model.lambdaMuscleFB];
-        % Relative command feedback # concatination
-        % if (iter2 > 1)
-        %     feature = [feature; model.relCmd_hist(t-1) * model.lambdaMuscleFB];
-        % else
-        %     feature = [feature; 0];
-        % end
-
-        %% Absolute command feedback # additive
-        % feature = feature + command(2) * model.lambdaMuscleFB;
-        %% Absolute command feedback # multiplicative
-        % feature = feature * (command(2) * model.lambdaMuscleFB);
-        %% Relative command feedback # additive
-        % if (iter2 > 1)
-        %     feature = feature + model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
-        % end
-        %% Relative command feedback # multiplicative
-        % if (iter2 > 1)
-        %     feature = feature * model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
-        % end
 
         %%% Calculate metabolic costs
         metCost = getMetCost(command) * 2;
@@ -215,6 +196,9 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.scmodel_Large.stepTrain(currentView{1});
         model.scmodel_Small.stepTrain(currentView{2});
         % RL model
+        % decay of actor's output perturbation
+        % variance(t=100k) ~= 1e-5
+        % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 15000);
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
@@ -230,12 +214,12 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % testLP = [];
         % for test = 1:10000
         %     testLP = [testLP truncLaplacian(b,range)];
-
         % end
         % figure;
         % hold on;
         % histogram(testLP);
         % hold off;
+
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                currentTexture, currentTexture, objDist, objDist, angleNew));

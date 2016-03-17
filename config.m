@@ -82,8 +82,9 @@ muscleInitMin = 0.00807;    %minimal initial muscle innervation
 muscleInitMax = 0.07186;    %maximal --"--
 
 interval = 10;                          %period to change a new environment for the eye | origin 10
-lambdaMuscleFB = 0.9048;                %factor of muscle activity feedback to RL feature vector
-                                        %Proportion MF/feature | 0.5% = 0.4524 | 1% = 0.9048 | 5% = 4.524 | 10% = 9.048
+lambdaMuscleFB = 1.0722;                %factor of muscle activity feedback to RL feature vector
+                                        %Proportion MF/feature | 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
+                                        % 30% = 1.0722 | 50% = 1.7871 | 100% = 3.5741
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]

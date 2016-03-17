@@ -561,12 +561,6 @@ classdef Model < handle
             ymax = -ymin;
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-            if (min(actualResponseStat(:, 1)) < xmin)
-                xmin = min(actualResponseStat(:, 1)) - min(actualResponseStat(:, 1)) * 0.1;
-            end
-            if (max(actualResponseStat(:, 1)) > xmax)
-                xmax = max(actualResponseStat(:, 1)) + max(actualResponseStat(:, 1)) * 0.1;
-            end
             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
@@ -671,12 +665,6 @@ classdef Model < handle
             ymax = -ymin;
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-            if (min(actualResponseStat(:, 1)) < xmin)
-                xmin = min(actualResponseStat(:, 1)) - min(actualResponseStat(:, 1)) * 0.1;
-            end
-            if (max(actualResponseStat(:, 1)) > xmax)
-                xmax = max(actualResponseStat(:, 1)) + max(actualResponseStat(:, 1)) * 0.1;
-            end
             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
@@ -777,12 +765,6 @@ classdef Model < handle
             ymax = -ymin;
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-            if (min(actualResponseStat(:, 1)) < xmin)
-                xmin = min(actualResponseStat(:, 1)) - min(actualResponseStat(:, 1)) * 0.1;
-            end
-            if (max(actualResponseStat(:, 1)) > xmax)
-                xmax = max(actualResponseStat(:, 1)) + max(actualResponseStat(:, 1)) * 0.1;
-            end
             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);

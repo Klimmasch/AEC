@@ -110,6 +110,7 @@ end
 
 %%% Main execution loop
 t = 0;
+rewardFunction_prev = -1;
 tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
 
@@ -172,31 +173,17 @@ for iter1 = 1 : (model.trainTime / model.interval)
         %%% Feedback
         % Absolute command feedback # concatination
         feature = [feature; command(2) * model.lambdaMuscleFB];
-        % Relative command feedback # concatination
-        % if (iter2 > 1)
-        %     feature = [feature; model.relCmd_hist(t-1) * model.lambdaMuscleFB];
-        % else
-        %     feature = [feature; 0];
-        % end
-
-        %% Absolute command feedback # additive
-        % feature = feature + command(2) * model.lambdaMuscleFB;
-        %% Absolute command feedback # multiplicative
-        % feature = feature * (command(2) * model.lambdaMuscleFB);
-        %% Relative command feedback # additive
-        % if (iter2 > 1)
-        %     feature = feature + model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
-        % end
-        %% Relative command feedback # multiplicative
-        % if (iter2 > 1)
-        %     feature = feature * model.relCmd_hist(t - 1) * model.lambdaMuscleFB;
-        % end
 
         %%% Calculate metabolic costs
         metCost = getMetCost(command) * 2;
 
         %%% Calculate reward function
-        rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
+        % delta reward
+        rewardFunctionAbs = model.lambdaRec * reward - model.lambdaMet * metCost;
+        rewardFunction = rewardFunctionAbs - rewardFunction_prev;
+        rewardFunction_prev = rewardFunctionAbs;
+
+        % rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
         % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
 
         %%% Weight L1 regularization
@@ -217,7 +204,11 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % Sparse coding models
         %model.scmodel_Large.stepTrain(currentView{1});
         %model.scmodel_Small.stepTrain(currentView{2});
+
         % RL model
+        % decay of actor's output perturbation
+        % variance(t=100k) ~= 1e-5
+        model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 15000);
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
@@ -233,12 +224,12 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % testLP = [];
         % for test = 1:10000
         %     testLP = [testLP truncLaplacian(b,range)];
-
         % end
         % figure;
         % hold on;
         % histogram(testLP);
         % hold off;
+
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -280,15 +271,14 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
         % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
         % model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
-%         plot(model.td_hist);
-%         figure
-%         hold on;
-%         plot(sum(model.feature_hist(:,1:end-1),2),'r');
-%         plot(model.feature_hist(:,end),'b');
-%         title(sprintf('%g', model.feature_hist(end,end)));
-%         if (t < trainTime)
-%             close all;
-%         end
+        % plot(model.td_hist);
+        % if (model.feature_hist(end,end) > sum(model.feature_hist(t,1:end-1),2))
+        %     figure
+        %     hold on;
+        %     plot(sum(model.feature_hist(:,1:end-1),2),'r');
+        %     plot(model.feature_hist(:,end),'b');
+        %     title(sprintf('%g', model.feature_hist(end,end)));
+        % end
     end
 
     sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
@@ -319,13 +309,13 @@ sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/s
 if (plotNsave)
     % model.errPlot();
     model.allPlotSave();
-    copyfile('CActorG.m', model.savePath);
-    copyfile('CCriticG.m', model.savePath);
     copyfile('config.m', model.savePath);
-    copyfile('Model.m', model.savePath);
     copyfile('OESMuscles.m', model.savePath);
+    copyfile('OESMusclesBF.m', model.savePath);
     copyfile('ReinforcementLearningCont.m', model.savePath);
-    copyfile('CActorG.m', model.savePath);
+    copyfile('CRGActor.m', model.savePath);
+    copyfile('CRGCritic.m', model.savePath);
+    copyfile('Model.m', model.savePath);
 end
 
 %%% Testing procedure
