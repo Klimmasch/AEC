@@ -95,8 +95,8 @@ function [vergErrs, relCmds] = generateRelCmds(model, objRange, vergRange, repea
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-                anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
-                imwrite(anaglyph, 'anaglyph.png');
+%                 anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
+%                 imwrite(anaglyph, 'anaglyph.png');
 
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
