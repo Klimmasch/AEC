@@ -43,8 +43,8 @@ classdef CRGActor < handle
         end
 
         function update(this, delta)
-            % psi = ((this.command_prev - this.z_k_prev) * this.z_i_prev) / this.variance;
-            psi = ((this.z_k_prev - this.command_prev) * this.z_i_prev) / this.variance; % inverse psi
+            psi = ((this.command_prev - this.z_k_prev) * this.z_i_prev) / this.variance;
+            % psi = ((this.z_k_prev - this.command_prev) * this.z_i_prev) / this.variance; % inverse psi
             % histogram(psi,100)
             this.wp_ki = this.wp_ki + this.beta_p * delta * psi';
 

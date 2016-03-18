@@ -24,7 +24,7 @@ plotNsave = uint8(1);
 % Whether the testing procedure shall be executed in the end
 % testIt:   0 = don't do it
 %           1 = do it
-testIt = uint8(0);
+testIt = uint8(1);
 
 % Save model and conduct testing every saveInterval training iterations (+1)
 saveInterval = 1000;
@@ -176,10 +176,14 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         %%% Calculate reward function
         % delta reward
-        rewardFunctionAbs = model.lambdaRec * reward - model.lambdaMet * metCost;
-        rewardFunction = rewardFunctionAbs - rewardFunction_prev;
-        rewardFunction_prev = rewardFunctionAbs;
+        rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
+        rewardFunction = rewardFunctionReal - rewardFunction_prev;
 
+        % counter balance 0 movement by small negative bias
+        % rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
+        rewardFunction_prev = rewardFunctionReal;
+
+        % standard reward
         % rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
         % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
 
@@ -203,8 +207,13 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.scmodel_Small.stepTrain(currentView{2});
         % RL model
         % decay of actor's output perturbation
-        % variance(t=100k) ~= 1e-5
+        % variance(t = [1, 100k]) ~= [0.001, 1e-5]
         % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 15000);
+        % variance(t = [1, 100k]) ~= [0.001, 1e-4]
+        model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 30200);
+        % variance(t = [1, 100k]) ~= [0.01, 1e-4]
+        % model.rlmodel.CActor.variance = 0.01 * 2 ^ (-t / 15100);
+
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
@@ -305,13 +314,13 @@ sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/s
 if (plotNsave)
     % model.errPlot();
     model.allPlotSave();
-    copyfile('CActorG.m', model.savePath);
-    copyfile('CCriticG.m', model.savePath);
     copyfile('config.m', model.savePath);
-    copyfile('Model.m', model.savePath);
     copyfile('OESMuscles.m', model.savePath);
+    copyfile('OESMusclesBF.m', model.savePath);
     copyfile('ReinforcementLearningCont.m', model.savePath);
-    copyfile('CActorG.m', model.savePath);
+    copyfile('CRGActor.m', model.savePath);
+    copyfile('CRGCritic.m', model.savePath);
+    copyfile('Model.m', model.savePath);
 end
 
 %%% Testing procedure
