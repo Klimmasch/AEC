@@ -457,10 +457,10 @@ classdef Model < handle
             l.Orientation = 'horizontal';
             l.Location = 'southoutside';
             % axis
-            xmin = -10;
-            xmax = -xmin;
-            ymin = -0.1;
-            ymax = -ymin;
+            xmin = min(actualResponseStat(:, 1)) * 1.1;
+            xmax = max(actualResponseStat(:, 1)) * 1.1;
+            ymin = min(actualResponseStat(:, 2)) * 1.1;
+            ymax = max([max(perfectResponse(:, 4)) * 1.1, max(actualResponseStat(:, 2)) * 1.1]);
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -555,10 +555,10 @@ classdef Model < handle
             l.Orientation = 'horizontal';
             l.Location = 'southoutside';
             % axis
-            xmin = -10;
-            xmax = -xmin;
-            ymin = -0.1;
-            ymax = -ymin;
+            xmin = min(actualResponseStat(:, 1)) * 1.1;
+            xmax = max(actualResponseStat(:, 1)) * 1.1;
+            ymin = min(actualResponseStat(:, 2)) * 1.1;
+            ymax = max([max(perfectResponse(:, 4)) * 1.1, max(actualResponseStat(:, 2)) * 1.1]);
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -659,10 +659,10 @@ classdef Model < handle
             l.Orientation = 'horizontal';
             l.Location = 'southoutside';
             % axis
-            xmin = -10;
-            xmax = -xmin;
-            ymin = -0.1;
-            ymax = -ymin;
+            xmin = min(actualResponseStat(:, 1)) * 1.1;
+            xmax = max(actualResponseStat(:, 1)) * 1.1;
+            ymin = min(actualResponseStat(:, 2)) * 1.1;
+            ymax = max([max(perfectResponse(:, 4)) * 1.1, max(actualResponseStat(:, 2)) * 1.1]);
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -759,10 +759,10 @@ classdef Model < handle
             l.Orientation = 'horizontal';
             l.Location = 'southoutside';
             % axis
-            xmin = -10;
-            xmax = -xmin;
-            ymin = -0.1;
-            ymax = -ymin;
+            xmin = min(actualResponseStat(:, 1)) * 1.1;
+            xmax = max(actualResponseStat(:, 1)) * 1.1;
+            ymin = min(actualResponseStat(:, 2)) * 1.1;
+            ymax = max([max(perfectResponse(:, 4)) * 1.1, max(actualResponseStat(:, 2)) * 1.1]);
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
