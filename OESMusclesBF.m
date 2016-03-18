@@ -34,9 +34,9 @@ end
 
 % Instantiate and initiate model and test_data objects
 model = config(learnedFile, textureFile, trainTime, sparseCodingType);
-modelBF = load('/tmp/model_11-Mar-2016 20:38:05_100000_110_111_nhomeo_1_trainBF_laplacian_b=1/model.mat');
-model.scmodel_Small.Basis = modelBF.model.scmodel_Small.Basis;
-model.scmodel_Large.Basis = modelBF.model.scmodel_Large.Basis;
+% modelBF = load('/tmp/model_11-Mar-2016 20:38:05_100000_110_111_nhomeo_1_trainBF_laplacian_b=1/model.mat');
+% model.scmodel_Small.Basis = modelBF.model.scmodel_Small.Basis;
+% model.scmodel_Large.Basis = modelBF.model.scmodel_Large.Basis;
 
 if (trainTime <= model.interval)
     sprintf('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
@@ -132,10 +132,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
     angleNew = getAngle(command) * 2;
 
     % Training of basis functions:
-    % b = 1;      % diversity or variance of laplacian dist.
-    % range = 5;  % maximum vergence is 5 degree
-    % angleDes = 2 * atand(baseline / (2 * objDist));
-    % angleNew = angleDes + truncLaplacian(b, range);
+    b = 1;      % diversity or variance of laplacian dist.
+    range = 5;  % maximum vergence is 5 degree
+    angleDes = 2 * atand(model.baseline / (2 * objDist));
+    angleNew = angleDes + truncLaplacian(b, range);
 
     [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                    currentTexture, currentTexture, objDist, objDist, angleNew));
@@ -219,16 +219,16 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % in case you want to train basisfunctions tuned to a specific
         % disparity:
-        % angleDes = 2 * atand(baseline / (2 * objDist)); %desired vergence [deg]
-        % angleNew = angleDes + truncLaplacian(b,range);
-        % testLP = [];
-        % for test = 1:10000
-        %     testLP = [testLP truncLaplacian(b,range)];
-        % end
-        % figure;
-        % hold on;
-        % histogram(testLP);
-        % hold off;
+%         angleDes = 2 * atand(model.baseline / (2 * objDist)); %desired vergence [deg]
+%         angleNew = angleDes + truncLaplacian(b,range);
+%         testLP = [];
+%         for test = 1:10000
+%             testLP = [testLP truncLaplacian(b,range)];
+%         end
+%         figure;
+%         hold on;
+%         histogram(testLP);
+%         hold off;
 
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
