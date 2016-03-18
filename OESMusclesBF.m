@@ -331,6 +331,7 @@ end
 if (testIt)
     % TestTrial(model, randomizationSeed, fileDescription);
     model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 5);
+    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 5);
 end
 
 end
