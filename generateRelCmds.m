@@ -8,7 +8,7 @@
 % meters, than goes through the range of vergence "Errors" and generates
 % muscle commands and repeats that 10 times
 
-function [vergErrs, relCmds] = generateRelCmds(model, objRange, vergRange, repeat)
+function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
 
     focalLength = 257.34;        	%focal length [px]
     baseline = 0.056;   		%interocular distance (baseline)
@@ -49,6 +49,7 @@ function [vergErrs, relCmds] = generateRelCmds(model, objRange, vergRange, repea
 
     vergErrs = [];
     relCmds = [];
+    recErrs = [];
 
 
     [~, numDists] = size(objRange);
@@ -120,10 +121,12 @@ function [vergErrs, relCmds] = generateRelCmds(model, objRange, vergRange, repea
                 %Traking variables
                 vergErrs = [vergErrs; vergRange(verg)];
                 relCmds = [relCmds; relCmd];
+                recErrs = [recErrs; errorTotal];
             end
         end
         sprintf('number of repetitions: %d/%d done', rep, repeat)
     end
+    responseResults = struct('relCmds', relCmds, 'vergErrs', vergErrs, 'recErrs', recErrs);
 end
 
 %%% Helper functions for image preprocessing

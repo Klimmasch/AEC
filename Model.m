@@ -725,8 +725,8 @@ classdef Model < handle
 
             %%% generating fixed distances
             % actualResponse = [vergErrs, relCmds];
-            [vergErrs, relCmds] = generateRelCmds(this, objRange, vergRange, repeat);
-            actualResponse = [vergErrs, relCmds];
+            responseResults = generateRelCmds(this, objRange, vergRange, repeat);
+            actualResponse = [responseResults.vergErrs, responseResults.relCmds];
             nVal = size(vergRange, 2); % #bins of statistics
 
             tmpRsp = sortrows(actualResponse);
@@ -769,8 +769,66 @@ classdef Model < handle
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title('\Delta MF(Vergence_{error}) response at Testing procedure');
-            plotpath = sprintf('%s/deltaMFasFktVerErrGenDist', this.savePath);
-            saveas(gcf, plotpath, 'png');
+            if ~isempty(this.savePath)
+                plotpath = sprintf('%s/deltaMFasFktVerErrGenDist', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            end
+            
+        end
+        
+        %% plot & save reconstructionErr(Vergence_error)
+        % objRange = range of object distances being tested
+        % vergRange = range of vergences being tested
+        % repeat = #repetitions of testing procedure
+        function recErrPlotGenDist(this, objRange, vergRange, repeat)
+            %plotting the resonstruction error of basis functions over
+            %different disparities
+            responseResults = generateRelCmds(this, objRange, vergRange, repeat);
+            recResponse = [responseResults.vergErrs, responseResults.recErrs];
+            nVal = size(vergRange, 2); % #bins of statistics
+
+            tmpRsp = sortrows(recResponse);
+            deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+            % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
+            tmp = zeros(nVal, 3);
+
+            for i = 1:nVal
+                tmp(i, 1) = vergRange(i);
+                tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+                tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                            & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+            end
+            actualResponseStat = tmp;
+            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
+
+            figure;
+            hold on;
+            grid on;
+            % error bars of reconstruction of the model
+            errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
+            % reconstruction of the model
+            plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+%             l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
+%             l.FontSize = 7;
+%             l.Orientation = 'horizontal';
+%             l.Location = 'southoutside';
+            % axis
+%             xmin = -10;
+%             xmax = -xmin;
+%             ymin = -0.1;
+%             ymax = -ymin;
+%             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+%             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
+%             axis([xmin, xmax, ymin, ymax]);
+            xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
+            ylabel('resonstruction Error', 'FontSize', 12);
+            title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]',num2str(objRange)));
+            
+            if ~ isempty(this.savePath)
+                plotpath = sprintf('%s/recErrVsVerErrGenDist', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            end
         end
 
         % DEPRECATED
