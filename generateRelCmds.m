@@ -50,6 +50,8 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     vergErrs = [];
     relCmds = [];
     recErrs = [];
+    recErrsSmall = [];
+    recErrsLarge = [];
 
 
     [~, numDists] = size(objRange);
@@ -122,11 +124,13 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
                 vergErrs = [vergErrs; vergRange(verg)];
                 relCmds = [relCmds; relCmd];
                 recErrs = [recErrs; errorTotal];
+                recErrsLarge = [recErrsLarge; errorLarge];
+                recErrsSmall = [recErrsSmall; errorSmall];
             end
         end
         sprintf('number of repetitions: %d/%d done', rep, repeat)
     end
-    responseResults = struct('relCmds', relCmds, 'vergErrs', vergErrs, 'recErrs', recErrs);
+    responseResults = struct('relCmds', relCmds, 'vergErrs', vergErrs, 'recErrs', recErrs, 'recErrsLarge', recErrsLarge, 'recErrsSmall', recErrsSmall);
 end
 
 %%% Helper functions for image preprocessing

@@ -785,8 +785,11 @@ classdef Model < handle
             %different disparities
             responseResults = generateRelCmds(this, objRange, vergRange, repeat);
             recResponse = [responseResults.vergErrs, responseResults.recErrs];
+            recResponseLarge = [responseResults.vergErrs, responseResults.recErrsLarge];
+            recResponseSmall = [responseResults.vergErrs, responseResults.recErrsSmall];
             nVal = size(vergRange, 2); % #bins of statistics
-
+            
+            %calculate mean and std of reconstruction error
             tmpRsp = sortrows(recResponse);
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
             % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
@@ -799,20 +802,54 @@ classdef Model < handle
                 tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
             end
-            actualResponseStat = tmp;
-            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
+            recErrs = tmp;
+            recErrs(isnan(recErrs(:, 2)), :) = []; % drop NaN elements
 
+            %calculate mean and std of large scale reconstruction error
+            tmpRsp = sortrows(recResponseLarge);
+            deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+            % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
+            tmp = zeros(nVal, 3);
+
+            for i = 1:nVal
+                tmp(i, 1) = vergRange(i);
+                tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+                tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                            & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+            end
+            recErrsLarge = tmp;
+            recErrsLarge(isnan(recErrsLarge(:, 2)), :) = []; % drop NaN elements
+            
+            %calculate mean and std of small scale reconstruction error
+            tmpRsp = sortrows(recResponseSmall);
+            deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+            % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
+            tmp = zeros(nVal, 3);
+
+            for i = 1:nVal
+                tmp(i, 1) = vergRange(i);
+                tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+                tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                            & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+            end
+            recErrsSmall = tmp;
+            recErrsSmall(isnan(recErrsSmall(:, 2)), :) = []; % drop NaN elements
+            
             figure;
             hold on;
             grid on;
             % error bars of reconstruction of the model
-            errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
+            errorbar(recErrs(:, 1), recErrs(:, 2), recErrs(:, 3), 'LineWidth', 0.9); %'color', [1, 0.5098, 0.1961],
+            errorbar(recErrsLarge(:, 1), recErrsLarge(:, 2), recErrsLarge(:, 3), 'LineWidth', 0.9);%'color', [1, 0.5098, 0.1961],
+            errorbar(recErrsSmall(:, 1), recErrsSmall(:, 2), recErrsSmall(:, 3), 'LineWidth', 0.9);%'color', [1, 0.5098, 0.1961],
             % reconstruction of the model
-            plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-%             l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-%             l.FontSize = 7;
-%             l.Orientation = 'horizontal';
-%             l.Location = 'southoutside';
+%             plot(recErrs(:, 1), recErrs(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            l = legend('reconstruction Error', 'small scale recErr', 'large scale recErr');
+            l.FontSize = 7;
+            l.Orientation = 'horizontal';
+            l.Location = 'southoutside';
             % axis
 %             xmin = -10;
 %             xmax = -xmin;
