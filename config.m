@@ -66,7 +66,9 @@ S0 = PARAMSC_L{3} + PARAMSC_S{3} + 1;   %number of neurons in the input layer (S
 weight_range = [0.0017, 0.0017, 0.05];  %maximum initial weight [critic_ji, actor_ji, actor_kj] | origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
 lambda = 0.01;                          %reguralization factor | origin 0.01
 continuous = uint8(1);                  %indicates if the policy is discrete or continuous
-PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, variance, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous};
+deltaVar = 1;                           %delta variance tracking (CACLAVar)
+eta = 0.001;                            %delta vairance scaling factor (CACLAVar)
+PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, variance, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous, deltaVar, eta};
 
 %%% Model parameters
 % Camera parameters
