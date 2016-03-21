@@ -181,8 +181,11 @@ for iter1 = 1 : (model.trainTime / model.interval)
         rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
         rewardFunction = rewardFunctionReal - rewardFunction_prev;
 
-        % counter balance 0 movement by small negative bias
-        % rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
+        % counter balance non-movement by small negative bias
+        % if (abs(rewardFunctionReal - rewardFunction_prev) < 1e-5)
+        %     rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
+        % end
+
         rewardFunction_prev = rewardFunctionReal;
 
         % standard reward
@@ -320,7 +323,8 @@ if (plotNsave)
     copyfile('OESMuscles.m', model.savePath);
     copyfile('OESMusclesBF.m', model.savePath);
     copyfile('ReinforcementLearningCont.m', model.savePath);
-    copyfile('CRGActor.m', model.savePath);
+    copyfile('CACLAActor.m', model.savePath);
+    copyfile('CACLAVarActor.m', model.savePath);
     copyfile('CRGCritic.m', model.savePath);
     copyfile('Model.m', model.savePath);
 end

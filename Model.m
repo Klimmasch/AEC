@@ -100,7 +100,7 @@ classdef Model < handle
 
             obj.g_hist = zeros(obj.trainTime, 1);
             obj.td_hist = zeros(obj.trainTime, 1);
-            % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);
+            obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, 1);
             obj.l12_weights = zeros(obj.trainTime, 4);
@@ -459,8 +459,8 @@ classdef Model < handle
             % axis
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
-            ymin = min(actualResponseStat(:, 2)) * 1.1;
-            ymax = max([max(perfectResponse(:, 4)) * 1.1, max(actualResponseStat(:, 2)) * 1.1]);
+            ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.2]);
+            ymax = max([max(perfectResponse(:, 4)) * 1.2, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.2]);
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -557,8 +557,8 @@ classdef Model < handle
             % axis
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
-            ymin = min(actualResponseStat(:, 2)) * 1.1;
-            ymax = max([max(perfectResponse(:, 4)) * 1.1, max(actualResponseStat(:, 2)) * 1.1]);
+            ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.2]);
+            ymax = max([max(perfectResponse(:, 4)) * 1.2, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.2]);
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -661,8 +661,8 @@ classdef Model < handle
             % axis
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
-            ymin = min(actualResponseStat(:, 2)) * 1.1;
-            ymax = max([max(perfectResponse(:, 4)) * 1.1, max(actualResponseStat(:, 2)) * 1.1]);
+            ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.2]);
+            ymax = max([max(perfectResponse(:, 4)) * 1.2, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.2]);
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -761,8 +761,8 @@ classdef Model < handle
             % axis
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
-            ymin = min(actualResponseStat(:, 2)) * 1.1;
-            ymax = max([max(perfectResponse(:, 4)) * 1.1, max(actualResponseStat(:, 2)) * 1.1]);
+            ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.2]);
+            ymax = max([max(perfectResponse(:, 4)) * 1.2, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.2]);
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -773,9 +773,9 @@ classdef Model < handle
                 plotpath = sprintf('%s/deltaMFasFktVerErrGenDist', this.savePath);
                 saveas(gcf, plotpath, 'png');
             end
-            
+
         end
-        
+
         %% plot & save reconstructionErr(Vergence_error)
         % objRange = range of object distances being tested
         % vergRange = range of vergences being tested
@@ -788,7 +788,7 @@ classdef Model < handle
             recResponseLarge = [responseResults.vergErrs, responseResults.recErrsLarge];
             recResponseSmall = [responseResults.vergErrs, responseResults.recErrsSmall];
             nVal = size(vergRange, 2); % #bins of statistics
-            
+
             %calculate mean and std of reconstruction error
             tmpRsp = sortrows(recResponse);
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
@@ -820,7 +820,7 @@ classdef Model < handle
             end
             recErrsLarge = tmp;
             recErrsLarge(isnan(recErrsLarge(:, 2)), :) = []; % drop NaN elements
-            
+
             %calculate mean and std of small scale reconstruction error
             tmpRsp = sortrows(recResponseSmall);
             deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
@@ -836,7 +836,7 @@ classdef Model < handle
             end
             recErrsSmall = tmp;
             recErrsSmall(isnan(recErrsSmall(:, 2)), :) = []; % drop NaN elements
-            
+
             figure;
             hold on;
             grid on;
@@ -861,7 +861,7 @@ classdef Model < handle
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('resonstruction Error', 'FontSize', 12);
             title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]',num2str(objRange)));
-            
+
             if ~ isempty(this.savePath)
                 plotpath = sprintf('%s/recErrVsVerErrGenDist', this.savePath);
                 saveas(gcf, plotpath, 'png');

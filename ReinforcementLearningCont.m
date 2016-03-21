@@ -7,6 +7,8 @@ classdef ReinforcementLearningCont < handle
         gamma;          %learning rate to update cumulative value or decay rate of moving average
         lambda;         %the regularizatoin factor
         xi;             %discount factor
+        deltaVar;
+        eta;
 
         variance;    %temperature in softmax function in policy network
         weight_range;   %maximum initial weight
@@ -41,6 +43,9 @@ classdef ReinforcementLearningCont < handle
             % continuous action space (lukas)
             obj.continuous = PARAM{14};
 
+            obj.deltaVar = PARAM{15};
+            obj.eta = PARAM{16};
+
             %CriticParams = {alpha_v, eta, gamma, featureDimension, initialWeightRange}
             %CriticParams = {0.01, 0.05, 0.3, 576, 0.15}; --> params from original implementation
             % CriticParams = {obj.alpha_v, obj.gamma, obj.xi, obj.S0, obj.weight_range(1)};
@@ -53,7 +58,10 @@ classdef ReinforcementLearningCont < handle
             % ActorParams = {obj.alpha_p, obj.alpha_n, obj.S0, obj.weight_range(2:3), 'tanh', 'default', obj.variance};
             % obj.CActor = CActorG(ActorParams);
             ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.variance};
-            obj.CActor = CRGActor(ActorParams);
+            % obj.CActor = CRGActor(ActorParams);
+            obj.CActor = CACLAActor(ActorParams);
+            % ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.variance, obj.deltaVar, obj.eta};
+            % obj.CActor = CACLAVarActor(ActorParams);
 
             % DEPRECATED
             % TODO: update model reload
