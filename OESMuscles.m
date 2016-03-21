@@ -152,8 +152,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
         imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
         % Generate & save the anaglyph picture
-        % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
-        % imwrite(anaglyph, 'anaglyph.png');
+        % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for
+        % matlab 2015 or newer
+        anaglyph = imfuse(imgGrayLeft, imgGrayRight, 'falsecolor');
+        imwrite(anaglyph, 'anaglyph.png');
 
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
