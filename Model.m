@@ -100,7 +100,7 @@ classdef Model < handle
 
             obj.g_hist = zeros(obj.trainTime, 1);
             obj.td_hist = zeros(obj.trainTime, 1);
-            obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);
+            % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.S0);
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, 1);
             obj.l12_weights = zeros(obj.trainTime, 4);
@@ -442,6 +442,15 @@ classdef Model < handle
             actualResponseStat = tmp;
             actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
+            % TODO: debug
+            % Calculate performance
+            % tmp = zeros(nVal);
+            % for i = 1:nVal
+            %     tmp(i) = actualResponseStat(i, 2) - ...
+            %              perfectResponse(perfectResponse(:, 3) <= vergRange(i) + dmf & perfectResponse(:, 3) >= vergRange(i));
+            % end
+            % performance = sqrt(sum(tmp .^ 2)) / nVal;
+
             figure;
             hold on;
             grid on;
@@ -459,12 +468,21 @@ classdef Model < handle
             % axis
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
+            if (xmin >= xmax)
+                xmin = -5.5;
+                xmax = 5.5;
+            end
             ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.2]);
             ymax = max([max(perfectResponse(:, 4)) * 1.2, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.2]);
+            if (ymin >= ymax)
+                ymin = -0.1;
+                ymax = 0.1;
+            end
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
+            % xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg\nMSE(Resp) = %.2f', deltaVergErr, performance), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title(strcat('\Delta MF(Vergence_{error}) response after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
             plotpath = sprintf('%s/deltaMFasFktVerErr', this.savePath);
@@ -557,8 +575,16 @@ classdef Model < handle
             % axis
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
+            if (xmin >= xmax)
+                xmin = -5.5;
+                xmax = 5.5;
+            end
             ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.2]);
             ymax = max([max(perfectResponse(:, 4)) * 1.2, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.2]);
+            if (ymin >= ymax)
+                ymin = -0.1;
+                ymax = 0.1;
+            end
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -661,8 +687,16 @@ classdef Model < handle
             % axis
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
+            if (xmin >= xmax)
+                xmin = -5.5;
+                xmax = 5.5;
+            end
             ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.2]);
             ymax = max([max(perfectResponse(:, 4)) * 1.2, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.2]);
+            if (ymin >= ymax)
+                ymin = -0.1;
+                ymax = 0.1;
+            end
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
@@ -671,6 +705,9 @@ classdef Model < handle
             title(strcat('\Delta MF(Vergence_{error}) betweem iteration ', sprintf(' %d and %d', startIter, endIter)));
             plotpath = sprintf('%s/deltaMFasFktVerErrStartEnd', this.savePath);
             saveas(gcf, plotpath, 'png');
+        end
+
+        function generateResponses()
         end
 
         %% plot & save delta_MF(Vergence_error)
@@ -761,16 +798,25 @@ classdef Model < handle
             % axis
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
+            if (xmin >= xmax)
+                xmin = -5.5;
+                xmax = 5.5;
+            end
             ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.2]);
             ymax = max([max(perfectResponse(:, 4)) * 1.2, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.2]);
+            if (ymin >= ymax)
+                ymin = -0.1;
+                ymax = 0.1;
+            end
             plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
             plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            title('\Delta MF(Vergence_{error}) response at Testing procedure');
-            if ~isempty(this.savePath)
-                plotpath = sprintf('%s/deltaMFasFktVerErrGenDist', this.savePath);
+            title(sprintf('\Delta MF(Vergence_{error}) response at Testing procedure\nobject distances: [%s]',num2str(objRange)));
+
+            if (~isempty(this.savePath))
+                plotpath = sprintf('%s/deltaMFasFktVerErrGenDistObjDist%s', this.savePath, num2str(objRange));
                 saveas(gcf, plotpath, 'png');
             end
 
@@ -860,10 +906,10 @@ classdef Model < handle
 %             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('resonstruction Error', 'FontSize', 12);
-            title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]',num2str(objRange)));
+            title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
 
-            if ~ isempty(this.savePath)
-                plotpath = sprintf('%s/recErrVsVerErrGenDist', this.savePath);
+            if (~isempty(this.savePath))
+                plotpath = sprintf('%s/recErrVsVerErrGenDist[%s]', this.savePath, num2str(objRange));
                 saveas(gcf, plotpath, 'png');
             end
         end

@@ -181,7 +181,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
         rewardFunction = rewardFunctionReal - rewardFunction_prev;
 
-        % counter balance non-movement by small negative bias
+        % stasis punishment, i.e. punish non-movement of eyes
         % if (abs(rewardFunctionReal - rewardFunction_prev) < 1e-5)
         %     rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
         % end
@@ -212,11 +212,11 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.scmodel_Small.stepTrain(currentView{2});
         % RL model
         % decay of actor's output perturbation
-        % variance(t = [1, 100k]) ~= [0.001, 1e-5]
+        % variance(t = [1, 100k]) ~= [10-3, 10-5]
         % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 15000);
-        % variance(t = [1, 100k]) ~= [0.001, 1e-4]
+        % variance(t = [1, 100k]) ~= [10-3, 10-4]
         model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 30200);
-        % variance(t = [1, 100k]) ~= [0.01, 1e-4]
+        % variance(t = [1, 100k]) ~= [10-2, 10-4]
         % model.rlmodel.CActor.variance = 0.01 * 2 ^ (-t / 15100);
 
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
@@ -269,7 +269,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.relCmd_hist(t) = relativeCommand;
         model.cmd_hist(t, :) = command;
         model.reward_hist(t) = rewardFunction;
-        model.feature_hist(t, :) = feature;
+        % model.feature_hist(t, :) = feature;
         model.metCost_hist(t) = metCost;
         model.td_hist(t) = model.rlmodel.CCritic.delta;
         % model.g_hist(t) = model.rlmodel.CActor.params(7);
@@ -281,15 +281,6 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
         % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
         % model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
-        % plot(model.td_hist);
-        % figure
-        % hold on;
-        % plot(sum(model.feature_hist(:,1:end-1),2),'r');
-        % plot(model.feature_hist(:,end),'b');
-        % title(sprintf('%g', model.feature_hist(end,end)));
-        % if (t < trainTime)
-        %     close all;
-        % end
     end
 
     sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
@@ -332,8 +323,12 @@ end
 %%% Testing procedure
 if (testIt)
     % TestTrial(model, randomizationSeed, fileDescription);
-    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 5);
-    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 5);
+    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 20);
+    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 20);
+    model.deltaMFplotGenDist([0.5], [-5:5], 20);
+    model.recErrPlotGenDist([0.5], [-5:5], 20);
+    model.deltaMFplotGenDist([2], [-5:5], 20);
+    model.recErrPlotGenDist([2], [-5:5], 20);
 end
 
 end
