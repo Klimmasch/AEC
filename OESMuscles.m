@@ -154,9 +154,9 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for
         % matlab 2015 or newer
-        
+
         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
-        
+
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
         [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
@@ -316,7 +316,7 @@ if (plotNsave)
     copyfile('ReinforcementLearningCont.m', model.savePath);
     copyfile('CACLAActor.m', model.savePath);
     copyfile('CACLAVarActor.m', model.savePath);
-    copyfile('CRGCritic.m', model.savePath);
+    copyfile('CACLACritic.m', model.savePath);
     copyfile('Model.m', model.savePath);
 end
 
@@ -416,7 +416,7 @@ end
 function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
     imwrite(anaglyph, 'anaglyph.png');
-    
+
     %Downsampling Large
     imgLeftL = leftGray(:);
     imgLeftL = reshape(imgLeftL, size(leftGray));
@@ -426,20 +426,20 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
         imgLeftL = impyramid(imgLeftL, 'reduce');
         imgRightL = impyramid(imgRightL, 'reduce');
     end
-    
+
     % cut fovea in the center
     [h, w, ~] = size(imgLeftL);
     imgLeftL = imgLeftL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
               fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
     imgRightL = imgRightL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
               fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
-          
+
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
     imwrite(imresize(anaglyphL, 20), 'anaglyphLargeScale.png');
     largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
     imwrite(imresize(largeScaleView, 20), 'LargeScaleMontage.png');
-    
+
     %Downsampling Small
     imgLeftS = leftGray(:);
     imgLeftS = reshape(imgLeftS, size(leftGray));
@@ -449,14 +449,14 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
         imgLeftS = impyramid(imgLeftS, 'reduce');
         imgRightS = impyramid(imgRightS, 'reduce');
     end
-    
+
     % cut fovea in the center
     [h, w, ~] = size(imgLeftS);
     imgLeftS = imgLeftS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
               fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
     imgRightS = imgRightS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
               fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
-          
+
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
     imwrite(imresize(anaglyphS, 8), 'anaglyphSmallScale.png');
