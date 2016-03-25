@@ -323,12 +323,12 @@ end
 %%% Testing procedure
 if (testIt)
     % TestTrial(model, randomizationSeed, fileDescription);
-    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 20);
-    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 20);
-    model.deltaMFplotGenDist([0.5], [-5:5], 20);
-    model.recErrPlotGenDist([0.5], [-5:5], 20);
-    model.deltaMFplotGenDist([2], [-5:5], 20);
-    model.recErrPlotGenDist([2], [-5:5], 20);
+    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 20, '05-2m');
+    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 20, '05-2m');
+    model.deltaMFplotGenDist([0.5], [-5:5], 20, '05m');
+    model.recErrPlotGenDist([0.5], [-5:5], 20, '05m');
+    model.deltaMFplotGenDist([2], [-5:5], 20, '2m');
+    model.recErrPlotGenDist([2], [-5:5], 20, '2m');
 end
 
 end
@@ -413,6 +413,7 @@ end
 
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
+% TODO: adjust the sizes of the montage view
 function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
     imwrite(anaglyph, 'anaglyph.png');
@@ -459,7 +460,7 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
-    imwrite(imresize(anaglyphS, 8), 'anaglyphSmallScale.png');
+    imwrite(imresize(anaglyphS, 16), 'anaglyphSmallScale.png');
     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
     imwrite(imresize(smallScaleView, 8), 'smallScaleMontage.png');
 end

@@ -230,8 +230,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % in case you want to train basisfunctions tuned to a specific
         % disparity:
-%         angleDes = 2 * atand(model.baseline / (2 * objDist)); %desired vergence [deg]
-%         angleNew = angleDes + truncLaplacian(b,range);
+        angleDes = 2 * atand(model.baseline / (2 * objDist)); %desired vergence [deg]
+        angleNew = angleDes + truncLaplacian(b,range);
 %         testLP = [];
 %         for test = 1:10000
 %             testLP = [testLP truncLaplacian(b,range)];
@@ -331,8 +331,12 @@ end
 %%% Testing procedure
 if (testIt)
     % TestTrial(model, randomizationSeed, fileDescription);
-    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 5);
-    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 5);
+    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 20, '05-2m');
+    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 20, '05-2m');
+    model.deltaMFplotGenDist([0.5], [-5:5], 20, '05m');
+    model.recErrPlotGenDist([0.5], [-5:5], 20, '05m');
+    model.deltaMFplotGenDist([2], [-5:5], 20, '2m');
+    model.recErrPlotGenDist([2], [-5:5], 20, '2m');
 end
 
 end
@@ -414,3 +418,57 @@ function l = truncLaplacian(diversity, range)
         l = 0;
     end
 end
+
+%this function generates anaglyphs of the large and small scale fovea and
+%one of the two unpreprocessed gray scale images
+function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
+    anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
+    imwrite(anaglyph, 'anaglyph.png');
+
+    %Downsampling Large
+    imgLeftL = leftGray(:);
+    imgLeftL = reshape(imgLeftL, size(leftGray));
+    imgRightL = rightGray(:);
+    imgRightL = reshape(imgRightL, size(rightGray));
+    for i = 1:log2(dsRatioL)
+        imgLeftL = impyramid(imgLeftL, 'reduce');
+        imgRightL = impyramid(imgRightL, 'reduce');
+    end
+
+    % cut fovea in the center
+    [h, w, ~] = size(imgLeftL);
+    imgLeftL = imgLeftL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
+              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
+    imgRightL = imgRightL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
+              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
+
+    %create an anaglyph of the two pictures, scale it up and save it
+    anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
+    imwrite(imresize(anaglyphL, 20), 'anaglyphLargeScale.png');
+    largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    imwrite(imresize(largeScaleView, 20), 'LargeScaleMontage.png');
+
+    %Downsampling Small
+    imgLeftS = leftGray(:);
+    imgLeftS = reshape(imgLeftS, size(leftGray));
+    imgRightS = rightGray(:);
+    imgRightS = reshape(imgRightS, size(rightGray));
+    for i = 1:log2(dsRatioS)
+        imgLeftS = impyramid(imgLeftS, 'reduce');
+        imgRightS = impyramid(imgRightS, 'reduce');
+    end
+
+    % cut fovea in the center
+    [h, w, ~] = size(imgLeftS);
+    imgLeftS = imgLeftS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
+              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
+    imgRightS = imgRightS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
+              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
+
+    %create an anaglyph of the two pictures, scale it up and save it
+    anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
+    imwrite(imresize(anaglyphS, 16), 'anaglyphSmallScale.png');
+    smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    imwrite(imresize(smallScaleView, 8), 'smallScaleMontage.png');
+end
+

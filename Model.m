@@ -907,14 +907,9 @@ classdef Model < handle
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('resonstruction Error', 'FontSize', 12);
             title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
-
-<<<<<<< HEAD
+            
             if ~ isempty(this.savePath)
                 plotpath = sprintf('%s/recErrVsVerErrGenDist_%s', this.savePath, description);
-=======
-            if (~isempty(this.savePath))
-                plotpath = sprintf('%s/recErrVsVerErrGenDist[%s]', this.savePath, num2str(objRange));
->>>>>>> 647c080e869b6c6c3004a5af255fe4851ce53e8d
                 saveas(gcf, plotpath, 'png');
             end
         end
