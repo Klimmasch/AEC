@@ -677,7 +677,7 @@ classdef Model < handle
         % objRange = range of object distances being tested
         % vergRange = range of vergences being tested
         % repeat = #repetitions of testing procedure
-        function deltaMFplotGenDist(this, objRange, vergRange, repeat)
+        function deltaMFplotGenDist(this, objRange, vergRange, repeat, description)
             % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
             % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
             % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
@@ -770,7 +770,7 @@ classdef Model < handle
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
             title('\Delta MF(Vergence_{error}) response at Testing procedure');
             if ~isempty(this.savePath)
-                plotpath = sprintf('%s/deltaMFasFktVerErrGenDist', this.savePath);
+                plotpath = sprintf('%s/deltaMFasFktVerErrGenDist_%s', this.savePath, description);
                 saveas(gcf, plotpath, 'png');
             end
 
@@ -780,7 +780,7 @@ classdef Model < handle
         % objRange = range of object distances being tested
         % vergRange = range of vergences being tested
         % repeat = #repetitions of testing procedure
-        function recErrPlotGenDist(this, objRange, vergRange, repeat)
+        function recErrPlotGenDist(this, objRange, vergRange, repeat, description)
             %plotting the resonstruction error of basis functions over
             %different disparities
             responseResults = generateRelCmds(this, objRange, vergRange, repeat);
@@ -863,7 +863,7 @@ classdef Model < handle
             title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]',num2str(objRange)));
 
             if ~ isempty(this.savePath)
-                plotpath = sprintf('%s/recErrVsVerErrGenDist', this.savePath);
+                plotpath = sprintf('%s/recErrVsVerErrGenDist_%s', this.savePath, description);
                 saveas(gcf, plotpath, 'png');
             end
         end

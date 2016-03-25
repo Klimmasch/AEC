@@ -416,7 +416,7 @@ function l = truncLaplacian(diversity, range)
     end
 end
 
-%this function generated anaglyphs of the large and small scale fovea and
+%this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
 function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
