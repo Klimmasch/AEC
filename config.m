@@ -52,8 +52,19 @@ PARAMSC_L = {Basis_num_used, Basis_size, Basis_num_coarse, eta, Temperature, Dsr
 PARAMSC = {PARAMSC_L, PARAMSC_S};
 
 %%% Reinforcement Learning parameters
-Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8]; %vergence angles (discrete policy)
+% Critic and Actor implementation rlFlavour = [Critic, Actor]
+% 0 = Chong's implementation
+% 1 = CRG       Critic Continuous Regular Gradient
+% 2 = CACLA     Critic Continuous Actor Critic Learning Automaton
+%
+% 0 = Chong's implementation
+% 1 = CRG       Actor Continuous Regular Gradient
+% 2 = CACLA     Actor Continuous Actor Critic Learning Automaton
+% 3 = CACLAVar  Actor Continuous Actor Critic Learning Automaton with (delta std) * update
+% 4 = CNGFI     Actor Continuous Natural Gradient with Fisher Information matrix TODO: unsupported yet
+rlFlavour = [2, 2];
 
+Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8]; %vergence angles (discrete policy)
 alpha_v = 0.9;                          %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                        %learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
 alpha_p = 0.002;                        %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
@@ -68,7 +79,9 @@ lambda = 0.01;                          %reguralization factor | origin 0.01
 continuous = uint8(1);                  %indicates if the policy is discrete or continuous
 deltaVar = 1;                           %delta variance tracking (CACLAVar)
 eta = 0.001;                            %delta vairance scaling factor (CACLAVar)
-PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, variance, lambda, S0, weight_range, loadweights, weights, weightsHist, continuous, deltaVar, eta};
+fiScale = 1e-5;                         %scaling factor of Fisher Information matrix (CNGFI)
+PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, variance, lambda, S0, weight_range, ...
+           loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour};
 
 %%% Model parameters
 % Camera parameters
@@ -95,7 +108,8 @@ lambdaMet = 0;                          %metabolic costs factor | 0.204
 lambdaV = 7.0282e-04;                   %value networks input->output weights factor | L1 norm 7.0282e-04
 lambdaP1 = 0.019;                       %policy networks input->hidden weights factor | L1 norm 0.019
 lambdaP2 = 0.309;                       %policy networks hidden->output weights factor | L1 norm 0.309
-PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, f, baseline, objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
+PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, f, baseline, ...
+              objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};

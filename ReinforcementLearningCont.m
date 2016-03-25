@@ -9,19 +9,21 @@ classdef ReinforcementLearningCont < handle
         xi;             %discount factor
         deltaVar;
         eta;
+        fiScale;
 
-        variance;    %temperature in softmax function in policy network
+        variance;       %variance of gaussian policy of actor
         weight_range;   %maximum initial weight
         S0;             %number of neurons in the input layer
 
         % DEPRECATED
         % TODO: update model reload
         % Weights;
-        % J = 0;          %average of estimated reward
-        % g;              %intermedia variable to keep track of "w" which is the gradient of the policy
-        % Weights_hist;   %weights history
+        % J = 0;        %average of estimated reward
+        % g;            %intermedia variable to keep track of "w" which is the gradient of the policy
+        % Weights_hist; %weights history
 
         continuous;     %flag whether policy is discrete or continous
+        rlFlavour;      %which critic and actor implementation is chosen
 
         % for continuous action space with gaussian policy
         CCritic;
@@ -45,23 +47,49 @@ classdef ReinforcementLearningCont < handle
 
             obj.deltaVar = PARAM{15};
             obj.eta = PARAM{16};
+            obj.fiScale = PARAM{17};
 
-            %CriticParams = {alpha_v, eta, gamma, featureDimension, initialWeightRange}
-            %CriticParams = {0.01, 0.05, 0.3, 576, 0.15}; --> params from original implementation
-            % CriticParams = {obj.alpha_v, obj.gamma, obj.xi, obj.S0, obj.weight_range(1)};
-            % obj.CCritic = CCriticG(CriticParams);
-            CriticParams = {obj.S0, obj.weight_range(1), obj.alpha_v, obj.xi, obj.gamma};
-            obj.CCritic = CRGCritic(CriticParams);
+            % instantiate chosen Actor and Critic
+            obj.rlFlavour = PARAM{18};
+            switch obj.rlFlavour(1)
+                case 0
+                    % CriticParams = {alpha_v, eta, gamma, featureDimension, initialWeightRange}
+                    % CriticParams = {0.01, 0.05, 0.3, 576, 0.15}; --> params from original implementation
+                    CriticParams = {obj.alpha_v, obj.gamma, obj.xi, obj.S0, obj.weight_range(1)};
+                    obj.CCritic = CCriticG(CriticParams);
+                case 1
+                    CriticParams = {obj.S0, obj.weight_range(1), obj.alpha_v, obj.xi, obj.gamma};
+                    obj.CCritic = CRGCritic(CriticParams);
+                case 2
+                    CriticParams = {obj.S0, obj.weight_range(1), obj.alpha_v, obj.gamma};
+                    obj.CCritic = CACLACritic(CriticParams);
+                otherwise
+                    sprintf('Critic algorithm not supported!')
+                    return;
+            end
 
-            %ActorParams = {alpha_p, alpha_n, featureDimension, initialWeightRange, actorHiddenType, variance};
-            %ActorParams = {0.001, 0.01, 576, 0.22, 'tanh'}; original params
-            % ActorParams = {obj.alpha_p, obj.alpha_n, obj.S0, obj.weight_range(2:3), 'tanh', 'default', obj.variance};
-            % obj.CActor = CActorG(ActorParams);
-            ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.variance};
-            % obj.CActor = CRGActor(ActorParams);
-            obj.CActor = CACLAActor(ActorParams);
-            % ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.variance, obj.deltaVar, obj.eta};
-            % obj.CActor = CACLAVarActor(ActorParams);
+            switch obj.rlFlavour(2)
+                case 0
+                    % ActorParams = {alpha_p, alpha_n, featureDimension, initialWeightRange, actorHiddenType, variance};
+                    % ActorParams = {0.001, 0.01, 576, 0.22, 'tanh'}; original params
+                    ActorParams = {obj.alpha_p, obj.alpha_n, obj.S0, obj.weight_range(2:3), 'tanh', 'default', obj.variance};
+                    obj.CActor = CActorG(ActorParams);
+                case 1
+                    ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.variance};
+                    obj.CActor = CRGActor(ActorParams);
+                case 2
+                    ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.variance};
+                    obj.CActor = CACLAActor(ActorParams);
+                case 3
+                    ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.variance, obj.deltaVar, obj.eta};
+                    obj.CActor = CACLAVarActor(ActorParams);
+                case 4
+                    ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.alpha_v, obj.variance, obj.fiScale};
+                    obj.CActor = CNGFIActor(ActorParams);
+                otherwise
+                    sprintf('Actor algorithm not supported!')
+                    return;
+            end
 
             % DEPRECATED
             % TODO: update model reload
