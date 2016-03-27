@@ -1,4 +1,3 @@
-
 %This function goes through all object distances and averages the motor command
 % and reconstruction error for different vergence errors.
 %TODO what about muscle innervations?
@@ -9,10 +8,6 @@
 % muscle commands and repeats that 10 times
 
 function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
-
-    focalLength = 257.34;        	%focal length [px]
-    baseline = 0.056;   		%interocular distance (baseline)
-
     % Image process variables
     patchSize = 8;
 
@@ -42,7 +37,6 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     end
 
     % preparing Textures
-%     texturePath = sprintf('config/%s', 'Textures_New.mat');
     texture = load('config/Textures_New.mat');
     texture = texture.texture;
     nTextures = length(texture);
@@ -52,7 +46,6 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     recErrs = [];
     recErrsSmall = [];
     recErrsLarge = [];
-
 
     [~, numDists] = size(objRange);
 %     avgCmd = zeros(numDists,1);
@@ -78,7 +71,7 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     sprintf('starting to generate vergence commands for different vergence errors ...')
     for rep = 1:repeat
         for objDist = 1:numDists
-            angleDes = 2 * atand(baseline / (2 * objRange(objDist)));
+            angleDes = 2 * atand(model.baseline / (2 * objRange(objDist)));
 
             for verg = 1:numVergs
                 currentTexture = texture{(randi(nTextures, 1))}; %random picture for every iteration
@@ -163,4 +156,3 @@ function [patches] = preprocessImage(img, fovea, downSampling, patchSize, column
     normp(normp == 0) = eps;                                            %regularizer
     patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
 end
-

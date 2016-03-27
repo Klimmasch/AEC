@@ -62,7 +62,7 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 % 2 = CACLA     Actor Continuous Actor Critic Learning Automaton
 % 3 = CACLAVar  Actor Continuous Actor Critic Learning Automaton with (delta std) * update
 % 4 = CNGFI     Actor Continuous Natural Gradient with Fisher Information matrix TODO: unsupported yet
-rlFlavour = [2, 2];
+rlFlavour = [2, 3];
 
 Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8]; %vergence angles (discrete policy)
 alpha_v = 0.9;                          %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
@@ -85,9 +85,9 @@ PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, variance, lambda, S0, w
 
 %%% Model parameters
 % Camera parameters
-% offset = 0;       %vertical offset between left and right (0 in the Simulator!!!)
-f = 257.34;         %focal length [px]
-baseline = 0.056;   %interocular distance
+% offset = 0;           %vertical offset between left and right (0 in the Simulator!!!)
+focalLength = 257.34;   %focal length [px]
+baseline = 0.056;       %interocular distance
 
 % Object distance to eyes [m]
 objDistMin = 0.5;
@@ -108,7 +108,7 @@ lambdaMet = 0;                          %metabolic costs factor | 0.204
 lambdaV = 7.0282e-04;                   %value networks input->output weights factor | L1 norm 7.0282e-04
 lambdaP1 = 0.019;                       %policy networks input->hidden weights factor | L1 norm 0.019
 lambdaP2 = 0.309;                       %policy networks hidden->output weights factor | L1 norm 0.309
-PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, f, baseline, ...
+PARAMModel = {learnedFile, textureFile, trainTime, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2};
 

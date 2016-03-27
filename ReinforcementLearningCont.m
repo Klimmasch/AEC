@@ -25,7 +25,7 @@ classdef ReinforcementLearningCont < handle
         continuous;     %flag whether policy is discrete or continous
         rlFlavour;      %which critic and actor implementation is chosen
 
-        % for continuous action space with gaussian policy
+        % continuous action space with gaussian policy
         CCritic;
         CActor;
     end

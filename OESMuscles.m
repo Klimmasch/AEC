@@ -212,12 +212,17 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.scmodel_Small.stepTrain(currentView{2});
         % RL model
         % decay of actor's output perturbation
+        % https://www.symbolab.com/solver/step-by-step/
         % variance(t = [1, 100k]) ~= [10-3, 10-5]
         % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 15000);
         % variance(t = [1, 100k]) ~= [10-3, 10-4]
-        model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 30200);
+        % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 30200);
         % variance(t = [1, 100k]) ~= [10-2, 10-4]
         % model.rlmodel.CActor.variance = 0.01 * 2 ^ (-t / 15100);
+        % variance(t = [1, 100k]) ~= [10-3, 10-4] @ 500k iterations
+        model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 1.5051e+05);
+        % variance(t = [1, 100k]) ~= [10-2, 10-5] @ 500k iterations
+        % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 5.0172e+04);
 
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
@@ -256,7 +261,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         fixDepth = (model.baseline / 2) / tand(angleNew / 2);   %fixation depth [m]
         angleDes = 2 * atand(model.baseline / (2 * objDist));   %desired vergence [deg]
         anglerr = angleDes - angleNew;                          %vergence error [deg]
-        disparity = 2 * model.f * tand(anglerr / 2);            %current disp [px]
+        disparity = 2 * model.focalLength * tand(anglerr / 2);            %current disp [px]
 
         % save state
         model.Z(t) = objDist;
@@ -314,9 +319,11 @@ if (plotNsave)
     copyfile('OESMuscles.m', model.savePath);
     copyfile('OESMusclesBF.m', model.savePath);
     copyfile('ReinforcementLearningCont.m', model.savePath);
+    copyfile('CRGCritic.m', model.savePath);
+    copyfile('CRGActor.m', model.savePath);
+    copyfile('CACLACritic.m', model.savePath);
     copyfile('CACLAActor.m', model.savePath);
     copyfile('CACLAVarActor.m', model.savePath);
-    copyfile('CACLACritic.m', model.savePath);
     copyfile('Model.m', model.savePath);
 end
 

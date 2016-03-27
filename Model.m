@@ -4,7 +4,7 @@ classdef Model < handle
         scmodel_Small;      %SparseCoding class
         rlmodel;            %ReinforcementLearning class
 
-        f;                  %focal length [px]
+        focalLength;        %focal length [px]
         baseline;           %interocular distance
         objDistMin;         %object distance to eyes [m]
         objDistMax;
@@ -55,7 +55,7 @@ classdef Model < handle
             obj.textureFile = PARAM{1}{2};
             obj.trainTime = PARAM{1}{3};
             obj.sparseCodingType = PARAM{1}{4};
-            obj.f = PARAM{1}{5};
+            obj.focalLength = PARAM{1}{5};
             obj.baseline = PARAM{1}{6};
             obj.objDistMin = PARAM{1}{7};
             obj.objDistMax = PARAM{1}{8};
@@ -335,20 +335,20 @@ classdef Model < handle
             plotpath = sprintf('%s/weightsL1', this.savePath);
             saveas(gcf, plotpath, 'png');
 
-            figure;
-            hold on;
-            grid on;
-            plot(this.l12_weights(:, 2), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 4), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            % plot(this.l12_weights(:, 6), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
-            % plot(this.l12_weights(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            ylabel('\Sigma weights^{2}', 'FontSize', 12);
-            % legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
-            legend('w_{Vji}', 'w_{Pki}', 'Location', 'best');
-            title('Model weights (L2)')
-            plotpath = sprintf('%s/weightsL2', this.savePath);
-            saveas(gcf, plotpath, 'png');
+            % figure;
+            % hold on;
+            % grid on;
+            % plot(this.l12_weights(:, 2), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+            % plot(this.l12_weights(:, 4), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+            % % plot(this.l12_weights(:, 6), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+            % % plot(this.l12_weights(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            % ylabel('\Sigma weights^{2}', 'FontSize', 12);
+            % % legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
+            % legend('w_{Vji}', 'w_{Pki}', 'Location', 'best');
+            % title('Model weights (L2)')
+            % plotpath = sprintf('%s/weightsL2', this.savePath);
+            % saveas(gcf, plotpath, 'png');
 
             %% Reward
             figure;
@@ -707,9 +707,6 @@ classdef Model < handle
             saveas(gcf, plotpath, 'png');
         end
 
-        function generateResponses()
-        end
-
         %% plot & save delta_MF(Vergence_error)
         % objRange = range of object distances being tested
         % vergRange = range of vergences being tested
@@ -813,7 +810,7 @@ classdef Model < handle
             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            
+
             title('\Delta MF(Vergence_{error}) response at Testing procedure');
             if ~isempty(this.savePath)
                 plotpath = sprintf('%s/deltaMFasFktVerErrGenDist_%s', this.savePath, description);
@@ -907,7 +904,7 @@ classdef Model < handle
             xlabel(sprintf('Vergence Error [deg], bin size = %.3g deg', deltaVergErr), 'FontSize', 12);
             ylabel('resonstruction Error', 'FontSize', 12);
             title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
-            
+
             if ~ isempty(this.savePath)
                 plotpath = sprintf('%s/recErrVsVerErrGenDist_%s', this.savePath, description);
                 saveas(gcf, plotpath, 'png');

@@ -159,7 +159,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % matlab 2015 or newer
         anaglyph = imfuse(imgGrayLeft, imgGrayRight, 'falsecolor');
         imwrite(anaglyph, 'anaglyph.png');
-        
+
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
         [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
@@ -257,7 +257,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         fixDepth = (model.baseline / 2) / tand(angleNew / 2);   %fixation depth [m]
         angleDes = 2 * atand(model.baseline / (2 * objDist));   %desired vergence [deg]
         anglerr = angleDes - angleNew;                          %vergence error [deg]
-        disparity = 2 * model.f * tand(anglerr / 2);            %current disp [px]
+        disparity = 2 * model.focalLength * tand(anglerr / 2);            %current disp [px]
 
         % save state
         model.Z(t) = objDist;
