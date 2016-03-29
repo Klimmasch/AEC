@@ -148,8 +148,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-
-        generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
+        % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -302,12 +301,12 @@ end
 %%% Testing procedure
 if (testIt)
     % TestTrial(model, randomizationSeed, fileDescription);
-    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 20, '05-2m');
-    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 20, '05-2m');
-    model.deltaMFplotGenDist([0.5], [-5:5], 20, '05m');
-    model.recErrPlotGenDist([0.5], [-5:5], 20, '05m');
-    model.deltaMFplotGenDist([2], [-5:5], 20, '2m');
-    model.recErrPlotGenDist([2], [-5:5], 20, '2m');
+    model.deltaMFplotGenDist([0.5, 1, 2], [-5:0.5:5], 20, '05-2m');
+    model.recErrPlotGenDist([0.5, 1, 2], [-5:0.5:5], 20, '05-2m');
+    model.deltaMFplotGenDist([0.5], [-5:0.5:5], 20, '05m');
+    model.recErrPlotGenDist([0.5], [-5:0.5:5], 20, '05m');
+    model.deltaMFplotGenDist([2], [-5:0.5:5], 20, '2m');
+    model.recErrPlotGenDist([2], [-5:0.5:5], 20, '2m');
 end
 
 end

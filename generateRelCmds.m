@@ -15,8 +15,8 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
 
     % fovea = [128 128];
-    foveaL = patchSize + patchSize^2 / 2^log2(dsRatioL); %fovea size (Large scale) | 16
-    foveaS = patchSize + patchSize^2 / 2^log2(dsRatioS); %fovea size (Small scale) | 40
+    foveaL = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioL); %fovea size (Large scale) | 16
+    foveaS = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioS); %fovea size (Small scale) | 40
 
     stOvL = patchSize / dsRatioL; %steps of overlap in the ds image | 1
     stOvS = patchSize / dsRatioS; %steps of overlap in the ds image | 4
@@ -48,11 +48,11 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     recErrsLarge = [];
 
     [~, numDists] = size(objRange);
-%     avgCmd = zeros(numDists,1);
-%
-%     vergences = vergRange(1):0.1:vergRange(2);
+    % avgCmd = zeros(numDists,1);
+
+    % vergences = vergRange(1):0.1:vergRange(2);
     [~, numVergs] = size(vergRange);
-%     avgVergErr = zeros(numVergs,1);
+    % avgVergErr = zeros(numVergs,1);
 
     degrees = load('Degrees.mat');
     resolution = 10001;
@@ -91,8 +91,8 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-%                 anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
-%                 imwrite(anaglyph, 'anaglyph.png');
+                % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
+                % imwrite(anaglyph, 'anaglyph.png');
 
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
