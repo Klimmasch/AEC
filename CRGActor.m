@@ -10,6 +10,8 @@ classdef CRGActor < handle
         % Reinforcement Learning parameters
         beta_p;         % step-size schedule of weight update "learning rate"
         variance;       % variance of perturbation distribution
+        varianceRange;
+        varDec;
         covmat;         % action perturbation matrix
 
         % model state tracking of previous time step
@@ -31,7 +33,9 @@ classdef CRGActor < handle
             obj.wp_ki = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1); % [0, 1] * w_init_range
 
             obj.beta_p = PARAM{4};
-            obj.variance = PARAM{5};
+            obj.varianceRange = PARAM{5};
+            obj.variance = obj.varianceRange(1);
+            obj.varDec = PARAM{6};
             obj.covmat = eye(obj.output_dim) * obj.variance;
 
             obj.param_num = 2;

@@ -70,9 +70,8 @@ alpha_n = 0.025;                        %learning rate of natural policy gradien
 alpha_p = 0.002;                        %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
 xi = 0.3;                               %discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                            %learning rate to update cumulative value | origin 1
-variance = 1e-5;                        %variance of action output
-                                        %if policy is continuous, this value
-                                        %serves as variance for the actor
+varianceRange = [1e-3, 1e-5];           %variance of action output [start, end]
+varDec = (log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); %action variance decay factor
 S0 = PARAMSC_L{3} + PARAMSC_S{3} + 1;   %number of neurons in the input layer (Small + Large scale + Muscle activities)
 weight_range = [0.0017, 0.0017, 0.05];  %maximum initial weight [critic_ji, actor_ji, actor_kj] | origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
 lambda = 0.01;                          %reguralization factor | origin 0.01
@@ -80,8 +79,8 @@ continuous = uint8(1);                  %indicates if the policy is discrete or 
 deltaVar = 1;                           %delta variance tracking (CACLAVar)
 eta = 0.001;                            %delta vairance scaling factor (CACLAVar)
 fiScale = 1e-5;                         %scaling factor of Fisher Information matrix (CNGFI)
-PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, variance, lambda, S0, weight_range, ...
-           loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour};
+PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, S0, weight_range, ...
+           loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour, varDec};
 
 %%% Model parameters
 % Camera parameters
@@ -96,7 +95,7 @@ objDistMax = 2;
 muscleInitMin = 0.00807;    %minimal initial muscle innervation
 muscleInitMax = 0.07186;    %maximal --"--
 
-interval = 10;                          %period to change a new environment for the eye | origin 10
+interval = 10;                          %period for changing the stimulus for the eye | origin 10
 lambdaMuscleFB = 1.0722;                %factor of muscle activity feedback to RL feature vector
                                         %Proportion MF/feature | 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
                                         % 30% = 1.0722 | 50% = 1.7871 | 100% = 3.5741

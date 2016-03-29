@@ -15,6 +15,8 @@ classdef CActorG < handle
         type_output;
         regulizer;
         variance;
+        varianceRange;
+        varDec;
         param_num;
         params;
     end
@@ -34,7 +36,9 @@ classdef CActorG < handle
             obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1);
             obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2);
             obj.regulizer = 0.005;
-            obj.variance = PARAM{7};
+            obj.varianceRange = PARAM{7};
+            obj.variance = obj.varianceRange(1);
+            obj.varDec = PARAM{8};
             % obj.covmat = diag(ones(obj.output_dim, 1));
             obj.covmat = eye(obj.output_dim) * obj.variance; % indicated no correlation between the output values
             obj.param_num = 7;

@@ -1,8 +1,9 @@
-%%% Main script for launching application
+%%% Main script for launching experimental procedure
 %@param trainTime           training time in number of iterations
 %@param randomizationSeed   randomization seed
+%@param fileDescription     description of approach used as file name
 %
-% learnedFile:              file with policy and sparse coding to test if not empty
+% learnedFile:              previously learned policy and sparse coding model
 % textureFile:              texture settings files
 % sparseCodingType:         type of sparse coding approach
 %%%
@@ -21,18 +22,18 @@ sparseCodingType = 'nonhomeo';
 plotNsave = uint8(1);
 
 % Testing flag
-% Whether the testing procedure shall be executed in the end
+% Whether the testing procedure shall be executed after training
 % testIt:   0 = don't do it
 %           1 = do it
 testIt = uint8(1);
 
-% Save model and conduct testing every saveInterval training iterations (+1)
+% Save model every saveInterval training iterations
 saveInterval = 1000;
 if (trainTime < saveInterval)
     saveInterval = trainTime;
 end
 
-% Instantiate and initiate model and test_data objects
+% Instantiate and initiate model object
 model = config(learnedFile, textureFile, trainTime, sparseCodingType);
 
 if (trainTime <= model.interval)
@@ -44,8 +45,8 @@ elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
 end
 
 % File management
-modelName = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
-                    datestr(now), ...
+modelName = sprintf('model_%s_%i_%s_%i_%s', ...
+                    datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
                     trainTime, ...
                     sparseCodingType, ...
                     randomizationSeed, ...
@@ -63,8 +64,8 @@ dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | orig
 dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
 
 % fovea = [128 128];
-foveaL = patchSize + patchSize^2 / 2^log2(dsRatioL); %fovea size (Large scale) | 16
-foveaS = patchSize + patchSize^2 / 2^log2(dsRatioS); %fovea size (Small scale) | 40
+foveaL = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioL); %fovea size (Large scale) | 16
+foveaS = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioS); %fovea size (Small scale) | 40
 
 stOvL = patchSize / dsRatioL; %steps of overlap in the ds image | 1
 stOvS = patchSize / dsRatioS; %steps of overlap in the ds image | 4
@@ -128,12 +129,6 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
     angleNew = getAngle(command) * 2;
 
-    % Training of basis functions:
-    % b = 1;      % diversity or variance of laplacian dist.
-    % range = 5;  % maximum vergence is 5 degree
-    % angleDes = 2 * atand(baseline / (2 * objDist));
-    % angleNew = angleDes + truncLaplacian(b, range);
-
     [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                    currentTexture, currentTexture, objDist, objDist, angleNew));
 
@@ -152,8 +147,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
         % Generate & save the anaglyph picture
-        % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for
-        % matlab 2015 or newer
+        % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
 
         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
@@ -177,20 +171,20 @@ for iter1 = 1 : (model.trainTime / model.interval)
         metCost = getMetCost(command) * 2;
 
         %%% Calculate reward function
-        % delta reward
+        %% Standard reward
+        % rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
+        % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
+
+        %% Delta reward
         rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
         rewardFunction = rewardFunctionReal - rewardFunction_prev;
 
-        % stasis punishment, i.e. punish non-movement of eyes
+        % Stasis punishment, i.e. punish non-movement of eyes
         % if (abs(rewardFunctionReal - rewardFunction_prev) < 1e-5)
         %     rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
         % end
 
         rewardFunction_prev = rewardFunctionReal;
-
-        % standard reward
-        % rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
-        % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
 
         %%% Weight L1 regularization
         % rewardFunction = model.lambdaRec * reward ...
@@ -210,19 +204,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % Sparse coding models
         model.scmodel_Large.stepTrain(currentView{1});
         model.scmodel_Small.stepTrain(currentView{2});
+
         % RL model
-        % decay of actor's output perturbation
-        % https://www.symbolab.com/solver/step-by-step/
-        % variance(t = [1, 100k]) ~= [10-3, 10-5]
-        % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 15000);
-        % variance(t = [1, 100k]) ~= [10-3, 10-4]
-        % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 30200);
-        % variance(t = [1, 100k]) ~= [10-2, 10-4]
-        % model.rlmodel.CActor.variance = 0.01 * 2 ^ (-t / 15100);
-        % variance(t = [1, 100k]) ~= [10-3, 10-4] @ 500k iterations
-        model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 1.5051e+05);
-        % variance(t = [1, 100k]) ~= [10-2, 10-5] @ 500k iterations
-        % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 5.0172e+04);
+        % Variance decay, i.e. reduction of actor's output perturbation
+        model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
 
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
@@ -231,19 +216,6 @@ for iter1 = 1 : (model.trainTime / model.interval)
         command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
         angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
-
-        % in case you want to train basisfunctions tuned to a specific
-        % disparity:
-        % angleDes = 2 * atand(baseline / (2 * objDist)); %desired vergence [deg]
-        % angleNew = angleDes + truncLaplacian(b,range);
-        % testLP = [];
-        % for test = 1:10000
-        %     testLP = [testLP truncLaplacian(b,range)];
-        % end
-        % figure;
-        % hold on;
-        % histogram(testLP);
-        % hold off;
 
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
@@ -261,7 +233,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         fixDepth = (model.baseline / 2) / tand(angleNew / 2);   %fixation depth [m]
         angleDes = 2 * atand(model.baseline / (2 * objDist));   %desired vergence [deg]
         anglerr = angleDes - angleNew;                          %vergence error [deg]
-        disparity = 2 * model.focalLength * tand(anglerr / 2);            %current disp [px]
+        disparity = 2 * model.focalLength * tand(anglerr / 2);  %current disp [px]
 
         % save state
         model.Z(t) = objDist;
@@ -408,9 +380,9 @@ function l = truncLaplacian(diversity, range)
 
     switch r < 0.5
         case 1
-            l = 1/diversity*log(2*r);
+            l = 1 / diversity * log(2 * r);
         case 0
-            l = -1/diversity*log(2*(1-r));
+            l = -1 / diversity * log(2 * (1 - r));
     end
 
     if abs(l) > range
