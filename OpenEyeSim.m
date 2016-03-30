@@ -127,8 +127,8 @@ while (true)
             objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset vergence to random value
             angleNew = randi(vergeMax, 1); % relax the eyes
-            [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                           currentTexture, currentTexture, objDist, objDist, angleNew));
+            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                           currentTexture, objDist, angleNew));
 
             % Abort execution if error occured
             if (status)
@@ -161,8 +161,8 @@ while (true)
             objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
             % reset vergence to random value
             angleNew = randi(vergeMax, 1); % relax the eyes
-            [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                           currentTexture, currentTexture, objDist, objDist, angleNew));
+            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                           currentTexture, objDist, angleNew));
 
             % Abort execution if error occured
             if (status)
@@ -223,8 +223,8 @@ while (true)
         if (angleNew > vergeMax)
             angleNew = randi(vergeMax, 1);     %relax the eyes
         end
-        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                               currentTexture, currentTexture, objDist, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                       currentTexture, objDist, angleNew));
 
         % Abort execution if error occured
         if (status)
@@ -282,8 +282,8 @@ while (true)
         if (angleNew > vergeMax)
             angleNew = randi(vergeMax, 1);     %relax the eyes
         end
-        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                       currentTexture, currentTexture, objDist, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                       currentTexture, objDist, angleNew));
 
         % Abort execution if error occured
         if (status)

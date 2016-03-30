@@ -129,8 +129,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
     angleNew = getAngle(command) * 2;
 
-    [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                   currentTexture, currentTexture, objDist, objDist, angleNew));
+    [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                   currentTexture, objDist, angleNew));
 
     % abort execution if error occured
     if (status)
@@ -217,8 +217,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
         angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
 
         % generate new view (two pictures) with new vergence angle
-        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                               currentTexture, currentTexture, objDist, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                       currentTexture, objDist, angleNew));
 
         % abort execution if error occured
         if (status)

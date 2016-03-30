@@ -82,8 +82,8 @@ function testModel(model, randomizationSeed, objRange, repeat)
             % Random distance
             objRange(iter2) = 0.5 + (2 - 0.5) * rand(1, 1);
 
-            [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                           currentTexture, currentTexture, objRange(iter2), objRange(iter2), angleNew));
+            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                           currentTexture, objRange(iter2), angleNew));
 
             % abort execution if error occured
             if (status)
@@ -131,8 +131,8 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 % angleNew = angleNew + relativeCommand; %discrete
 
                 % generate new view (two pictures) with new vergence angle
-                [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                       currentTexture, currentTexture, objRange(iter2), objRange(iter2), angleNew));
+                [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                               currentTexture, objRange(iter2), angleNew));
 
                 % abort execution if error occured
                 if (status)
