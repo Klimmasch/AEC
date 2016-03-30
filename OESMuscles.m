@@ -303,10 +303,10 @@ if (testIt)
     % TestTrial(model, randomizationSeed, fileDescription);
     model.deltaMFplotGenDist([0.5, 1, 2], [-5:0.5:5], 20, '05-2m');
     model.recErrPlotGenDist([0.5, 1, 2], [-5:0.5:5], 20, '05-2m');
-    model.deltaMFplotGenDist([0.5], [-5:0.5:5], 20, '05m');
-    model.recErrPlotGenDist([0.5], [-5:0.5:5], 20, '05m');
-    model.deltaMFplotGenDist([2], [-5:0.5:5], 20, '2m');
-    model.recErrPlotGenDist([2], [-5:0.5:5], 20, '2m');
+    % model.deltaMFplotGenDist([0.5], [-5:0.5:5], 20, '05m');
+    % model.recErrPlotGenDist([0.5], [-5:0.5:5], 20, '05m');
+    % model.deltaMFplotGenDist([2], [-5:0.5:5], 20, '2m');
+    % model.recErrPlotGenDist([2], [-5:0.5:5], 20, '2m');
 end
 
 end
