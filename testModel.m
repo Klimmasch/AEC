@@ -227,7 +227,6 @@ function [patches] = preprocessImage(img, fovea, downSampling, patchSize, column
     patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
 end
 
-<<<<<<< HEAD
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
 % TODO: adjust the sizes of the montage view
