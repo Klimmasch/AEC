@@ -241,7 +241,7 @@ classdef Model < handle
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Vergence Error [deg]', 'FontSize', 12);
             title('Moving Average of the Vergence Error');
-            legend('verg_{err}', 'SMA(verg_{err})');
+            legend('|verg_{err}|', 'SMA(|verg_{err}|)');
             plotpath = sprintf('%s/mvngAvgVergErr', this.savePath);
             saveas(gcf, plotpath, 'png');
 

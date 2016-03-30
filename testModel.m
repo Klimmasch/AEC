@@ -77,6 +77,10 @@ function testModel(model, randomizationSeed, objRange, repeat)
             % command(2) = 0.1 * rand(1, 1); % random policy
 
             angleNew = getAngle(command) * 2;
+            % angleNew = randi(16, 1); %discrete
+
+            % Random distance
+            objRange(iter2) = 0.5 + (2 - 0.5) * rand(1, 1);
 
             [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                            currentTexture, currentTexture, objRange(iter2), objRange(iter2), angleNew));
@@ -94,6 +98,9 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
+                % Anaglyph images
+                % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
+
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
                 [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
@@ -108,7 +115,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
                 %%% Feedback
                 % Absolute command feedback # concatination
-                feature = [feature; command(2) * model.lambdaMuscleFB];
+                feature = [feature; command(2) * model.lambdaMuscleFB]; %nondiscrete
 
                 %%% Calculate metabolic costs
                 % metCost = getMetCost(command) * 2;
@@ -121,6 +128,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 command(2) = command(2) + relativeCommand;  %one muscel
                 command = checkCmd(command);                %restrain motor commands to [0,1]
                 angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+                % angleNew = angleNew + relativeCommand; %discrete
 
                 % generate new view (two pictures) with new vergence angle
                 [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
@@ -141,7 +149,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
                 disZ(iter3, iter2, iter1) = objRange(iter2);
                 fixZ(iter3, iter2, iter1) = fixDepth;
-                vergerr(iter3, iter2, iter1) = anglerr;
+                vergerr(iter3, iter2, iter1) = abs(anglerr);
             end
         end
     end
@@ -151,9 +159,8 @@ function testModel(model, randomizationSeed, objRange, repeat)
     figure;
     hold on;
     grid on;
-    % plot(1 : model.interval, mean(mean(vergerr, 3), 2), 'color', [1, 0.549, 0], 'LineWidth', 0.8);
     errorbar([1 : model.interval], mean(mean(vergerr, 3), 2), std(std(vergerr, 0, 3), 0, 2), 'color', [1, 0.549, 0], 'LineWidth', 0.8);
-
+    axis([0, 11, 0, 3]);
     xlabel('Iteration step', 'FontSize', 12);
     ylabel('Vergence Error [deg]', 'FontSize', 12);
     title('Average Vergence Error over Trial (Testing)');
@@ -214,4 +221,58 @@ function [patches] = preprocessImage(img, fovea, downSampling, patchSize, column
     % normalize patches to norm 1
     normp(normp == 0) = eps;                                            %regularizer
     patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
+end
+
+%this function generates anaglyphs of the large and small scale fovea and
+%one of the two unpreprocessed gray scale images
+% TODO: adjust the sizes of the montage view
+function generateAnaglyphs(model, leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
+    anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
+    imwrite(anaglyph, 'anaglyph.png');
+
+    %Downsampling Large
+    imgLeftL = leftGray(:);
+    imgLeftL = reshape(imgLeftL, size(leftGray));
+    imgRightL = rightGray(:);
+    imgRightL = reshape(imgRightL, size(rightGray));
+    for i = 1:log2(dsRatioL)
+        imgLeftL = impyramid(imgLeftL, 'reduce');
+        imgRightL = impyramid(imgRightL, 'reduce');
+    end
+
+    % cut fovea in the center
+    [h, w, ~] = size(imgLeftL);
+    imgLeftL = imgLeftL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
+              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
+    imgRightL = imgRightL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
+              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
+
+    %create an anaglyph of the two pictures, scale it up and save it
+    anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
+    imwrite(imresize(anaglyphL, 20), sprintf('%s/anaglyphLargeScale.png', model.savePath));
+    largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage.png', model.savePath));
+
+    %Downsampling Small
+    imgLeftS = leftGray(:);
+    imgLeftS = reshape(imgLeftS, size(leftGray));
+    imgRightS = rightGray(:);
+    imgRightS = reshape(imgRightS, size(rightGray));
+    for i = 1:log2(dsRatioS)
+        imgLeftS = impyramid(imgLeftS, 'reduce');
+        imgRightS = impyramid(imgRightS, 'reduce');
+    end
+
+    % cut fovea in the center
+    [h, w, ~] = size(imgLeftS);
+    imgLeftS = imgLeftS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
+              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
+    imgRightS = imgRightS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
+              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
+
+    %create an anaglyph of the two pictures, scale it up and save it
+    anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
+    imwrite(imresize(anaglyphS, 16), sprintf('%s/anaglyphSmallScale.png', model.savePath));
+    smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage.png', model.savePath));
 end
