@@ -94,7 +94,9 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 imgRawRight = imread('right.png');
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
-
+                
+                generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+                
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
                 [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
@@ -123,6 +125,9 @@ function testModel(model, randomizationSeed, objRange, repeat)
 %                 command = checkCmd(command);                %restrain motor commands to [0,1]
 %                 angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
                 angleNew = angleNew + relativeCommand;
+                if angleNew > 16 || angleNew < 0.01
+                    angleNew = randi(16,1);
+                end
 
                 % generate new view (two pictures) with new vergence angle
                 [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
@@ -216,4 +221,55 @@ function [patches] = preprocessImage(img, fovea, downSampling, patchSize, column
     % normalize patches to norm 1
     normp(normp == 0) = eps;                                            %regularizer
     patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
+end
+
+function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
+    anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
+    imwrite(anaglyph, 'anaglyph.png');
+
+    %Downsampling Large
+    imgLeftL = leftGray(:);
+    imgLeftL = reshape(imgLeftL, size(leftGray));
+    imgRightL = rightGray(:);
+    imgRightL = reshape(imgRightL, size(rightGray));
+    for i = 1:log2(dsRatioL)
+        imgLeftL = impyramid(imgLeftL, 'reduce');
+        imgRightL = impyramid(imgRightL, 'reduce');
+    end
+
+    % cut fovea in the center
+    [h, w, ~] = size(imgLeftL);
+    imgLeftL = imgLeftL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
+              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
+    imgRightL = imgRightL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
+              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
+
+    %create an anaglyph of the two pictures, scale it up and save it
+    anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
+    imwrite(imresize(anaglyphL, 20), strcat(savePath, 'anaglyphLargeScale.png'));
+    largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    imwrite(imresize(largeScaleView, 20), strcat(savePath,'LargeScaleMontage.png'));
+
+    %Downsampling Small
+    imgLeftS = leftGray(:);
+    imgLeftS = reshape(imgLeftS, size(leftGray));
+    imgRightS = rightGray(:);
+    imgRightS = reshape(imgRightS, size(rightGray));
+    for i = 1:log2(dsRatioS)
+        imgLeftS = impyramid(imgLeftS, 'reduce');
+        imgRightS = impyramid(imgRightS, 'reduce');
+    end
+
+    % cut fovea in the center
+    [h, w, ~] = size(imgLeftS);
+    imgLeftS = imgLeftS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
+              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
+    imgRightS = imgRightS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
+              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
+
+    %create an anaglyph of the two pictures, scale it up and save it
+    anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
+    imwrite(imresize(anaglyphS, 8), strcat(savePath,'anaglyphSmallScale.png'));
+    smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    imwrite(imresize(smallScaleView, 8), strcat(savePath,'smallScaleMontage.png'));
 end
