@@ -302,8 +302,6 @@ end
 %%% Testing procedure
 if (testIt)
     testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], 10);
-    model.deltaMFplotGenDist([0.5, 1, 2], [-5 : 0.5 : 5], 20, '05-2m');
-    model.recErrPlotGenDist([0.5, 1, 2], [-5 : 0.5 : 5], 20, '05-2m');
 end
 
 end
