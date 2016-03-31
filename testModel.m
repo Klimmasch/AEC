@@ -78,7 +78,8 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
             angleNew = getAngle(command) * 2;
             angleNew = randi(16,1); % for discrete Policy
-
+            
+            objRange(iter2) = 0.5 + (2-0.5)*rand(1,1);
             [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                            currentTexture, currentTexture, objRange(iter2), objRange(iter2), angleNew));
 
@@ -128,11 +129,10 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 if angleNew > 16 || angleNew < 0.01
                     angleNew = randi(16,1);
                 end
-
+                                
                 % generate new view (two pictures) with new vergence angle
                 [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                        currentTexture, currentTexture, objRange(iter2), objRange(iter2), angleNew));
-
                 % abort execution if error occured
                 if (status)
                     sprintf('Error in checkEnvironment:\n%s', res)
