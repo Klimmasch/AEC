@@ -137,8 +137,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
     angleDes = 2 * atand(model.baseline / (2 * objDist));
     angleNew = angleDes + truncLaplacian(b, range);
 
-    [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                   currentTexture, currentTexture, objDist, objDist, angleNew));
+    [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                   currentTexture, objDist, angleNew));
 
     % abort execution if error occured
     if (status)
@@ -242,8 +242,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
 %         hold off;
 
         % generate new view (two pictures) with new vergence angle
-        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                               currentTexture, currentTexture, objDist, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                       currentTexture, objDist, angleNew));
 
         % abort execution if error occured
         if (status)

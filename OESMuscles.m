@@ -129,8 +129,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
     angleNew = getAngle(command) * 2;
 
-    [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                   currentTexture, currentTexture, objDist, objDist, angleNew));
+    [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                   currentTexture, objDist, angleNew));
 
     % abort execution if error occured
     if (status)
@@ -217,8 +217,8 @@ for iter1 = 1 : (model.trainTime / model.interval)
         angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
 
         % generate new view (two pictures) with new vergence angle
-        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                               currentTexture, currentTexture, objDist, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                       currentTexture, objDist, angleNew));
 
         % abort execution if error occured
         if (status)
@@ -253,6 +253,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.l12_weights(t, 2) = model.rlmodel.CCritic.params(2);
         model.l12_weights(t, 3) = model.rlmodel.CActor.params(1);
         model.l12_weights(t, 4) = model.rlmodel.CActor.params(2);
+        model.variance_hist(t) = model.rlmodel.CActor.variance;
         % model.l12_weights(t, 5) = model.rlmodel.CActor.params(3);
         % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
         % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
@@ -271,6 +272,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.scmodel_Large.saveBasis();
         model.scmodel_Small.saveBasis();
 
+        % TODO: DEPRECATED
         % save Weights
         % model.rlmodel.saveWeights();
     end
@@ -284,11 +286,10 @@ sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/s
 
 % Plot results
 if (plotNsave)
-    % model.errPlot();
     model.allPlotSave();
     copyfile('config.m', model.savePath);
     copyfile('OESMuscles.m', model.savePath);
-    copyfile('OESMusclesBF.m', model.savePath);
+    % copyfile('OESMusclesBF.m', model.savePath);
     copyfile('ReinforcementLearningCont.m', model.savePath);
     copyfile('CRGCritic.m', model.savePath);
     copyfile('CRGActor.m', model.savePath);
@@ -300,13 +301,9 @@ end
 
 %%% Testing procedure
 if (testIt)
-    % TestTrial(model, randomizationSeed, fileDescription);
-    model.deltaMFplotGenDist([0.5, 1, 2], [-5:0.5:5], 20, '05-2m');
-    model.recErrPlotGenDist([0.5, 1, 2], [-5:0.5:5], 20, '05-2m');
-    model.deltaMFplotGenDist([0.5], [-5:0.5:5], 20, '05m');
-    model.recErrPlotGenDist([0.5], [-5:0.5:5], 20, '05m');
-    model.deltaMFplotGenDist([2], [-5:0.5:5], 20, '2m');
-    model.recErrPlotGenDist([2], [-5:0.5:5], 20, '2m');
+    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], 10);
+    model.deltaMFplotGenDist([0.5, 1, 2], [-5 : 0.5 : 5], 20, '05-2m');
+    model.recErrPlotGenDist([0.5, 1, 2], [-5 : 0.5 : 5], 20, '05-2m');
 end
 
 end

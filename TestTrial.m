@@ -99,8 +99,8 @@ function TestTrial(model, randomizationSeed, fileDescription)
         angleNew = getAngle(command) * 2;
 
         %generate two new pictures
-        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                   currentTexture, currentTexture, objDist, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                       currentTexture, objDist, angleNew));
 
         % Abort execution if error occured
         if (status)
@@ -184,8 +184,8 @@ function TestTrial(model, randomizationSeed, fileDescription)
             angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
 
             % generate new view (two pictures) with new vergence angle
-            [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                   currentTexture, currentTexture, objDist, objDist, angleNew));
+            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                           currentTexture, objDist, angleNew));
 
             % Abort execution if error occured
             if (status)

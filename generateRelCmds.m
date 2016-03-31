@@ -76,8 +76,8 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
             for verg = 1:numVergs
                 currentTexture = texture{(randi(nTextures, 1))}; %random picture for every iteration
                 %generate two new pictures
-                [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                           currentTexture, currentTexture, objRange(objDist), objRange(objDist), angleDes + vergRange(verg)));
+                [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                               currentTexture, objRange(objDist), angleDes + vergRange(verg)));
 
                 % Abort execution if error occured
                 if (status)

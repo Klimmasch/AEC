@@ -71,18 +71,20 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
             % reset muscle activities to random values
             command = [0, 0];
-%             command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);    %only for one muscle
+            command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);    %only for one muscle
             % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);  %two muscles
             % command(2) = command(1);
             % command(2) = 0.1 * rand(1, 1); % random policy
 
             angleNew = getAngle(command) * 2;
-            angleNew = randi(16,1); % for discrete Policy
-            
-            objRange(iter2) = 0.5 + (2-0.5)*rand(1,1);
-            [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                           currentTexture, currentTexture, objRange(iter2), objRange(iter2), angleNew));
 
+            angleNew = randi(16,1); % for discrete Policy
+
+            % Random distance
+            objRange(iter2) = 0.5 + (2 - 0.5) * rand(1, 1);
+
+            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                           currentTexture, objRange(iter2), angleNew));
             % abort execution if error occured
             if (status)
                 sprintf('Error in checkEnvironment:\n%s', res)
@@ -95,9 +97,9 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 imgRawRight = imread('right.png');
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
-                
-                generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
-                
+
+                % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
                 [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
@@ -112,7 +114,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
                 %%% Feedback
                 % Absolute command feedback # concatination
-%                 feature = [feature; command(2) * model.lambdaMuscleFB];
+                feature = [feature; command(2) * model.lambdaMuscleFB]; %nondiscrete
 
                 %%% Calculate metabolic costs
                 % metCost = getMetCost(command) * 2;
@@ -122,6 +124,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
                 % add the change in muscle Activities to current ones
                 % command = command + relativeCommand';     %two muscels
+<<<<<<< HEAD
 %                 command(2) = command(2) + relativeCommand;  %one muscel
 %                 command = checkCmd(command);                %restrain motor commands to [0,1]
 %                 angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
@@ -133,6 +136,22 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 % generate new view (two pictures) with new vergence angle
                 [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
                                        currentTexture, currentTexture, objRange(iter2), objRange(iter2), angleNew));
+=======
+                command(2) = command(2) + relativeCommand;  %one muscel
+                command = checkCmd(command);                %restrain motor commands to [0,1]
+                angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+
+                % for discrete Policy
+                % angleNew = angleNew + relativeCommand;
+                % if angleNew > 16 || angleNew < 0.01
+                %     angleNew = randi(16,1);
+                % end
+
+                % generate new view (two pictures) with new vergence angle
+                [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                               currentTexture, objRange(iter2), angleNew));
+
+>>>>>>> 66cd217fa9ce51cbb2c88eff3f3fc65e45cb375c
                 % abort execution if error occured
                 if (status)
                     sprintf('Error in checkEnvironment:\n%s', res)
@@ -148,7 +167,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
                 disZ(iter3, iter2, iter1) = objRange(iter2);
                 fixZ(iter3, iter2, iter1) = fixDepth;
-                vergerr(iter3, iter2, iter1) = anglerr;
+                vergerr(iter3, iter2, iter1) = abs(anglerr);
             end
         end
     end
@@ -158,9 +177,8 @@ function testModel(model, randomizationSeed, objRange, repeat)
     figure;
     hold on;
     grid on;
-    % plot(1 : model.interval, mean(mean(vergerr, 3), 2), 'color', [1, 0.549, 0], 'LineWidth', 0.8);
     errorbar([1 : model.interval], mean(mean(vergerr, 3), 2), std(std(vergerr, 0, 3), 0, 2), 'color', [1, 0.549, 0], 'LineWidth', 0.8);
-
+    axis([0, 11, 0, 3]);
     xlabel('Iteration step', 'FontSize', 12);
     ylabel('Vergence Error [deg]', 'FontSize', 12);
     title('Average Vergence Error over Trial (Testing)');
@@ -223,7 +241,10 @@ function [patches] = preprocessImage(img, fovea, downSampling, patchSize, column
     patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
 end
 
-function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
+%this function generates anaglyphs of the large and small scale fovea and
+%one of the two unpreprocessed gray scale images
+% TODO: adjust the sizes of the montage view
+function generateAnaglyphs(model, leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
     imwrite(anaglyph, 'anaglyph.png');
 
@@ -246,9 +267,9 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
-    imwrite(imresize(anaglyphL, 20), strcat(savePath, 'anaglyphLargeScale.png'));
+    imwrite(imresize(anaglyphL, 20), sprintf('%s/anaglyphLargeScale.png', model.savePath));
     largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(largeScaleView, 20), strcat(savePath,'LargeScaleMontage.png'));
+    imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage.png', model.savePath));
 
     %Downsampling Small
     imgLeftS = leftGray(:);
@@ -269,7 +290,7 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
-    imwrite(imresize(anaglyphS, 8), strcat(savePath,'anaglyphSmallScale.png'));
+    imwrite(imresize(anaglyphS, 16), sprintf('%s/anaglyphSmallScale.png', model.savePath));
     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(smallScaleView, 8), strcat(savePath,'smallScaleMontage.png'));
+    imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage.png', model.savePath));
 end

@@ -125,8 +125,8 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
         % command(2) = 0.1 * rand(1, 1); % random policy
 
         angleNew = getAngle(command) * 2;
-        [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                       currentTexture, currentTexture, objDist, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                       currentTexture, objDist, angleNew));
 
         % Abort execution if error occured
         if (status)
@@ -220,8 +220,8 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
             angleNew = getAngle(command) * 2;       %resulting angle is used for both eyes
 
             % generate new view (two pictures) with new vergence angle
-            [status, res] = system(sprintf('./checkEnvironment %s %s %d %d left.png right.png %d', ...
-                                   currentTexture, currentTexture, objDist, objDist, angleNew));
+            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                           currentTexture, objDist, angleNew));
 
             % Abort execution if error occured
             if (status)

@@ -2,7 +2,7 @@
 <OpenSimDocument Version="30000">
 	<Model name="eye_model">
 		<credits />
-		<publications>OpenEyeSim Alex Priamikov, Jochen Triesch</publications>
+		<publications>Holzbaur, K.R.S., Murray, W.M., Delp, S.L. A Model of the Upper Extremity for Simulating Musculoskeletal Surgery and Analyzing Neuromuscular Control. Annals of Biomedical Engineering, vol 33, pp 829–840, 2005</publications>
 		<length_units>meters</length_units>
 		<force_units>N</force_units>
 		<!--Acceleration due to gravity.-->
@@ -33,684 +33,14 @@
 									<!--Name of texture file .jpg, .bmp-->
 									<texture_file />
 									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> -3.14 -1.54159 -0 0 1.578 0</transform>
+									<transform> 0 -1.57079632679 3.14159265359 0 1.578 0</transform>
 									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
+									<scale_factors> 1.4 1.4 1.4</scale_factors>
 									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>4</display_preference>
+                                                                        <display_preference>4</display_preference>
 									<!--Display opacity between 0.0 and 1.0-->
 									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>sacrum.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 0 0.93 0</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>pelvis_r.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 0 0.93 0</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>pelvis_l.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 0 0.93 0</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>thorax.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.1007 1.4 0</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>hat_skull.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.1007 1.4 0</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>4</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>0.2</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>hat_jaw.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.1007 1.4 0</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>4</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>0.2</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>hat_spine.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.1007 1.4 0</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>femur_r.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0707 0.87 0.0835</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>tibia_r.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0707 0.47 0.0835</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>fibula_r.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0707 0.47 0.0835</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>talus_r.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0707 0.04 0.0835</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>foot_r.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.1107 0 0.0925</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>femur_l.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0707 0.87 -0.0835</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>tibia_l.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0707 0.47 -0.0835</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>fibula_l.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0707 0.47 -0.0835</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>talus_l.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0707 0.04 -0.0835</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>foot_l.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.1107 0 -0.0925</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>clavicle.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.094375 1.40693 0.025465</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>scapula.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.108705 1.427 0.160965</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>humerus.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.099205 1.393 0.169965</transform>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_ulna.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_radius.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_lunate.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_scaphoid.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_pisiform.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_triquetrum.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_capitate.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_trapezium.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_trapezoid.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_hamate.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_1mc.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_2mc.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_3mc.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_4mc.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_5mc.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_thumbprox.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_thumbdist.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_2proxph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_2midph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_2distph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_3proxph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_3midph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_3distph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_4proxph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_4midph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_4distph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_5proxph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_5midph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
-								<DisplayGeometry>
-									<!--Name of geometry file .vtp, .stl, .obj-->
-									<geometry_file>arm_r_5distph.vtp</geometry_file>
-									<!--Color used to display the geometry when visible-->
-									<color> 1 1 1</color>
-									<!--Name of texture file .jpg, .bmp-->
-									<texture_file />
-									<!--in body transform specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.092705 1.1111 0.150664</transform>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-									<display_preference>0</display_preference>
-									<!--Display opacity between 0.0 and 1.0-->
-									<opacity>1</opacity>
-								</DisplayGeometry>
+								</DisplayGeometry>																								
 							</objects>
 							<groups />
 						</GeometrySet>
@@ -721,7 +51,7 @@
 						<!--Whether to show a coordinate frame-->
 						<show_axes>false</show_axes>
 						<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded Can be overriden for individual geometries-->
-						<display_preference>0</display_preference>
+                                                <display_preference>4</display_preference>
 					</VisibleObject>
 					<WrapObjectSet>
 						<objects>
@@ -731,7 +61,7 @@
 								<!--Display Color-->
 								<color>0 1 1</color>
 								<xyz_body_rotation> 0 0 0</xyz_body_rotation>
-								<translation> -0.0317 1.578 -0.028</translation>
+								<translation> 0 1.578 -0.028</translation>
 								<active>true</active>
 								<quadrant>all</quadrant>
 								<VisibleObject>
@@ -743,40 +73,14 @@
 									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
 									<scale_factors> 1 1 1</scale_factors>
 									<!--transform relative to owner specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0317 1.578 -0.028</transform>
+									<transform> 0 0 0 0 1.578 -0.028</transform>
 									<!--Whether to show a coordinate frame-->
 									<show_axes>true</show_axes>
 									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded Can be overriden for individual geometries-->
 									<display_preference>4</display_preference>
 								</VisibleObject>
 								<radius>0.0119</radius>
-							</WrapSphere>
-							<WrapSphere name="Sphere_right">
-								<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded-->
-								<display_preference>4</display_preference>
-								<!--Display Color-->
-								<color>0 1 1</color>
-								<xyz_body_rotation> 0 0 0</xyz_body_rotation>
-								<translation> -0.0317 1.578 0.028</translation>
-								<active>true</active>
-								<quadrant>all</quadrant>
-								<VisibleObject>
-									<!--Set of geometry files and associated attributes, allow .vtp, .stl, .obj-->
-									<GeometrySet>
-										<objects />
-										<groups />
-									</GeometrySet>
-									<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-									<scale_factors> 1 1 1</scale_factors>
-									<!--transform relative to owner specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-									<transform> 0 0 0 -0.0317 1.578 0.028</transform>
-									<!--Whether to show a coordinate frame-->
-									<show_axes>true</show_axes>
-									<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded Can be overriden for individual geometries-->
-									<display_preference>1</display_preference>
-								</VisibleObject>
-								<radius>0.0119</radius>
-							</WrapSphere>
+							</WrapSphere>							
 						</objects>
 					</WrapObjectSet>
 				</Body>
@@ -791,11 +95,11 @@
 					<inertia_yz>0</inertia_yz>
 					<!--Joint that connects this body with the parent body.-->
 					<Joint>
-						<BallJoint name="left_eye">
+						<FreeJoint name="left_eye">
 							<!--Name of the parent body to which this joint connects its owner body.-->
 							<parent_body>ground</parent_body>
 							<!--Location of the joint in the parent body specified in the parent reference frame. Default is (0,0,0).-->
-							<location_in_parent>-0.0317 1.578 -0.028</location_in_parent>
+							<location_in_parent>0 1.578 -0.028</location_in_parent>
 							<!--Orientation of the joint in the parent body specified in the parent reference frame. Euler XYZ body-fixed rotation angles are used to express the orientation. Default is (0,0,0).-->
 							<orientation_in_parent>0 0 0</orientation_in_parent>
 							<!--Location of the joint in the child body specified in the child reference frame. For SIMM models, this vector is always the zero vector (i.e., the body reference frame coincides with the joint). -->
@@ -809,7 +113,7 @@
 										<!--Coordinate can describe rotational, translational, or coupled motion. Defaults to rotational.-->
 										<motion_type>rotational</motion_type>
 										<!--The value of this coordinate before any value has been set. Rotational coordinate value is in radians and Translational in meters.-->
-										<default_value>-5.08624902861091e-012</default_value>
+										<default_value>0</default_value>
 										<!--The speed value of this coordinate before any value has been set. Rotational coordinate value is in rad/s and Translational in m/s.-->
 										<default_speed_value>0</default_speed_value>
 										<!--The minimum and maximum values that the coordinate can range between. Rotational coordinate range in radians and Translational in meters.-->
@@ -845,7 +149,7 @@
 										<!--Coordinate can describe rotational, translational, or coupled motion. Defaults to rotational.-->
 										<motion_type>rotational</motion_type>
 										<!--The value of this coordinate before any value has been set. Rotational coordinate value is in radians and Translational in meters.-->
-										<default_value>-2.14285683358178e-012</default_value>
+										<default_value>0</default_value>
 										<!--The speed value of this coordinate before any value has been set. Rotational coordinate value is in rad/s and Translational in m/s.-->
 										<default_speed_value>0</default_speed_value>
 										<!--The minimum and maximum values that the coordinate can range between. Rotational coordinate range in radians and Translational in meters.-->
@@ -859,12 +163,66 @@
 										<!--Flag indicating whether or not the values of the coordinates should be prescribed according to the function above. It is ignored if the no prescribed function is specified.-->
 										<prescribed>false</prescribed>
 									</Coordinate>
+									<Coordinate name="left_xTranslation">
+										<!--Coordinate can describe rotational, translational, or coupled motion. Defaults to rotational.-->
+										<motion_type>translational</motion_type>
+										<!--The value of this coordinate before any value has been set. Rotational coordinate value is in radians and Translational in meters.-->
+										<default_value>0</default_value>
+										<!--The speed value of this coordinate before any value has been set. Rotational coordinate value is in rad/s and Translational in m/s.-->
+										<default_speed_value>0</default_speed_value>
+										<!--The minimum and maximum values that the coordinate can range between. Rotational coordinate range in radians and Translational in meters.-->
+										<range>-999999.9 999999.9</range>
+										<!--Flag indicating whether or not the values of the coordinates should be limited to the range, above.-->
+										<clamped>false</clamped>
+										<!--Flag indicating whether or not the values of the coordinates should be constrained to the current (e.g. default) value, above.-->
+										<locked>true</locked>
+										<!--If specified, the coordinate can be prescribed by a function of time. It can be any OpenSim Function with valid second order derivatives.-->
+										<prescribed_function />
+										<!--Flag indicating whether or not the values of the coordinates should be prescribed according to the function above. It is ignored if the no prescribed function is specified.-->
+										<prescribed>false</prescribed>
+									</Coordinate>
+									<Coordinate name="left_yTranslation">
+										<!--Coordinate can describe rotational, translational, or coupled motion. Defaults to rotational.-->
+										<motion_type>translational</motion_type>
+										<!--The value of this coordinate before any value has been set. Rotational coordinate value is in radians and Translational in meters.-->
+										<default_value>0</default_value>
+										<!--The speed value of this coordinate before any value has been set. Rotational coordinate value is in rad/s and Translational in m/s.-->
+										<default_speed_value>0</default_speed_value>
+										<!--The minimum and maximum values that the coordinate can range between. Rotational coordinate range in radians and Translational in meters.-->
+										<range>-999999.9 999999.9</range>
+										<!--Flag indicating whether or not the values of the coordinates should be limited to the range, above.-->
+										<clamped>false</clamped>
+										<!--Flag indicating whether or not the values of the coordinates should be constrained to the current (e.g. default) value, above.-->
+										<locked>true</locked>
+										<!--If specified, the coordinate can be prescribed by a function of time. It can be any OpenSim Function with valid second order derivatives.-->
+										<prescribed_function />
+										<!--Flag indicating whether or not the values of the coordinates should be prescribed according to the function above. It is ignored if the no prescribed function is specified.-->
+										<prescribed>false</prescribed>
+									</Coordinate>
+									<Coordinate name="left_zTranslation">
+										<!--Coordinate can describe rotational, translational, or coupled motion. Defaults to rotational.-->
+										<motion_type>translational</motion_type>
+										<!--The value of this coordinate before any value has been set. Rotational coordinate value is in radians and Translational in meters.-->
+										<default_value>0</default_value>
+										<!--The speed value of this coordinate before any value has been set. Rotational coordinate value is in rad/s and Translational in m/s.-->
+										<default_speed_value>0</default_speed_value>
+										<!--The minimum and maximum values that the coordinate can range between. Rotational coordinate range in radians and Translational in meters.-->
+										<range>-999999.9 999999.9</range>
+										<!--Flag indicating whether or not the values of the coordinates should be limited to the range, above.-->
+										<clamped>false</clamped>
+										<!--Flag indicating whether or not the values of the coordinates should be constrained to the current (e.g. default) value, above.-->
+										<locked>true</locked>
+										<!--If specified, the coordinate can be prescribed by a function of time. It can be any OpenSim Function with valid second order derivatives.-->
+										<prescribed_function />
+										<!--Flag indicating whether or not the values of the coordinates should be prescribed according to the function above. It is ignored if the no prescribed function is specified.-->
+										<prescribed>false</prescribed>
+									</Coordinate>
 								</objects>
 								<groups />
 							</CoordinateSet>
 							<!--Whether the joint transform defines parent->child or child->parent.-->
 							<reverse>false</reverse>
-						</BallJoint>
+						</FreeJoint>
 					</Joint>
 					<VisibleObject>
 						<!--Set of geometry files and associated attributes, allow .vtp, .stl, .obj-->
@@ -892,7 +250,7 @@
 					<WrapObjectSet>
 						<!--All properties of this object have their default values.-->
 					</WrapObjectSet>
-				</Body>
+				</Body>				
 			</objects>
 			<groups />
 		</BodySet>
@@ -904,26 +262,22 @@
 		<!--Forces in the model.-->
 		<ForceSet>
 			<objects>
-				<Millard2012EquilibriumMuscle name="lateral_rect_left">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>0.1</min_control>
+				<Schutte1993Muscle_Deprecated name="lateral_rect_left">
 					<!--The set of points defining the path of the muscle.-->
 					<GeometryPath>
 						<!--The set of points defining the path-->
 						<PathPointSet>
 							<objects>
 								<PathPoint name="lrl_eye">
-									<location> 0.0065 0 -0.01008</location>
+									<location> 0.007 0 -0.01</location>
 									<body>left_eye</body>
 								</PathPoint>
 								<PathPoint name="lateral_rect_left-P2">
-									<location> -0.0397 1.57833 -0.04</location>
+									<location> -0.008 1.5777 -0.04</location>
 									<body>ground</body>
 								</PathPoint>
 								<PathPoint name="lrl_ground">
-									<location> -0.0657 1.577 -0.015</location>
+									<location> -0.034 1.577 -0.015</location>
 									<body>ground</body>
 								</PathPoint>
 							</objects>
@@ -958,85 +312,28 @@
 						</VisibleObject>
 					</GeometryPath>
 					<!--Maximum isometric force that the fibers can generate-->
-					<max_isometric_force>69.93</max_isometric_force>
+					<max_isometric_force>100.48</max_isometric_force>
 					<!--Optimal length of the muscle fibers-->
 					<optimal_fiber_length>0.0375</optimal_fiber_length>
 					<!--Resting length of the tendon-->
 					<tendon_slack_length>0.00771</tendon_slack_length>
-					<!--Maximum contraction velocity of the fibers, in optimal fiberlengths/second-->
-					<max_contraction_velocity>10</max_contraction_velocity>
-					<!--Activation lower bound.-->
-					<minimum_activation>0.01</minimum_activation>
-					<!--Active-force-length curve.-->
-					<ActiveForceLengthCurve>
-						<!--Normalized fiber length where the steep ascending limb starts-->
-						<min_norm_active_fiber_length>0.2441</min_norm_active_fiber_length>
-						<!--Normalized fiber length where the steep ascending limb transitions to the shallow ascending limb-->
-						<transition_norm_fiber_length>0.93</transition_norm_fiber_length>
-						<!--Normalized fiber length where the descending limb ends-->
-						<max_norm_active_fiber_length>15.8123</max_norm_active_fiber_length>
-						<!--Slope of the shallow ascending limb-->
-						<shallow_ascending_slope>0.9616</shallow_ascending_slope>
-						<!--Minimum value of the active-force-length curve-->
-						<minimum_value>0</minimum_value>
-					</ActiveForceLengthCurve>
-					<!--Force-velocity curve.-->
-					<ForceVelocityCurve>
-						<!--Curve slope at the maximum normalized concentric (shortening) velocity (normalized velocity of -1)-->
-						<concentric_slope_at_vmax>0</concentric_slope_at_vmax>
-						<!--Curve slope just before reaching concentric_slope_at_vmax-->
-						<concentric_slope_near_vmax>0.55</concentric_slope_near_vmax>
-						<!--Curve slope at isometric (normalized velocity of 0)-->
-						<isometric_slope>5</isometric_slope>
-						<!--Curve slope at the maximum normalized eccentric (lengthening) velocity (normalized velocity of 1)-->
-						<eccentric_slope_at_vmax>0</eccentric_slope_at_vmax>
-						<!--Curve slope just before reaching eccentric_slope_at_vmax-->
-						<eccentric_slope_near_vmax>0.25</eccentric_slope_near_vmax>
-						<!--Curve value at the maximum normalized eccentric contraction velocity-->
-						<max_eccentric_velocity_force_multiplier>1.4</max_eccentric_velocity_force_multiplier>
-						<!--Concentric curve shape, from linear (0) to maximal curve (1)-->
-						<concentric_curviness>0.9</concentric_curviness>
-						<!--Eccentric curve shape, from linear (0) to maximal curve (1)-->
-						<eccentric_curviness>0.9</eccentric_curviness>
-					</ForceVelocityCurve>
-					<!--Passive-force-length curve.-->
-					<FiberForceLengthCurve>
-						<!--Fiber strain at zero force-->
-						<strain_at_zero_force>0</strain_at_zero_force>
-						<!--Fiber strain at a tension of 1 normalized force-->
-						<strain_at_one_norm_force>0.4</strain_at_one_norm_force>
-						<!--Fiber stiffness at the end of the low-force region-->
-						<stiffness_at_low_force>0.125</stiffness_at_low_force>
-						<!--Fiber stiffness at a tension of 1 normalized force-->
-						<stiffness_at_one_norm_force>20</stiffness_at_one_norm_force>
-						<!--Fiber curve bend, from linear (0) to maximum bend (1)-->
-						<curviness>0.8</curviness>
-					</FiberForceLengthCurve>
-					<!--Tendon-force-length curve.-->
-					<TendonForceLengthCurve>
-						<!--All properties of this object have their default values.-->
-					</TendonForceLengthCurve>
-				</Millard2012EquilibriumMuscle>
-				<Millard2012EquilibriumMuscle name="medial_rect_left">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>0.1</min_control>
+				</Schutte1993Muscle_Deprecated>
+				<Schutte1993Muscle_Deprecated name="medial_rect_left">
 					<!--The set of points defining the path of the muscle.-->
 					<GeometryPath>
 						<!--The set of points defining the path-->
 						<PathPointSet>
 							<objects>
 								<PathPoint name="mrl_eye">
-									<location> 0.00885 0 0.00965</location>
+									<location> 0.009 0 0.009</location>
 									<body>left_eye</body>
 								</PathPoint>
 								<PathPoint name="medial_rect_left-P2">
-									<location> -0.0367 1.57786 -0.014</location>
+									<location> -0.005 1.578 -0.014</location>
 									<body>ground</body>
 								</PathPoint>
 								<PathPoint name="mrl_ground">
-									<location> -0.0617 1.579 -0.011</location>
+									<location> -0.03 1.579 -0.011</location>
 									<body>ground</body>
 								</PathPoint>
 							</objects>
@@ -1071,601 +368,12 @@
 						</VisibleObject>
 					</GeometryPath>
 					<!--Maximum isometric force that the fibers can generate-->
-					<max_isometric_force>74.83</max_isometric_force>
+					<max_isometric_force>100.48</max_isometric_force>
 					<!--Optimal length of the muscle fibers-->
 					<optimal_fiber_length>0.03192</optimal_fiber_length>
 					<!--Resting length of the tendon-->
 					<tendon_slack_length>0.00491</tendon_slack_length>
-					<!--Maximum contraction velocity of the fibers, in optimal fiberlengths/second-->
-					<max_contraction_velocity>10</max_contraction_velocity>
-					<!--Activation lower bound.-->
-					<minimum_activation>0.01</minimum_activation>
-					<!--Active-force-length curve.-->
-					<ActiveForceLengthCurve>
-						<!--Normalized fiber length where the steep ascending limb starts-->
-						<min_norm_active_fiber_length>0.2441</min_norm_active_fiber_length>
-						<!--Normalized fiber length where the steep ascending limb transitions to the shallow ascending limb-->
-						<transition_norm_fiber_length>0.93</transition_norm_fiber_length>
-						<!--Normalized fiber length where the descending limb ends-->
-						<max_norm_active_fiber_length>15.8123</max_norm_active_fiber_length>
-						<!--Slope of the shallow ascending limb-->
-						<shallow_ascending_slope>0.9616</shallow_ascending_slope>
-						<!--Minimum value of the active-force-length curve-->
-						<minimum_value>0</minimum_value>
-					</ActiveForceLengthCurve>
-					<!--Force-velocity curve.-->
-					<ForceVelocityCurve>
-						<!--Curve slope at the maximum normalized concentric (shortening) velocity (normalized velocity of -1)-->
-						<concentric_slope_at_vmax>0</concentric_slope_at_vmax>
-						<!--Curve slope just before reaching concentric_slope_at_vmax-->
-						<concentric_slope_near_vmax>0.55</concentric_slope_near_vmax>
-						<!--Curve slope at isometric (normalized velocity of 0)-->
-						<isometric_slope>5</isometric_slope>
-						<!--Curve slope at the maximum normalized eccentric (lengthening) velocity (normalized velocity of 1)-->
-						<eccentric_slope_at_vmax>0</eccentric_slope_at_vmax>
-						<!--Curve slope just before reaching eccentric_slope_at_vmax-->
-						<eccentric_slope_near_vmax>0.25</eccentric_slope_near_vmax>
-						<!--Curve value at the maximum normalized eccentric contraction velocity-->
-						<max_eccentric_velocity_force_multiplier>1.4</max_eccentric_velocity_force_multiplier>
-						<!--Concentric curve shape, from linear (0) to maximal curve (1)-->
-						<concentric_curviness>0.9</concentric_curviness>
-						<!--Eccentric curve shape, from linear (0) to maximal curve (1)-->
-						<eccentric_curviness>0.9</eccentric_curviness>
-					</ForceVelocityCurve>
-					<!--Passive-force-length curve.-->
-					<FiberForceLengthCurve>
-						<!--Fiber strain at zero force-->
-						<strain_at_zero_force>0</strain_at_zero_force>
-						<!--Fiber strain at a tension of 1 normalized force-->
-						<strain_at_one_norm_force>0.4</strain_at_one_norm_force>
-						<!--Fiber stiffness at the end of the low-force region-->
-						<stiffness_at_low_force>0.125</stiffness_at_low_force>
-						<!--Fiber stiffness at a tension of 1 normalized force-->
-						<stiffness_at_one_norm_force>20</stiffness_at_one_norm_force>
-						<!--Fiber curve bend, from linear (0) to maximum bend (1)-->
-						<curviness>0.8</curviness>
-					</FiberForceLengthCurve>
-					<!--Tendon-force-length curve.-->
-					<TendonForceLengthCurve>
-						<!--All properties of this object have their default values.-->
-					</TendonForceLengthCurve>
-				</Millard2012EquilibriumMuscle>
-				<Millard2012EquilibriumMuscle name="superior_rect_left">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>0.1</min_control>
-					<!--The set of points defining the path of the muscle.-->
-					<GeometryPath>
-						<!--The set of points defining the path-->
-						<PathPointSet>
-							<objects>
-								<PathPoint name="srl_eye">
-									<location> 0.00646 0.01025 -0.00276</location>
-									<body>left_eye</body>
-								</PathPoint>
-								<ConditionalPathPoint name="default">
-									<location> -0.0283508 1.59012 -0.0248078</location>
-									<body>ground</body>
-									<range> -1.65806 -0.698132</range>
-									<coordinate>left_yRotation</coordinate>
-								</ConditionalPathPoint>
-								<PathPoint name="superior_rect_left-P2">
-									<location> -0.04248 1.588 -0.02284</location>
-									<body>ground</body>
-								</PathPoint>
-								<PathPoint name="srl_ground">
-									<location> -0.06346 1.5816 -0.013</location>
-									<body>ground</body>
-								</PathPoint>
-							</objects>
-							<groups />
-						</PathPointSet>
-						<!--The wrap objecs that are associated with this path-->
-						<PathWrapSet>
-							<objects>
-								<PathWrap>
-									<wrap_object>Sphere_left</wrap_object>
-									<method>hybrid</method>
-									<range> -1 -1</range>
-								</PathWrap>
-							</objects>
-							<groups />
-						</PathWrapSet>
-						<!--Used to display the path in the 3D window-->
-						<VisibleObject name="display">
-							<!--Set of geometry files and associated attributes, allow .vtp, .stl, .obj-->
-							<GeometrySet>
-								<objects />
-								<groups />
-							</GeometrySet>
-							<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-							<scale_factors> 1 1 1</scale_factors>
-							<!--transform relative to owner specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-							<transform> -0 0 -0 0 0 0</transform>
-							<!--Whether to show a coordinate frame-->
-							<show_axes>false</show_axes>
-							<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded Can be overriden for individual geometries-->
-							<display_preference>4</display_preference>
-						</VisibleObject>
-					</GeometryPath>
-					<!--Maximum isometric force that the fibers can generate-->
-					<max_isometric_force>55.94</max_isometric_force>
-					<!--Optimal length of the muscle fibers-->
-					<optimal_fiber_length>0.03382</optimal_fiber_length>
-					<!--Resting length of the tendon-->
-					<tendon_slack_length>0.0054</tendon_slack_length>
-					<!--Maximum contraction velocity of the fibers, in optimal fiberlengths/second-->
-					<max_contraction_velocity>10</max_contraction_velocity>
-					<!--Activation lower bound.-->
-					<minimum_activation>0.01</minimum_activation>
-					<!--Active-force-length curve.-->
-					<ActiveForceLengthCurve>
-						<!--Normalized fiber length where the steep ascending limb starts-->
-						<min_norm_active_fiber_length>0.2441</min_norm_active_fiber_length>
-						<!--Normalized fiber length where the steep ascending limb transitions to the shallow ascending limb-->
-						<transition_norm_fiber_length>0.93</transition_norm_fiber_length>
-						<!--Normalized fiber length where the descending limb ends-->
-						<max_norm_active_fiber_length>15.8123</max_norm_active_fiber_length>
-						<!--Slope of the shallow ascending limb-->
-						<shallow_ascending_slope>0.9616</shallow_ascending_slope>
-						<!--Minimum value of the active-force-length curve-->
-						<minimum_value>0</minimum_value>
-					</ActiveForceLengthCurve>
-					<!--Force-velocity curve.-->
-					<ForceVelocityCurve>
-						<!--Curve slope at the maximum normalized concentric (shortening) velocity (normalized velocity of -1)-->
-						<concentric_slope_at_vmax>0</concentric_slope_at_vmax>
-						<!--Curve slope just before reaching concentric_slope_at_vmax-->
-						<concentric_slope_near_vmax>0.55</concentric_slope_near_vmax>
-						<!--Curve slope at isometric (normalized velocity of 0)-->
-						<isometric_slope>5</isometric_slope>
-						<!--Curve slope at the maximum normalized eccentric (lengthening) velocity (normalized velocity of 1)-->
-						<eccentric_slope_at_vmax>0</eccentric_slope_at_vmax>
-						<!--Curve slope just before reaching eccentric_slope_at_vmax-->
-						<eccentric_slope_near_vmax>0.25</eccentric_slope_near_vmax>
-						<!--Curve value at the maximum normalized eccentric contraction velocity-->
-						<max_eccentric_velocity_force_multiplier>1.4</max_eccentric_velocity_force_multiplier>
-						<!--Concentric curve shape, from linear (0) to maximal curve (1)-->
-						<concentric_curviness>0.9</concentric_curviness>
-						<!--Eccentric curve shape, from linear (0) to maximal curve (1)-->
-						<eccentric_curviness>0.9</eccentric_curviness>
-					</ForceVelocityCurve>
-					<!--Passive-force-length curve.-->
-					<FiberForceLengthCurve>
-						<!--Fiber strain at zero force-->
-						<strain_at_zero_force>0</strain_at_zero_force>
-						<!--Fiber strain at a tension of 1 normalized force-->
-						<strain_at_one_norm_force>0.4</strain_at_one_norm_force>
-						<!--Fiber stiffness at the end of the low-force region-->
-						<stiffness_at_low_force>0.125</stiffness_at_low_force>
-						<!--Fiber stiffness at a tension of 1 normalized force-->
-						<stiffness_at_one_norm_force>20</stiffness_at_one_norm_force>
-						<!--Fiber curve bend, from linear (0) to maximum bend (1)-->
-						<curviness>0.8</curviness>
-					</FiberForceLengthCurve>
-					<!--Tendon-force-length curve.-->
-					<TendonForceLengthCurve>
-						<!--All properties of this object have their default values.-->
-					</TendonForceLengthCurve>
-				</Millard2012EquilibriumMuscle>
-				<Millard2012EquilibriumMuscle name="inferior_rect_left">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>0.1</min_control>
-					<!--The set of points defining the path of the muscle.-->
-					<GeometryPath>
-						<!--The set of points defining the path-->
-						<PathPointSet>
-							<objects>
-								<PathPoint name="irl_eye">
-									<location> 0.00685 -0.01022 0.00176</location>
-									<body>left_eye</body>
-								</PathPoint>
-								<PathPoint name="inferior_rect_left-P2">
-									<location> -0.04048 1.566 -0.02284</location>
-									<body>ground</body>
-								</PathPoint>
-								<PathPoint name="irl_ground">
-									<location> -0.06346 1.5756 -0.011</location>
-									<body>ground</body>
-								</PathPoint>
-							</objects>
-							<groups />
-						</PathPointSet>
-						<!--The wrap objecs that are associated with this path-->
-						<PathWrapSet>
-							<objects>
-								<PathWrap>
-									<wrap_object>Sphere_left</wrap_object>
-									<method>hybrid</method>
-									<range> -1 -1</range>
-								</PathWrap>
-							</objects>
-							<groups />
-						</PathWrapSet>
-						<!--Used to display the path in the 3D window-->
-						<VisibleObject name="display">
-							<!--Set of geometry files and associated attributes, allow .vtp, .stl, .obj-->
-							<GeometrySet>
-								<objects />
-								<groups />
-							</GeometrySet>
-							<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-							<scale_factors> 1 1 1</scale_factors>
-							<!--transform relative to owner specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-							<transform> -0 0 -0 0 0 0</transform>
-							<!--Whether to show a coordinate frame-->
-							<show_axes>false</show_axes>
-							<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded Can be overriden for individual geometries-->
-							<display_preference>4</display_preference>
-						</VisibleObject>
-					</GeometryPath>
-					<!--Maximum isometric force that the fibers can generate-->
-					<max_isometric_force>67.83</max_isometric_force>
-					<!--Optimal length of the muscle fibers-->
-					<optimal_fiber_length>0.0356</optimal_fiber_length>
-					<!--Resting length of the tendon-->
-					<tendon_slack_length>0.0048</tendon_slack_length>
-					<!--Maximum contraction velocity of the fibers, in optimal fiberlengths/second-->
-					<max_contraction_velocity>10</max_contraction_velocity>
-					<!--Activation lower bound.-->
-					<minimum_activation>0.01</minimum_activation>
-					<!--Active-force-length curve.-->
-					<ActiveForceLengthCurve>
-						<!--Normalized fiber length where the steep ascending limb starts-->
-						<min_norm_active_fiber_length>0.2441</min_norm_active_fiber_length>
-						<!--Normalized fiber length where the steep ascending limb transitions to the shallow ascending limb-->
-						<transition_norm_fiber_length>0.93</transition_norm_fiber_length>
-						<!--Normalized fiber length where the descending limb ends-->
-						<max_norm_active_fiber_length>15.8123</max_norm_active_fiber_length>
-						<!--Slope of the shallow ascending limb-->
-						<shallow_ascending_slope>0.9616</shallow_ascending_slope>
-						<!--Minimum value of the active-force-length curve-->
-						<minimum_value>0</minimum_value>
-					</ActiveForceLengthCurve>
-					<!--Force-velocity curve.-->
-					<ForceVelocityCurve>
-						<!--Curve slope at the maximum normalized concentric (shortening) velocity (normalized velocity of -1)-->
-						<concentric_slope_at_vmax>0</concentric_slope_at_vmax>
-						<!--Curve slope just before reaching concentric_slope_at_vmax-->
-						<concentric_slope_near_vmax>0.55</concentric_slope_near_vmax>
-						<!--Curve slope at isometric (normalized velocity of 0)-->
-						<isometric_slope>5</isometric_slope>
-						<!--Curve slope at the maximum normalized eccentric (lengthening) velocity (normalized velocity of 1)-->
-						<eccentric_slope_at_vmax>0</eccentric_slope_at_vmax>
-						<!--Curve slope just before reaching eccentric_slope_at_vmax-->
-						<eccentric_slope_near_vmax>0.25</eccentric_slope_near_vmax>
-						<!--Curve value at the maximum normalized eccentric contraction velocity-->
-						<max_eccentric_velocity_force_multiplier>1.4</max_eccentric_velocity_force_multiplier>
-						<!--Concentric curve shape, from linear (0) to maximal curve (1)-->
-						<concentric_curviness>0.9</concentric_curviness>
-						<!--Eccentric curve shape, from linear (0) to maximal curve (1)-->
-						<eccentric_curviness>0.9</eccentric_curviness>
-					</ForceVelocityCurve>
-					<!--Passive-force-length curve.-->
-					<FiberForceLengthCurve>
-						<!--Fiber strain at zero force-->
-						<strain_at_zero_force>0</strain_at_zero_force>
-						<!--Fiber strain at a tension of 1 normalized force-->
-						<strain_at_one_norm_force>0.4</strain_at_one_norm_force>
-						<!--Fiber stiffness at the end of the low-force region-->
-						<stiffness_at_low_force>0.125</stiffness_at_low_force>
-						<!--Fiber stiffness at a tension of 1 normalized force-->
-						<stiffness_at_one_norm_force>20</stiffness_at_one_norm_force>
-						<!--Fiber curve bend, from linear (0) to maximum bend (1)-->
-						<curviness>0.8</curviness>
-					</FiberForceLengthCurve>
-					<!--Tendon-force-length curve.-->
-					<TendonForceLengthCurve>
-						<!--All properties of this object have their default values.-->
-					</TendonForceLengthCurve>
-				</Millard2012EquilibriumMuscle>
-				<Millard2012EquilibriumMuscle name="superior_oblique_left">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>0.1</min_control>
-					<!--The set of points defining the path of the muscle.-->
-					<GeometryPath>
-						<!--The set of points defining the path-->
-						<PathPointSet>
-							<objects>
-								<PathPoint name="srl_eye">
-									<location> -0.008 0.00882 -0.0029</location>
-									<body>left_eye</body>
-								</PathPoint>
-								<ConditionalPathPoint name="default">
-									<location> -0.0285236 1.59021 -0.024934</location>
-									<body>ground</body>
-									<range> -1.65806 -0.698132</range>
-									<coordinate>left_yRotation</coordinate>
-								</ConditionalPathPoint>
-								<PathPoint name="superior_oblique_left-P2">
-									<location> -0.0207 1.58975 -0.01273</location>
-									<body>ground</body>
-								</PathPoint>
-								<PathPoint name="srl_ground">
-									<location> -0.0632 1.583 -0.01</location>
-									<body>ground</body>
-								</PathPoint>
-							</objects>
-							<groups />
-						</PathPointSet>
-						<!--The wrap objecs that are associated with this path-->
-						<PathWrapSet>
-							<objects>
-								<PathWrap>
-									<wrap_object>Sphere_left</wrap_object>
-									<method>hybrid</method>
-									<range> -1 -1</range>
-								</PathWrap>
-							</objects>
-							<groups />
-						</PathWrapSet>
-						<!--Used to display the path in the 3D window-->
-						<VisibleObject name="display">
-							<!--Set of geometry files and associated attributes, allow .vtp, .stl, .obj-->
-							<GeometrySet>
-								<objects />
-								<groups />
-							</GeometrySet>
-							<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-							<scale_factors> 1 1 1</scale_factors>
-							<!--transform relative to owner specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-							<transform> -0 0 -0 0 0 0</transform>
-							<!--Whether to show a coordinate frame-->
-							<show_axes>false</show_axes>
-							<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded Can be overriden for individual geometries-->
-							<display_preference>4</display_preference>
-						</VisibleObject>
-					</GeometryPath>
-					<!--Maximum isometric force that the fibers can generate-->
-					<max_isometric_force>28.67</max_isometric_force>
-					<!--Optimal length of the muscle fibers-->
-					<optimal_fiber_length>0.03415</optimal_fiber_length>
-					<!--Resting length of the tendon-->
-					<tendon_slack_length>0.0319</tendon_slack_length>
-					<!--Maximum contraction velocity of the fibers, in optimal fiberlengths/second-->
-					<max_contraction_velocity>10</max_contraction_velocity>
-					<!--Activation lower bound.-->
-					<minimum_activation>0.01</minimum_activation>
-					<!--Active-force-length curve.-->
-					<ActiveForceLengthCurve>
-						<!--Normalized fiber length where the steep ascending limb starts-->
-						<min_norm_active_fiber_length>0.2441</min_norm_active_fiber_length>
-						<!--Normalized fiber length where the steep ascending limb transitions to the shallow ascending limb-->
-						<transition_norm_fiber_length>0.93</transition_norm_fiber_length>
-						<!--Normalized fiber length where the descending limb ends-->
-						<max_norm_active_fiber_length>15.8123</max_norm_active_fiber_length>
-						<!--Slope of the shallow ascending limb-->
-						<shallow_ascending_slope>0.9616</shallow_ascending_slope>
-						<!--Minimum value of the active-force-length curve-->
-						<minimum_value>0</minimum_value>
-					</ActiveForceLengthCurve>
-					<!--Force-velocity curve.-->
-					<ForceVelocityCurve>
-						<!--Curve slope at the maximum normalized concentric (shortening) velocity (normalized velocity of -1)-->
-						<concentric_slope_at_vmax>0</concentric_slope_at_vmax>
-						<!--Curve slope just before reaching concentric_slope_at_vmax-->
-						<concentric_slope_near_vmax>0.55</concentric_slope_near_vmax>
-						<!--Curve slope at isometric (normalized velocity of 0)-->
-						<isometric_slope>5</isometric_slope>
-						<!--Curve slope at the maximum normalized eccentric (lengthening) velocity (normalized velocity of 1)-->
-						<eccentric_slope_at_vmax>0</eccentric_slope_at_vmax>
-						<!--Curve slope just before reaching eccentric_slope_at_vmax-->
-						<eccentric_slope_near_vmax>0.25</eccentric_slope_near_vmax>
-						<!--Curve value at the maximum normalized eccentric contraction velocity-->
-						<max_eccentric_velocity_force_multiplier>1.4</max_eccentric_velocity_force_multiplier>
-						<!--Concentric curve shape, from linear (0) to maximal curve (1)-->
-						<concentric_curviness>0.9</concentric_curviness>
-						<!--Eccentric curve shape, from linear (0) to maximal curve (1)-->
-						<eccentric_curviness>0.9</eccentric_curviness>
-					</ForceVelocityCurve>
-					<!--Passive-force-length curve.-->
-					<FiberForceLengthCurve>
-						<!--Fiber strain at zero force-->
-						<strain_at_zero_force>0</strain_at_zero_force>
-						<!--Fiber strain at a tension of 1 normalized force-->
-						<strain_at_one_norm_force>0.4</strain_at_one_norm_force>
-						<!--Fiber stiffness at the end of the low-force region-->
-						<stiffness_at_low_force>0.125</stiffness_at_low_force>
-						<!--Fiber stiffness at a tension of 1 normalized force-->
-						<stiffness_at_one_norm_force>20</stiffness_at_one_norm_force>
-						<!--Fiber curve bend, from linear (0) to maximum bend (1)-->
-						<curviness>0.8</curviness>
-					</FiberForceLengthCurve>
-					<!--Tendon-force-length curve.-->
-					<TendonForceLengthCurve>
-						<!--All properties of this object have their default values.-->
-					</TendonForceLengthCurve>
-				</Millard2012EquilibriumMuscle>
-				<Millard2012EquilibriumMuscle name="inferior_oblique_left">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>0.1</min_control>
-					<!--The set of points defining the path of the muscle.-->
-					<GeometryPath>
-						<!--The set of points defining the path-->
-						<PathPointSet>
-							<objects>
-								<PathPoint name="irl_eye">
-									<location> -0.00918 -0 -0.008</location>
-									<body>left_eye</body>
-								</PathPoint>
-								<PathPoint name="inferior_oblique_left-P2">
-									<location> -0.0217 1.56254 -0.015</location>
-									<body>ground</body>
-								</PathPoint>
-								<PathPoint name="default">
-									<location> -0.0217 1.56254 -0.015</location>
-									<body>ground</body>
-								</PathPoint>
-							</objects>
-							<groups />
-						</PathPointSet>
-						<!--The wrap objecs that are associated with this path-->
-						<PathWrapSet>
-							<objects>
-								<PathWrap>
-									<wrap_object>Sphere_left</wrap_object>
-									<method>hybrid</method>
-									<range> -1 -1</range>
-								</PathWrap>
-							</objects>
-							<groups />
-						</PathWrapSet>
-						<!--Used to display the path in the 3D window-->
-						<VisibleObject name="display">
-							<!--Set of geometry files and associated attributes, allow .vtp, .stl, .obj-->
-							<GeometrySet>
-								<objects />
-								<groups />
-							</GeometrySet>
-							<!--Three scale factors for display purposes: scaleX scaleY scaleZ-->
-							<scale_factors> 1 1 1</scale_factors>
-							<!--transform relative to owner specified as 3 rotations (rad) followed by 3 translations rX rY rZ tx ty tz-->
-							<transform> -0 0 -0 0 0 0</transform>
-							<!--Whether to show a coordinate frame-->
-							<show_axes>false</show_axes>
-							<!--Display Pref. 0:Hide 1:Wire 3:Flat 4:Shaded Can be overriden for individual geometries-->
-							<display_preference>4</display_preference>
-						</VisibleObject>
-					</GeometryPath>
-					<!--Maximum isometric force that the fibers can generate-->
-					<max_isometric_force>26.57</max_isometric_force>
-					<!--Optimal length of the muscle fibers-->
-					<optimal_fiber_length>0.03055</optimal_fiber_length>
-					<!--Resting length of the tendon-->
-					<tendon_slack_length>0.00133</tendon_slack_length>
-					<!--Maximum contraction velocity of the fibers, in optimal fiberlengths/second-->
-					<max_contraction_velocity>10</max_contraction_velocity>
-					<!--Activation lower bound.-->
-					<minimum_activation>0.01</minimum_activation>
-					<!--Active-force-length curve.-->
-					<ActiveForceLengthCurve>
-						<!--Normalized fiber length where the steep ascending limb starts-->
-						<min_norm_active_fiber_length>0.2441</min_norm_active_fiber_length>
-						<!--Normalized fiber length where the steep ascending limb transitions to the shallow ascending limb-->
-						<transition_norm_fiber_length>0.93</transition_norm_fiber_length>
-						<!--Normalized fiber length where the descending limb ends-->
-						<max_norm_active_fiber_length>15.8123</max_norm_active_fiber_length>
-						<!--Slope of the shallow ascending limb-->
-						<shallow_ascending_slope>0.9616</shallow_ascending_slope>
-						<!--Minimum value of the active-force-length curve-->
-						<minimum_value>0</minimum_value>
-					</ActiveForceLengthCurve>
-					<!--Force-velocity curve.-->
-					<ForceVelocityCurve>
-						<!--Curve slope at the maximum normalized concentric (shortening) velocity (normalized velocity of -1)-->
-						<concentric_slope_at_vmax>0</concentric_slope_at_vmax>
-						<!--Curve slope just before reaching concentric_slope_at_vmax-->
-						<concentric_slope_near_vmax>0.55</concentric_slope_near_vmax>
-						<!--Curve slope at isometric (normalized velocity of 0)-->
-						<isometric_slope>5</isometric_slope>
-						<!--Curve slope at the maximum normalized eccentric (lengthening) velocity (normalized velocity of 1)-->
-						<eccentric_slope_at_vmax>0</eccentric_slope_at_vmax>
-						<!--Curve slope just before reaching eccentric_slope_at_vmax-->
-						<eccentric_slope_near_vmax>0.25</eccentric_slope_near_vmax>
-						<!--Curve value at the maximum normalized eccentric contraction velocity-->
-						<max_eccentric_velocity_force_multiplier>1.4</max_eccentric_velocity_force_multiplier>
-						<!--Concentric curve shape, from linear (0) to maximal curve (1)-->
-						<concentric_curviness>0.9</concentric_curviness>
-						<!--Eccentric curve shape, from linear (0) to maximal curve (1)-->
-						<eccentric_curviness>0.9</eccentric_curviness>
-					</ForceVelocityCurve>
-					<!--Passive-force-length curve.-->
-					<FiberForceLengthCurve>
-						<!--Fiber strain at zero force-->
-						<strain_at_zero_force>0</strain_at_zero_force>
-						<!--Fiber strain at a tension of 1 normalized force-->
-						<strain_at_one_norm_force>0.4</strain_at_one_norm_force>
-						<!--Fiber stiffness at the end of the low-force region-->
-						<stiffness_at_low_force>0.125</stiffness_at_low_force>
-						<!--Fiber stiffness at a tension of 1 normalized force-->
-						<stiffness_at_one_norm_force>20</stiffness_at_one_norm_force>
-						<!--Fiber curve bend, from linear (0) to maximum bend (1)-->
-						<curviness>0.8</curviness>
-					</FiberForceLengthCurve>
-					<!--Tendon-force-length curve.-->
-					<TendonForceLengthCurve>
-						<!--All properties of this object have their default values.-->
-					</TendonForceLengthCurve>
-				</Millard2012EquilibriumMuscle>
-				<CoordinateActuator name="left_xRotation">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>-Inf</min_control>
-					<!--Maximum allowed value for control signal. Used primarily when solving for control values.-->
-					<max_control>Inf</max_control>
-					<!--Name of the generalized coordinate to which the actuator applies.-->
-					<coordinate>left_xRotation</coordinate>
-					<!--The maximum generalized force produced by this actuator.-->
-					<optimal_force>1000</optimal_force>
-				</CoordinateActuator>
-				<CoordinateActuator name="left_yRotation">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>-Inf</min_control>
-					<!--Maximum allowed value for control signal. Used primarily when solving for control values.-->
-					<max_control>Inf</max_control>
-					<!--Name of the generalized coordinate to which the actuator applies.-->
-					<coordinate>left_yRotation</coordinate>
-					<!--The maximum generalized force produced by this actuator.-->
-					<optimal_force>1000</optimal_force>
-				</CoordinateActuator>
-				<CoordinateActuator name="left_zRotation">
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Minimum allowed value for control signal. Used primarily when solving for control values.-->
-					<min_control>-Inf</min_control>
-					<!--Maximum allowed value for control signal. Used primarily when solving for control values.-->
-					<max_control>Inf</max_control>
-					<!--Name of the generalized coordinate to which the actuator applies.-->
-					<coordinate>left_zRotation</coordinate>
-					<!--The maximum generalized force produced by this actuator.-->
-					<optimal_force>1000</optimal_force>
-				</CoordinateActuator>
-				<SpringGeneralizedForce>
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Name of the coordinate to which this force is applied.-->
-					<coordinate>left_yRotation</coordinate>
-					<!--Spring stiffness.-->
-					<stiffness>1</stiffness>
-					<!--Coordinate value at which spring produces no force.-->
-					<rest_length>0</rest_length>
-					<!--Damping constant.-->
-					<viscosity>0.01</viscosity>
-				</SpringGeneralizedForce>
-				<SpringGeneralizedForce>
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Name of the coordinate to which this force is applied.-->
-					<coordinate>left_xRotation</coordinate>
-					<!--Spring stiffness.-->
-					<stiffness>1</stiffness>
-					<!--Coordinate value at which spring produces no force.-->
-					<rest_length>0</rest_length>
-					<!--Damping constant.-->
-					<viscosity>0.01</viscosity>
-				</SpringGeneralizedForce>
-				<SpringGeneralizedForce>
-					<!--Flag indicating whether the force is disabled or not. Disabled means that the force is not active in subsequent dynamics realizations.-->
-					<isDisabled>false</isDisabled>
-					<!--Name of the coordinate to which this force is applied.-->
-					<coordinate>left_zRotation</coordinate>
-					<!--Spring stiffness.-->
-					<stiffness>1</stiffness>
-					<!--Coordinate value at which spring produces no force.-->
-					<rest_length>0</rest_length>
-					<!--Damping constant.-->
-					<viscosity>0.01</viscosity>
-				</SpringGeneralizedForce>
+				</Schutte1993Muscle_Deprecated>				
 			</objects>
 			<groups />
 		</ForceSet>
