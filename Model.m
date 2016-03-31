@@ -46,6 +46,7 @@ classdef Model < handle
         l12_weights;        %L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
         reward_hist;        %reward function
         metCost_hist;       %metabolic costs
+        variance_hist;      %exploratory variance of actor
         savePath;           %where all the data are stored
     end
 
@@ -106,6 +107,7 @@ classdef Model < handle
             obj.l12_weights = zeros(obj.trainTime, 4);
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
+            obj.variance_hist = zeros(obj.trainTime, 1);
         end
 
         %%% Generate Feature Vector and Reward
