@@ -71,13 +71,13 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
             % reset muscle activities to random values
             command = [0, 0];
-%             command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);    %only for one muscle
+            command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);    %only for one muscle
             % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);  %two muscles
             % command(2) = command(1);
             % command(2) = 0.1 * rand(1, 1); % random policy
 
             angleNew = getAngle(command) * 2;
-            angleNew = randi(16,1); % for discrete Policy
+            % angleNew = randi(16,1); % for discrete Policy
 
             % Random distance
             objRange(iter2) = 0.5 + (2 - 0.5) * rand(1, 1);
@@ -98,7 +98,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-                generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+                % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
 
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -114,7 +114,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
                 %%% Feedback
                 % Absolute command feedback # concatination
-%                 feature = [feature; command(2) * model.lambdaMuscleFB]; %nondiscrete
+                feature = [feature; command(2) * model.lambdaMuscleFB]; %nondiscrete
 
                 %%% Calculate metabolic costs
                 % metCost = getMetCost(command) * 2;
@@ -124,15 +124,15 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
                 % add the change in muscle Activities to current ones
                 % command = command + relativeCommand';     %two muscels
-%                 command(2) = command(2) + relativeCommand;  %one muscel
-%                 command = checkCmd(command);                %restrain motor commands to [0,1]
-%                 angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+                command(2) = command(2) + relativeCommand;  %one muscel
+                command = checkCmd(command);                %restrain motor commands to [0,1]
+                angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
 
                 % for discrete Policy
-                angleNew = angleNew + relativeCommand;
-                if angleNew > 16 || angleNew < 0.01
-                    angleNew = randi(16,1);
-                end
+                % angleNew = angleNew + relativeCommand;
+                % if angleNew > 16 || angleNew < 0.01
+                %     angleNew = randi(16,1);
+                % end
 
                 % generate new view (two pictures) with new vergence angle
                 [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
