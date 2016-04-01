@@ -37,7 +37,7 @@ classdef CACLAVarActor < handle
             obj.beta_p = PARAM{4};
             obj.varianceRange = PARAM{5};
             obj.variance = obj.varianceRange(1);
-            obj.varDec = PARAM{6};
+            obj.varDec = PARAM{8};
             obj.covmat = eye(obj.output_dim) * obj.variance;
 
             obj.param_num = 2;

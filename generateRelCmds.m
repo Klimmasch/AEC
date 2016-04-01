@@ -121,7 +121,7 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
                 recErrsSmall = [recErrsSmall; errorSmall];
             end
         end
-        sprintf('number of repetitions: %d/%d done', rep, repeat)
+        % sprintf('number of repetitions: %d/%d done', rep, repeat)
     end
     responseResults = struct('relCmds', relCmds, 'vergErrs', vergErrs, 'recErrs', recErrs, 'recErrsLarge', recErrsLarge, 'recErrsSmall', recErrsSmall);
 end

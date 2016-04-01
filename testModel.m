@@ -187,8 +187,8 @@ function testModel(model, randomizationSeed, objRange, repeat)
     plotpath = sprintf('%s/vergenceAngleTesting', model.savePath);
     saveas(gcf, plotpath, 'png');
 
-    deltaMFplotGenDist(model, [0.5, 1, 2], [-5 : 0.5 : 5], 20, '[0.5m,2m]');
-    recErrPlotGenDist(model, [0.5, 1, 2], [-5 : 0.5 : 5], 20, '[0.5m,2m]');
+    deltaMFplotGenDist(model, [0.5, 1, 2], [-5 : 0.5 : 5], 50, '[0.5m,2m]');
+    recErrPlotGenDist(model, [0.5, 1, 2], [-5 : 0.5 : 5], 50, '[0.5m,2m]');
 end
 
 %%% Saturation function that keeps motor commands in [0, 1]
