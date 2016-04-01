@@ -46,7 +46,7 @@ classdef CACLAActor < handle
             obj.command_prev = 0;
         end
 
-        function update(this, delta)
+        function update(this)
             dwp_ki = (this.command_prev - this.z_k_prev) * this.z_i_prev;
             this.wp_ki = this.wp_ki + this.beta_p * dwp_ki';
 
@@ -72,7 +72,7 @@ classdef CACLAActor < handle
 
         function command = train(this, feature, delta, flag_update)
             if (flag_update && delta > 0)
-                this.update(delta);
+                this.update();
             end
             command = this.act(feature);
         end

@@ -280,7 +280,7 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
     elapsedTime = toc;
 
     % Total simulation time
-    model.simulated_time = elapsedTime / 60;
+    model.simulatedTime = elapsedTime / 60;
     sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
             elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
 

@@ -16,7 +16,7 @@ classdef ReinforcementLearning < handle
         Temperature;    %temperature in softmax function in policy network
         weight_range;   %maximum initial weight
 
-        S0;             %number of neurons in the input layer
+        inputDim;       %number of neurons in the input layer
         S1_pol;         %number of neurons in the middle layer of policy network
         S1_val;         %number of neurons in the middle layer of value network
         S2;             %number of actions
@@ -37,7 +37,7 @@ classdef ReinforcementLearning < handle
     end
 
     methods
-        %PARAM = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, S0,
+        %PARAM = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, Temperature, lambda, inputDim,
         %         weight_range, loadweights, weights, weights_hist, continuous};
         function obj = ReinforcementLearning(PARAM)
             obj.Action = PARAM{1};
@@ -49,7 +49,7 @@ classdef ReinforcementLearning < handle
             obj.gamma = PARAM{6};
             obj.Temperature = PARAM{7};
             obj.lambda = PARAM{8};
-            obj.S0 = PARAM{9};
+            obj.inputDim = PARAM{9};
             obj.S2 = length(obj.Action);
             obj.Action_num = length(obj.Action);
 
@@ -78,12 +78,12 @@ classdef ReinforcementLearning < handle
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function NAC_initNetwork(this)
             % Actor/Policy
-            this.Weights{1, 1} = (2 * rand(this.S2, this.S0) - 1) * this.weight_range(1);
+            this.Weights{1, 1} = (2 * rand(this.S2, this.inputDim) - 1) * this.weight_range(1);
             % Critic/Value
-            this.Weights{2, 1} = (2 * rand(1, this.S0) - 1) * this.weight_range(2);
+            this.Weights{2, 1} = (2 * rand(1, this.inputDim) - 1) * this.weight_range(2);
 
             this.J = 0;                             %average reward (Eq. 3.6, 3.7)
-            this.g = zeros(this.S2 * this.S0, 1);   %gradient
+            this.g = zeros(this.S2 * this.inputDim, 1);   %gradient
             this.Weights_hist = this.Weights;
         end
 

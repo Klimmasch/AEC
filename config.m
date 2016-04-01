@@ -65,21 +65,21 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 rlFlavour = [2, 2];
 
 Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8]; %vergence angles (discrete policy)
-alpha_v = 0.9;                          %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
-alpha_n = 0.025;                        %learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 0.002;                        %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
-xi = 0.3;                               %discount factor | origin 0.3 | Alex P 0.3
-gamma = 0.3;                            %learning rate to update cumulative value | origin 1
-varianceRange = [1e-5, 1e-7];           %variance of action output [start, end]
+alpha_v = 0.9;                                  %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
+alpha_n = 0.025;                                %learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
+alpha_p = 0.002;                                %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
+xi = 0.3;                                       %discount factor | origin 0.3 | Alex P 0.3
+gamma = 0.3;                                    %learning rate to update cumulative value | origin 1
+varianceRange = [1e-5, 1e-7];                   %variance of action output [start, end]
 varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); %action variance decay factor
-S0 = PARAMSC_L{3} + PARAMSC_S{3} + 1;   %number of neurons in the input layer (Small + Large scale + Muscle activities)
-weight_range = [0.0017, 0.0017, 0.05];  %maximum initial weight [critic_ji, actor_ji, actor_kj] | origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
-lambda = 0.01;                          %reguralization factor | origin 0.01
-continuous = uint8(1);                  %indicates if the policy is discrete or continuous
-deltaVar = 1;                           %TD error variance tracking/approximating (CACLAVar)
-eta = 0.001;                            %TD error variance variance scaling factor (CACLAVar)
-fiScale = 1e-5;                         %scaling factor of Fisher Information matrix (CNGFI)
-PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, S0, weight_range, ...
+inputDim = PARAMSC_L{3} + PARAMSC_S{3} + 1;     %number of neurons in the input layer (Small + Large scale + Muscle activities)
+weight_range = [0.0017, 0.0017, 0.05];          %maximum initial weight [critic_ji, actor_ji, actor_kj] | origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
+lambda = 0.01;                                  %reguralization factor | origin 0.01
+continuous = uint8(1);                          %indicates if the policy is discrete or continuous
+deltaVar = 1;                                   %TD error variance tracking/approximating (CACLAVar)
+eta = 0.001;                                    %TD error variance variance scaling factor (CACLAVar)
+fiScale = 1e-5;                                 %scaling factor of Fisher Information matrix (CNGFI)
+PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, inputDim, weight_range, ...
            loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour, varDec};
 
 %%% Model parameters

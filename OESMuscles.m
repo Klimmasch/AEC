@@ -160,7 +160,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
 
         % Generate input feature vector from current images
-        [feature, reward, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
+        [feature, reward, ~, errorLarge, errorSmall] = model.generateFR(currentView);
 
         %%% Feedback
         % Absolute command feedback # concatination
@@ -280,12 +280,13 @@ end
 elapsedTime = toc;
 
 % Total simulation time
-model.simulated_time = elapsedTime / 60;
+model.simulatedTime = elapsedTime / 60;
 sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
         elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
 
 % Plot results
 if (plotNsave)
+    save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
     model.allPlotSave();
     copyfile('config.m', model.savePath);
     copyfile('OESMuscles.m', model.savePath);

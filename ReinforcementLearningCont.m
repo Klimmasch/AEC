@@ -1,21 +1,5 @@
 classdef ReinforcementLearningCont < handle
     properties
-        alpha_v;        %learning rate to update the value function
-        alpha_p;        %learning rate to update the policy function
-        alpha_n;        %learning rate to update the nature gradient w
-
-        gamma;          %learning rate to update cumulative value or decay rate of moving average
-        lambda;         %the regularizatoin factor
-        xi;             %discount factor
-        deltaVar;
-        eta;
-        fiScale;
-
-        varianceRange;       %variance of gaussian policy of actor
-        varDec;         %variance decay factor
-        weight_range;   %maximum initial weight
-        S0;             %number of neurons in the input layer
-
         % DEPRECATED
         % TODO: update model reload
         % Weights;
@@ -23,6 +7,7 @@ classdef ReinforcementLearningCont < handle
         % g;            %intermedia variable to keep track of "w" which is the gradient of the policy
         % Weights_hist; %weights history
 
+        weight_range;
         continuous;     %flag whether policy is discrete or continous
         rlFlavour;      %which critic and actor implementation is chosen
 
@@ -33,38 +18,27 @@ classdef ReinforcementLearningCont < handle
 
     methods
         function obj = ReinforcementLearningCont(PARAM)
-            obj.alpha_v = PARAM{2};
-            obj.alpha_n = PARAM{3};
-            obj.alpha_p = PARAM{4};
-            obj.xi = PARAM{5}; % in continuous case used as gamma
-            obj.gamma = PARAM{6}; % in continuous case used as eta
-            obj.varianceRange = PARAM{7};
-            obj.lambda = PARAM{8};
-            obj.S0 = PARAM{9};
             obj.weight_range = PARAM{10};
-
-            % continuous action space (lukas)
             obj.continuous = PARAM{14};
-
-            obj.deltaVar = PARAM{15};
-            obj.eta = PARAM{16};
-            obj.fiScale = PARAM{17};
-            obj.varDec = PARAM{19};
+            obj.rlFlavour = PARAM{18};
 
             % instantiate chosen Actor and Critic
-            obj.rlFlavour = PARAM{18};
             switch obj.rlFlavour(1)
                 case 0
-                    % CriticParams = {alpha_v, eta, gamma, featureDimension, initialWeightRange}
-                    % CriticParams = {0.01, 0.05, 0.3, 576, 0.15}; --> params from original implementation
-                    CriticParams = {obj.alpha_v, obj.gamma, obj.xi, obj.S0, obj.weight_range(1)};
-                    obj.CCritic = CCriticG(CriticParams);
+                    %% Chong's implementation
+                    % criticParams = {obj.alpha_v, obj.gamma, obj.xi, obj.inputDim, obj.weight_range(1)};
+                    criticParams = {PARAM{2}, PARAM{6}, PARAM{5}, PARAM{9}, obj.weight_range(1)};
+                    obj.CCritic = CCriticG(criticParams);
                 case 1
-                    CriticParams = {obj.S0, obj.weight_range(1), obj.alpha_v, obj.xi, obj.gamma};
-                    obj.CCritic = CRGCritic(CriticParams);
+                    %% CRG
+                    % criticParams = {obj.inputDim, obj.weight_range(1), obj.alpha_v, obj.xi, obj.gamma};
+                    criticParams = {PARAM{9}, obj.weight_range(1), PARAM{2}, PARAM{5}, PARAM{6}};
+                    obj.CCritic = CRGCritic(criticParams);
                 case 2
-                    CriticParams = {obj.S0, obj.weight_range(1), obj.alpha_v, obj.gamma};
-                    obj.CCritic = CACLACritic(CriticParams);
+                    %% CACLA
+                    % criticParams = {obj.inputDim, obj.weight_range(1), obj.alpha_v, obj.gamma};
+                    criticParams = {PARAM{9}, obj.weight_range(1), PARAM{2}, PARAM{6}};
+                    obj.CCritic = CACLACritic(criticParams);
                 otherwise
                     sprintf('Critic algorithm not supported!')
                     return;
@@ -72,22 +46,30 @@ classdef ReinforcementLearningCont < handle
 
             switch obj.rlFlavour(2)
                 case 0
-                    % ActorParams = {alpha_p, alpha_n, featureDimension, initialWeightRange, actorHiddenType, variance};
-                    % ActorParams = {0.001, 0.01, 576, 0.22, 'tanh'}; original params
-                    ActorParams = {obj.alpha_p, obj.alpha_n, obj.S0, obj.weight_range(2:3), 'tanh', 'default', obj.varianceRange, obj.varDec};
-                    obj.CActor = CActorG(ActorParams);
+                    %% Chong's implementation
+                    % actorParams = {obj.alpha_p, obj.alpha_n, obj.inputDim, obj.weight_range(2:3), 'tanh', 'default', obj.varianceRange, obj.varDec};
+                    actorParams = {PARAM{4}, PARAM{3}, PARAM{9}, obj.weight_range(2:3), 'tanh', 'default', PARAM{7}, PARAM{19}};
+                    obj.CActor = CActorG(actorParams);
                 case 1
-                    ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
-                    obj.CActor = CRGActor(ActorParams);
+                    %% CRG
+                    % actorParams = {obj.inputDim, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
+                    actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{19}};
+                    obj.CActor = CRGActor(actorParams);
                 case 2
-                    ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
-                    obj.CActor = CACLAActor(ActorParams);
+                    %% CACLA
+                    % actorParams = {obj.inputDim, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
+                    actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{19}};
+                    obj.CActor = CACLAActor(actorParams);
                 case 3
-                    ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
-                    obj.CActor = CACLAVarActor(ActorParams);
+                    %% CACLAVar
+                    % actorParams = {obj.inputDim, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
+                    actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    obj.CActor = CACLAVarActor(actorParams);
                 case 4
-                    ActorParams = {obj.S0, 1, obj.weight_range(2:3), obj.alpha_p, obj.alpha_v, obj.varianceRange, obj.fiScale, obj.varDec};
-                    obj.CActor = CNGFIActor(ActorParams);
+                    %% CNGFI
+                    % actorParams = {obj.inputDim, 1, obj.weight_range(2:3), obj.alpha_p, obj.alpha_v, obj.varianceRange, obj.fiScale, obj.varDec};
+                    actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{2}, PARAM{7}, PARAM{17}, PARAM{19}};
+                    obj.CActor = CNGFIActor(actorParams);
                 otherwise
                     sprintf('Actor algorithm not supported!')
                     return;

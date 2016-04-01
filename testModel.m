@@ -108,7 +108,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
 
                 % Generate input feature vector from current images
-                [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
+                [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
 
                 %%% Feedback
                 % Absolute command feedback # concatination
@@ -302,8 +302,8 @@ function deltaMFplotGenDist(model, objRange, vergRange, repeat, description)
     degrees = load('Degrees.mat');
     angleMin = degrees.results_deg(1, 1);
     angleMax = degrees.results_deg(11, 1);
-    vergErrMin = model.desiredAngleMin - angleMax;
-    vergErrMax = model.desiredAngleMax - angleMin;
+    % vergErrMin = model.desiredAngleMin - angleMax;
+    % vergErrMax = model.desiredAngleMax - angleMin;
 
     resolution = 10001;
     approx = spline(1:11, degrees.results_deg(:, 1));
