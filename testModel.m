@@ -6,7 +6,7 @@
 %%%
 function testModel(model, randomizationSeed, objRange, repeat)
     rng(randomizationSeed);
-    textureFile = 'Textures_New.mat';
+    textureFile = model.textureFile;
 
     % Image process variables
     patchSize = 8;
@@ -95,7 +95,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-                % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+%                 generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -186,6 +186,9 @@ function testModel(model, randomizationSeed, objRange, repeat)
     plotpath = sprintf('%s/vergenceAngleTesting', model.savePath);
     saveas(gcf, plotpath, 'png');
 
+    %TODO: we definitely can do this more elegant:
+    %generateRelCmds(model, objRange, vergRange, repeat); can be calculated
+    %once and that give its data to the plotting functions!
     deltaMFplotGenDist(model, [0.5, 1, 2], [-5 : 0.5 : 5], 50, '[0.5m,2m]');
     recErrPlotGenDist(model, [0.5, 1, 2], [-5 : 0.5 : 5], 50, '[0.5m,2m]');
 end
@@ -235,7 +238,7 @@ end
 % TODO: adjust the sizes of the montage view
 function generateAnaglyphs(model, leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
-    imwrite(anaglyph, 'anaglyph.png');
+    imwrite(anaglyph,  sprintf('%s/anaglyph.png', model.savePath));
 
     %Downsampling Large
     imgLeftL = leftGray(:);

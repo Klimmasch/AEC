@@ -11,7 +11,8 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
 rng(randomizationSeed);
 learnedFile = '';
-textureFile = 'Textures_New.mat';
+% textureFile = 'Textures_celine.mat';
+textureFile = 'Textures_vanHateren.mat';
 sparseCodingType = 'nonhomeo';
 
 % Plotting and saving flag

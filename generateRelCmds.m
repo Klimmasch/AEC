@@ -37,7 +37,7 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     end
 
     % preparing Textures
-    texture = load('config/Textures_New.mat');
+    texture = load(['config/' model.textureFile]);
     texture = texture.texture;
     nTextures = length(texture);
 
