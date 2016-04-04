@@ -313,13 +313,15 @@ function deltaMFplotGenDist(model, objRange, vergRange, repeat, description)
     xValPos = ppval(approx, 1:0.001:11)';
     yValPos = linspace(0, 1, resolution)';
 
+    %TODO: no need for negative values, check it!
     xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
     yValNeg = linspace(-1, 0, resolution)';
 
-    % calculate muscle function :=  mf(vergence_angle) = muscle force [single muuscle]
+    % calculate muscle function :=  mf(vergence_angle) = muscle force [single muscle]
     mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
     dmf = diff(mf(1:2, 1)); % delta in angle
     indZero = find(mf(:, 2) == 0); % MF == 0_index
+    %TODO: make a function out of this
     indMaxFix = find(mf(:, 1) <= model.desiredAngleMin + dmf & mf(:, 1) >= model.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
     indMinFix = find(mf(:, 1) <= model.desiredAngleMax + dmf & mf(:, 1) >= model.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
 
@@ -348,14 +350,15 @@ function deltaMFplotGenDist(model, objRange, vergRange, repeat, description)
     % tmp = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
     tmp = zeros(nVal, 3);
 
+    %TODO: whole loop can be simplified here at generated vergErrors, no need to search vergErrors
     for i = 1:nVal
-        tmp(i, 1) = vergRange(i);
+        tmp(i, 1) = vergRange(i); %TODO: shift vergRange(i) by deltaVergErr/2...maybe not neccessary
         tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
                                      & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
         tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
                                     & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
     end
-    actualResponseStat = tmp;
+    actualResponseStat = tmp; %TODO: replace tmp by actualResponseStat and tmpRsp by actualResponse
     actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
     figure;

@@ -6,7 +6,7 @@
 % takes the model, positiones random textures at the distances of 0.5, 1 and 2
 % meters, than goes through the range of vergence "Errors" and generates
 % muscle commands and repeats that 10 times
-
+%TODO: analyze whole function
 function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     % Image process variables
     patchSize = 8;

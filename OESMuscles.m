@@ -109,6 +109,7 @@ end
 
 %%% Main execution loop
 t = 0;
+%TODO: initiatie rewardFunction_prev to a sane value (0)?
 rewardFunction_prev = -5;
 tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
@@ -251,9 +252,9 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.td_hist(t) = model.rlmodel.CCritic.delta;
         % model.g_hist(t) = model.rlmodel.CActor.params(7);
         model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
-        model.l12_weights(t, 2) = model.rlmodel.CCritic.params(2);
+        % model.l12_weights(t, 2) = model.rlmodel.CCritic.params(2);
         model.l12_weights(t, 3) = model.rlmodel.CActor.params(1);
-        model.l12_weights(t, 4) = model.rlmodel.CActor.params(2);
+        % model.l12_weights(t, 4) = model.rlmodel.CActor.params(2);
         model.variance_hist(t) = model.rlmodel.CActor.variance;
         % model.l12_weights(t, 5) = model.rlmodel.CActor.params(3);
         % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);

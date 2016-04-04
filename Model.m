@@ -70,6 +70,7 @@ classdef Model < handle
             obj.lambdaP1 = PARAM{1}{16};
             obj.lambdaP2 = PARAM{1}{17};
 
+            % single eye
             obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
             obj.desiredAngleMax = atand(obj.baseline / (2 * obj.objDistMin));
 
