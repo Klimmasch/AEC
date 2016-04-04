@@ -46,6 +46,7 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     recErrs = [];
     recErrsSmall = [];
     recErrsLarge = [];
+    criticValue = [];
 
     [~, numDists] = size(objRange);
     % avgCmd = zeros(numDists,1);
@@ -65,11 +66,13 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     yValNeg = linspace(-1, 0, resolution)';
 
     mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    mf(:, 1) = mf(:, 1) * 2; % angle for two eyes
     dmf = diff(mf(1:2, 1)); % delta in angle
     indZero = find(mf(:, 2) == 0); % MF == 0_index
 
     sprintf('starting to generate vergence commands for different vergence errors ...')
     for rep = 1:repeat
+        sprintf('repetition = %d/%d', rep, repeat)
         for objDist = 1:numDists
             angleDes = 2 * atand(model.baseline / (2 * objRange(objDist)));
 
@@ -110,24 +113,27 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
                 if (size(indTemp, 1) < 1)
                     indTemp = indZero;
                 end
-                
+
                 if model.rlmodel.continuous
                     feature = [feature; mf(indTemp(1), 2)];
+                    value = model.rlmodel.CCritic.v_ji * feature;
+                else
+                    value = model.rlmodel.Weights{2,1} * feature;
                 end
-                
+
                 relCmd = model.rlmodel.softmaxAct(feature);
 
                 %Traking variables
-                vergErrs = [vergErrs; vergRange(verg)];
                 relCmds = [relCmds; relCmd];
+                vergErrs = [vergErrs; vergRange(verg)];
                 recErrs = [recErrs; errorTotal];
                 recErrsLarge = [recErrsLarge; errorLarge];
                 recErrsSmall = [recErrsSmall; errorSmall];
+                criticValue = [criticValue; value];
             end
         end
-        % sprintf('number of repetitions: %d/%d done', rep, repeat)
     end
-    responseResults = struct('relCmds', relCmds, 'vergErrs', vergErrs, 'recErrs', recErrs, 'recErrsLarge', recErrsLarge, 'recErrsSmall', recErrsSmall);
+    responseResults = struct('vergErrs', vergErrs, 'relCmds', relCmds, 'recErrs', recErrs, 'recErrsLarge', recErrsLarge, 'recErrsSmall', recErrsSmall, 'criticValue', criticValue);
 end
 
 %%% Helper functions for image preprocessing

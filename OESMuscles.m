@@ -318,7 +318,8 @@ end
 
 %%% Testing procedure
 if (testIt)
-    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], 10);
+    % testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange)
+    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-5 : 0.5 : 5], [10, 50], 1);
 end
 
 end

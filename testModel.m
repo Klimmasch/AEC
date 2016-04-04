@@ -2,9 +2,11 @@
 %@param model               respective model object to be tested
 %@param randomizationSeed   randomization seed
 %@param objRange            stimulus distance range
-%@param repeat              # different stimuli for repetition
+%@param vergRange           vergence range
+%@param repeat              [#repetition test, #repetition deltaMF and recErr]
+%@param testRandObjRange    whether the object ranges shall be randomized at testing procedure
 %%%
-function testModel(model, randomizationSeed, objRange, repeat)
+function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange)
     rng(randomizationSeed);
     textureFile = model.textureFile;
 
@@ -36,9 +38,8 @@ function testModel(model, randomizationSeed, objRange, repeat)
         columnIndS = [columnIndS tmpInd];
     end
 
-    % Textures
-    texturePath = sprintf('config/%s', textureFile);
-    texture = load(texturePath);
+    % Prepare Textures
+    texture = load(['config/' model.textureFile]);
     texture = texture.texture;
     nTextures = length(texture);
 
@@ -57,13 +58,14 @@ function testModel(model, randomizationSeed, objRange, repeat)
     %     tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
     % end
 
-    disZ = zeros(model.interval, size(objRange, 2), repeat);        % desired fixation distance
-    fixZ = zeros(model.interval, size(objRange, 2), repeat);        % actual fixation distance
-    vergerr = zeros(model.interval, size(objRange, 2), repeat);     % vergence error
+    disZ = zeros(model.interval, size(objRange, 2), repeat(1));        % desired fixation distance
+    fixZ = zeros(model.interval, size(objRange, 2), repeat(1));        % actual fixation distance
+    vergerr = zeros(model.interval, size(objRange, 2), repeat(1));     % vergence error
+    tmpObjRange = 0;
 
-    %%% Main execution loop
-    for iter1 = 1 : repeat
-        sprintf('Testing repetition = %d/%d', iter1, repeat)
+    %%% Average VergErr over Trial loop
+    for iter1 = 1 : repeat(1)
+        sprintf('Testing repetition = %d/%d', iter1, repeat(1))
         % pick random texture
         currentTexture = texture{(randi(nTextures, 1))};
 
@@ -77,11 +79,15 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 angleNew = randi(16, 1);
             end
 
-            % Random distance
-            objRange(iter2) = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+            % Object distance = random/determined
+            if (testRandObjRange == 1)
+                tmpObjRange = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+            else
+                tmpObjRange = objRange(iter2);
+            end
 
             [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                           currentTexture, objRange(iter2), angleNew));
+                                           currentTexture, tmpObjRange, angleNew));
             % abort execution if error occured
             if (status)
                 sprintf('Error in checkEnvironment:\n%s', res)
@@ -95,7 +101,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-%                 generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
+                % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -136,7 +142,7 @@ function testModel(model, randomizationSeed, objRange, repeat)
 
                 % generate new view (two pictures) with new vergence angle
                 [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                               currentTexture, objRange(iter2), angleNew));
+                                               currentTexture, tmpObjRange, angleNew));
 
                 % abort execution if error occured
                 if (status)
@@ -147,11 +153,11 @@ function testModel(model, randomizationSeed, objRange, repeat)
                 %%% Track results
                 % compute desired vergence command, disparity and vergence error
                 fixDepth = (model.baseline / 2) / tand(angleNew / 2);           %fixation depth [m]
-                angleDes = 2 * atand(model.baseline / (2 * objRange(iter2)));   %desired vergence [deg]
+                angleDes = 2 * atand(model.baseline / (2 * tmpObjRange));   %desired vergence [deg]
                 anglerr = angleDes - angleNew;                                  %vergence error [deg]
                 % disparity = 2 * model.focalLength * tand(anglerr / 2);        %current disp [px]
 
-                disZ(iter3, iter2, iter1) = objRange(iter2);
+                disZ(iter3, iter2, iter1) = tmpObjRange;
                 fixZ(iter3, iter2, iter1) = fixDepth;
                 vergerr(iter3, iter2, iter1) = abs(anglerr);
             end
@@ -175,8 +181,8 @@ function testModel(model, randomizationSeed, objRange, repeat)
     figure;
     hold on;
     grid on;
-    plot(1 : model.interval * size(objRange, 2) * repeat, reshape(disZ, [numel(disZ), 1]), 'LineWidth', 1.3);
-    plot(1 : model.interval * size(objRange, 2) * repeat, reshape(fixZ, [numel(fixZ), 1]), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+    plot(1 : model.interval * size(objRange, 2) * repeat(1), reshape(disZ, [numel(disZ), 1]), 'LineWidth', 1.3);
+    plot(1 : model.interval * size(objRange, 2) * repeat(1), reshape(fixZ, [numel(fixZ), 1]), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
     xlabel('Iteration #', 'FontSize', 12);
     ylabel('Fixation [m]', 'FontSize', 12);
     l = legend('desired', 'actual');
@@ -186,11 +192,97 @@ function testModel(model, randomizationSeed, objRange, repeat)
     plotpath = sprintf('%s/vergenceAngleTesting', model.savePath);
     saveas(gcf, plotpath, 'png');
 
-    %TODO: we definitely can do this more elegant:
-    %generateRelCmds(model, objRange, vergRange, repeat); can be calculated
-    %once and that give its data to the plotting functions!
-    deltaMFplotGenDist(model, [0.5, 1, 2], [-5 : 0.5 : 5], 50, '[0.5m,2m]');
-    recErrPlotGenDist(model, [0.5, 1, 2], [-5 : 0.5 : 5], 50, '[0.5m,2m]');
+    %%% Relative commands loop
+    vergErrs = [];
+    relCmds = [];
+    recErrs = [];
+    recErrsSmall = [];
+    recErrsLarge = [];
+    criticValue = [];
+
+    resolution = 10001;
+    approx = spline(1:11, degrees.results_deg(:, 1));
+
+    xValPos = ppval(approx, 1:0.001:11)';
+    yValPos = linspace(0, 1, resolution)';
+
+    xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
+    yValNeg = linspace(-1, 0, resolution)';
+
+    mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    mf(:, 1) = mf(:, 1) * 2;        % angle for two eyes
+    dmf = diff(mf(1:2, 1));         % delta in angle
+    indZero = find(mf(:, 2) == 0);  % MF == 0_index
+
+    sprintf('starting to generate vergence commands for different vergence errors ...')
+    for iter1 = 1 : repeat(2)
+        sprintf('RelCmd repetition = %d/%d', iter1, repeat(2))
+
+        for objDist = 1 : size(objRange, 2)
+            angleDes = 2 * atand(model.baseline / (2 * objRange(objDist)));
+
+            for verg = 1 : size(vergRange, 2)
+                currentTexture = texture{(randi(nTextures, 1))}; %random picture for every iteration
+                %generate two new pictures
+                [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
+                                               currentTexture, objRange(objDist), angleDes + vergRange(verg)));
+
+                % Abort execution if error occured
+                if (status)
+                    sprintf('Error in checkEnvironment:\n%s', res)
+                    return;
+                end
+
+                % Read input images and convert to gray scale
+                imgRawLeft = imread('left.png');
+                imgRawRight = imread('right.png');
+                imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
+                imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
+
+                % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight);
+                % imwrite(anaglyph, 'anaglyph.png');
+
+                % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
+                [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
+                [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
+                [patchesRightSmall] = preprocessImage(imgGrayRight, foveaS, dsRatioS, patchSize, columnIndS);
+                [patchesRightLarge] = preprocessImage(imgGrayRight, foveaL, dsRatioL, patchSize, columnIndL);
+
+                % Image patches matrix (input to model)
+                currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
+
+                % Generate input feature vector from current images
+                [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
+
+                indTemp = find(mf(:, 1) <= angleDes + vergRange(verg) + dmf & mf(:, 1) >= angleDes + vergRange(verg) - dmf);
+                if (size(indTemp, 1) < 1)
+                    indTemp = indZero;
+                end
+
+                if (model.rlmodel.continuous == 1)
+                    feature = [feature; mf(indTemp(1), 2)];
+                    value = model.rlmodel.CCritic.v_ji * feature;
+                else
+                    value = model.rlmodel.Weights{2,1} * feature;
+                end
+
+                relCmd = model.rlmodel.softmaxAct(feature);
+
+                %Tracking variables
+                relCmds = [relCmds; relCmd];
+                vergErrs = [vergErrs; vergRange(verg)];
+                recErrs = [recErrs; errorTotal];
+                recErrsLarge = [recErrsLarge; errorLarge];
+                recErrsSmall = [recErrsSmall; errorSmall];
+                criticValue = [criticValue; value];
+            end
+        end
+    end
+    responseResults = struct('vergErrs', vergErrs, 'relCmds', relCmds, 'recErrs', recErrs, 'recErrsLarge', recErrsLarge, ...
+                             'recErrsSmall', recErrsSmall, 'criticValue', criticValue, 'objRange', objRange, 'vergRange', vergRange);
+
+    deltaMFplotGenDist(model, responseResults);
+    recErrPlotGenDist(model, responseResults);
 end
 
 %%% Saturation function that keeps motor commands in [0, 1]
@@ -231,6 +323,192 @@ function [patches] = preprocessImage(img, fovea, downSampling, patchSize, column
     % normalize patches to norm 1
     normp(normp == 0) = eps;                                            %regularizer
     patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
+end
+
+%% plot & save delta_MF(Vergence_error)
+%@param responseResults model's responses to generated vergErr and objDist
+function deltaMFplotGenDist(model, responseResults)
+    % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
+    % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
+    % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
+    % actual_distance_max = (baseline / 2) / tand(results_deg(1,1)*2 / 2) = 3.2219 [m]
+    % angle_min @ actual_distance_max = results_deg(1,1) * 2 = 0.9958 deg
+    % angle_max @ actual_distance_min = results_deg(11,1) * 2 = 71.5164 deg
+    % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
+    % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
+
+    degrees = load('Degrees.mat');
+    resolution = 10001;
+    approx = spline(1:11, degrees.results_deg(:, 1));
+
+    xValPos = ppval(approx, 1:0.001:11)';
+    yValPos = linspace(0, 1, resolution)';
+
+    %TODO: no need for negative values, check it!
+    xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
+    yValNeg = linspace(-1, 0, resolution)';
+
+    % calculate muscle function :=  mf(vergence_angle) = muscle force [single muscle]
+    mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    dmf = diff(mf(1:2, 1)); % delta in angle
+    indZero = find(mf(:, 2) == 0); % MF == 0_index
+    %TODO: make a function out of this
+    indMaxFix = find(mf(:, 1) <= model.desiredAngleMin + dmf & mf(:, 1) >= model.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
+    indMinFix = find(mf(:, 1) <= model.desiredAngleMax + dmf & mf(:, 1) >= model.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
+
+    % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
+    % x = vergenceError, y = deltaMuscelForce
+    perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
+                             (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
+                             (mf(indMaxFix, 1) - flipud(mf(indZero : indMaxFix - 1, 1))) * 2, ...
+                             (mf(indMaxFix, 2) - flipud(mf(indZero : indMaxFix - 1, 2)))];
+
+    perfectResponseMinFix = [(mf(indMinFix, 1) - flipud(mf(indMinFix : end, 1))) * 2, ...
+                             (mf(indMinFix, 2) - flipud(mf(indMinFix : end, 2))); ...
+                             (mf(indMinFix, 1) - flipud(mf(indZero : indMinFix - 1, 1))) * 2, ...
+                             (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
+
+    perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
+
+    %%% generating fixed distances
+    % actualResponse = [vergErrs, relCmds];
+    actualResponse = [responseResults.vergErrs, responseResults.relCmds];
+    nVal = size(responseResults.vergRange, 2); % #bins of statistics
+
+    actualResponse = sortrows(actualResponse);
+    deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
+    % actualResponseStat = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
+    actualResponseStat = zeros(nVal, 3);
+
+    %TODO: whole loop can be simplified here at generated vergErrors, no need to search vergErrors
+    for i = 1 : nVal
+        %TODO: shift responseResults.vergRange(i) by deltaVergErr/2...maybe not neccessary
+        actualResponseStat(i, 1) = responseResults.vergRange(i);
+        actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+                                                            & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+        actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+                                                           & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+    end
+    actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
+
+    figure;
+    hold on;
+    grid on;
+    % perfect response to vergence error
+    plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+    plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+    % error bars of actual response of the model
+    errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
+    % actual response of the model
+    plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+    l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
+    l.FontSize = 7;
+    l.Orientation = 'horizontal';
+    l.Location = 'southoutside';
+    % adjust axis to actual response ranges + std deviation
+    xmin = min(actualResponseStat(:, 1)) * 1.1;
+    xmax = max(actualResponseStat(:, 1)) * 1.1;
+    if (xmin >= xmax)
+        xmin = -5.5;
+        xmax = 5.5;
+    end
+    ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.1]);
+    ymax = max([max(perfectResponse(:, 4)) * 1.1, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.1]);
+    if (ymin >= ymax)
+        ymin = -0.1;
+        ymax = 0.1;
+    end
+    plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+    plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
+    axis([xmin, xmax, ymin, ymax]);
+    xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
+    ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
+    title('\Delta MF(verg_{err}) response at Testing procedure');
+    if (~isempty(model.savePath))
+        plotpath = sprintf('%s/deltaMFasFktVerErrGenDist_[%fm,%fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
+        saveas(gcf, plotpath, 'png');
+    end
+end
+
+%% plot & save reconstructionErr(Vergence_error)
+%@param responseResults model's responses to generated vergErr and objDist
+function recErrPlotGenDist(model, responseResults)
+    %plotting the resonstruction error of basis functions over
+    %different disparities
+    recResponse = [responseResults.vergErrs, responseResults.recErrs];
+    recResponseLarge = [responseResults.vergErrs, responseResults.recErrsLarge];
+    recResponseSmall = [responseResults.vergErrs, responseResults.recErrsSmall];
+    nVal = size(responseResults.vergRange, 2); % #bins of statistics
+
+    %calculate mean and std of reconstruction error
+    tmpRsp = sortrows(recResponse);
+    deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+    % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
+    tmp = zeros(nVal, 3);
+
+    for i = 1:nVal
+        tmp(i, 1) = responseResults.vergRange(i);
+        tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                     & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+        tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                    & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+    end
+    recErrs = tmp;
+    recErrs(isnan(recErrs(:, 2)), :) = []; % drop NaN elements
+
+    %calculate mean and std of large scale reconstruction error
+    tmpRsp = sortrows(recResponseLarge);
+    deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+    % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
+    tmp = zeros(nVal, 3);
+
+    for i = 1:nVal
+        tmp(i, 1) = responseResults.vergRange(i);
+        tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                     & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+        tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                    & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+    end
+    recErrsLarge = tmp;
+    recErrsLarge(isnan(recErrsLarge(:, 2)), :) = []; % drop NaN elements
+
+    %calculate mean and std of small scale reconstruction error
+    tmpRsp = sortrows(recResponseSmall);
+    deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+    % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
+    tmp = zeros(nVal, 3);
+
+    for i = 1:nVal
+        tmp(i, 1) = responseResults.vergRange(i);
+        tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                     & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+        tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                    & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+    end
+    recErrsSmall = tmp;
+    recErrsSmall(isnan(recErrsSmall(:, 2)), :) = []; % drop NaN elements
+
+    figure;
+    hold on;
+    grid on;
+    % error bars of reconstruction of the model
+    errorbar(recErrs(:, 1), recErrs(:, 2), recErrs(:, 3), 'LineWidth', 0.9); %'color', [1, 0.5098, 0.1961],
+    errorbar(recErrsLarge(:, 1), recErrsLarge(:, 2), recErrsLarge(:, 3), 'LineWidth', 0.9);%'color', [1, 0.5098, 0.1961],
+    errorbar(recErrsSmall(:, 1), recErrsSmall(:, 2), recErrsSmall(:, 3), 'LineWidth', 0.9);%'color', [1, 0.5098, 0.1961],
+    % reconstruction of the model
+    % plot(recErrs(:, 1), recErrs(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+    l = legend('reconstruction Error', 'small scale recErr', 'large scale recErr');
+    l.FontSize = 7;
+    l.Orientation = 'horizontal';
+    l.Location = 'southoutside';
+    xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
+    ylabel('resonstruction Error', 'FontSize', 12);
+    title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(responseResults.objRange)));
+
+    if (~ isempty(model.savePath))
+        plotpath = sprintf('%s/recErrVsVerErrGenDist_[%fm,%fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
+        saveas(gcf, plotpath, 'png');
+    end
 end
 
 %this function generates anaglyphs of the large and small scale fovea and
@@ -285,201 +563,4 @@ function generateAnaglyphs(model, leftGray, rightGray, dsRatioL, dsRatioS, fovea
     imwrite(imresize(anaglyphS, 16), sprintf('%s/anaglyphSmallScale.png', model.savePath));
     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
     imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage.png', model.savePath));
-end
-
-%% plot & save delta_MF(Vergence_error)
-% objRange = range of object distances being tested
-% vergRange = range of vergences being tested
-% repeat = #repetitions of testing procedure
-function deltaMFplotGenDist(model, objRange, vergRange, repeat, description)
-    % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
-    % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
-    % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
-    % actual_distance_max = (baseline / 2) / tand(results_deg(1,1)*2 / 2) = 3.2219 [m]
-    % angle_min @ actual_distance_max = results_deg(1,1) * 2 = 0.9958 deg
-    % angle_max @ actual_distance_min = results_deg(11,1) * 2 = 71.5164 deg
-    % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
-    % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
-
-    degrees = load('Degrees.mat');
-    angleMin = degrees.results_deg(1, 1);
-    angleMax = degrees.results_deg(11, 1);
-    % vergErrMin = model.desiredAngleMin - angleMax;
-    % vergErrMax = model.desiredAngleMax - angleMin;
-
-    resolution = 10001;
-    approx = spline(1:11, degrees.results_deg(:, 1));
-
-    xValPos = ppval(approx, 1:0.001:11)';
-    yValPos = linspace(0, 1, resolution)';
-
-    %TODO: no need for negative values, check it!
-    xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
-    yValNeg = linspace(-1, 0, resolution)';
-
-    % calculate muscle function :=  mf(vergence_angle) = muscle force [single muscle]
-    mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
-    dmf = diff(mf(1:2, 1)); % delta in angle
-    indZero = find(mf(:, 2) == 0); % MF == 0_index
-    %TODO: make a function out of this
-    indMaxFix = find(mf(:, 1) <= model.desiredAngleMin + dmf & mf(:, 1) >= model.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-    indMinFix = find(mf(:, 1) <= model.desiredAngleMax + dmf & mf(:, 1) >= model.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
-
-    % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
-    % x = vergenceError, y = deltaMuscelForce
-    perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
-                             (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
-                             (mf(indMaxFix, 1) - flipud(mf(indZero : indMaxFix - 1, 1))) * 2, ...
-                             (mf(indMaxFix, 2) - flipud(mf(indZero : indMaxFix - 1, 2)))];
-
-    perfectResponseMinFix = [(mf(indMinFix, 1) - flipud(mf(indMinFix : end, 1))) * 2, ...
-                             (mf(indMinFix, 2) - flipud(mf(indMinFix : end, 2))); ...
-                             (mf(indMinFix, 1) - flipud(mf(indZero : indMinFix - 1, 1))) * 2, ...
-                             (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
-
-    perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-
-    %%% generating fixed distances
-    % actualResponse = [vergErrs, relCmds];
-    responseResults = generateRelCmds(model, objRange, vergRange, repeat);
-    actualResponse = [responseResults.vergErrs, responseResults.relCmds];
-    nVal = size(vergRange, 2); % #bins of statistics
-
-    tmpRsp = sortrows(actualResponse);
-    deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-    % tmp = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
-    tmp = zeros(nVal, 3);
-
-    %TODO: whole loop can be simplified here at generated vergErrors, no need to search vergErrors
-    for i = 1:nVal
-        tmp(i, 1) = vergRange(i); %TODO: shift vergRange(i) by deltaVergErr/2...maybe not neccessary
-        tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                     & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-        tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                    & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-    end
-    actualResponseStat = tmp; %TODO: replace tmp by actualResponseStat and tmpRsp by actualResponse
-    actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
-
-    figure;
-    hold on;
-    grid on;
-    % perfect response to vergence error
-    plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-    plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-    % error bars of actual response of the model
-    errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
-    % actual response of the model
-    plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-    l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-    l.FontSize = 7;
-    l.Orientation = 'horizontal';
-    l.Location = 'southoutside';
-    % adjust axis to actual response ranges + std deviation
-    xmin = min(actualResponseStat(:, 1)) * 1.1;
-    xmax = max(actualResponseStat(:, 1)) * 1.1;
-    if (xmin >= xmax)
-        xmin = -5.5;
-        xmax = 5.5;
-    end
-    ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.1]);
-    ymax = max([max(perfectResponse(:, 4)) * 1.1, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.1]);
-    if (ymin >= ymax)
-        ymin = -0.1;
-        ymax = 0.1;
-    end
-    plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
-    plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-    axis([xmin, xmax, ymin, ymax]);
-    xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
-    ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-    title('\Delta MF(verg_{err}) response at Testing procedure');
-    if (~isempty(model.savePath))
-        plotpath = sprintf('%s/deltaMFasFktVerErrGenDist_%s', model.savePath, description);
-        saveas(gcf, plotpath, 'png');
-    end
-end
-
-%% plot & save reconstructionErr(Vergence_error)
-% objRange = range of object distances being tested
-% vergRange = range of vergences being tested
-% repeat = #repetitions of testing procedure
-function recErrPlotGenDist(model, objRange, vergRange, repeat, description)
-    %plotting the resonstruction error of basis functions over
-    %different disparities
-    responseResults = generateRelCmds(model, objRange, vergRange, repeat);
-    recResponse = [responseResults.vergErrs, responseResults.recErrs];
-    recResponseLarge = [responseResults.vergErrs, responseResults.recErrsLarge];
-    recResponseSmall = [responseResults.vergErrs, responseResults.recErrsSmall];
-    nVal = size(vergRange, 2); % #bins of statistics
-
-    %calculate mean and std of reconstruction error
-    tmpRsp = sortrows(recResponse);
-    deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-    % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
-    tmp = zeros(nVal, 3);
-
-    for i = 1:nVal
-        tmp(i, 1) = vergRange(i);
-        tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                     & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-        tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                    & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-    end
-    recErrs = tmp;
-    recErrs(isnan(recErrs(:, 2)), :) = []; % drop NaN elements
-
-    %calculate mean and std of large scale reconstruction error
-    tmpRsp = sortrows(recResponseLarge);
-    deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-    % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
-    tmp = zeros(nVal, 3);
-
-    for i = 1:nVal
-        tmp(i, 1) = vergRange(i);
-        tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                     & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-        tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                    & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-    end
-    recErrsLarge = tmp;
-    recErrsLarge(isnan(recErrsLarge(:, 2)), :) = []; % drop NaN elements
-
-    %calculate mean and std of small scale reconstruction error
-    tmpRsp = sortrows(recResponseSmall);
-    deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-    % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
-    tmp = zeros(nVal, 3);
-
-    for i = 1:nVal
-        tmp(i, 1) = vergRange(i);
-        tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                     & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-        tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                    & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-    end
-    recErrsSmall = tmp;
-    recErrsSmall(isnan(recErrsSmall(:, 2)), :) = []; % drop NaN elements
-
-    figure;
-    hold on;
-    grid on;
-    % error bars of reconstruction of the model
-    errorbar(recErrs(:, 1), recErrs(:, 2), recErrs(:, 3), 'LineWidth', 0.9); %'color', [1, 0.5098, 0.1961],
-    errorbar(recErrsLarge(:, 1), recErrsLarge(:, 2), recErrsLarge(:, 3), 'LineWidth', 0.9);%'color', [1, 0.5098, 0.1961],
-    errorbar(recErrsSmall(:, 1), recErrsSmall(:, 2), recErrsSmall(:, 3), 'LineWidth', 0.9);%'color', [1, 0.5098, 0.1961],
-    % reconstruction of the model
-    % plot(recErrs(:, 1), recErrs(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-    l = legend('reconstruction Error', 'small scale recErr', 'large scale recErr');
-    l.FontSize = 7;
-    l.Orientation = 'horizontal';
-    l.Location = 'southoutside';
-    xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
-    ylabel('resonstruction Error', 'FontSize', 12);
-    title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
-
-    if (~ isempty(model.savePath))
-        plotpath = sprintf('%s/recErrVsVerErrGenDist_%s', model.savePath, description);
-        saveas(gcf, plotpath, 'png');
-    end
 end
