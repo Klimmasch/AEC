@@ -110,7 +110,11 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
                 if (size(indTemp, 1) < 1)
                     indTemp = indZero;
                 end
-                feature = [feature; mf(indTemp(1), 2)];
+                
+                if model.rlmodel.continuous
+                    feature = [feature; mf(indTemp(1), 2)];
+                end
+                
                 relCmd = model.rlmodel.softmaxAct(feature);
 
                 %Traking variables
