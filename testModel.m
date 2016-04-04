@@ -425,7 +425,7 @@ function deltaMFplotGenDist(model, responseResults)
     ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
     title('\Delta MF(verg_{err}) response at Testing procedure');
     if (~isempty(model.savePath))
-        plotpath = sprintf('%s/deltaMFasFktVerErrGenDist_[%fm,%fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
+        plotpath = sprintf('%s/deltaMFasFktVerErrGenDist_[%.1fm,%.1fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
         saveas(gcf, plotpath, 'png');
     end
 end
@@ -506,7 +506,7 @@ function recErrPlotGenDist(model, responseResults)
     title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(responseResults.objRange)));
 
     if (~ isempty(model.savePath))
-        plotpath = sprintf('%s/recErrVsVerErrGenDist_[%fm,%fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
+        plotpath = sprintf('%s/recErrVsVerErrGenDist_[%.1fm,%.1fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
         saveas(gcf, plotpath, 'png');
     end
 end
