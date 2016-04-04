@@ -125,9 +125,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
     command = [0, 0];
     command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %only for one muscle
     % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %two muscles
-    % command(2) = command(1);
-    % command(2) = 0.1 * rand(1, 1); % random policy
-
+    
     angleNew = getAngle(command) * 2;
 
     [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
@@ -165,7 +163,9 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         %%% Feedback
         % Absolute command feedback # concatination
-        feature = [feature; command(2) * model.lambdaMuscleFB];
+        if model.rlmodel.continuous
+            feature = [feature; command(2) * model.lambdaMuscleFB];
+        end
 
         %%% Calculate metabolic costs
         metCost = getMetCost(command) * 2;
@@ -207,7 +207,9 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % RL model
         % Variance decay, i.e. reduction of actor's output perturbation
-        model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
+        if model.rlmodel.continuous
+            model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
+        end
 
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
@@ -215,7 +217,17 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % command = command + relativeCommand';     %two muscels
         command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
-        angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+        
+        if model.rlmodel.continuous
+            angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+        else
+            angleNew = angleNew + relativeCommand;
+            if angleNew > 71.5 || angleNew < 0.99 % analogous to checkCmd
+                command = [0, 0];
+                command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1);
+                angleNew = getAngle(command) * 2;
+            end
+        end
 
         % generate new view (two pictures) with new vergence angle
         [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
@@ -248,17 +260,19 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.reward_hist(t) = rewardFunction;
         % model.feature_hist(t, :) = feature;
         model.metCost_hist(t) = metCost;
-        model.td_hist(t) = model.rlmodel.CCritic.delta;
-        % model.g_hist(t) = model.rlmodel.CActor.params(7);
-        model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
-        model.l12_weights(t, 2) = model.rlmodel.CCritic.params(2);
-        model.l12_weights(t, 3) = model.rlmodel.CActor.params(1);
-        model.l12_weights(t, 4) = model.rlmodel.CActor.params(2);
-        model.variance_hist(t) = model.rlmodel.CActor.variance;
-        % model.l12_weights(t, 5) = model.rlmodel.CActor.params(3);
-        % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
-        % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
-        % model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
+        if model.rlmodel.continuous
+            model.td_hist(t) = model.rlmodel.CCritic.delta;
+            % model.g_hist(t) = model.rlmodel.CActor.params(7);
+            model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
+            model.l12_weights(t, 2) = model.rlmodel.CCritic.params(2);
+            model.l12_weights(t, 3) = model.rlmodel.CActor.params(1);
+            model.l12_weights(t, 4) = model.rlmodel.CActor.params(2);
+            model.variance_hist(t) = model.rlmodel.CActor.variance;
+            % model.l12_weights(t, 5) = model.rlmodel.CActor.params(3);
+            % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
+            % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
+            % model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
+        end
     end
 
     sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
