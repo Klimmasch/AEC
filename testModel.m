@@ -5,8 +5,14 @@
 %@param vergRange           vergence range
 %@param repeat              [#repetition test, #repetition deltaMF and recErr]
 %@param testRandObjRange    whether the object ranges shall be randomized at testing procedure
+%@pram plotIt               whether plots shall be generated
 %%%
-function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange)
+function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange, plotIt)
+    % cancel testing procedure
+    if (repeat == [0, 0])
+        return;
+    end
+
     rng(randomizationSeed);
     textureFile = model.textureFile;
 
@@ -58,9 +64,9 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
     %     tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
     % end
 
-    disZ = zeros(model.interval, size(objRange, 2), repeat(1));        % desired fixation distance
-    fixZ = zeros(model.interval, size(objRange, 2), repeat(1));        % actual fixation distance
-    vergerr = zeros(model.interval, size(objRange, 2), repeat(1));     % vergence error
+    disZtest = zeros(model.interval, size(objRange, 2), repeat(1));        % desired fixation distance
+    fixZtest = zeros(model.interval, size(objRange, 2), repeat(1));        % actual fixation distance
+    vergErrTest = zeros(model.interval, size(objRange, 2), repeat(1));     % vergence error
     tmpObjRange = 0;
 
     %%% Average VergErr over Trial loop
@@ -157,42 +163,82 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
                 anglerr = angleDes - angleNew;                                  %vergence error [deg]
                 % disparity = 2 * model.focalLength * tand(anglerr / 2);        %current disp [px]
 
-                disZ(iter3, iter2, iter1) = tmpObjRange;
-                fixZ(iter3, iter2, iter1) = fixDepth;
-                vergerr(iter3, iter2, iter1) = abs(anglerr);
+                disZtest(iter3, iter2, iter1) = tmpObjRange;
+                fixZtest(iter3, iter2, iter1) = fixDepth;
+                vergErrTest(iter3, iter2, iter1) = anglerr;
             end
         end
     end
 
-    %%% Vergence error dynamics over 10 iterations
-    % mean over repetitions (stimuli) and object distances
-    figure;
-    hold on;
-    grid on;
-    errorbar([1 : model.interval], mean(mean(vergerr, 3), 2), std(std(vergerr, 0, 3), 0, 2), 'color', [1, 0.549, 0], 'LineWidth', 0.8);
-    axis([0, 11, 0, 3]);
-    xlabel('Iteration step', 'FontSize', 12);
-    ylabel('Vergence Error [deg]', 'FontSize', 12);
-    title('Average Vergence Error over Trial (Testing)');
-    plotpath = sprintf('%s/AvgVergErrOverTrial', model.savePath);
-    saveas(gcf, plotpath, 'png');
+    % save first test results
+    try
+        model.disZtest = disZtest;
+        model.fixZtest = fixZtest;
+        model.vergErrTest = vergErrTest;
+        save(strcat(model.savePath, '/model'), 'model');
+    catch
+        % catch non-existing variables error, occuring at old models
+        clone = model.copy();
+        delete(model);
+        clear model;
+        model = clone;
+        model.disZtest = disZtest;
+        model.fixZtest = fixZtest;
+        model.vergErrTest = vergErrTest;
+        save(strcat(model.savePath, '/model'), 'model');
+        delete(clone);
+        clear clone;
+    end
 
-    %%% Vergence error dynamics over whole testing procedure
-    figure;
-    hold on;
-    grid on;
-    plot(1 : model.interval * size(objRange, 2) * repeat(1), reshape(disZ, [numel(disZ), 1]), 'LineWidth', 1.3);
-    plot(1 : model.interval * size(objRange, 2) * repeat(1), reshape(fixZ, [numel(fixZ), 1]), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
-    xlabel('Iteration #', 'FontSize', 12);
-    ylabel('Fixation [m]', 'FontSize', 12);
-    l = legend('desired', 'actual');
-    l.Orientation = 'horizontal';
-    l.Location = 'southoutside';
-    title('Fixation Distance at Testing Procedure');
-    plotpath = sprintf('%s/vergenceAngleTesting', model.savePath);
-    saveas(gcf, plotpath, 'png');
+    if (plotIt == 1)
+        %%% Vergence error dynamics over 10 iterations
+        % mean abs over repetitions (stimuli) and object distances
+        figure;
+        hold on;
+        grid on;
+        errorbar([1 : model.interval], mean(mean(abs(vergErrTest), 3), 2), std(std(abs(vergErrTest), 0, 3), 0, 2), 'color', [1, 0.549, 0], 'LineWidth', 0.8);
+        axis([0, 11, 0, 3]);
+        xlabel('Iteration step', 'FontSize', 12);
+        ylabel('|Vergence Error| [deg]', 'FontSize', 12);
+        title(sprintf('Avg Vergence Error over Trial at Testing (repetitions=%d)', repeat(1)));
+        plotpath = sprintf('%s/AvgAbsVergErrOverTrial', model.savePath);
+        saveas(gcf, plotpath, 'png');
+
+        % boxplot over repetitions (stimuli) and object distances
+        figure;
+        hold on;
+        grid on;
+        boxplot(reshape(mean(model.vergErrTest, 2), [model.interval, repeat(1)])');
+        axis([0, 11, -3, 3]);
+        xlabel('Iteration step', 'FontSize', 12);
+        ylabel('Vergence Error [deg]', 'FontSize', 12);
+        title('Vergence Error over Trial (Testing)');
+        title(sprintf('Vergence Error over Trial at Testing (repetitions=%d)', repeat(1)));
+        plotpath = sprintf('%s/AvgVergErrOverTrialBP', model.savePath);
+        saveas(gcf, plotpath, 'png');
+
+        %%% Vergence error dynamics over whole testing procedure
+        figure;
+        hold on;
+        grid on;
+        plot(1 : model.interval * size(objRange, 2) * repeat(1), reshape(disZtest, [numel(disZtest), 1]), 'LineWidth', 1.3);
+        plot(1 : model.interval * size(objRange, 2) * repeat(1), reshape(fixZtest, [numel(fixZtest), 1]), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+        xlabel('Iteration #', 'FontSize', 12);
+        ylabel('Fixation [m]', 'FontSize', 12);
+        l = legend('desired', 'actual');
+        l.Orientation = 'horizontal';
+        l.Location = 'southoutside';
+        title('Fixation Distance at Testing Procedure');
+        plotpath = sprintf('%s/vergenceAngleTesting', model.savePath);
+        saveas(gcf, plotpath, 'png');
+    end
 
     %%% Relative commands loop
+    % cancel 2nd testing procedure
+    if (repeat(2) == 0)
+        return;
+    end
+
     vergErrs = [];
     relCmds = [];
     recErrs = [];
@@ -281,8 +327,14 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
     responseResults = struct('vergErrs', vergErrs, 'relCmds', relCmds, 'recErrs', recErrs, 'recErrsLarge', recErrsLarge, ...
                              'recErrsSmall', recErrsSmall, 'criticValue', criticValue, 'objRange', objRange, 'vergRange', vergRange);
 
-    deltaMFplotGenDist(model, responseResults);
-    recErrPlotGenDist(model, responseResults);
+    % save second test results
+    model.responseResults = responseResults;
+    save(strcat(model.savePath, '/model'), 'model');
+
+    if (plotIt == 1)
+        deltaMFplotGenDist(model, responseResults, plotIt);
+        recErrPlotGenDist(model, responseResults, plotIt);
+    end
 end
 
 %%% Saturation function that keeps motor commands in [0, 1]

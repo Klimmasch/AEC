@@ -48,6 +48,12 @@ classdef Model < handle
         metCost_hist;       %metabolic costs
         variance_hist;      %exploratory variance of actor
         savePath;           %where all the data are stored
+
+        % Model results at testing procedure
+        disZtest;
+        fixZtest;
+        vergErrTest;
+        responseResults;
     end
 
     methods
@@ -109,6 +115,26 @@ classdef Model < handle
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
             obj.variance_hist = zeros(obj.trainTime, 1);
+
+            obj.disZtest = [];
+            obj.fixZtest = [];
+            obj.vergErrTest = [];
+            obj.responseResults = struct();
+        end
+
+        %%% Make a (deep) copy of a handle object
+        function new = copy(this)
+            % Instantiate new object of the same class
+            new = feval(class(this));
+
+            % Copy all non-hidden properties
+            p = properties(this);
+            % Copy hidden properties which don't show up in the result
+            % of properties(this)
+            % p = fieldnames(struct(this));
+            for i = 1:length(p)
+                new.(p{i}) = this.(p{i});
+            end
         end
 
         %%% Generate Feature Vector and Reward

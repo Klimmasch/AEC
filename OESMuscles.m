@@ -18,9 +18,10 @@ sparseCodingType = 'nonhomeo';
 % Plotting and saving flag
 % Whether figures should be generated, saved and plotted
 % additionally some relevant scripts are backed up
-% plotNsave:    0 = don't do it
-%               1 = do it
-plotNsave = uint8(1);
+% plotNsave: [training, test]
+%            0 = don't do it
+%            1 = do it
+plotNsave = [uint8(1), uint8(1)];
 
 % Testing flag
 % Whether the testing procedure shall be executed after training
@@ -301,7 +302,7 @@ sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/s
         elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
 
 % Plot results
-if (plotNsave)
+if (plotNsave(1) == 1)
     save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
     model.allPlotSave();
     copyfile('config.m', model.savePath);
@@ -318,8 +319,8 @@ end
 
 %%% Testing procedure
 if (testIt)
-    % testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange)
-    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-5 : 0.5 : 5], [10, 50], 1);
+    % testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange, plotIt)
+    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-5 : 0.5 : 5], [10, 50], 1, plotNsave(2));
 end
 
 end
