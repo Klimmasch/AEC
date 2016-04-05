@@ -8,7 +8,7 @@
 %%%
 function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange)
     rng(randomizationSeed);
-    textureFile = model.textureFile;
+    textureFile = 'Textures_vanHaterenTest';
 
     % Image process variables
     patchSize = 8;
@@ -257,6 +257,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
                 indTemp = find(mf(:, 1) <= angleDes + vergRange(verg) + dmf & mf(:, 1) >= angleDes + vergRange(verg) - dmf);
                 if (size(indTemp, 1) < 1)
                     indTemp = indZero;
+                    sprintf('too large vergence error: %d at object distance %d', angleDes + vergRange(verg), objRange(objDist))
+                    continue %###! preliminary fix
                 end
 
                 if (model.rlmodel.continuous == 1)
