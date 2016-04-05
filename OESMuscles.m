@@ -12,7 +12,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 rng(randomizationSeed);
 learnedFile = '';
 % textureFile = 'Textures_celine.mat';
-textureFile = 'Textures_vanHateren.mat';
+textureFile = 'Textures_vanHaterenTrain.mat';
 sparseCodingType = 'nonhomeo';
 
 % Plotting and saving flag
@@ -406,7 +406,7 @@ end
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
 % TODO: adjust the sizes of the montage view
-function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
+function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
     imwrite(anaglyph, 'anaglyph.png');
 
