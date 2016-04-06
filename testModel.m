@@ -208,7 +208,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
         figure;
         hold on;
         grid on;
-        boxplot(reshape(mean(model.vergErrTest, 2), [model.interval, repeat(1)])');
+%         boxplot(reshape(mean(model.vergErrTest, 2), [model.interval, repeat(1)])');
+        boxplot(reshape(mean(model.vergErrTest, 3), [model.interval, size(objRange, 2)])');
         axis([0, 11, -3, 3]);
         xlabel('Iteration step', 'FontSize', 12);
         ylabel('Vergence Error [deg]', 'FontSize', 12);
@@ -260,6 +261,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
     dmf = diff(mf(1:2, 1));         % delta in angle
     indZero = find(mf(:, 2) == 0);  % MF == 0_index
 
+    angleMin = getAngle([0, 0]) * 2;
+
     sprintf('starting to generate vergence commands for different vergence errors ...')
     for iter1 = 1 : repeat(2)
         sprintf('RelCmd repetition = %d/%d', iter1, repeat(2))
@@ -270,6 +273,12 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
             for verg = 1 : size(vergRange, 2)
                 currentTexture = texture{(randi(nTextures, 1))}; %random picture for every iteration
                 %generate two new pictures
+
+                if angleDes + vergRange(verg) < angleMin % when angle can't be reached by muscles
+                    sprintf('Warning: vergrange exceeds possible muscle commands, angleDes: %d, vergenceError: %d, angleMin: %d', angleDes, vergRange(verg), angleMin)
+                    continue
+                end
+
                 [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
                                                currentTexture, objRange(objDist), angleDes + vergRange(verg)));
 
@@ -303,8 +312,6 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
                 indTemp = find(mf(:, 1) <= angleDes + vergRange(verg) + dmf & mf(:, 1) >= angleDes + vergRange(verg) - dmf);
                 if (size(indTemp, 1) < 1)
                     indTemp = indZero;
-                    sprintf('too large vergence error: %d at object distance %d', angleDes + vergRange(verg), objRange(objDist))
-                    continue %###! preliminary fix
                 end
 
                 if (model.rlmodel.continuous == 1)
@@ -334,8 +341,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
     save(strcat(model.savePath, '/model'), 'model');
 
     if (plotIt == 1)
-        deltaMFplotGenDist(model, responseResults, plotIt);
-        recErrPlotGenDist(model, responseResults, plotIt);
+        deltaMFplotGenDist(model, responseResults);
+        recErrPlotGenDist(model, responseResults);
     end
 end
 

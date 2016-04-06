@@ -52,22 +52,32 @@ classdef ReinforcementLearningCont < handle
                     obj.CActor = CActorG(actorParams);
                 case 1
                     %% CRG
-                    % actorParams = {obj.inputDim, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
+                    % actorParams = {obj.inputDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
                     actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{19}};
                     obj.CActor = CRGActor(actorParams);
                 case 2
-                    %% CACLA
-                    % actorParams = {obj.inputDim, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
+                    %% CACLA linear
+                    % actorParams = {obj.inputDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
                     actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{19}};
-                    obj.CActor = CACLAActor(actorParams);
+                    obj.CActor = CACLAActorLin(actorParams);
                 case 3
-                    %% CACLAVar
-                    % actorParams = {obj.inputDim, 1, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
+                    %% CACLAVar linear
+                    % actorParams = {obj.inputDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
                     actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
-                    obj.CActor = CACLAVarActor(actorParams);
+                    obj.CActor = CACLAVarActorLin(actorParams);
                 case 4
+                    %% CACLA
+                    % actorParams = {obj.inputDim, obj.hiddenDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.varDec};
+                    actorParams = {PARAM{9}, PARAM{20}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{19}};
+                    obj.CActor = CACLAActor(actorParams);
+                case 5
+                    %% CACLAVar
+                    % actorParams = {obj.inputDim, obj.hiddenDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
+                    actorParams = {PARAM{9}, PARAM{20}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    obj.CActor = CACLAVarActor(actorParams);
+                case 6
                     %% CNGFI
-                    % actorParams = {obj.inputDim, 1, obj.weight_range(2:3), obj.alpha_p, obj.alpha_v, obj.varianceRange, obj.fiScale, obj.varDec};
+                    % actorParams = {obj.inputDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.alpha_v, obj.varianceRange, obj.fiScale, obj.varDec};
                     actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{2}, PARAM{7}, PARAM{17}, PARAM{19}};
                     obj.CActor = CNGFIActor(actorParams);
                 otherwise
