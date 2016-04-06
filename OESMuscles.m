@@ -12,7 +12,8 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 rng(randomizationSeed);
 learnedFile = '';
 % textureFile = 'Textures_celine.mat';
-textureFile = 'Textures_vanHaterenTrain.mat';
+% textureFile = 'Textures_vanHaterenTrain.mat';
+textureFile = 'Textures_vanHateren.mat';
 sparseCodingType = 'nonhomeo';
 
 % Plotting and saving flag
@@ -21,7 +22,7 @@ sparseCodingType = 'nonhomeo';
 % plotNsave: [training, test]
 %            0 = don't do it
 %            1 = do it
-plotNsave = [uint8(1), uint8(1)];
+plotNsave = [uint8(1), uint8(0)];
 
 % Testing flag
 % Whether the testing procedure shall be executed after training

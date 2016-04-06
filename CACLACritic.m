@@ -30,7 +30,6 @@ classdef CACLACritic < handle
             % obj.v_ji = rand(1, obj.input_dim) * obj.v_init_range; % [0, 1] * v_init_range
 
             obj.delta = 0;
-
             obj.feature_prev = zeros(obj.input_dim, 1);
             obj.params = zeros(1, 2);
         end
