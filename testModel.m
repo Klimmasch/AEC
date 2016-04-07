@@ -177,25 +177,27 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     end
 
     % save first test results
-    if (saveTestResults == 1)
-        try
-            model.disZtest = disZtest;
-            model.fixZtest = fixZtest;
-            model.vergErrTest = vergErrTest;
+    try
+        model.disZtest = disZtest;
+        model.fixZtest = fixZtest;
+        model.vergErrTest = vergErrTest;
+        if (saveTestResults == 1)
             save(strcat(model.savePath, '/model'), 'model');
-        catch
-            % catch non-existing variables error, occuring at old models
-            clone = model.copy();
-            delete(model);
-            clear model;
-            model = clone;
-            model.disZtest = disZtest;
-            model.fixZtest = fixZtest;
-            model.vergErrTest = vergErrTest;
-            save(strcat(model.savePath, '/model'), 'model');
-            delete(clone);
-            clear clone;
         end
+    catch
+        % catch non-existing variables error, occuring at old models
+        clone = model.copy();
+        delete(model);
+        clear model;
+        model = clone;
+        model.disZtest = disZtest;
+        model.fixZtest = fixZtest;
+        model.vergErrTest = vergErrTest;
+        if (saveTestResults == 1)
+            save(strcat(model.savePath, '/model'), 'model');
+        end
+        delete(clone);
+        clear clone;
     end
 
     if (plotIt == 1)
@@ -349,16 +351,16 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     end
     responseResults = struct('vergErrs', vergErrs, 'relCmds', relCmds, 'recErrs', recErrs, 'recErrsLarge', recErrsLarge, ...
                              'recErrsSmall', recErrsSmall, 'criticValue', criticValue, 'objRange', objRange, 'vergRange', vergRange);
+    model.responseResults = responseResults;
 
     % save second test results
     if (saveTestResults == 1)
-        model.responseResults = responseResults;
         save(strcat(model.savePath, '/model'), 'model');
     end
 
     if (plotIt == 1)
-%         deltaMFplotGenDist(model, responseResults);
-%         recErrPlotGenDist(model, responseResults);
+        deltaMFplotGenDist(model, responseResults);
+        recErrPlotGenDist(model, responseResults);
         criticValPlotGenDist(model, responseResults);
     end
 end
