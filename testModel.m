@@ -4,10 +4,12 @@
 %@param objRange            stimulus distance range
 %@param vergRange           vergence range
 %@param repeat              [#repetition test, #repetition deltaMF and recErr]
-%@param testRandObjRange    whether the object ranges shall be randomized at testing procedure
+%@param randStimuli         whether the stimuli shall be randomized at the 1st part of the testing procedure
+%@param randObjRange        whether the object ranges shall be randomized at testing procedure
 %@pram plotIt               whether plots shall be generated
+%@param saveTestResults     whether to save the results (not recommended if model is still trained!)
 %%%
-function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange, plotIt)
+function testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
     % cancel testing procedure
     if (repeat == [0, 0])
         return;
@@ -72,8 +74,12 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
     %%% Average VergErr over Trial loop
     for iter1 = 1 : repeat(1)
         sprintf('Testing repetition = %d/%d', iter1, repeat(1))
-        % pick random texture
-        currentTexture = texture{(randi(nTextures, 1))};
+        % pick texture
+        if (randStimuli == 1)
+            currentTexture = texture{(randi(nTextures, 1))};
+        else
+            currentTexture = texture{iter1};
+        end
 
         for iter2 = 1 : size(objRange, 2)
             % reset muscle activities to random values
@@ -86,7 +92,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
             end
 
             % Object distance = random/determined
-            if (testRandObjRange == 1)
+            if (randObjRange == 1)
                 tmpObjRange = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
             else
                 tmpObjRange = objRange(iter2);
@@ -171,23 +177,25 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
     end
 
     % save first test results
-    try
-        model.disZtest = disZtest;
-        model.fixZtest = fixZtest;
-        model.vergErrTest = vergErrTest;
-        save(strcat(model.savePath, '/model'), 'model');
-    catch
-        % catch non-existing variables error, occuring at old models
-        clone = model.copy();
-        delete(model);
-        clear model;
-        model = clone;
-        model.disZtest = disZtest;
-        model.fixZtest = fixZtest;
-        model.vergErrTest = vergErrTest;
-        save(strcat(model.savePath, '/model'), 'model');
-        delete(clone);
-        clear clone;
+    if (saveTestResults == 1)
+        try
+            model.disZtest = disZtest;
+            model.fixZtest = fixZtest;
+            model.vergErrTest = vergErrTest;
+            save(strcat(model.savePath, '/model'), 'model');
+        catch
+            % catch non-existing variables error, occuring at old models
+            clone = model.copy();
+            delete(model);
+            clear model;
+            model = clone;
+            model.disZtest = disZtest;
+            model.fixZtest = fixZtest;
+            model.vergErrTest = vergErrTest;
+            save(strcat(model.savePath, '/model'), 'model');
+            delete(clone);
+            clear clone;
+        end
     end
 
     if (plotIt == 1)
@@ -208,7 +216,9 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
         figure;
         hold on;
         grid on;
-%         boxplot(reshape(mean(model.vergErrTest, 2), [model.interval, repeat(1)])');
+        % mean over object distances
+        % boxplot(reshape(mean(model.vergErrTest, 2), [model.interval, repeat(1)])');
+        % mean over trials/stimuli responses
         boxplot(reshape(mean(model.vergErrTest, 3), [model.interval, size(objRange, 2)])');
         axis([0, 11, -3, 3]);
         xlabel('Iteration step', 'FontSize', 12);
@@ -227,8 +237,10 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
         xlabel('Iteration #', 'FontSize', 12);
         ylabel('Fixation [m]', 'FontSize', 12);
         l = legend('desired', 'actual');
-        l.Orientation = 'horizontal';
-        l.Location = 'southoutside';
+        if(version('-release') == '2015b')
+            l.Orientation = 'horizontal';
+            l.Location = 'southoutside';
+        end
         title('Fixation Distance at Testing Procedure');
         plotpath = sprintf('%s/vergenceAngleTesting', model.savePath);
         saveas(gcf, plotpath, 'png');
@@ -271,14 +283,16 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
             angleDes = 2 * atand(model.baseline / (2 * objRange(objDist)));
 
             for verg = 1 : size(vergRange, 2)
-                currentTexture = texture{(randi(nTextures, 1))}; %random picture for every iteration
-                %generate two new pictures
+                %random picture for every iteration
+                currentTexture = texture{(randi(nTextures, 1))};
 
-                if angleDes + vergRange(verg) < angleMin % when angle can't be reached by muscles
+                % when angle can't be reached by muscles
+                if (angleDes + vergRange(verg) < angleMin)
                     sprintf('Warning: vergrange exceeds possible muscle commands, angleDes: %d, vergenceError: %d, angleMin: %d', angleDes, vergRange(verg), angleMin)
                     continue
                 end
 
+                %generate two new pictures
                 [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
                                                currentTexture, objRange(objDist), angleDes + vergRange(verg)));
 
@@ -337,12 +351,15 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, testRa
                              'recErrsSmall', recErrsSmall, 'criticValue', criticValue, 'objRange', objRange, 'vergRange', vergRange);
 
     % save second test results
-    model.responseResults = responseResults;
-    save(strcat(model.savePath, '/model'), 'model');
+    if (saveTestResults == 1)
+        model.responseResults = responseResults;
+        save(strcat(model.savePath, '/model'), 'model');
+    end
 
     if (plotIt == 1)
-        deltaMFplotGenDist(model, responseResults);
-        recErrPlotGenDist(model, responseResults);
+%         deltaMFplotGenDist(model, responseResults);
+%         recErrPlotGenDist(model, responseResults);
+        criticValPlotGenDist(model, responseResults);
     end
 end
 
@@ -463,9 +480,11 @@ function deltaMFplotGenDist(model, responseResults)
     % actual response of the model
     plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
     l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-    l.FontSize = 7;
-    l.Orientation = 'horizontal';
-    l.Location = 'southoutside';
+    if(version('-release') == '2015b')
+        l.FontSize = 7;
+        l.Orientation = 'horizontal';
+        l.Location = 'southoutside';
+    end
     % adjust axis to actual response ranges + std deviation
     xmin = min(actualResponseStat(:, 1)) * 1.1;
     xmax = max(actualResponseStat(:, 1)) * 1.1;
@@ -559,15 +578,53 @@ function recErrPlotGenDist(model, responseResults)
     % reconstruction of the model
     % plot(recErrs(:, 1), recErrs(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
     l = legend('reconstruction Error', 'small scale recErr', 'large scale recErr');
-    l.FontSize = 7;
-    l.Orientation = 'horizontal';
-    l.Location = 'southoutside';
+    if(version('-release') == '2015b')
+        l.FontSize = 7;
+        l.Orientation = 'horizontal';
+        l.Location = 'southoutside';
+    end
     xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
     ylabel('resonstruction Error', 'FontSize', 12);
     title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(responseResults.objRange)));
 
     if (~ isempty(model.savePath))
         plotpath = sprintf('%s/recErrVsVerErrGenDist_[%.1fm,%.1fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
+        saveas(gcf, plotpath, 'png');
+    end
+end
+
+%% plot & save criticValue(Vergence_error)
+%@param responseResults model's responses to generated vergErr and objDist
+function criticValPlotGenDist(model, responseResults)
+    criticResponse = [responseResults.vergErrs, responseResults.criticValue];
+    nVal = size(responseResults.vergRange, 2); % #bins of statistics
+
+    %calculate mean and std of critic's value
+    tmpRsp = sortrows(criticResponse);
+    deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
+    % tmp = [index_x = vergence_error angle, mean_recError, std_recError]
+    criticResponseStat = zeros(nVal, 3);
+
+    for i = 1:nVal
+        criticResponseStat(i, 1) = responseResults.vergRange(i);
+        criticResponseStat(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                        & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+        criticResponseStat(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                       & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
+    end
+    criticResponseStat(isnan(criticResponseStat(:, 2)), :) = []; % drop NaN elements
+
+    figure;
+    hold on;
+    grid on;
+    % error bars of critic's response of the model
+    errorbar(criticResponseStat(:, 1), criticResponseStat(:, 2), criticResponseStat(:, 3), 'LineWidth', 0.9); %'color', [1, 0.5098, 0.1961],
+    xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
+    ylabel('Value', 'FontSize', 12);
+    title(sprintf('Critic Value over different disparities\nobject distances: [%s]', num2str(responseResults.objRange)));
+
+    if (~ isempty(model.savePath))
+        plotpath = sprintf('%s/criticValvsVerErrGenDist_[%.1fm,%.1fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
         saveas(gcf, plotpath, 'png');
     end
 end
