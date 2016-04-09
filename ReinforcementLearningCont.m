@@ -104,7 +104,7 @@ classdef ReinforcementLearningCont < handle
         %%% output in the policy network
         %%% Xin: feature input to the network
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function command = softmaxAct(this, Xin)
+        function command = act(this, Xin)
             command = this.CActor.actHard(Xin);
         end
 

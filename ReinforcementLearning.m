@@ -159,7 +159,7 @@ classdef ReinforcementLearning < handle
         %%% commands calculated in policy network
         %%% Xin: feature input to the network
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function [command, pol, Xin] = Act(this, Xin)
+        function [command, pol, Xin] = act(this, Xin)
             poltmp = this.Weights{1, 1} * Xin / this.Temperature;
             pol = softmax(poltmp - max(poltmp));
             [~, index] = max(poltmp);
