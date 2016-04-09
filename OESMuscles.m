@@ -165,7 +165,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         %%% Feedback
         % Absolute command feedback # concatination
-        if model.rlmodel.continuous
+        if (model.rlmodel.continuous == 1)
             feature = [feature; command(2) * model.lambdaMuscleFB];
         end
 
@@ -209,7 +209,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % RL model
         % Variance decay, i.e. reduction of actor's output perturbation
-        if model.rlmodel.continuous
+        if (model.rlmodel.continuous == 1)
             model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
         end
 
@@ -220,11 +220,11 @@ for iter1 = 1 : (model.trainTime / model.interval)
         command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
 
-        if model.rlmodel.continuous
+        if (model.rlmodel.continuous == 1)
             angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
         else
             angleNew = angleNew + relativeCommand;
-            if angleNew > 71.5 || angleNew < 0.99 % analogous to checkCmd
+            if (angleNew > 71.5 || angleNew < 0.99) % analogous to checkCmd
                 command = [0, 0];
                 command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1);
                 angleNew = getAngle(command) * 2;
@@ -262,7 +262,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.reward_hist(t) = rewardFunction;
         % model.feature_hist(t, :) = feature;
         model.metCost_hist(t) = metCost;
-        if model.rlmodel.continuous
+        if (model.rlmodel.continuous == 1)
             model.td_hist(t) = model.rlmodel.CCritic.delta;
             % model.g_hist(t) = model.rlmodel.CActor.params(7);
             model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
@@ -309,8 +309,8 @@ if (plotNsave(1) == 1)
     copyfile('OESMuscles.m', model.savePath);
     % copyfile('OESMusclesBF.m', model.savePath);
     copyfile('ReinforcementLearningCont.m', model.savePath);
-    copyfile('CRGCritic.m', model.savePath);
-    copyfile('CRGActor.m', model.savePath);
+    % copyfile('CRGCritic.m', model.savePath);
+    % copyfile('CRGActor.m', model.savePath);
     copyfile('CACLACritic.m', model.savePath);
     copyfile('CACLAActor.m', model.savePath);
     copyfile('CACLAVarActor.m', model.savePath);
@@ -319,8 +319,8 @@ end
 
 %%% Testing procedure
 if (testIt)
-    % testModel(model, randomizationSeed, objRange, vergRange, repeat, testRandObjRange, plotIt)
-    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-5 : 0.5 : 5], [10, 50], 1, plotNsave(2));
+    % testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
+    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-5 : 0.5 : 5], [50, 50], 0, 1, plotNsave(2), 1);
 end
 
 end
@@ -398,7 +398,7 @@ function l = truncLaplacian(diversity, range)
             l = -1 / diversity * log(2 * (1 - r));
     end
 
-    if abs(l) > range
+    if (abs(l) > range)
         l = 0;
     end
 end

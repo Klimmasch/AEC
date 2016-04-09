@@ -337,8 +337,9 @@ classdef Model < handle
             ylabel('Value', 'FontSize', 12);
             % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
             l = legend('\lambdametCost', '\lambdaRecErr');
-            % l.FontSize = 7;
-            l.Location = 'southwest';
+            if(version('-release') == '2015b')
+                l.Location = 'southwest';
+            end
             % title('Reward composition (L1)');
             title('Reward composition');
             plotpath = sprintf('%s/rewardComp', this.savePath);
@@ -425,9 +426,11 @@ classdef Model < handle
             % actual response of the model
             plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-            l.FontSize = 7;
-            l.Orientation = 'horizontal';
-            l.Location = 'southoutside';
+            if(version('-release') == '2015b')
+                l.FontSize = 7;
+                l.Orientation = 'horizontal';
+                l.Location = 'southoutside';
+            end
             % adjust axis to actual response ranges + std deviation
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
@@ -531,9 +534,11 @@ classdef Model < handle
             % actual response of the model
             plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-            l.FontSize = 7;
-            l.Orientation = 'horizontal';
-            l.Location = 'southoutside';
+            if(version('-release') == '2015b')
+                l.FontSize = 7;
+                l.Orientation = 'horizontal';
+                l.Location = 'southoutside';
+            end
             % adjust axis to actual response ranges + std deviation
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
@@ -637,9 +642,11 @@ classdef Model < handle
             % actual response of the model
             plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-            l.FontSize = 7;
-            l.Orientation = 'horizontal';
-            l.Location = 'southoutside';
+            if(version('-release') == '2015b')
+                l.FontSize = 7;
+                l.Orientation = 'horizontal';
+                l.Location = 'southoutside';
+            end
             % adjust axis to actual response ranges + std deviation
             xmin = min(actualResponseStat(:, 1)) * 1.1;
             xmax = max(actualResponseStat(:, 1)) * 1.1;
