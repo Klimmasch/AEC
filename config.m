@@ -64,7 +64,7 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 % 4 = CACLA             Actor Continuous Actor Critic Learning Automaton
 % 5 = CACLAVar          Actor Continuous Actor Critic Learning Automaton with (delta std) * update
 % 6 = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
-rlFlavour = [2, 4];
+rlFlavour = [2, 5];
 
 continuous = uint8(1);                          %indicates if the policy is discrete or continuous
 % Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8];    %vergence angles (discrete policy)
@@ -85,7 +85,7 @@ else
 end
 hiddenDim = 50;                                 %number of neurons in the hidden layer
 weight_range = [1 / inputDim, ...               %maximum initial weight [critic_ji, actor_ji, actor_kj]
-                1 / inputDim, ...               %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
+                1 / (inputDim * hiddenDim), ... %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
                 1 / hiddenDim];
 lambda = 0.01;                                  %reguralization factor | origin 0.01
 deltaVar = 1;                                   %TD error variance tracking/approximating (CACLAVar)
