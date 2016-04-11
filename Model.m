@@ -291,17 +291,17 @@ classdef Model < handle
             figure;
             hold on;
             grid on;
-<<<<<<< HEAD
-            plot(this.l12_weights(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 3), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            plot(this.l12_weights(:, 5), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
-            % plot(this.l12_weights(:, 7), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-            % legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
-            legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'Location', 'best');
-            title('Model weights (L1)')
-=======
+% <<<<<<< HEAD
+%             plot(this.l12_weights(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+%             plot(this.l12_weights(:, 3), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+%             plot(this.l12_weights(:, 5), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+%             plot(this.l12_weights(:, 7), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+%             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+%             ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+%             legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
+%             legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'Location', 'best');
+%             title('Model weights (L1)')
+% =======
             if ((this.rlmodel.rlFlavour(2) == 4) || (this.rlmodel.rlFlavour(2) == 5))
                 subplot(3, 1, 1);
                 plot(this.l12_weights(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
@@ -326,7 +326,7 @@ classdef Model < handle
                 legend('w_{Vji}', 'w_{Pki}', 'Location', 'best');
                 title('Model weights (L1)');
             end
->>>>>>> 5ee37c374096eb3ee9cf8bd6e45632e550ed9167
+% >>>>>>> 5ee37c374096eb3ee9cf8bd6e45632e550ed9167
             plotpath = sprintf('%s/weightsL1', this.savePath);
             saveas(gcf, plotpath, 'png');
 
