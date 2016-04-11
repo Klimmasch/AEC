@@ -21,7 +21,7 @@ sparseCodingType = 'nonhomeo';
 % plotNsave: [training, test]
 %            0 = don't do it
 %            1 = do it
-plotNsave = [uint8(1), uint8(0)];
+plotNsave = [uint8(1), uint8(1)];
 
 % Testing flag
 % Whether the testing procedure shall be executed after training
@@ -29,7 +29,7 @@ plotNsave = [uint8(1), uint8(0)];
 %           1 = do it
 testIt = uint8(1);
 
-% Save model every saveInterval training iterations
+% Save model every #saveInterval training iterations
 saveInterval = 1000;
 if (trainTime < saveInterval)
     saveInterval = trainTime;
@@ -110,7 +110,6 @@ end
 
 %%% Main execution loop
 t = 0;
-%TODO: initiatie rewardFunction_prev to a sane value (0)?
 rewardFunction_prev = 0;
 tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
@@ -221,7 +220,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
         command = checkCmd(command);                %restrain motor commands to [0,1]
 
         if (model.rlmodel.continuous == 1)
-            angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+            angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
         else
             angleNew = angleNew + relativeCommand;
             if (angleNew > 71.5 || angleNew < 0.99) % analogous to checkCmd
@@ -265,13 +264,13 @@ for iter1 = 1 : (model.trainTime / model.interval)
         if (model.rlmodel.continuous == 1)
             model.td_hist(t) = model.rlmodel.CCritic.delta;
             % model.g_hist(t) = model.rlmodel.CActor.params(7);
-            if ((model.rlmodel.rlFlavour(2) == 4) || (model.rlmodel.rlFlavour(2) == 5))
-                model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
-                model.l12_weights(t, 2) = model.rlmodel.CActor.params(1);
-                model.l12_weights(t, 3) = model.rlmodel.CActor.params(3);
-            else
-                model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
-                model.l12_weights(t, 2) = model.rlmodel.CActor.params(1);
+            model.weight_hist(t, 1) = model.rlmodel.CCritic.params(1);
+            model.weight_hist(t, 2) = model.rlmodel.CActor.params(1);
+            if (model.rlmodel.rlFlavour(2) >= 4)
+                model.weight_hist(t, 3) = model.rlmodel.CActor.params(2);
+                if (model.rlmodel.rlFlavour(2) == 5)
+                    model.weight_hist(t, 4) = model.rlmodel.CActor.params(3);
+                end
             end
             model.variance_hist(t) = model.rlmodel.CActor.variance;
         end

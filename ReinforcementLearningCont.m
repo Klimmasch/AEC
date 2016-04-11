@@ -90,7 +90,7 @@ classdef ReinforcementLearningCont < handle
             % obj.Weights_hist = cell(2, 1);
             % load/init
             if (PARAM{11})
-                sprintf('Model reloading function is DEPRECATED and therefore currently not supported!');
+                sprintf('Model reloading function is DEPRECATED and therefore currently not supported!')
                 return;
                 % obj.Weights = PARAM{12}(1:2);
                 % obj.J = PARAM{12}{3};
@@ -131,7 +131,7 @@ classdef ReinforcementLearningCont < handle
         %%% 3rd dim corresponds to iteration, col to weight
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function saveWeights(this)
-            sprintf('Model reloading function is DEPRECATED and therefore currently not supported!');
+            sprintf('Model reloading function is DEPRECATED and therefore currently not supported!')
             return;
             % this.Weights_hist{1} = cat(3, this.Weights_hist{1}, this.Weights{1}); %policy net
             % this.Weights_hist{2} = cat(3, this.Weights_hist{2}, this.Weights{2}); %value net
@@ -143,7 +143,7 @@ classdef ReinforcementLearningCont < handle
         %%% save the parameters in a file
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function saveClass(this, configfile)
-            sprintf('Model reloading function is DEPRECATED and therefore currently not supported!');
+            sprintf('Model reloading function is DEPRECATED and therefore currently not supported!')
             return;
             % weights = cell(2, 1);
             % weights{1} = this.Weights;

@@ -43,7 +43,7 @@ classdef Model < handle
         feature_hist;       %feature vector
         cmd_hist;           %vergence commands
         relCmd_hist;        %relativ changes in motor commands
-        l12_weights;        %L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
+        weight_hist;        %L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
         reward_hist;        %reward function
         metCost_hist;       %metabolic costs
         variance_hist;      %exploratory variance of actor
@@ -111,7 +111,11 @@ classdef Model < handle
             % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.inputDim);
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, 1);
-            obj.l12_weights = zeros(obj.trainTime, 4);
+            if (PARAM{3}{18}(2) == 5)
+                obj.weight_hist = zeros(obj.trainTime, 4);
+            else
+                obj.weight_hist = zeros(obj.trainTime, 3);
+            end
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
             obj.variance_hist = zeros(obj.trainTime, 1);
@@ -293,23 +297,22 @@ classdef Model < handle
             grid on;
             if ((this.rlmodel.rlFlavour(2) == 4) || (this.rlmodel.rlFlavour(2) == 5))
                 subplot(3, 1, 1);
-                plot(this.l12_weights(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+                plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
                 ylabel('\Sigma \midweights\mid', 'FontSize', 12);
                 title('w_{Vji}');
                 subplot(3, 1, 2);
-                plot(this.l12_weights(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+                plot(this.weight_hist(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
                 ylabel('\Sigma \midweights\mid', 'FontSize', 12);
                 title('w_{Pji}');
                 subplot(3, 1, 3);
-                plot(this.l12_weights(:, 3), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+                plot(this.weight_hist(:, 3), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
                 xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                 ylabel('\Sigma \midweights\mid', 'FontSize', 12);
                 title('w_{Pkj}');
-                % legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'Location', 'best');
             else
-                plot(this.l12_weights(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-                plot(this.l12_weights(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-                % plot(this.l12_weights(:, 3), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+                plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+                plot(this.weight_hist(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+                % plot(this.weight_hist(:, 3), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
                 xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                 ylabel('\Sigma \midweights\mid', 'FontSize', 12);
                 legend('w_{Vji}', 'w_{Pki}', 'Location', 'best');
@@ -322,10 +325,10 @@ classdef Model < handle
             % figure;
             % hold on;
             % grid on;
-            % plot(this.l12_weights(:, 2), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            % plot(this.l12_weights(:, 4), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            % % plot(this.l12_weights(:, 6), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
-            % % plot(this.l12_weights(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            % plot(this.weight_hist(:, 2), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+            % plot(this.weight_hist(:, 4), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+            % % plot(this.weight_hist(:, 6), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+            % % plot(this.weight_hist(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
             % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             % ylabel('\Sigma weights^{2}', 'FontSize', 12);
             % % legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
@@ -335,28 +338,38 @@ classdef Model < handle
             % saveas(gcf, plotpath, 'png');
 
             %% Reward
+            % figure;
+            % hold on;
+            % grid on;
+            % % r = [- this.lambdaMet * this.metCost_hist, ...
+            % %      - this.lambdaP2 * this.weight_hist(:, 5), ...
+            % %      - this.lambdaP1 * this.weight_hist(:, 3), ...
+            % %      - this.lambdaV * this.weight_hist(:, 1), ...
+            % %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
+            % r = [- this.lambdaMet * this.metCost_hist, ...
+            %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
+            % handle = area(r, 'LineStyle','none');
+            % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            % ylabel('Value', 'FontSize', 12);
+            % % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+            % l = legend('\lambdametCost', '\lambdaRecErr');
+            % if(version('-release') == '2015b')
+            %     handle(1).FaceColor = [1, 0.25, 0];
+            %     handle(2).FaceColor = [1, 0.549, 0];
+            %     l.Location = 'southwest';
+            % end
+            % % title('Reward composition (L1)');
+            % title('Reward composition');
+            % plotpath = sprintf('%s/rewardComp', this.savePath);
+            % saveas(gcf, plotpath, 'png');
+
             figure;
             hold on;
             grid on;
-            % r = [- this.lambdaMet * this.metCost_hist, ...
-            %      - this.lambdaP2 * this.l12_weights(:, 5), ...
-            %      - this.lambdaP1 * this.l12_weights(:, 3), ...
-            %      - this.lambdaV * this.l12_weights(:, 1), ...
-            %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
-            r = [- this.lambdaMet * this.metCost_hist, ...
-                 - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
-            handle = area(r, 'LineStyle','none');
-            handle(1).FaceColor = [1, 0.25, 0];
-            handle(2).FaceColor = [1, 0.549, 0];
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            plot(this.reward_hist, 'color', [1, 0.25, 0]);
+            xlabel('Iteration #', 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
-            % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
-            l = legend('\lambdametCost', '\lambdaRecErr');
-            if(version('-release') == '2015b')
-                l.Location = 'southwest';
-            end
-            % title('Reward composition (L1)');
-            title('Reward composition');
+            title('Reward');
             plotpath = sprintf('%s/rewardComp', this.savePath);
             saveas(gcf, plotpath, 'png');
 

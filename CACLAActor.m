@@ -43,7 +43,7 @@ classdef CACLAActor < handle
             obj.varDec = PARAM{7};
             % obj.covmat = eye(obj.output_dim) * obj.variance;
 
-            obj.param_num = 4;
+            obj.param_num = 2;
             obj.params = zeros(1, obj.param_num);
 
             obj.z_i_prev = zeros(obj.input_dim, 1);
@@ -61,12 +61,6 @@ classdef CACLAActor < handle
 
             this.wp_kj = this.wp_kj + this.beta_p * dwp_kj;
             this.wp_ji = this.wp_ji + this.beta_p * dwp_ji * this.z_i_prev';
-
-            % model state tracking
-            this.params(1) = sum(sum(abs(this.wp_ji)));
-            this.params(2) = sum(sum(this.wp_ji .^ 2));
-            this.params(3) = sum(sum(abs(this.wp_kj)));
-            this.params(4) = sum(sum(this.wp_kj .^ 2));
         end
 
         function command = act(this, z_i)
@@ -93,6 +87,10 @@ classdef CACLAActor < handle
                 this.update();
             end
             command = this.act(feature);
+
+            % model state change tracking
+            this.params(1) = sum(sum(abs(this.wp_ji)));
+            this.params(2) = sum(sum(abs(this.wp_kj)));
         end
     end
 end

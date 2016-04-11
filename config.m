@@ -64,7 +64,7 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 % 4 = CACLA             Actor Continuous Actor Critic Learning Automaton
 % 5 = CACLAVar          Actor Continuous Actor Critic Learning Automaton with (delta std) * update
 % 6 = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
-rlFlavour = [2, 5];
+rlFlavour = [uint8(2), uint8(5)];
 
 continuous = uint8(1);                          %indicates if the policy is discrete or continuous
 % Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8];    %vergence angles (discrete policy)
