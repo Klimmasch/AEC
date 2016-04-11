@@ -67,15 +67,16 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 rlFlavour = [uint8(2), uint8(5)];
 
 continuous = uint8(1);                          %indicates if the policy is discrete or continuous
-% Action = [-8 -4 -2 -1 -0.5 0 0.5 1 2 4 8];    %vergence angles (discrete policy)
-Action = [-8 -4 -2 -1 -0.5 -0.2 -0.1  ...       %vergence angles (discrete policy) enable half pixel resolution
-            0 0.1 0.2 0.5 1 2 4 8];
+% Action = [-8, -4, -2, -1, -0.5, 0, ...        %vergence angles (discrete policy)
+%           0.5, 1, 2, 4, 8];
+Action = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... %vergence angles (discrete policy) enable half pixel resolution
+          0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
 alpha_v = 0.9;                                  %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                                %learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 0.002;                                %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
+alpha_p = 0.1;                                  %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                       %discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                    %learning rate to update cumulative value | origin 1
-varianceRange = [1e-4, 1e-7];                   %variance of action output [start, end]
+varianceRange = [1e-4, 1e-5];                   %variance of action output [start, end]
 varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); %action variance decay factor
 if continuous
     inputDim = PARAMSC_L{3} + PARAMSC_S{3} + 1; %number of neurons in the input layer (Small + Large scale + Muscle activities)
@@ -83,14 +84,14 @@ else
     inputDim = PARAMSC_L{3} + PARAMSC_S{3};     % only small + large scale basis function inputs in discrete case
     varianceRange = 1;
 end
-hiddenDim = 50;                                 %number of neurons in the hidden layer
-weight_range = [1 / inputDim, ...               %maximum initial weight [critic_ji, actor_ji, actor_kj]
-                1 / (inputDim * hiddenDim), ... %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
-                1 / hiddenDim];
-lambda = 0.01;                                  %reguralization factor | origin 0.01
-deltaVar = 1;                                   %TD error variance tracking/approximating (CACLAVar)
-eta = 0.001;                                    %TD error variance variance scaling factor (CACLAVar)
-fiScale = 1e-5;                                 %scaling factor of Fisher Information matrix (CNGFI)
+hiddenDim = 50;                                     %number of neurons in the hidden layer
+weight_range = [1 / inputDim, ...                   %maximum initial weight [critic_ji, actor_ji, actor_kj]
+                50 / (inputDim * hiddenDim), ...    %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
+                1 / hiddenDim];                     %linear [1, 1, 1]
+lambda = 0.01;                                      %reguralization factor | origin 0.01
+deltaVar = 1;                                       %TD error variance tracking/approximating (CACLAVar)
+eta = 0.001;                                        %TD error variance variance scaling factor (CACLAVar)
+fiScale = 1e-5;                                     %scaling factor of Fisher Information matrix (CNGFI)
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, inputDim, weight_range, ...
            loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour, varDec, hiddenDim};
 

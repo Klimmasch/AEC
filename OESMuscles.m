@@ -300,20 +300,53 @@ model.simulatedTime = elapsedTime / 60;
 sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
         elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
 
-% Plot results
+% Backup scripts & plot results
 if (plotNsave(1) == 1)
     save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
-    model.allPlotSave();
-    copyfile('config.m', model.savePath);
+
     copyfile('OESMuscles.m', model.savePath);
-    % copyfile('OESMusclesBF.m', model.savePath);
-    copyfile('ReinforcementLearningCont.m', model.savePath);
-    % copyfile('CRGCritic.m', model.savePath);
-    % copyfile('CRGActor.m', model.savePath);
-    copyfile('CACLACritic.m', model.savePath);
-    copyfile('CACLAActor.m', model.savePath);
-    copyfile('CACLAVarActor.m', model.savePath);
+    copyfile('config.m', model.savePath);
     copyfile('Model.m', model.savePath);
+
+    if (model.rlmodel.continuous == 1)
+        copyfile('ReinforcementLearningCont.m', model.savePath);
+    else
+        copyfile('ReinforcementLearning.m', model.savePath);
+    end
+
+    switch model.rlmodel.rlFlavour(1)
+        case 0
+            %% Chong's implementation
+            copyfile('CCriticG.m', model.savePath);
+        case 1
+            %% CRG
+            copyfile('CRGCritic.m', model.savePath);
+        case 2
+            %% CACLA
+            copyfile('CACLACritic.m', model.savePath);
+    end
+
+    switch model.rlmodel.rlFlavour(2)
+        case 0
+            %% Chong's implementation
+            copyfile('CActorG.m', model.savePath);
+        case 1
+            %% CRG
+            copyfile('CRGActor.m', model.savePath);
+        case 2
+            %% CACLA linear
+            copyfile('CACLAActorLin.m', model.savePath);
+        case 3
+            %% CACLAVar linear
+            copyfile('CACLAVarActorLin.m', model.savePath);
+        case 4
+            %% CACLA
+            copyfile('CACLAActor.m', model.savePath);
+        case 5
+            %% CACLAVar
+            copyfile('CACLAVarActor.m', model.savePath);
+    end
+    model.allPlotSave();
 end
 
 %%% Testing procedure
@@ -405,7 +438,7 @@ end
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
 % TODO: adjust the sizes of the montage view
-function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
+function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
     imwrite(anaglyph, 'anaglyph.png');
 
