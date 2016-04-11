@@ -126,7 +126,8 @@ classdef Model < handle
             obj.responseResults = struct();
         end
 
-        %%% Make a (deep) copy of a handle object
+        %%% Copy constructor
+        % Make a (deep) copy of a handle object
         function new = copy(this)
             % Instantiate new object of the same class
             new = feval(class(this));
@@ -152,7 +153,7 @@ classdef Model < handle
             imPind = find(sum(imagesLarge .^ 2)); %find non-zero patches (columns)
             if (isempty(imPind))
                 feature_L = zeros(this.scmodel_Large.Basis_num, 1);
-                reward_L = this.rlmodel.J;
+                reward_L = this.rlmodel.J; %TODO: not supported for continuous rlmodel
                 return;
             end
             [Coef_L, Error_L] = this.scmodel_Large.sparseEncode(imagesLarge);
@@ -170,7 +171,7 @@ classdef Model < handle
             imPind = find(sum(imagesSmall .^ 2)); %find non-zero patches
             if (isempty(imPind))
                 feature_S = zeros(this.scmodel_Small.Basis_num, 1);
-                reward_S = this.rlmodel.J;
+                reward_S = this.rlmodel.J; %TODO: not supported for continuous rlmodel
                 return;
             end
             [Coef_S, Error_S] = this.scmodel_Small.sparseEncode(imagesSmall);
@@ -385,11 +386,6 @@ classdef Model < handle
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
             degrees = load('Degrees.mat');
-            % angleMin = degrees.results_deg(1, 1);
-            % angleMax = degrees.results_deg(11, 1);
-            % vergErrMin = this.desiredAngleMin - angleMax;
-            % vergErrMax = this.desiredAngleMax - angleMin;
-
             resolution = 10001;
             approx = spline(1:11, degrees.results_deg(:, 1));
 
@@ -495,11 +491,6 @@ classdef Model < handle
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
             degrees = load('Degrees.mat');
-            % angleMin = degrees.results_deg(1, 1);
-            % angleMax = degrees.results_deg(11, 1);
-            % vergErrMin = this.desiredAngleMin - angleMax;
-            % vergErrMax = this.desiredAngleMax - angleMin;
-
             resolution = 10001;
             approx = spline(1:11, degrees.results_deg(:, 1));
 
@@ -603,11 +594,6 @@ classdef Model < handle
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
             degrees = load('Degrees.mat');
-            % angleMin = degrees.results_deg(1, 1);
-            % angleMax = degrees.results_deg(11, 1);
-            % vergErrMin = this.desiredAngleMin - angleMax;
-            % vergErrMax = this.desiredAngleMax - angleMin;
-
             resolution = 10001;
             approx = spline(1:11, degrees.results_deg(:, 1));
 

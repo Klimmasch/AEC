@@ -17,7 +17,7 @@ sparseCodingType = 'nonhomeo';
 
 % Plotting and saving flag
 % Whether figures should be generated, saved and plotted
-% additionally some relevant scripts are backed up
+% additionally the relevant scripts are backed up
 % plotNsave: [training, test]
 %            0 = don't do it
 %            1 = do it
@@ -110,6 +110,7 @@ end
 
 %%% Main execution loop
 t = 0;
+command = [0, 0];
 rewardFunction_prev = 0;
 tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
@@ -123,9 +124,9 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % reset muscle activities to random values
     % initialization for muscle in between borders of desired actvity
     % i.e. min and max stimulus distance
-    command = [0, 0];
-    command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %only for one muscle
-    % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %two muscles
+    command(1) = 0; % single muscle
+    % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
+    command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
 
     angleNew = getAngle(command) * 2;
 
@@ -216,6 +217,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % add the change in muscle Activities to current ones
         % command = command + relativeCommand';     %two muscels
+        command(1) = 0;
         command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
 
