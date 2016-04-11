@@ -226,11 +226,14 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
         % mean over object distances
         % boxplot(reshape(mean(model.vergErrTest, 2), [model.interval, repeat(1)])');
         % mean over trials/stimuli responses
+        % [x, y] = meshgrid(1:model.interval,objRange);
+        % plot3(x', y', std(model.vergErrTest, 0, 3))
+        % surf(x', y', mean(model.vergErrTest, 3));
         boxplot(reshape(mean(model.vergErrTest, 3), [model.interval, size(objRange, 2)])');
         axis([0, model.interval+1, -3, 3]);
         xlabel('Iteration step', 'FontSize', 12);
         ylabel('Vergence Error [deg]', 'FontSize', 12);
-        title('Vergence Error over Trial (Testing)');
+        title('Vergence Error over Trial for different objDist (Testing)');
         title(sprintf('Vergence Error over Trial at Testing (repetitions=%d)', repeat(1)));
         plotpath = sprintf('%s/AvgVergErrOverTrialBP', model.savePath);
         saveas(gcf, plotpath, 'png');

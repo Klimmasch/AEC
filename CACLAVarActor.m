@@ -69,10 +69,10 @@ classdef CACLAVarActor < handle
             this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji * this.z_i_prev') * updateCount;
 
             % model state tracking
-            this.params(1) = sum(sum(abs(this.wp_kj)));
-            this.params(2) = sum(sum(this.wp_kj .^ 2));
-            this.params(3) = sum(sum(abs(this.wp_ji)));
-            this.params(4) = sum(sum(this.wp_ji .^ 2));
+            this.params(1) = sum(sum(abs(this.wp_ji)));
+            this.params(2) = sum(sum(this.wp_ji .^ 2));
+            this.params(3) = sum(sum(abs(this.wp_kj)));
+            this.params(4) = sum(sum(this.wp_kj .^ 2));
         end
 
         function command = act(this, z_i)
