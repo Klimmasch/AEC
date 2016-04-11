@@ -72,10 +72,10 @@ Action = [-8 -4 -2 -1 -0.5 -0.2 -0.1  ...       %vergence angles (discrete polic
             0 0.1 0.2 0.5 1 2 4 8];
 alpha_v = 0.9;                                  %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                                %learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 0.002;                                %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
+alpha_p = 0.1;                                %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4
 xi = 0.3;                                       %discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                    %learning rate to update cumulative value | origin 1
-varianceRange = [1e-4, 1e-7];                   %variance of action output [start, end]
+varianceRange = [1e-4, 1e-5];                   %variance of action output [start, end]
 varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); %action variance decay factor
 if continuous
     inputDim = PARAMSC_L{3} + PARAMSC_S{3} + 1; %number of neurons in the input layer (Small + Large scale + Muscle activities)
@@ -104,8 +104,8 @@ baseline = 0.056;           %interocular distance
 objDistMin = 0.5;
 objDistMax = 2;
 
-muscleInitMin = 0.00807;    %minimal initial muscle innervation
-muscleInitMax = 0.07186;    %maximal --"--
+muscleInitMin = 0;    %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = 0.1;    %maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 interval = 10;              %period for changing the stimulus for the eye | origin 10
 lambdaMuscleFB = 1.0722;    %factor of muscle activity feedback to RL feature vector

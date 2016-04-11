@@ -121,7 +121,7 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
                     value = model.rlmodel.Weights{2,1} * feature;
                 end
 
-                relCmd = model.rlmodel.softmaxAct(feature);
+                relCmd = model.rlmodel.act(feature);
 
                 %Traking variables
                 relCmds = [relCmds; relCmd];
