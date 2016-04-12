@@ -70,7 +70,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     fixZtest = zeros(model.interval, size(objRange, 2), repeat(1));        % actual fixation distance
     vergErrTest = zeros(model.interval, size(objRange, 2), repeat(1));     % vergence error
     tmpObjRange = 0;
-    
+
     % minimal and maximal angle that can be reached by one-dimensional
     % muscle commands
     angleMin = getAngle([0, 0]) * 2;
@@ -85,6 +85,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
         else
             currentTexture = texture{iter1};
         end
+
         for iter2 = 1 : size(objRange, 2)
             % reset muscle activities to random values
             if (model.rlmodel.continuous == 1)
@@ -102,8 +103,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 tmpObjRange = objRange(iter2);
             end
             %desired vergence [deg]
-            angleDes = 2 * atand(model.baseline / (2 * tmpObjRange));   
-                
+            angleDes = 2 * atand(model.baseline / (2 * tmpObjRange));
+
             [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
                                            currentTexture, tmpObjRange, angleNew));
             % abort execution if error occured
@@ -119,7 +120,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-                generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
+                % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -170,8 +171,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
 
                 %%% Track results
                 % compute desired vergence command, disparity and vergence error
-                anglerr = angleDes - angleNew;                                  %vergence error [deg]
                 fixDepth = (model.baseline / 2) / tand(angleNew / 2);           %fixation depth [m]
+                anglerr = angleDes - angleNew;                                  %vergence error [deg]
                 % disparity = 2 * model.focalLength * tand(anglerr / 2);        %current disp [px]
 
                 disZtest(iter3, iter2, iter1) = tmpObjRange;
@@ -212,7 +213,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
         hold on;
         grid on;
         errorbar([1 : model.interval], mean(mean(abs(vergErrTest), 3), 2), std(std(abs(vergErrTest), 0, 3), 0, 2), 'color', [1, 0.549, 0], 'LineWidth', 0.8);
-        axis([0, model.interval+1, 0, 3]);
+        axis([0, model.interval + 1, 0, 3]);
         xlabel('Iteration step', 'FontSize', 12);
         ylabel('|Vergence Error| [deg]', 'FontSize', 12);
         title(sprintf('Avg Vergence Error over Trial at Testing (repetitions=%d)', repeat(1)));
@@ -230,7 +231,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
         % plot3(x', y', std(model.vergErrTest, 0, 3))
         % surf(x', y', mean(model.vergErrTest, 3));
         boxplot(reshape(mean(model.vergErrTest, 3), [model.interval, size(objRange, 2)])');
-        axis([0, model.interval+1, -3, 3]);
+        axis([0, model.interval + 1, -3, 3]);
         xlabel('Iteration step', 'FontSize', 12);
         ylabel('Vergence Error [deg]', 'FontSize', 12);
         title('Vergence Error over Trial for different objDist (Testing)');
@@ -286,15 +287,15 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     sprintf('starting to generate vergence commands for different vergence errors ...')
     for iter1 = 1 : repeat(2)
         sprintf('RelCmd repetition = %d/%d', iter1, repeat(2))
+        %random picture for every iteration
+        currentTexture = texture{(randi(nTextures, 1))};
 
         for objDist = 1 : size(objRange, 2)
-            currentTexture = texture{(randi(nTextures, 1))}; %random picture for every iteration
             angleDes = 2 * atand(model.baseline / (2 * objRange(objDist)));
 
             for verg = 1 : size(vergRange, 2)
-
                 % when angle can't be reached by muscles
-                if (angleDes + vergRange(verg) < angleMin) &&  (model.rlmodel.continuous == 1) % when angle can't be reached by muscles
+                if (angleDes + vergRange(verg) < angleMin) && (model.rlmodel.continuous == 1) % when angle can't be reached by muscles
                     sprintf('Warning: vergrange exceeds possible muscle commands, angleDes: %d, vergenceError: %d, angleMin: %d', angleDes, vergRange(verg), angleMin)
                     continue
                 end
@@ -315,8 +316,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-                generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
-%                 imshow(stereoAnaglyph(imgGrayLeft, imgGrayRight));
+                % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
+%               % imshow(stereoAnaglyph(imgGrayLeft, imgGrayRight));
 
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -329,7 +330,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
 
                 % Generate input feature vector from current images
                 [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-                
+
                 if (model.rlmodel.continuous == 1)
                     % calculate muscle activity at current position
                     indTemp = find(mf(:, 1) <= angleDes + vergRange(verg) + dmf & mf(:, 1) >= angleDes + vergRange(verg) - dmf);

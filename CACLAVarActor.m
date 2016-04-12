@@ -23,6 +23,7 @@ classdef CACLAVarActor < handle
         command_prev;   % resulted action
         deltaVar;       % variance of delta signal
         eta;            % scaling factor of delta variance
+        updateCount;
 
         % model history tracking
         param_num;
@@ -45,7 +46,7 @@ classdef CACLAVarActor < handle
             obj.varDec = PARAM{9};
             % obj.covmat = eye(obj.output_dim) * obj.variance;
 
-            obj.param_num = 4;
+            obj.param_num = 3;
             obj.params = zeros(1, obj.param_num);
 
             obj.z_i_prev = zeros(obj.input_dim, 1);
@@ -54,10 +55,11 @@ classdef CACLAVarActor < handle
             obj.command_prev = 0;
             obj.deltaVar = PARAM{7};
             obj.eta = PARAM{8};
+            obj.updateCount = 0;
         end
 
         function update(this, delta)
-            updateCount = ceil(delta / sqrt(this.deltaVar));
+            this.updateCount = ceil(delta / sqrt(this.deltaVar));
 
             % delta_weights(hidden -> output)
             dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
@@ -65,14 +67,8 @@ classdef CACLAVarActor < handle
             % delta_weights(input -> hidden) [standard backprop]
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') * (this.wp_kj * dwp_kj') * this.z_i_prev;
 
-            this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * updateCount;
-            this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji * this.z_i_prev') * updateCount;
-
-            % model state tracking
-            this.params(1) = sum(sum(abs(this.wp_ji)));
-            this.params(2) = sum(sum(this.wp_ji .^ 2));
-            this.params(3) = sum(sum(abs(this.wp_kj)));
-            this.params(4) = sum(sum(this.wp_kj .^ 2));
+            this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
+            this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji * this.z_i_prev') * this.updateCount;
         end
 
         function command = act(this, z_i)
@@ -99,8 +95,15 @@ classdef CACLAVarActor < handle
             this.deltaVar = (1 - this.eta) * this.deltaVar + this.eta * delta ^ 2;
             if (flag_update && delta > 0)
                 this.update(delta);
+            else
+                this.updateCount = 0;
             end
             command = this.act(feature);
+
+            % model state change tracking
+            this.params(1) = sum(sum(abs(this.wp_ji)));
+            this.params(2) = sum(sum(abs(this.wp_kj)));
+            this.params(3) = this.updateCount;
         end
     end
 end

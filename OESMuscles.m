@@ -17,11 +17,11 @@ sparseCodingType = 'nonhomeo';
 
 % Plotting and saving flag
 % Whether figures should be generated, saved and plotted
-% additionally some relevant scripts are backed up
+% additionally the relevant scripts are backed up
 % plotNsave: [training, test]
 %            0 = don't do it
 %            1 = do it
-plotNsave = [uint8(1), uint8(0)];
+plotNsave = [uint8(1), uint8(1)];
 
 % Testing flag
 % Whether the testing procedure shall be executed after training
@@ -29,7 +29,7 @@ plotNsave = [uint8(1), uint8(0)];
 %           1 = do it
 testIt = uint8(1);
 
-% Save model every saveInterval training iterations
+% Save model every #saveInterval training iterations
 saveInterval = 1000;
 if (trainTime < saveInterval)
     saveInterval = trainTime;
@@ -57,6 +57,7 @@ elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
     sprintf('Rendering binary \"checkEnvironment\" not present in current dir\n\"%s\"', cd)
     return;
 end
+
 % File management
 modelName = sprintf('model_%s_%i_%s_%i_%s', ...
                     datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
@@ -121,7 +122,7 @@ end
 
 %%% Main execution loop
 t = 0;
-%TODO: initiatie rewardFunction_prev to a sane value (0)?
+command = [0, 0];
 rewardFunction_prev = 0;
 tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
@@ -135,9 +136,9 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % reset muscle activities to random values
     % initialization for muscle in between borders of desired actvity
     % i.e. min and max stimulus distance
-    command = [0, 0];
-    command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %only for one muscle
-    % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %two muscles
+    command(1) = 0; % single muscle
+    % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
+    command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
 
     angleNew = getAngle(command) * 2;
 
@@ -228,11 +229,12 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % add the change in muscle Activities to current ones
         % command = command + relativeCommand';     %two muscels
+        command(1) = 0;
         command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
 
         if (model.rlmodel.continuous == 1)
-            angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+            angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
         else
             angleNew = angleNew + relativeCommand;
             if (angleNew > 71.5 || angleNew < 0.99) % analogous to checkCmd
@@ -276,19 +278,15 @@ for iter1 = 1 : (model.trainTime / model.interval)
         if (model.rlmodel.continuous == 1)
             model.td_hist(t) = model.rlmodel.CCritic.delta;
             % model.g_hist(t) = model.rlmodel.CActor.params(7);
-            if ((model.rlmodel.rlFlavour(2) == 4) || (model.rlmodel.rlFlavour(2) == 5))
-                model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
-                model.l12_weights(t, 2) = model.rlmodel.CActor.params(1);
-                model.l12_weights(t, 3) = model.rlmodel.CActor.params(3);
-            else
-                model.l12_weights(t, 1) = model.rlmodel.CCritic.params(1);
-                model.l12_weights(t, 2) = model.rlmodel.CActor.params(1);
+            model.weight_hist(t, 1) = model.rlmodel.CCritic.params(1);
+            model.weight_hist(t, 2) = model.rlmodel.CActor.params(1);
+            if (model.rlmodel.rlFlavour(2) >= 4)
+                model.weight_hist(t, 3) = model.rlmodel.CActor.params(2);
+                if (model.rlmodel.rlFlavour(2) == 5)
+                    model.weight_hist(t, 4) = model.rlmodel.CActor.params(3);
+                end
             end
             model.variance_hist(t) = model.rlmodel.CActor.variance;
-            model.l12_weights(t, 5) = model.rlmodel.CActor.params(3);
-            % model.l12_weights(t, 6) = model.rlmodel.CActor.params(4);
-            % model.l12_weights(t, 7) = model.rlmodel.CActor.params(5);
-            % model.l12_weights(t, 8) = model.rlmodel.CActor.params(6);
         end
     end
 
@@ -316,20 +314,53 @@ model.simulatedTime = elapsedTime / 60;
 sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
         elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
 
-% Plot results
+% Backup scripts & plot results
 if (plotNsave(1) == 1)
     save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
-    model.allPlotSave();
-    copyfile('config.m', model.savePath);
+
     copyfile('OESMuscles.m', model.savePath);
-    % copyfile('OESMusclesBF.m', model.savePath);
-    copyfile('ReinforcementLearningCont.m', model.savePath);
-    % copyfile('CRGCritic.m', model.savePath);
-    % copyfile('CRGActor.m', model.savePath);
-    copyfile('CACLACritic.m', model.savePath);
-    copyfile('CACLAActor.m', model.savePath);
-    copyfile('CACLAVarActor.m', model.savePath);
+    copyfile('config.m', model.savePath);
     copyfile('Model.m', model.savePath);
+
+    if (model.rlmodel.continuous == 1)
+        copyfile('ReinforcementLearningCont.m', model.savePath);
+    else
+        copyfile('ReinforcementLearning.m', model.savePath);
+    end
+
+    switch model.rlmodel.rlFlavour(1)
+        case 0
+            %% Chong's implementation
+            copyfile('CCriticG.m', model.savePath);
+        case 1
+            %% CRG
+            copyfile('CRGCritic.m', model.savePath);
+        case 2
+            %% CACLA
+            copyfile('CACLACritic.m', model.savePath);
+    end
+
+    switch model.rlmodel.rlFlavour(2)
+        case 0
+            %% Chong's implementation
+            copyfile('CActorG.m', model.savePath);
+        case 1
+            %% CRG
+            copyfile('CRGActor.m', model.savePath);
+        case 2
+            %% CACLA linear
+            copyfile('CACLAActorLin.m', model.savePath);
+        case 3
+            %% CACLAVar linear
+            copyfile('CACLAVarActorLin.m', model.savePath);
+        case 4
+            %% CACLA
+            copyfile('CACLAActor.m', model.savePath);
+        case 5
+            %% CACLAVar
+            copyfile('CACLAVarActor.m', model.savePath);
+    end
+    model.allPlotSave();
 end
 
 %%% Testing procedure
@@ -421,7 +452,7 @@ end
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
 % TODO: adjust the sizes of the montage view
-function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
+function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
     imwrite(anaglyph, 'anaglyph.png');
 
