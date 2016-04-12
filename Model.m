@@ -111,7 +111,7 @@ classdef Model < handle
             % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.inputDim);
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, 1);
-            if (PARAM{3}{18}(2) == 5)
+            if ((PARAM{3}{18}(2) == 5) || (PARAM{3}{18}(2) == 7))
                 obj.weight_hist = zeros(obj.trainTime, 4);
             else
                 obj.weight_hist = zeros(obj.trainTime, 3);
@@ -296,7 +296,7 @@ classdef Model < handle
             figure;
             hold on;
             grid on;
-            if ((this.rlmodel.rlFlavour(2) == 4) || (this.rlmodel.rlFlavour(2) == 5))
+            if (this.rlmodel.rlFlavour(2) >= 4)
                 subplot(3, 1, 1);
                 plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
                 ylabel('\Sigma \midweights\mid', 'FontSize', 12);

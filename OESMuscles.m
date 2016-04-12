@@ -282,7 +282,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
             model.weight_hist(t, 2) = model.rlmodel.CActor.params(1);
             if (model.rlmodel.rlFlavour(2) >= 4)
                 model.weight_hist(t, 3) = model.rlmodel.CActor.params(2);
-                if (model.rlmodel.rlFlavour(2) == 5)
+                if ((model.rlmodel.rlFlavour(2) == 5) || (model.rlmodel.rlFlavour(2) == 7))
                     model.weight_hist(t, 4) = model.rlmodel.CActor.params(3);
                 end
             end
