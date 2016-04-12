@@ -64,7 +64,7 @@ classdef CACLAVarActorLin < handle
         function command = act(this, z_i)
             z_k = this.wp_ki * z_i;                 % activity of output layer
             % command = mvnrnd(z_k, this.covmat)';    % perturbation of actor's output multivariate version
-            command = mvnrnd(z_k, this.variance)';
+            command = mvnrnd(z_k, this.variance);
 
             % model state tracking
             this.z_i_prev = z_i;

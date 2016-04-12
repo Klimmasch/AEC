@@ -1,5 +1,6 @@
 %%% Continuous Actor Critic Learning Automaton with variance Actor
-classdef CACLAVarActor < handle
+% non-linearity at hidden and output layer
+classdef CACLAVarActor2 < handle
     properties
         % network parameters
         input_dim;
@@ -31,7 +32,7 @@ classdef CACLAVarActor < handle
     end
 
     methods
-        function obj = CACLAVarActor(PARAM)
+        function obj = CACLAVarActor2(PARAM)
             obj.input_dim = PARAM{1};
             obj.hidden_dim = PARAM{2};
             obj.output_dim = PARAM{3};
@@ -62,7 +63,7 @@ classdef CACLAVarActor < handle
             this.updateCount = ceil(delta / sqrt(this.deltaVar));
 
             % delta_weights(hidden -> output)
-            dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
+            dwp_kj = (this.command_prev - this.z_k_prev) * ((1 - this.z_k_prev ^ 2) * this.z_j_prev');
 
             % delta_weights(input -> hidden) [standard backprop]
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') * (this.wp_kj * dwp_kj') * this.z_i_prev;
@@ -73,7 +74,7 @@ classdef CACLAVarActor < handle
 
         function command = act(this, z_i)
             z_j = tanh(this.wp_ji * z_i);           % activity of hidden layer
-            z_k = this.wp_kj * z_j;                 % activity of output layer
+            z_k = tanh(this.wp_kj * z_j);           % activity of output layer
 
             % command = mvnrnd(z_k, this.covmat)';  % perturbation of actor's output multivariate version
             command = mvnrnd(z_k, this.variance);

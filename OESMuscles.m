@@ -46,7 +46,7 @@ model = config(learnedFile, textureFile, trainTime, sparseCodingType);
 %     commands(i,2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1);
 %     angles(i) = getAngle(commands(i,:))*2;
 % end
-% histogram(angles); 
+% histogram(angles);
 % min(angles) % = 1.6045
 % max(angles) % = 6.4094
 %%%%%%%%%%%%%%%%%
@@ -359,6 +359,12 @@ if (plotNsave(1) == 1)
         case 5
             %% CACLAVar
             copyfile('CACLAVarActor.m', model.savePath);
+        case 6
+            %% CACLA2
+            copyfile('CACLAActor2.m', model.savePath);
+        case 7
+            %% CACLAVar2
+            copyfile('CACLAVarActor2.m', model.savePath);
     end
     model.allPlotSave();
 end
