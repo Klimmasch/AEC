@@ -159,8 +159,9 @@ classdef ReinforcementLearning < handle
         %%% commands calculated in policy network
         %%% Xin: feature input to the network
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function [command, pol, Xin] = Act(this, Xin)
-            poltmp = this.Weights{1, 1} * Xin / this.Temperature;
+        function [command, pol, Xin] = act(this, Xin)
+%             poltmp = this.Weights{1, 1} * Xin / this.Temperature;
+            poltmp = this.Weights{1, 1} * Xin / 0.1; % choose a low temperature during testing of policy
             pol = softmax(poltmp - max(poltmp));
             [~, index] = max(poltmp);
             command = this.Action(index);

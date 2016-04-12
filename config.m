@@ -105,8 +105,8 @@ baseline = 0.056;           %interocular distance
 objDistMin = 0.5;
 objDistMax = 2;
 
-muscleInitMin = 0.00807;    %minimal initial muscle innervation
-muscleInitMax = 0.07186;    %maximal --"--
+muscleInitMin = 0;    %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = 0.1;    %maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 interval = 10;              %period for changing the stimulus for the eye | origin 10
 lambdaMuscleFB = 1.0722;    %factor of muscle activity feedback to RL feature vector

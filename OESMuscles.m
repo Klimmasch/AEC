@@ -37,7 +37,19 @@ end
 
 % Instantiate and initiate model object
 model = config(learnedFile, textureFile, trainTime, sparseCodingType);
-
+%%%%%%%%%%%%%
+% n = 10000;
+% commands = zeros(n,2);
+% angles = zeros(n,1);
+% degrees = load('Degrees.mat');
+% for i = 1:n
+%     commands(i,2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1);
+%     angles(i) = getAngle(commands(i,:))*2;
+% end
+% histogram(angles); 
+% min(angles) % = 1.6045
+% max(angles) % = 6.4094
+%%%%%%%%%%%%%%%%%
 if (trainTime <= model.interval)
     sprintf('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
     return;
@@ -354,7 +366,7 @@ end
 %%% Testing procedure
 if (testIt)
     % testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
-    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-5 : 0.5 : 5], [50, 50], 0, 1, plotNsave(2), 1);
+    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotNsave(2), 1);
 end
 
 end
