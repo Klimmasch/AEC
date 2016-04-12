@@ -63,8 +63,10 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 % 3 = CACLAVarLin       Actor Continuous Actor Critic Learning Automaton with (delta std) * update [linear network topology]
 % 4 = CACLA             Actor Continuous Actor Critic Learning Automaton
 % 5 = CACLAVar          Actor Continuous Actor Critic Learning Automaton with (delta std) * update
-% 6 = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
-rlFlavour = [uint8(2), uint8(5)];
+% 6 = CACLA2            Actor Continuous Actor Critic Learning Automaton [non-linear output layer]
+% 7 = CACLAVar2         Actor Continuous Actor Critic Learning Automaton with (delta std) * update [non-linear output layer]
+% 8 = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
+rlFlavour = [uint8(2), uint8(7)];
 
 continuous = uint8(1);                          %indicates if the policy is discrete or continuous
 % Action = [-8, -4, -2, -1, -0.5, 0, ...        %vergence angles (discrete policy)
@@ -105,8 +107,8 @@ baseline = 0.056;           %interocular distance
 objDistMin = 0.5;
 objDistMax = 2;
 
-muscleInitMin = 0;    %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = 0.1;    %maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+muscleInitMin = 0;          %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = 0.1;        %maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 interval = 10;              %period for changing the stimulus for the eye | origin 10
 lambdaMuscleFB = 1.0722;    %factor of muscle activity feedback to RL feature vector

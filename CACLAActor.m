@@ -68,7 +68,7 @@ classdef CACLAActor < handle
             z_k = this.wp_kj * z_j;                 % activity of output layer
 
             % command = mvnrnd(z_k, this.covmat)';  % perturbation of actor's output multivariate version
-            command = mvnrnd(z_k, this.variance)';
+            command = mvnrnd(z_k, this.variance);
 
             % model state tracking
             this.z_i_prev = z_i;
