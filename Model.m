@@ -141,7 +141,7 @@ classdef Model < handle
             % Copy hidden properties which don't show up in the result
             % of properties(this)
             % p = fieldnames(struct(this));
-            for i = 1:length(p)
+            for i = 1 : length(p)
                 new.(p{i}) = this.(p{i});
             end
         end
@@ -195,7 +195,8 @@ classdef Model < handle
 
         %% Plotting everything and save graphs
         function allPlotSave(this)
-            windowSize = 125;
+            % windowSize = 125;
+            windowSize = 450;
             if (this.trainTime < windowSize * this.interval)
                 windowSize = round(this.trainTime / this.interval / 5);
             end
@@ -220,17 +221,31 @@ classdef Model < handle
             ylabel('Vergence Error [deg]', 'FontSize', 12);
             title('Moving Average of the Vergence Error');
             legend('|verg_{err}|', 'SMA(|verg_{err}|)');
+            plotpath = sprintf('%s/mvngAvgVergErrFull', this.savePath);
+            saveas(gcf, plotpath, 'png');
+
+            figure;
+            hold on;
+            grid on;
+            % Simple Moving Average
+            plot((windowSize + 1) * this.interval : this.interval : size(this.vergerr_hist), vergerr(windowSize + 1 : end), ...
+                 'LineWidth', 1.3);
+
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('SMA(|verg_{err}|) [deg]', 'FontSize', 12);
+            title('Moving Average of the Vergence Error');
             plotpath = sprintf('%s/mvngAvgVergErr', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Root Mean Squared Error
+            % windowSize = 125;
+            windowSize = 250;
             vergerr = this.vergerr_hist(ind);
             rmse = zeros(length(1 : windowSize : length(vergerr) - mod(length(vergerr), 2)), 1); %cut if odd length
             k = 1 : windowSize : length(vergerr) - mod(length(vergerr), 2);
             for i = 1 : length(rmse)
-                rmse(i) = mean(vergerr(k(i) : k(i) + windowSize - 1) .^ 2);
+                rmse(i) = sqrt(mean(vergerr(k(i) : k(i) + windowSize - 1) .^ 2));
             end
-            rmse = sqrt(rmse);
 
             figure;
             hold on;
@@ -239,7 +254,7 @@ classdef Model < handle
                  rmse, 'LineWidth', 1.3);
             axis([-inf, inf, 0, inf]);
             xlabel(sprintf('Iteration # (windowSize=%d)', windowSize * this.interval), 'FontSize', 12);
-            ylabel('RMSE Vergence Error [deg]', 'FontSize', 12);
+            ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
             title('RMSE of the Vergence Error');
             plotpath = sprintf('%s/rmseVergErr', this.savePath);
             saveas(gcf, plotpath, 'png');
@@ -389,6 +404,32 @@ classdef Model < handle
             % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
+            actualResponse = [this.vergerr_hist, this.relCmd_hist];
+
+            % observation Window, i.e. plot statistics over last #obsWin iterations
+            obsWin = 1000;
+            if (size(actualResponse, 1) <= obsWin)
+                obsWin = size(actualResponse, 1) - 1;
+            end
+            nVal = 20; % #bins of statistics
+
+            actualResponse = sortrows(actualResponse(end - obsWin : end, :));
+            if (all(actualResponse == 0)) % skip plot if empty or still training
+                return;
+            end
+            deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
+            % actualResponseStat = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
+            actualResponseStat = zeros(nVal, 3);
+
+            for i = 1:nVal
+                actualResponseStat(i, 1) = (actualResponse(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
+                actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+                                                & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+                actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+                                               & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+            end
+            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
+
             degrees = load('Degrees.mat');
             resolution = 10001;
             approx = spline(1:11, degrees.results_deg(:, 1));
@@ -419,29 +460,6 @@ classdef Model < handle
                                      (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
 
             perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-            actualResponse = [this.vergerr_hist, this.relCmd_hist];
-
-            % observation Window, i.e. plot statistics over last #obsWin iterations
-            obsWin = 1000;
-            if (size(actualResponse, 1) <= obsWin)
-                obsWin = size(actualResponse, 1) - 1;
-            end
-            nVal = 20; % #bins of statistics
-
-            tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
-            deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-            % tmp = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
-            tmp = zeros(nVal, 3);
-
-            for i = 1:nVal
-                tmp(i, 1) = (tmpRsp(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
-                tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-                tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                            & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-            end
-            actualResponseStat = tmp;
-            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
             figure;
             hold on;
@@ -484,15 +502,32 @@ classdef Model < handle
 
         %% plot & save delta_MF(Vergence_error)
         % observation Window = obsWin, i.e. plot statistics over last #obsWin iterations
+        % see delta_MF(Vergence_error) @ allPlotSave() for remarks regarding calculations
         function deltaMFplotObsWin(this, obsWin)
-            % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
-            % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
-            % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
-            % actual_distance_max = (baseline / 2) / tand(results_deg(1,1)*2 / 2) = 3.2219 [m]
-            % angle_min @ actual_distance_max = results_deg(1,1) * 2 = 0.9958 deg
-            % angle_max @ actual_distance_min = results_deg(11,1) * 2 = 71.5164 deg
-            % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
-            % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
+            actualResponse = [this.vergerr_hist, this.relCmd_hist];
+
+            if (size(actualResponse, 1) <= obsWin)
+                obsWin = size(actualResponse, 1) - 1;
+            end
+            nVal = 20; % #bins of statistics
+
+            actualResponse = sortrows(actualResponse(end - obsWin : end, :));
+            if (all(actualResponse == 0)) % skip plot if empty or still training
+                sprintf('No model response within observation window.')
+                return;
+            end
+            deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
+            % actualResponseStat = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
+            actualResponseStat = zeros(nVal, 3);
+
+            for i = 1:nVal
+                actualResponseStat(i, 1) = (actualResponse(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
+                actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+                                                & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+                actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+                                               & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+            end
+            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
             degrees = load('Degrees.mat');
             resolution = 10001;
@@ -524,27 +559,6 @@ classdef Model < handle
                                      (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
 
             perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-            actualResponse = [this.vergerr_hist, this.relCmd_hist];
-
-            if (size(actualResponse, 1) <= obsWin)
-                obsWin = size(actualResponse, 1) - 1;
-            end
-            nVal = 20; % #bins of statistics
-
-            tmpRsp = sortrows(actualResponse(end - obsWin : end, :));
-            deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-            % tmp = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
-            tmp = zeros(nVal, 3);
-
-            for i = 1:nVal
-                tmp(i, 1) = (tmpRsp(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
-                tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-                tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                            & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-            end
-            actualResponseStat = tmp;
-            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
             figure;
             hold on;
@@ -587,15 +601,32 @@ classdef Model < handle
 
         %% plot & save delta_MF(Vergence_error)
         % startIter, endIter = plot statistics over #startIter : endIter iterations
+        % see delta_MF(Vergence_error) @ allPlotSave() for remarks regarding calculations
         function deltaMFplotStartEnd(this, startIter, endIter)
-            % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
-            % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
-            % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
-            % actual_distance_max = (baseline / 2) / tand(results_deg(1,1)*2 / 2) = 3.2219 [m]
-            % angle_min @ actual_distance_max = results_deg(1,1) * 2 = 0.9958 deg
-            % angle_max @ actual_distance_min = results_deg(11,1) * 2 = 71.5164 deg
-            % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
-            % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
+            actualResponse = [this.vergerr_hist, this.relCmd_hist];
+
+            if (endIter > size(actualResponse, 1))
+                endIter = size(actualResponse, 1);
+            end
+            nVal = 20; % #bins of statistics
+
+            actualResponse = sortrows(actualResponse(startIter : endIter, :));
+            if (all(actualResponse == 0)) % skip plot if empty or still training
+                sprintf('No model response within observation window.')
+                return;
+            end
+            deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
+            % actualResponseStat = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
+            actualResponseStat = zeros(nVal, 3);
+
+            for i = 1:nVal
+                actualResponseStat(i, 1) = (actualResponse(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
+                actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+                                                & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+                actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+                                               & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+            end
+            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
             degrees = load('Degrees.mat');
             resolution = 10001;
@@ -627,27 +658,6 @@ classdef Model < handle
                                      (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
 
             perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-            actualResponse = [this.vergerr_hist, this.relCmd_hist];
-
-            if (endIter > size(actualResponse, 1))
-                endIter = size(actualResponse, 1);
-            end
-            nVal = 20; % #bins of statistics
-
-            tmpRsp = sortrows(actualResponse(startIter : endIter, :));
-            deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nVal;
-            % tmp = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
-            tmp = zeros(nVal, 3);
-
-            for i = 1:nVal
-                tmp(i, 1) = (tmpRsp(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
-                tmp(i, 2) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                             & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-                tmp(i, 3) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                            & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2));
-            end
-            actualResponseStat = tmp;
-            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
             figure;
             hold on;
