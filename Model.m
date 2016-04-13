@@ -16,8 +16,9 @@ classdef Model < handle
 
         learnedFile;        %previously learned model
         textureFile;        %config file containing texture stimulus list
-        trainTime;          %# training iterations
-        simulatedTime;     %how long did the model take to be learned (min)
+        trainTime;          %number of training (intended) iterations
+        trainedUntil;       %how long did the training actually proceed?
+        simulatedTime;      %how long did the model take to be learned (min)
 
         sparseCodingType;   %type of sparse coding
         stopSC;
@@ -48,6 +49,7 @@ classdef Model < handle
         metCost_hist;       %metabolic costs
         variance_hist;      %exploratory variance of actor
         savePath;           %where all the data are stored
+        notes;              %is there any special things about this model to note?
 
         % Model results at testing procedure
         disZtest;
@@ -124,6 +126,8 @@ classdef Model < handle
             obj.fixZtest = [];
             obj.vergErrTest = [];
             obj.responseResults = struct();
+            obj.trainedUntil = 0;
+            obj.notes = '';
         end
 
         %%% Copy constructor

@@ -8,13 +8,13 @@ weightsHist = cell(2, 1);
 % DEPRECATED
 % TODO: update model reload
 %%% Loading existing model
-configpath = sprintf('config/%s', learnedFile);
-if (~isempty(learnedFile))
-    sprintf('Model reloading function is DEPRECATED and therefore currently not fully supported!');
+% configpath = sprintf('config/%s', learnedFile);
+% if (~isempty(learnedFile))
+%     sprintf('Model reloading function is DEPRECATED and therefore currently not fully supported!');
 
-    load(configpath);
-    basisSmall = model.scmodel_Small.Basis;
-    basisLarge = model.scmodel_Large.Basis;
+    % load(configpath);
+    % basisSmall = model.scmodel_Small.Basis;
+    % basisLarge = model.scmodel_Large.Basis;
 
     % weights = model.rlmodel.Weights;    %actor-critic NN weights
     % weights{3} = model.rlmodel.J;
@@ -26,9 +26,9 @@ if (~isempty(learnedFile))
     % else
     %     weightsHist = model.rlmodel.Weights;
     % end
-end
-loadBasis = uint8(~isempty(learnedFile));
-loadweights = uint8(~isempty(learnedFile));
+% end
+loadBasis = uint8(0);%uint8(~isempty(learnedFile));
+loadweights = uint8(0);%unint(uint8(~isempty(learnedFile));
 
 %%% Sparce Coding parameters
 % FINE (small) SCALE

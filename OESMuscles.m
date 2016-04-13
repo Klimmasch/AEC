@@ -2,15 +2,20 @@
 %@param trainTime           training time in number of iterations
 %@param randomizationSeed   randomization seed
 %@param fileDescription     description of approach used as file name
-%
+%@param useLearnedFile      two paramters that indicate (1) to use the
+%                           model specified in learnedFile, (2) if the
+%                           model simulation of this file was aborted and
+%                           the training should just be completed
 % learnedFile:              previously learned policy and sparse coding model
 % textureFile:              texture settings files
 % sparseCodingType:         type of sparse coding approach
 %%%
-function OESMuscles(trainTime, randomizationSeed, fileDescription)
+function OESMuscles(trainTime, randomizationSeed, fileDescription, useLearnedFile)
 
 rng(randomizationSeed);
-learnedFile = '';
+learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat'; 
+% do we want to keep it that way? one could also specify the model file in
+% the input parameters
 % textureFile = 'Textures_celine.mat';
 textureFile = 'Textures_vanHaterenTrain.mat';
 sparseCodingType = 'nonhomeo';
@@ -30,26 +35,25 @@ plotNsave = [uint8(1), uint8(1)];
 testIt = uint8(1);
 
 % Save model every #saveInterval training iterations
-saveInterval = 1000;
+saveInterval = 10;
 if (trainTime < saveInterval)
     saveInterval = trainTime;
 end
 
-% Instantiate and initiate model object
-model = config(learnedFile, textureFile, trainTime, sparseCodingType);
-%%%%%%%%%%%%%
-% n = 10000;
-% commands = zeros(n,2);
-% angles = zeros(n,1);
-% degrees = load('Degrees.mat');
-% for i = 1:n
-%     commands(i,2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1);
-%     angles(i) = getAngle(commands(i,:))*2;
-% end
-% histogram(angles);
-% min(angles) % = 1.6045
-% max(angles) % = 6.4094
-%%%%%%%%%%%%%%%%%
+% Load model from file or instantiate and initiate new model object
+if useLearnedFile(1)
+    if isempty(learnedFile)
+        sprintf('could not open the learned file! %s', learnedFile)
+        return;
+    else
+        model = load(learnedFile, 'model');
+        model = model.model;
+    end
+else
+    model = config(learnedFile, textureFile, trainTime, sparseCodingType);
+end
+
+% safety check for plotting functions
 if (trainTime <= model.interval)
     sprintf('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
     return;
@@ -58,18 +62,27 @@ elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
     return;
 end
 
-% File management
-modelName = sprintf('model_%s_%i_%s_%i_%s', ...
-                    datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
-                    trainTime, ...
-                    sparseCodingType, ...
-                    randomizationSeed, ...
-                    fileDescription);
-% folder = '~/projects/RESULTS/';
-% folder = './results/';
-folder = '../results/';
-mkdir(folder, modelName);
-model.savePath = strcat(folder, modelName);
+% File management: either complete training with existing folder etc., or
+% create a new one
+if useLearnedFile(1) && useLearnedFile(2)
+    timeToTrain = model.trainTime - model.trainedUntil;
+else
+    modelName = sprintf('model_%s_%i_%s_%i_%s', ...
+                        datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
+                        trainTime, ...
+                        sparseCodingType, ...
+                        randomizationSeed, ...
+                        fileDescription);
+    % folder = '~/projects/RESULTS/';
+    % folder = './results/';
+    folder = '../results/';
+    mkdir(folder, modelName);
+    model.savePath = strcat(folder, modelName);
+    timeToTrain = model.trainTime;
+end
+    
+model.notes = [model.notes fileDescription]; %just and idea to store some more information
+    
 
 % Image process variables
 patchSize = 8;
@@ -121,12 +134,11 @@ function [tmpMetCost] = getMetCost(command)
 end
 
 %%% Main execution loop
-t = 0;
+t = model.trainedUntil; % this is zero in new initiated model
 command = [0, 0];
 rewardFunction_prev = 0;
 tic; % start time count
-for iter1 = 1 : (model.trainTime / model.interval)
-
+for iter1 = 1 : (timeToTrain / model.interval)
     % pick random texture every #interval times
     currentTexture = texture{(randi(nTextures, 1))};
 
@@ -288,6 +300,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
             end
             model.variance_hist(t) = model.rlmodel.CActor.variance;
         end
+        model.trainedUntil = t;
     end
 
     sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
@@ -295,7 +308,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
     % Display per cent completed of training and save model
     if (~mod(t, saveInterval))
-        sprintf('%g%% is finished', (t / model.trainTime * 100))
+        sprintf('%g%% is finished', (t / timeToTrain * 100))
         save(strcat(model.savePath, '/model'), 'model');
 
         % save Basis
@@ -316,6 +329,9 @@ sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/s
 
 % Backup scripts & plot results
 if (plotNsave(1) == 1)
+%     if useLearnedFile(2)
+%         model.trainTime = model.trainTime + model.trainedUntil;
+%     end
     save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
 
     copyfile('OESMuscles.m', model.savePath);
