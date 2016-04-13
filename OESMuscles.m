@@ -34,12 +34,6 @@ plotNsave = [uint8(1), uint8(1)];
 %           1 = do it
 testIt = uint8(1);
 
-% Save model every #saveInterval training iterations
-saveInterval = 10;
-if (trainTime < saveInterval)
-    saveInterval = trainTime;
-end
-
 % Load model from file or instantiate and initiate new model object
 if useLearnedFile(1)
     if isempty(learnedFile)
@@ -121,6 +115,12 @@ nTextures = length(texture);
 degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
 metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
+% Save model every #saveInterval training iterations
+saveInterval = ceil(model.trainTime / 100); % is every percent of training ok?
+% if (trainTime < saveInterval)
+%     saveInterval = trainTime;
+% end
+
 %%% Helper function that maps muscle activities to resulting angle
 function [angle] = getAngle(command)
     cmd = (command * 10) + 1;                               % scale commands to table entries
@@ -154,8 +154,8 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
     angleNew = getAngle(command) * 2;
 
-    [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                   currentTexture, objDist, angleNew));
+    [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+                                   currentTexture, objDist, angleNew, model.savePath, model.savePath));
 
     % abort execution if error occured
     if (status)
@@ -166,14 +166,14 @@ for iter1 = 1 : (timeToTrain / model.interval)
     for iter2 = 1 : model.interval
         t = t + 1;
         % read input images and convert to gray scale
-        imgRawLeft = imread('left.png');
-        imgRawRight = imread('right.png');
+        imgRawLeft = imread([model.savePath '/left.png']);
+        imgRawRight = imread([model.savePath '/right.png']);
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
         imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-        % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
+%         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
 
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -257,8 +257,8 @@ for iter1 = 1 : (timeToTrain / model.interval)
         end
 
         % generate new view (two pictures) with new vergence angle
-        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                       currentTexture, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+                                   currentTexture, objDist, angleNew, model.savePath, model.savePath));
 
         % abort execution if error occured
         if (status)
@@ -474,9 +474,9 @@ end
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
 % TODO: adjust the sizes of the montage view
-function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
+function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
-    imwrite(anaglyph, 'anaglyph.png');
+    imwrite(anaglyph, [savePath '/anaglyph.png']);
 
     %Downsampling Large
     imgLeftL = leftGray(:);
@@ -497,9 +497,9 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
-    imwrite(imresize(anaglyphL, 20), 'anaglyphLargeScale.png');
+    imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
     largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(largeScaleView, 20), 'LargeScaleMontage.png');
+    imwrite(imresize(largeScaleView, 20), [savePath '/LargeScaleMontage.png']);
 
     %Downsampling Small
     imgLeftS = leftGray(:);
@@ -520,7 +520,7 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
-    imwrite(imresize(anaglyphS, 16), 'anaglyphSmallScale.png');
+    imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(smallScaleView, 8), 'smallScaleMontage.png');
+    imwrite(imresize(smallScaleView, 8), [savePath '/smallScaleMontage.png']);
 end

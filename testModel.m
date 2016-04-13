@@ -47,7 +47,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     end
 
     % Prepare Textures
-    texture = load('config/Textures_vanHaterenTest');
+    texture = load(['config/' textureFile]);
     texture = texture.texture;
     nTextures = length(texture);
 
@@ -105,8 +105,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
             %desired vergence [deg]
             angleDes = 2 * atand(model.baseline / (2 * tmpObjRange));
 
-            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                           currentTexture, tmpObjRange, angleNew));
+            [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+                                           currentTexture, tmpObjRange, angleNew, model.savePath, model.savePath));
             % abort execution if error occured
             if (status)
                 sprintf('Error in checkEnvironment:\n%s', res)
@@ -115,8 +115,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
 
             for iter3 = 1 : model.interval
                 % read input images and convert to gray scale
-                imgRawLeft = imread('left.png');
-                imgRawRight = imread('right.png');
+                imgRawLeft = imread([model.savePath '/left.png']);
+                imgRawRight = imread([model.savePath '/right.png']);
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
@@ -160,8 +160,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 end
 
                 % generate new view (two pictures) with new vergence angle
-                [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                               currentTexture, tmpObjRange, angleNew));
+                [status, res] = system(sprintf('./checkEnvironment %s %d %d l%s/eft.png %s/right.png', ...
+                                               currentTexture, tmpObjRange, angleNew, model.savePath, model.savePath));
 
                 % abort execution if error occured
                 if (status)
@@ -301,8 +301,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 end
 
                 %generate two new pictures
-                [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                               currentTexture, objRange(objDist), angleDes + vergRange(verg)));
+                [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+                                               currentTexture, objRange(objDist), angleDes + vergRange(verg), model.savePath, model.savePath));
 
                 % Abort execution if error occured
                 if (status)
@@ -311,8 +311,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 end
 
                 % Read input images and convert to gray scale
-                imgRawLeft = imread('left.png');
-                imgRawRight = imread('right.png');
+                imgRawLeft = imread([model.savePath '/left.png']);
+                imgRawRight = imread([model.savePath '/right.png']);
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
