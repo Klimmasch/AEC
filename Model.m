@@ -244,20 +244,29 @@ classdef Model < handle
             rmse = zeros(length(1 : windowSize : length(vergerr) - mod(length(vergerr), 2)), 1); %cut if odd length
             k = 1 : windowSize : length(vergerr) - mod(length(vergerr), 2);
             for i = 1 : length(rmse)
-                rmse(i) = sqrt(mean(vergerr(k(i) : k(i) + windowSize - 1) .^ 2));
+                try
+                    rmse(i) = sqrt(mean(vergerr(k(i) : k(i) + windowSize - 1) .^ 2));
+                catch
+                    % if windowsize > values in vergerr
+                    rmse(i) = 0;
+                end
             end
 
-            figure;
-            hold on;
-            grid on;
-            plot(windowSize * this.interval : windowSize * this.interval : (length(vergerr) - mod(length(vergerr), 2)) * this.interval, ...
-                 rmse, 'LineWidth', 1.3);
-            axis([-inf, inf, 0, inf]);
-            xlabel(sprintf('Iteration # (windowSize=%d)', windowSize * this.interval), 'FontSize', 12);
-            ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
-            title('RMSE of the Vergence Error');
-            plotpath = sprintf('%s/rmseVergErr', this.savePath);
-            saveas(gcf, plotpath, 'png');
+            try
+                figure;
+                hold on;
+                grid on;
+                plot(windowSize * this.interval : windowSize * this.interval : (length(vergerr) - mod(length(vergerr), 2)) * this.interval, ...
+                     rmse, 'LineWidth', 1.3);
+                axis([-inf, inf, 0, inf]);
+                xlabel(sprintf('Iteration # (windowSize=%d)', windowSize * this.interval), 'FontSize', 12);
+                ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
+                title('RMSE of the Vergence Error');
+                plotpath = sprintf('%s/rmseVergErr', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            catch
+                % if windowsize > values in vergerr
+            end
 
             %% Reconstruction Error
             recerr_L = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(ind, 1));

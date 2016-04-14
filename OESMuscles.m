@@ -13,7 +13,8 @@
 function OESMuscles(trainTime, randomizationSeed, fileDescription, useLearnedFile)
 
 rng(randomizationSeed);
-learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat'; 
+% learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat';
+learnedFile = '';
 % do we want to keep it that way? one could also specify the model file in
 % the input parameters
 % textureFile = 'Textures_celine.mat';
@@ -74,9 +75,8 @@ else
     model.savePath = strcat(folder, modelName);
     timeToTrain = model.trainTime;
 end
-    
+
 model.notes = [model.notes fileDescription]; %just and idea to store some more information
-    
 
 % Image process variables
 patchSize = 8;
@@ -116,7 +116,7 @@ degrees = load('Degrees.mat');              %loads tabular for resulting degrees
 metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
 % Save model every #saveInterval training iterations
-saveInterval = ceil(model.trainTime / 100); % is every percent of training ok?
+saveInterval = ceil(model.trainTime / 5); % is every percent of training ok?
 % if (trainTime < saveInterval)
 %     saveInterval = trainTime;
 % end
