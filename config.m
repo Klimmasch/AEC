@@ -88,7 +88,7 @@ else
 end
 hiddenDim = 50;                                     %number of neurons in the hidden layer
 weight_range = [1 / inputDim, ...                   %maximum initial weight [critic_ji, actor_ji, actor_kj]
-                100 / (inputDim * hiddenDim), ...   %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
+                1 / (inputDim * hiddenDim), ...   %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
                 2 / hiddenDim];                     %linear [1/inputDim, 1/inputDim, -]
 lambda = 0.01;                                      %reguralization factor | origin 0.01
 deltaVar = 1;                                       %TD error variance tracking/approximating (CACLAVar)
