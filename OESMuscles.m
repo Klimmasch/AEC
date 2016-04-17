@@ -153,7 +153,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
     command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
 
     angleNew = getAngle(command) * 2;
-
+    
     [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
 
@@ -173,7 +173,9 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-%         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+        imwrite(imfuse(leftGray, rightGray, 'falsecolor'), [savePath '/anaglyph.png']); %this one works for all tested matlab
+        %more advanced functions that generated the anaglyphs of the foveal views
+%         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath); 
 
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
