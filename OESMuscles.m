@@ -14,7 +14,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription, useLearnedFil
 
 rng(randomizationSeed);
 % learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat';
-learnedFile = '';
+learnedFile = '/home/lelais/Documents/MATLAB/results/model_16-Apr-2016_16:59:12_500000_nonhomeo_1_TestAlpha1/model.mat';
 % do we want to keep it that way? one could also specify the model file in
 % the input parameters
 % textureFile = 'Textures_celine.mat';
@@ -73,6 +73,11 @@ else
     folder = '../results/';
     mkdir(folder, modelName);
     model.savePath = strcat(folder, modelName);
+    % make copies of relevant files
+    copyfile('OESMuscles.m', model.savePath);
+    copyfile('config.m', model.savePath);
+    copyfile('Model.m', model.savePath);
+    
     timeToTrain = model.trainTime;
 end
 
@@ -173,7 +178,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-        imwrite(imfuse(leftGray, rightGray, 'falsecolor'), [savePath '/anaglyph.png']); %this one works for all tested matlab
+        imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
         %more advanced functions that generated the anaglyphs of the foveal views
 %         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath); 
 
@@ -329,16 +334,12 @@ model.simulatedTime = elapsedTime / 60;
 sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
         elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
 
-% Backup scripts & plot results
+% plot results
 if (plotNsave(1) == 1)
 %     if useLearnedFile(2)
 %         model.trainTime = model.trainTime + model.trainedUntil;
 %     end
     save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
-
-    copyfile('OESMuscles.m', model.savePath);
-    copyfile('config.m', model.savePath);
-    copyfile('Model.m', model.savePath);
 
     if (model.rlmodel.continuous == 1)
         copyfile('ReinforcementLearningCont.m', model.savePath);
