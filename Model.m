@@ -56,6 +56,7 @@ classdef Model < handle
         fixZtest;
         vergErrTest;
         responseResults;
+        testResult;
     end
 
     methods
@@ -422,7 +423,7 @@ classdef Model < handle
             end
             nVal = 20; % #bins of statistics
 
-            actualResponse = sortrows(actualResponse(end - obsWin : end, :));
+            actualResponse = sortrows(actualResponse(end - obsWin + 1 : end, :));
             if (all(actualResponse == 0)) % skip plot if empty or still training
                 return;
             end
@@ -504,7 +505,7 @@ classdef Model < handle
             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            title(strcat('\Delta MF(verg_{err}) response after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
+            title(strcat('\Delta MF(verg_{err}) response after ', sprintf(' %d iterations', size(this.vergerr_hist, 1) - obsWin)));
             plotpath = sprintf('%s/deltaMFasFktVerErr', this.savePath);
             saveas(gcf, plotpath, 'png');
         end
@@ -520,7 +521,7 @@ classdef Model < handle
             end
             nVal = 20; % #bins of statistics
 
-            actualResponse = sortrows(actualResponse(end - obsWin : end, :));
+            actualResponse = sortrows(actualResponse(end - obsWin + 1 : end, :));
             if (all(actualResponse == 0)) % skip plot if empty or still training
                 sprintf('No model response within observation window.')
                 return;
@@ -603,7 +604,7 @@ classdef Model < handle
             axis([xmin, xmax, ymin, ymax]);
             xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
             ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            title(strcat('\Delta MF(verg_{err}) response after ', sprintf(' %d iterations', size(actualResponse, 1) - obsWin)));
+            title(strcat('\Delta MF(verg_{err}) response after ', sprintf(' %d iterations', size(this.vergerr_hist, 1) - obsWin)));
             plotpath = sprintf('%s/deltaMFasFktVerErrObsWin', this.savePath);
             saveas(gcf, plotpath, 'png');
         end

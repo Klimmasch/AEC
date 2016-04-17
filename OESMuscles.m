@@ -27,13 +27,13 @@ sparseCodingType = 'nonhomeo';
 % plotNsave: [training, test]
 %            0 = don't do it
 %            1 = do it
-plotNsave = [uint8(1), uint8(1)];
+plotNsave = [uint8(0), uint8(0)];
 
 % Testing flag
 % Whether the testing procedure shall be executed after training
 % testIt:   0 = don't do it
 %           1 = do it
-testIt = uint8(1);
+testIt = uint8(0);
 
 % Load model from file or instantiate and initiate new model object
 if useLearnedFile(1)
@@ -233,7 +233,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
         % RL model
         % Variance decay, i.e. reduction of actor's output perturbation
-        if (model.rlmodel.continuous == 1)
+        if ((model.rlmodel.continuous == 1) && (model.rlmodel.CActor.varDec > 0))
             model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
         end
 
