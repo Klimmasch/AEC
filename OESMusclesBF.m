@@ -34,9 +34,9 @@ end
 
 % Instantiate and initiate model and test_data objects
 model = config(learnedFile, textureFile, trainTime, sparseCodingType);
-% modelBF = load('/tmp/model_11-Mar-2016 20:38:05_100000_110_111_nhomeo_1_trainBF_laplacian_b=1/model.mat');
-% model.scmodel_Small.Basis = modelBF.model.scmodel_Small.Basis;
-% model.scmodel_Large.Basis = modelBF.model.scmodel_Large.Basis;
+modelBF = load('/home/lelais/Documents/MATLAB/results/model_16-Apr-2016_16:14:22_500000_nonhomeo_1_CACLAVarLin_deltaR_Var_10-5_lMFB_0.3_LR_0.002/model.mat');
+model.scmodel_Small.Basis = modelBF.model.scmodel_Small.Basis;
+model.scmodel_Large.Basis = modelBF.model.scmodel_Large.Basis;
 
 if (trainTime <= model.interval)
     sprintf('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
@@ -48,7 +48,7 @@ end
 
 % File management
 modelName = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
-                    datestr(now), ...
+                    datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
                     trainTime, ...
                     sparseCodingType, ...
                     randomizationSeed, ...
@@ -58,6 +58,14 @@ modelName = sprintf('model_%s_%i_%i_%i_%s_%i_%s', ...
 folder = '../results/';
 mkdir(folder, modelName);
 model.savePath = strcat(folder, modelName);
+copyfile('config.m', model.savePath);
+copyfile('OESMusclesBF.m', model.savePath);
+copyfile('ReinforcementLearningCont.m', model.savePath);
+copyfile('CRGActor.m', model.savePath);
+copyfile('CRGCritic.m', model.savePath);
+copyfile('Model.m', model.savePath);
+
+model.notes = [model.notes fileDescription]; %just and idea to store some more information
 
 % Image process variables
 patchSize = 8;
@@ -132,14 +140,14 @@ for iter1 = 1 : (model.trainTime / model.interval)
     angleNew = getAngle(command) * 2;
 
     % Training of basis functions:
-    b = 1;      % diversity or variance of laplacian dist.
-    range = 5;  % maximum vergence is 5 degree
-    angleDes = 2 * atand(model.baseline / (2 * objDist));
-    angleNew = angleDes + truncLaplacian(b, range);
-
-    [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                   currentTexture, objDist, angleNew));
-
+    % b = 1;      % diversity or variance of laplacian dist.
+    % range = 5;  % maximum vergence is 5 degree
+    % angleDes = 2 * atand(model.baseline / (2 * objDist));
+    % angleNew = angleDes + truncLaplacian(b, range);
+    
+    [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+                                   currentTexture, objDist, angleNew, model.savePath, model.savePath));
+    
     % abort execution if error occured
     if (status)
         sprintf('Error in checkEnvironment:\n%s', res)
@@ -149,16 +157,16 @@ for iter1 = 1 : (model.trainTime / model.interval)
     for iter2 = 1 : model.interval
         t = t + 1;
         % read input images and convert to gray scale
-        imgRawLeft = imread('left.png');
-        imgRawRight = imread('right.png');
+        imgRawLeft = imread([model.savePath '/left.png']);
+        imgRawRight = imread([model.savePath '/right.png']);
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
         imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
         % Generate & save the anaglyph picture
-        % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for
-        % matlab 2015 or newer
-        anaglyph = imfuse(imgGrayLeft, imgGrayRight, 'falsecolor');
-        imwrite(anaglyph, 'anaglyph.png');
+        % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
+        imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
+        %more advanced functions that generated the anaglyphs of the foveal views
+%         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
 
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -174,23 +182,26 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         %%% Feedback
         % Absolute command feedback # concatination
-        feature = [feature; command(2) * model.lambdaMuscleFB];
+        if (model.rlmodel.continuous == 1)
+            feature = [feature; command(2) * model.lambdaMuscleFB];
+        end
 
         %%% Calculate metabolic costs
         metCost = getMetCost(command) * 2;
 
         %%% Calculate reward function
-        % delta reward
-        rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
+        %% Standard reward
+        rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
+        % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
+
+        %% Delta reward
+        % rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
         % rewardFunction = rewardFunctionReal - rewardFunction_prev;
 
         % counter balance 0 movement by small negative bias
-        rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
-        rewardFunction_prev = rewardFunctionReal;
+        % rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
+        % rewardFunction_prev = rewardFunctionReal;
 
-        % standard reward
-        % rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
-        % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
 
         %%% Weight L1 regularization
         % rewardFunction = model.lambdaRec * reward ...
@@ -212,13 +223,10 @@ for iter1 = 1 : (model.trainTime / model.interval)
         %model.scmodel_Small.stepTrain(currentView{2});
 
         % RL model
-        % decay of actor's output perturbation
-        % variance(t = [1, 100k]) ~= [0.001, 1e-5]
-        % model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 15000);
-        % variance(t = [1, 100k]) ~= [0.001, 1e-4]
-        model.rlmodel.CActor.variance = 0.001 * 2 ^ (-t / 30200);
-        % variance(t = [1, 100k]) ~= [0.01, 1e-4]
-        % model.rlmodel.CActor.variance = 0.01 * 2 ^ (-t / 15100);
+        % Variance decay, i.e. reduction of actor's output perturbation
+        if ((model.rlmodel.continuous == 1) && (model.rlmodel.CActor.varDec > 0))
+            model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
+        end
 
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
@@ -226,24 +234,22 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % command = command + relativeCommand';     %two muscels
         command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
-        angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+        % angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
 
-        % in case you want to train basisfunctions tuned to a specific
-        % disparity:
-        angleDes = 2 * atand(model.baseline / (2 * objDist)); %desired vergence [deg]
-        angleNew = angleDes + truncLaplacian(b,range);
-%         testLP = [];
-%         for test = 1:10000
-%             testLP = [testLP truncLaplacian(b,range)];
-%         end
-%         figure;
-%         hold on;
-%         histogram(testLP);
-%         hold off;
+        if (model.rlmodel.continuous == 1)
+            angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
+        else
+            angleNew = angleNew + relativeCommand;
+            if (angleNew > 71.5 || angleNew < 0.99) % analogous to checkCmd
+                command = [0, 0];
+                command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1);
+                angleNew = getAngle(command) * 2;
+            end
+        end
 
         % generate new view (two pictures) with new vergence angle
-        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                       currentTexture, objDist, angleNew));
+        [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+                                   currentTexture, objDist, angleNew, model.savePath, model.savePath));
 
         % abort execution if error occured
         if (status)
@@ -270,26 +276,22 @@ for iter1 = 1 : (model.trainTime / model.interval)
         model.relCmd_hist(t) = relativeCommand;
         model.cmd_hist(t, :) = command;
         model.reward_hist(t) = rewardFunction;
-        model.feature_hist(t, :) = feature;
+        % model.feature_hist(t, :) = feature;
         model.metCost_hist(t) = metCost;
-        model.td_hist(t) = model.rlmodel.CCritic.delta;
-        % model.g_hist(t) = model.rlmodel.CActor.params(7);
-        model.weight_hist(t, 1) = model.rlmodel.CCritic.params(1);
-        model.weight_hist(t, 2) = model.rlmodel.CCritic.params(2);
-        model.weight_hist(t, 3) = model.rlmodel.CActor.params(1);
-        model.weight_hist(t, 4) = model.rlmodel.CActor.params(2);
-        % model.weight_hist(t, 5) = model.rlmodel.CActor.params(3);
-        % model.weight_hist(t, 6) = model.rlmodel.CActor.params(4);
-        % model.weight_hist(t, 7) = model.rlmodel.CActor.params(5);
-        % model.weight_hist(t, 8) = model.rlmodel.CActor.params(6);
-        % plot(model.td_hist);
-        % if (model.feature_hist(end,end) > sum(model.feature_hist(t,1:end-1),2))
-        %     figure
-        %     hold on;
-        %     plot(sum(model.feature_hist(:,1:end-1),2),'r');
-        %     plot(model.feature_hist(:,end),'b');
-        %     title(sprintf('%g', model.feature_hist(end,end)));
-        % end
+        if (model.rlmodel.continuous == 1)
+            model.td_hist(t) = model.rlmodel.CCritic.delta;
+            % model.g_hist(t) = model.rlmodel.CActor.params(7);
+            model.weight_hist(t, 1) = model.rlmodel.CCritic.params(1);
+            model.weight_hist(t, 2) = model.rlmodel.CActor.params(1);
+            if (model.rlmodel.rlFlavour(2) >= 4)
+                model.weight_hist(t, 3) = model.rlmodel.CActor.params(2);
+                if ((model.rlmodel.rlFlavour(2) == 5) || (model.rlmodel.rlFlavour(2) == 7))
+                    model.weight_hist(t, 4) = model.rlmodel.CActor.params(3);
+                end
+            end
+            model.variance_hist(t) = model.rlmodel.CActor.variance;
+        end
+        model.trainedUntil = t;
     end
 
     sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
@@ -315,28 +317,65 @@ model.simulatedTime = elapsedTime / 60;
 sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
         elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
 
-% Plot results
-if (plotNsave)
-    % model.errPlot();
+% plot results
+if (plotNsave(1) == 1)
+%     if useLearnedFile(2)
+%         model.trainTime = model.trainTime + model.trainedUntil;
+%     end
+    save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
+
+    if (model.rlmodel.continuous == 1)
+        copyfile('ReinforcementLearningCont.m', model.savePath);
+    else
+        copyfile('ReinforcementLearning.m', model.savePath);
+    end
+
+    switch model.rlmodel.rlFlavour(1)
+        case 0
+            %% Chong's implementation
+            copyfile('CCriticG.m', model.savePath);
+        case 1
+            %% CRG
+            copyfile('CRGCritic.m', model.savePath);
+        case 2
+            %% CACLA
+            copyfile('CACLACritic.m', model.savePath);
+    end
+
+    switch model.rlmodel.rlFlavour(2)
+        case 0
+            %% Chong's implementation
+            copyfile('CActorG.m', model.savePath);
+        case 1
+            %% CRG
+            copyfile('CRGActor.m', model.savePath);
+        case 2
+            %% CACLA linear
+            copyfile('CACLAActorLin.m', model.savePath);
+        case 3
+            %% CACLAVar linear
+            copyfile('CACLAVarActorLin.m', model.savePath);
+        case 4
+            %% CACLA
+            copyfile('CACLAActor.m', model.savePath);
+        case 5
+            %% CACLAVar
+            copyfile('CACLAVarActor.m', model.savePath);
+        case 6
+            %% CACLA2
+            copyfile('CACLAActor2.m', model.savePath);
+        case 7
+            %% CACLAVar2
+            copyfile('CACLAVarActor2.m', model.savePath);
+    end
     model.allPlotSave();
-    copyfile('config.m', model.savePath);
-    copyfile('OESMuscles.m', model.savePath);
-    copyfile('OESMusclesBF.m', model.savePath);
-    copyfile('ReinforcementLearningCont.m', model.savePath);
-    copyfile('CRGActor.m', model.savePath);
-    copyfile('CRGCritic.m', model.savePath);
-    copyfile('Model.m', model.savePath);
+    
 end
 
 %%% Testing procedure
 if (testIt)
-    % TestTrial(model, randomizationSeed, fileDescription);
-    model.deltaMFplotGenDist([0.5, 1, 2], [-5:5], 20, '05-2m');
-    model.recErrPlotGenDist([0.5, 1, 2], [-5:5], 20, '05-2m');
-    model.deltaMFplotGenDist([0.5], [-5:5], 20, '05m');
-    model.recErrPlotGenDist([0.5], [-5:5], 20, '05m');
-    model.deltaMFplotGenDist([2], [-5:5], 20, '2m');
-    model.recErrPlotGenDist([2], [-5:5], 20, '2m');
+    % testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
+    testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotNsave(2), 1);
 end
 
 end
@@ -421,9 +460,10 @@ end
 
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
-function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
+% TODO: adjust the sizes of the montage view
+function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
-    imwrite(anaglyph, 'anaglyph.png');
+    imwrite(anaglyph, [savePath '/anaglyph.png']);
 
     %Downsampling Large
     imgLeftL = leftGray(:);
@@ -444,9 +484,9 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
-    imwrite(imresize(anaglyphL, 20), 'anaglyphLargeScale.png');
+    imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
     largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(largeScaleView, 20), 'LargeScaleMontage.png');
+    imwrite(imresize(largeScaleView, 20), [savePath '/LargeScaleMontage.png']);
 
     %Downsampling Small
     imgLeftS = leftGray(:);
@@ -467,8 +507,8 @@ function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, fove
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
-    imwrite(imresize(anaglyphS, 16), 'anaglyphSmallScale.png');
+    imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(smallScaleView, 8), 'smallScaleMontage.png');
+    imwrite(imresize(smallScaleView, 8), [savePath '/smallScaleMontage.png']);
 end
 

@@ -65,15 +65,18 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 % 5 = CACLAVar          Actor Continuous Actor Critic Learning Automaton with (delta std) * update
 % 6 = CACLA2            Actor Continuous Actor Critic Learning Automaton [non-linear output layer]
 % 7 = CACLAVar2         Actor Continuous Actor Critic Learning Automaton with (delta std) * update [non-linear output layer]
-% 8 = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
-rlFlavour = [uint8(2), uint8(5)];
+% 8 = CACLAVarLu        Actor Continuous Actor Critic Learning Automaton with (delta std) * update [Lukas interpretation of CACLA appoach]
+% 9 = CACLAVarAl        Actor Continuous Actor Critic Learning Automaton with (delta std) * update [Alex interpretation of CACLA appoach]
+%10 = CACLAVarBp        Actor Continuous Actor Critic Learning Automaton with (delta std) * update [CACLA appoach with std. Backpropagation]
+% # = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
+rlFlavour = [uint8(2), uint8(8)];
 
 continuous = uint8(1);                          %indicates if the policy is discrete or continuous
 % Action = [-8, -4, -2, -1, -0.5, 0, ...        %vergence angles (discrete policy)
 %           0.5, 1, 2, 4, 8];
 Action = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... %vergence angles (discrete policy) enable half pixel resolution
           0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
-alpha_v = 0.9;                                  %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
+alpha_v = 1;                                  %learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                                %learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
 alpha_p = 1;                                  %learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                       %discount factor | origin 0.3 | Alex P 0.3
@@ -92,7 +95,7 @@ else
 end
 hiddenDim = 50;                                     %number of neurons in the hidden layer
 weight_range = [1 / inputDim, ...                   %maximum initial weight [critic_ji, actor_ji, actor_kj]
-                1000 / (inputDim * hiddenDim), ...   %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
+                0.01, ...%100 / (inputDim * hiddenDim), ...   %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
                 2 / hiddenDim];                     %linear [1/inputDim, 1/inputDim, -]
 lambda = 0.01;                                      %reguralization factor | origin 0.01
 deltaVar = 1;                                       %TD error variance tracking/approximating (CACLAVar)

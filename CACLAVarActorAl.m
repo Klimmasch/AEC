@@ -1,5 +1,6 @@
 %%% Continuous Actor Critic Learning Automaton with variance Actor
-classdef CACLAVarActor < handle
+% Alex interpretation of CACLA appoach
+classdef CACLAVarActorAl < handle
     properties
         % network parameters
         input_dim;
@@ -31,7 +32,7 @@ classdef CACLAVarActor < handle
     end
 
     methods
-        function obj = CACLAVarActor(PARAM)
+        function obj = CACLAVarActorAl(PARAM)
             obj.input_dim = PARAM{1};
             obj.hidden_dim = PARAM{2};
             obj.output_dim = PARAM{3};
@@ -64,17 +65,10 @@ classdef CACLAVarActor < handle
             % delta_weights(hidden -> output)
             dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
 
-            % delta_weights(input -> hidden) [standard backprop]
-            % dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') * (this.wp_kj * dwp_kj') * this.z_i_prev;
-                        
-            % A = (1 - this.z_j_prev .^ 2) * this.z_i_prev';
-            % tmp = ((this.command_prev - this.z_k_prev) * this.wp_kj)';
-            % dwp_ji = A .* repmat(tmp, 1, this.input_dim);
-            tmpVector = ((this.command_prev - this.z_k_prev) * this.wp_kj)';
-            dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat(tmpVector, 1, this.input_dim);
+            % delta_weights(input -> hidden)
+            dwp_ji = (this.command_prev - this.z_k_prev) * ((1 - this.z_j_prev .^ 2) * this.z_i_prev');
 
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
-            % this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji * this.z_i_prev') * this.updateCount;
             this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji) * this.updateCount;
         end
 

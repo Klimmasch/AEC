@@ -14,8 +14,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription, useLearnedFil
 
 rng(randomizationSeed);
 % learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat';
-% learnedFile = '/home/lelais/Documents/MATLAB/results/model_18-Apr-2016_18:27:54_200000_nonhomeo_1_CACLAVar_NewHiddenUpdate_init00017-01-004_alpha10_var-5/model.mat';
-learnedFile = '';
+learnedFile = '/home/lelais/Documents/MATLAB/results/model_18-Apr-2016_18:27:54_200000_nonhomeo_1_CACLAVar_NewHiddenUpdate_init00017-01-004_alpha10_var-5/model.mat';
 % do we want to keep it that way? one could also specify the model file in
 % the input parameters
 % textureFile = 'Textures_celine.mat';
@@ -28,7 +27,7 @@ sparseCodingType = 'nonhomeo';
 % plotNsave: [training, test]
 %            0 = don't do it
 %            1 = do it
-plotNsave = [uint8(1), uint8(1)];
+plotNsave = [uint8(1), uint8(0)];
 
 % Testing flag
 % Whether the testing procedure shall be executed after training
@@ -75,7 +74,7 @@ else
     mkdir(folder, modelName);
     model.savePath = strcat(folder, modelName);
     % make copies of relevant files
-    copyfile('OESMuscles.m', model.savePath);
+    copyfile('OESVergErrReward.m', model.savePath);
     copyfile('config.m', model.savePath);
     copyfile('Model.m', model.savePath);
 
@@ -159,6 +158,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
     command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
 
     angleNew = getAngle(command) * 2;
+
     [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
 
@@ -202,11 +202,18 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
         %%% Calculate metabolic costs
         metCost = getMetCost(command) * 2;
-
+        
+        % compute desired vergence command, disparity and vergence error
+        fixDepth = (model.baseline / 2) / tand(angleNew / 2);   %fixation depth [m]
+        angleDes = 2 * atand(model.baseline / (2 * objDist));   %desired vergence [deg]
+        anglerr = angleDes - angleNew;                          %vergence error [deg]
+        disparity = 2 * model.focalLength * tand(anglerr / 2);  %current disp [px]
+        
         %%% Calculate reward function
         %% Standard reward
-        rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
+        % rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
         % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
+        rewardFunction = -abs(anglerr);
 
         %% Delta reward
         % rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
@@ -240,16 +247,16 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
         % RL model
         % Variance decay, i.e. reduction of actor's output perturbation
-        % if ((model.rlmodel.continuous == 1) && (model.rlmodel.CActor.varDec > 0))
-        %     model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
-        % end
+        if ((model.rlmodel.continuous == 1) && (model.rlmodel.CActor.varDec > 0))
+            model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
+        end
 
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
-        % command = command + relativeCommand';     %two muscels
+        % command = command + relativeCommand';     %two muscles
         command(1) = 0;
-        command(2) = command(2) + relativeCommand;  %one muscel
+        command(2) = command(2) + relativeCommand;  %one muscle
         command = checkCmd(command);                %restrain motor commands to [0,1]
 
         if (model.rlmodel.continuous == 1)
@@ -274,12 +281,6 @@ for iter1 = 1 : (timeToTrain / model.interval)
         end
 
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
-
-        % compute desired vergence command, disparity and vergence error
-        fixDepth = (model.baseline / 2) / tand(angleNew / 2);   %fixation depth [m]
-        angleDes = 2 * atand(model.baseline / (2 * objDist));   %desired vergence [deg]
-        anglerr = angleDes - angleNew;                          %vergence error [deg]
-        disparity = 2 * model.focalLength * tand(anglerr / 2);  %current disp [px]
 
         % save state
         model.Z(t) = objDist;

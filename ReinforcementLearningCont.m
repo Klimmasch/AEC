@@ -86,10 +86,26 @@ classdef ReinforcementLearningCont < handle
                     actorParams = {PARAM{9}, PARAM{20}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
                     obj.CActor = CACLAVarActor2(actorParams);
                 case 8
-                    %% CNGFI
-                    % actorParams = {obj.inputDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.alpha_v, obj.varianceRange, obj.fiScale, obj.varDec};
-                    actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{2}, PARAM{7}, PARAM{17}, PARAM{19}};
-                    obj.CActor = CNGFIActor(actorParams);
+                    %% CACLAVar [Lukas interpretation of CACLA appoach]
+                    % actorParams = {obj.inputDim, obj.hiddenDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
+                    actorParams = {PARAM{9}, PARAM{20}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    obj.CActor = CACLAVarActorLu(actorParams);
+                case 9
+                    %% CACLAVar [Alex interpretation of CACLA appoach]
+                    % actorParams = {obj.inputDim, obj.hiddenDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
+                    actorParams = {PARAM{9}, PARAM{20}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    obj.CActor = CACLAVarActorAl(actorParams);
+                case 10
+                    %% CACLAVar [CACLA appoach with std. Backpropagation]
+                    % actorParams = {obj.inputDim, obj.hiddenDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
+                    actorParams = {PARAM{9}, PARAM{20}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    obj.CActor = CACLAVarActorBp(actorParams);
+                % case 8
+                %     % TODO: unsupported yet
+                %     %% CNGFI
+                %     % actorParams = {obj.inputDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.alpha_v, obj.varianceRange, obj.fiScale, obj.varDec};
+                %     actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{2}, PARAM{7}, PARAM{17}, PARAM{19}};
+                %     obj.CActor = CNGFIActor(actorParams);
                 otherwise
                     sprintf('Actor algorithm not supported!')
                     return;
