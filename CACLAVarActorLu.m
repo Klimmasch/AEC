@@ -37,9 +37,9 @@ classdef CACLAVarActorLu < handle
             obj.hidden_dim = PARAM{2};
             obj.output_dim = PARAM{3};
             obj.w_init_range = PARAM{4};
-            % obj.wp_ji = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1); % [0, 1] * w_init_range
             obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1); % [-1, 1] * w_init_range
             obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2); % [-1, 1] * w_init_range
+            % obj.wp_kj = rand(obj.output_dim, obj.hidden_dim) * obj.w_init_range(2); % [0, 1] * w_init_range
 
             obj.beta_p = PARAM{5};
             obj.varianceRange = PARAM{6};

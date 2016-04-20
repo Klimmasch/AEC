@@ -84,6 +84,12 @@ end
 
 model.notes = [model.notes fileDescription]; %just and idea to store some more information
 
+% Save model every #saveInterval training iterations
+saveInterval = ceil(model.trainTime / 50);
+% if (trainTime < saveInterval)
+%     saveInterval = trainTime;
+% end
+
 % Image process variables
 patchSize = 8;
 
@@ -121,11 +127,27 @@ nTextures = length(texture);
 degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
 metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
-% Save model every #saveInterval training iterations
-saveInterval = ceil(model.trainTime / 50); % is every percent of training ok?
-% if (trainTime < saveInterval)
-%     saveInterval = trainTime;
-% end
+% muscle function :=  mf(vergence_angle) = muscle force [single muscle]
+resolution = 10001;
+approx = spline(1:11, degrees.results_deg(:, 1));
+
+xValPos = ppval(approx, 1:0.001:11)';
+yValPos = linspace(0, 1, resolution)';
+
+xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
+yValNeg = linspace(-1, 0, resolution)';
+
+mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
+dmf = diff(mfunction(1 : 2, 1));        % delta in angle
+
+%%% Helper function that maps {vergenceAngle} -> {muscleForce}
+function mf = getMF(vergAngle)
+    % look up index of vergAngle
+    indVergAngle = find(mfunction(:, 1) <= vergAngle + dmf & mfunction(:, 1) >= vergAngle - dmf);
+    mf = mfunction(indVergAngle, 2);
+    mf = mf(1);
+end
 
 %%% Helper function that maps muscle activities to resulting angle
 function [angle] = getAngle(command)
@@ -156,7 +178,8 @@ for iter1 = 1 : (timeToTrain / model.interval)
     % i.e. min and max stimulus distance
     command(1) = 0; % single muscle
     % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
-    command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
+    % command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
+    command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
 
     angleNew = getAngle(command) * 2;
     [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
@@ -179,8 +202,8 @@ for iter1 = 1 : (timeToTrain / model.interval)
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
         imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
-        %more advanced functions that generated the anaglyphs of the foveal views
-%         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+        % more advanced functions that generated the anaglyphs of the foveal views
+        % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
 
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -258,7 +281,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
             angleNew = angleNew + relativeCommand;
             if (angleNew > 71.5 || angleNew < 0.99) % analogous to checkCmd
                 command = [0, 0];
-                command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1);
+                command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
                 angleNew = getAngle(command) * 2;
             end
         end
@@ -301,7 +324,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
             model.weight_hist(t, 2) = model.rlmodel.CActor.params(1);
             if (model.rlmodel.rlFlavour(2) >= 4)
                 model.weight_hist(t, 3) = model.rlmodel.CActor.params(2);
-                if ((model.rlmodel.rlFlavour(2) == 5) || (model.rlmodel.rlFlavour(2) == 7))
+                if ((model.rlmodel.rlFlavour(2) == 5) || (model.rlmodel.rlFlavour(2) >= 7))
                     model.weight_hist(t, 4) = model.rlmodel.CActor.params(3);
                 end
             end
@@ -336,9 +359,10 @@ sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/s
 
 % plot results
 if (plotNsave(1) == 1)
-%     if useLearnedFile(2)
-%         model.trainTime = model.trainTime + model.trainedUntil;
-%     end
+    % if useLearnedFile(2)
+    %     model.trainTime = model.trainTime + model.trainedUntil;
+    % end
+
     save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
 
     if (model.rlmodel.continuous == 1)
@@ -384,6 +408,8 @@ if (plotNsave(1) == 1)
         case 7
             %% CACLAVar2
             copyfile('CACLAVarActor2.m', model.savePath);
+        otherwise
+            copyfile('CACLAVarActorLu.m', model.savePath);
     end
     model.allPlotSave();
 end
@@ -392,6 +418,8 @@ end
 if (testIt)
     % testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
     testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotNsave(2), 1);
+    % testModel2(model, nStim, plotIt, saveTestResults)
+    testModel2(10, 1, 1);
 end
 
 end
