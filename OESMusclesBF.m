@@ -34,7 +34,7 @@ end
 
 % Instantiate and initiate model and test_data objects
 model = config(learnedFile, textureFile, trainTime, sparseCodingType);
-modelBF = load('/home/lelais/Documents/MATLAB/results/model_16-Apr-2016_16:14:22_500000_nonhomeo_1_CACLAVarLin_deltaR_Var_10-5_lMFB_0.3_LR_0.002/model.mat');
+modelBF = load('/home/klimmasch/projects/results/model_12-Apr-2016_17:41:14_100000_nonhomeo_1_Bestdiscrete_highRes_cluster/model.mat');
 model.scmodel_Small.Basis = modelBF.model.scmodel_Small.Basis;
 model.scmodel_Large.Basis = modelBF.model.scmodel_Large.Basis;
 
