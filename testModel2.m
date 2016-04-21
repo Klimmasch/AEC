@@ -12,9 +12,10 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
     command = [0, 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
-    testResult = zeros(size(objRange, 2), 7, 44);
+    testResult = zeros(size(objRange, 2), 7, 66);
     tmpResult1 = zeros(nStim, model.interval + 1);
     tmpResult2 = zeros(nStim, model.interval + 1);
+    tmpResult3 = zeros(nStim, model.interval + 1);
 
     % Image processing variables
     textureFile = 'Textures_vanHaterenTest';
@@ -53,29 +54,25 @@ function testModel2(model, nStim, plotIt, saveTestResults)
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
-    %TODO: define new results variables
-    % disZtest = zeros(model.interval, size(objRange, 2), repeat(1));        % desired fixation distance
-    % fixZtest = zeros(model.interval, size(objRange, 2), repeat(1));        % actual fixation distance
-    % vergErrTest = zeros(model.interval, size(objRange, 2), repeat(1));     % vergence error
-
-    % minimal and maximal angle that can be reached by one-dimensional muscle commands
-    angleMin = getAngle([0, 0]) * 2;
-    angleMax = getAngle([0, 1]) * 2;
-
     % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
-    resolution = 10001;
+    resolution = 100001;
     approx = spline(1:11, degrees.results_deg(:, 1));
 
-    xValPos = ppval(approx, 1:0.001:11)';
+    xValPos = ppval(approx, 1:0.0001:11)';
     yValPos = linspace(0, 1, resolution)';
 
-    xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
+    xValNeg = flipud(ppval(approx, 1:0.0001:11)' * -1);
     yValNeg = linspace(-1, 0, resolution)';
 
     mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
     dmf = diff(mfunction(1 : 2, 1));        % delta in angle
-    % indZero = find(mfunction(:, 2) == 0); % MF == 0_index
+    dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
+    indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
+
+    % minimal and maximal angle that can be reached by one-dimensional muscle commands
+    angleMin = mfunction(indZero, 1);
+    angleMax = mfunction(end, 1);
 
     %%% Helper function that maps {objDist, desiredVergErr} -> {muscleForce, angleInit}
     function [mf, angleInit] = getMF(objDist, desVergErr)
@@ -86,7 +83,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
         % look up index of angleInit
         indAngleInit = find(mfunction(:, 1) <= angleInit + dmf & mfunction(:, 1) >= angleInit - dmf);
         mf = mfunction(indAngleInit, 2);
-        mf = mf(1);
+        mf = mf(ceil(length(mf) / 2));
     end
 
     % %%% Helper function for calculating {objDist} -> {minVergErr, maxVergErr}
@@ -105,9 +102,15 @@ function testModel2(model, nStim, plotIt, saveTestResults)
     end
 
     %%% Helper function that maps muscle activities to resulting angle
-    function [angle] = getAngle(command)
+    function angle = getAngle(command)
         cmd = (command * 10) + 1;                               % calculate tabular index
         angle = interp2(degrees.results_deg, cmd(1), cmd(2));   % interpolate in tabular
+    end
+
+    function angle = getAngle2(command)
+        angleIndex = find(mfunction(:, 2) <= command(2) + dmf2 & mfunction(:, 2) >= command(2) - dmf2);
+        angle = mfunction(angleIndex, 1);
+        angle = angle(ceil(length(angle) / 2));
     end
 
     %%% Helper function that maps muscle activities to resulting metabolic costs
@@ -178,11 +181,11 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                         command(1) = 0;
                         command(2) = command(2) + relativeCommand;  %one muscel
                         command = checkCmd(command);                %restrain motor commands to [0,1]
-                        angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
+                        angleNew = getAngle2(command);           %resulting angle is used for both eyes
                     else
                         angleNew = angleNew + relativeCommand;
                         if (angleNew > angleMax || angleNew < angleMin)
-                            angleNew = (model.desiredAngleMin + (model.desiredAngleMax - model.desiredAngleMin) * rand(1, 1)) * 2;
+                            angleNew = model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1);
                         end
                     end
 
@@ -199,14 +202,17 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                     % temporary results
                     tmpResult1(stimulusIndex, iter) = angleDes - angleNew;
                     tmpResult2(stimulusIndex, iter) = relativeCommand;
+                    tmpResult3(stimulusIndex, iter) = model.rlmodel.CCritic.v_ji * feature;
                 end
             end
 
             % final results
-            testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1); % vergErr
+            testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1);   % vergErr
             testResult(odIndex, vseIndex, 12 : 22) = std(tmpResult1);
-            testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2); % deltaMF
+            testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2);  % deltaMF
             testResult(odIndex, vseIndex, 34 : 44) = std(tmpResult2);
+            testResult(odIndex, vseIndex, 45 : 55) = mean(tmpResult3);  % critic's response
+            testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
         end
     end
     toc
@@ -268,29 +274,59 @@ function testModel2(model, nStim, plotIt, saveTestResults)
         hold on;
         grid on;
         for odIndex = 1 : size(objRange, 2)
-            % figure;
-            % hold on;
-            % grid on;
-            errorbar(reshape(reshape(testResult(odIndex, :, 1 : 11), [7, 11])', [1, 7 * 11]), ...
-                     reshape(reshape(testResult(odIndex, :, 23 : 33), [7, 11])', [1, 7 * 11]), ...
-                     reshape(reshape(testResult(odIndex, :, 34 : 44), [7, 11])', [1, 7 * 11]), ...
+            % delta_mf_t+1(vergAngle_t)
+            errorbar(reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10]), ...
+                     reshape(reshape(testResult(odIndex, :, 24 : 33), [7, 10])', [1, 7 * 10]), ...
+                     reshape(reshape(testResult(odIndex, :, 35 : 44), [7, 10])', [1, 7 * 10]), ...
                      'DisplayName', num2str(objRange(odIndex)), 'Marker', '*', 'MarkerSize', 3, ...
                      'color', [rand, rand, rand], 'LineWidth', 0.9, 'LineStyle', 'none');
+            % l = legend('-DynamicLegend');
             legend('-DynamicLegend');
-            % xlabel('Vergence Error [deg]', 'FontSize', 12);
-            % ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            % title(strcat('\Delta MF(verg_{err}) response at Testing procedure', sprintf(' (objDist = %.1fm)', objRange(odIndex))));
-            % if (~isempty(model.savePath))
-            %     plotpath = sprintf('%s/deltaMFasFktVerErr_objDist[%.1fm]', model.savePath, objRange(odIndex));
-            %     saveas(gcf, plotpath, 'png');
-            % end
         end
+
+        % adjust axis to actual response ranges + std deviation
+        xmin = -4;
+        xmax = 6;
+        ymin = -0.1;
+        ymax = 0.1;
+        plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+        plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
+        axis([xmin, xmax, ymin, ymax]);
+        % l.Title.String = 'objDist [m]';
+        % l.Title.FontSize = 12;
         xlabel('Vergence Error [deg]', 'FontSize', 12);
         ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
         title('\Delta MF(verg_{err}) response at Testing procedure');
-        legend(num2str(objRange));
         if (~isempty(model.savePath))
             plotpath = sprintf('%s/deltaMFasFktVerErr', model.savePath);
+            saveas(gcf, plotpath, 'png');
+        end
+
+        % critic's response
+        figure;
+        hold on;
+        grid on;
+        for odIndex = 1 : size(objRange, 2)
+            % delta_mf_t+1(vergAngle_t)
+            errorbar(reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10]), ...
+                     reshape(reshape(testResult(odIndex, :, 46 : 55), [7, 10])', [1, 7 * 10]), ...
+                     reshape(reshape(testResult(odIndex, :, 57 : 66), [7, 10])', [1, 7 * 10]), ...
+                     'LineWidth', 0.9);
+        end
+
+        % adjust axis to actual response ranges + std deviation
+        % xmin = -4;
+        % xmax = 6;
+        % ymin = -0.1;
+        % ymax = 0.1;
+        % plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+        % plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
+        % axis([xmin, xmax, ymin, ymax]);
+        xlabel('Vergence Error [deg]', 'FontSize', 12);
+        ylabel('Value', 'FontSize', 12);
+        title('Critic Value over different disparities');
+        if (~isempty(model.savePath))
+            plotpath = sprintf('%s/criticValvsVerErr', model.savePath);
             saveas(gcf, plotpath, 'png');
         end
     end
