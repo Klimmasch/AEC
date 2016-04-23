@@ -135,7 +135,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                 command(1) = 0;
                 [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
 
-                [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+                [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left2.png %s/right2.png', ...
                                                currentTexture, objRange(odIndex), angleNew, model.savePath, model.savePath));
                 % abort execution if error occured
                 if (status)
@@ -145,8 +145,8 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
                 for iter = 2 : model.interval + 1
                     % read input images and convert to gray scale
-                    imgRawLeft = imread([model.savePath '/left.png']);
-                    imgRawRight = imread([model.savePath '/right.png']);
+                    imgRawLeft = imread([model.savePath '/left2.png']);
+                    imgRawRight = imread([model.savePath '/right2.png']);
                     imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                     imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
@@ -190,7 +190,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                     end
 
                     % generate new view (two pictures) with new vergence angle
-                    [status, res] = system(sprintf('./checkEnvironment %s %d %d l%s/eft.png %s/right.png', ...
+                    [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left2.png %s/right2.png', ...
                                                    currentTexture, objRange(odIndex), angleNew, model.savePath, model.savePath));
 
                     % abort execution if error occured
@@ -286,7 +286,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
         % adjust axis to actual response ranges + std deviation
         xmin = -4;
-        xmax = 6;
+        xmax = 7;
         ymin = -0.1;
         ymax = 0.1;
         plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
