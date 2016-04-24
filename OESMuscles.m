@@ -179,8 +179,28 @@ for iter1 = 1 : (timeToTrain / model.interval)
     command(1) = 0; % single muscle
     % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
     % command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
-    command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
+    % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
+    initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+    command(2) = getMF(2 * atand(model.baseline / (2 * initDist))); % a bit weird to give the angle for two eyes and receive activation for one muscle ...
 
+    % testing input distribution
+%     nSamples = 10000;
+%     commands = zeros(nSamples,1);
+%     angles = zeros(nSamples, 1);
+%     dists = zeros(nSamples, 1);
+%     for i = 1:10000
+%         initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+%         initAngle = atand(model.baseline / (2 * initDist));
+%         commands(i) = getMF(initAngle*2);
+%         angles(i) = getAngle([0, commands(i)]);
+%         dists(i) = (model.baseline/ (2 * tand(angles(i))));
+%     end
+%     
+%     figure; histogram(commands); title('commands');
+%     figure; histogram(angles); title('angles');
+%     figure; histogram(dists); title('distances');
+    
+        
     angleNew = getAngle(command) * 2;
     [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
