@@ -9,6 +9,9 @@ function testModel2(model, nStim, plotIt, saveTestResults)
     if (nStim == 0)
         return;
     end
+    
+    % imageSavePath = model.savePath;
+    imageSavePath = '.'; 
 
     command = [0, 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
@@ -135,8 +138,8 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                 command(1) = 0;
                 [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
 
-                [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left2.png %s/right2.png', ...
-                                               currentTexture, objRange(odIndex), angleNew, model.savePath, model.savePath));
+                [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
+                                               currentTexture, objRange(odIndex), angleNew, imageSavePath, imageSavePath));
                 % abort execution if error occured
                 if (status)
                     sprintf('Error in checkEnvironment:\n%s', res)
@@ -145,12 +148,13 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
                 for iter = 2 : model.interval + 1
                     % read input images and convert to gray scale
-                    imgRawLeft = imread([model.savePath '/left2.png']);
-                    imgRawRight = imread([model.savePath '/right2.png']);
+                    imgRawLeft = imread([imageSavePath '/leftTest.png']);
+                    imgRawRight = imread([imageSavePath '/rightTest.png']);
                     imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                     imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
-                    % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
+                    % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imagesSavePath '/anaglyph.png']);
+                    % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
                     % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                     [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
@@ -190,8 +194,8 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                     end
 
                     % generate new view (two pictures) with new vergence angle
-                    [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left2.png %s/right2.png', ...
-                                                   currentTexture, objRange(odIndex), angleNew, model.savePath, model.savePath));
+                    [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
+                                                   currentTexture, objRange(odIndex), angleNew, imageSavePath, imageSavePath));
 
                     % abort execution if error occured
                     if (status)
@@ -374,9 +378,9 @@ end
 
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
-function generateAnaglyphs(model, leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
+function generateAnaglyphs(imageSavePath, leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
-    imwrite(anaglyph,  sprintf('%s/anaglyph.png', model.savePath));
+    imwrite(anaglyph,  sprintf('%s/anaglyph.png', imageSavePath));
 
     %Downsampling Large
     imgLeftL = leftGray(:);
@@ -397,9 +401,9 @@ function generateAnaglyphs(model, leftGray, rightGray, dsRatioL, dsRatioS, fovea
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
-    imwrite(imresize(anaglyphL, 20), sprintf('%s/anaglyphLargeScale.png', model.savePath));
+    imwrite(imresize(anaglyphL, 20), sprintf('%s/anaglyphLargeScale.png', imageSavePath));
     largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage.png', model.savePath));
+    imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage.png', imageSavePath));
 
     %Downsampling Small
     imgLeftS = leftGray(:);
@@ -420,7 +424,7 @@ function generateAnaglyphs(model, leftGray, rightGray, dsRatioL, dsRatioS, fovea
 
     %create an anaglyph of the two pictures, scale it up and save it
     anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
-    imwrite(imresize(anaglyphS, 8), sprintf('%s/anaglyphSmallScale.png', model.savePath));
+    imwrite(imresize(anaglyphS, 8), sprintf('%s/anaglyphSmallScale.png', imageSavePath));
     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage.png', model.savePath));
+    imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage.png', imageSavePath));
 end
