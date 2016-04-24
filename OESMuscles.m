@@ -18,8 +18,8 @@ rng(randomizationSeed);
 learnedFile = '';
 % do we want to keep it that way? one could also specify the model file in
 % the input parameters
-% textureFile = 'Textures_celine.mat';
-textureFile = 'Textures_vanHaterenTrain.mat';
+textureFile = 'Textures_celine.mat';
+%textureFile = 'Textures_vanHaterenTrain.mat';
 sparseCodingType = 'nonhomeo';
 
 % Plotting and saving flag
@@ -28,13 +28,13 @@ sparseCodingType = 'nonhomeo';
 % plotNsave: [training, test]
 %            0 = don't do it
 %            1 = do it
-plotNsave = [uint8(1), uint8(1)];
+plotNsave = [uint8(0), uint8(0)];
 
 % Testing flag
 % Whether the testing procedure shall be executed after training
 % testIt:   0 = don't do it
 %           1 = do it
-testIt = uint8(1);
+testIt = uint8(0);
 
 % Load model from file or instantiate and initiate new model object
 if useLearnedFile(1)
@@ -53,9 +53,9 @@ end
 if (trainTime <= model.interval)
     sprintf('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
     return;
-elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
-    sprintf('Rendering binary \"checkEnvironment\" not present in current dir\n\"%s\"', cd)
-    return;
+% elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
+%     sprintf('Rendering binary \"checkEnvironment\" not present in current dir\n\"%s\"', cd)
+%     return;
 end
 
 % File management: either complete training with existing folder etc., or
@@ -85,7 +85,7 @@ end
 model.notes = [model.notes fileDescription]; %just and idea to store some more information
 
 % Save model every #saveInterval training iterations
-saveInterval = ceil(model.trainTime / 50);
+saveInterval = ceil(model.trainTime / 4);
 % if (trainTime < saveInterval)
 %     saveInterval = trainTime;
 % end
@@ -141,6 +141,63 @@ mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
 mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
 dmf = diff(mfunction(1 : 2, 1));        % delta in angle
 
+%%% New renderer
+% makeOpenEyeSim;
+Simulator = OpenEyeSim('create');
+% Simulator.initRenderer()
+
+imgRawLeft = uint8(zeros(240, 320, 3));
+imgRawRight = uint8(zeros(240, 320, 3));
+
+function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
+    Simulator.add_texture(1, texture);
+    Simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
+
+    tmpResLeft = Simulator.generate_left;
+    tmpResRight = Simulator.generate_right;
+
+    % creating final 320x240 color images
+    k = 1;
+    l = 1;
+    for i = 1 : 3 : length(tmpResLeft)
+        imLeft(k, l, 1) = tmpResLeft(i);
+        imLeft(k, l, 2) = tmpResLeft(i + 1);
+        imLeft(k, l, 3) = tmpResLeft(i + 2);
+
+        l = l + 1;
+        if (l > 320)
+            l = 1;
+            k = k + 1;
+        end
+    end
+
+    k = 1;
+    l = 1;
+    for i = 1 : 3 : length(tmpResRight)
+        imRight(k, l, 1) = tmpResRight(i);
+        imRight(k, l, 2) = tmpResRight(i + 1);
+        imRight(k, l, 3) = tmpResRight(i + 2);
+
+        l = l + 1;
+        if (l > 320)
+            l = 1;
+            k = k + 1;
+        end
+    end
+end
+
+Simulator = OpenEyeSim('create');
+Simulator.initRenderer()
+
+tic
+for i=1:200
+    tic
+    [imLeft, imRight] = refreshImages(texture{1}, 0+rand(1), 1+rand(1));
+    toc
+end
+toc
+toc;
+
 %%% Helper function that maps {vergenceAngle} -> {muscleForce}
 function mf = getMF(vergAngle)
     % look up index of vergAngle
@@ -182,20 +239,21 @@ for iter1 = 1 : (timeToTrain / model.interval)
     command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
 
     angleNew = getAngle(command) * 2;
-    [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
-                                   currentTexture, objDist, angleNew, model.savePath, model.savePath));
+    % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+    %                                currentTexture, objDist, angleNew, model.savePath, model.savePath));
 
-    % abort execution if error occured
-    if (status)
-        sprintf('Error in checkEnvironment:\n%s', res)
-        return;
-    end
+    % % abort execution if error occured
+    % if (status)
+    %     sprintf('Error in checkEnvironment:\n%s', res)
+    %     return;
+    % end
+    [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
 
     for iter2 = 1 : model.interval
         t = t + 1;
         % read input images and convert to gray scale
-        imgRawLeft = imread([model.savePath '/left.png']);
-        imgRawRight = imread([model.savePath '/right.png']);
+        % imgRawLeft = imread([model.savePath '/left.png']);
+        % imgRawRight = imread([model.savePath '/right.png']);
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
         imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
@@ -287,14 +345,15 @@ for iter1 = 1 : (timeToTrain / model.interval)
         end
 
         % generate new view (two pictures) with new vergence angle
-        [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
-                                   currentTexture, objDist, angleNew, model.savePath, model.savePath));
+        % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+        %                            currentTexture, objDist, angleNew, model.savePath, model.savePath));
 
-        % abort execution if error occured
-        if (status)
-            sprintf('Error in checkEnvironment:\n%s', res)
-            return;
-        end
+        % % abort execution if error occured
+        % if (status)
+        %     sprintf('Error in checkEnvironment:\n%s', res)
+        %     return;
+        % end
+        [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
 
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 

@@ -131,6 +131,7 @@ classdef Model < handle
             obj.fixZtest = [];
             obj.vergErrTest = [];
             obj.responseResults = struct();
+            obj.testResult = [];
             obj.trainedUntil = 0;
             obj.notes = '';
         end
@@ -163,7 +164,7 @@ classdef Model < handle
             if (isempty(imPind))
                 feature_L = zeros(this.scmodel_Large.Basis_num, 1);
                 reward_L = this.rlmodel.J; %TODO: not supported for continuous rlmodel
-		sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
+                sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
                 return;
             end
             [Coef_L, Error_L] = this.scmodel_Large.sparseEncode(imagesLarge);
@@ -182,7 +183,7 @@ classdef Model < handle
             if (isempty(imPind))
                 feature_S = zeros(this.scmodel_Small.Basis_num, 1);
                 reward_S = this.rlmodel.J; %TODO: not supported for continuous rlmodel
-		sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
+                sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
                 return;
             end
             [Coef_S, Error_S] = this.scmodel_Small.sparseEncode(imagesSmall);

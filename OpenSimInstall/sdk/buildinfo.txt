@@ -1,0 +1,3 @@
+Product Version=3.2
+Compiler=Unix Makefiles-GNU
+Platform=Linux-x64
