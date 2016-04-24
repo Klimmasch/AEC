@@ -13,6 +13,8 @@ classdef Model < handle
         interval;           %period of eye stimulus change
         desiredAngleMin;    %min/max desired vergence angle
         desiredAngleMax;
+        vergAngleMin;
+        vergAngleMax;
 
         learnedFile;        %previously learned model
         textureFile;        %config file containing texture stimulus list
@@ -82,6 +84,8 @@ classdef Model < handle
             % single eye
             obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
             obj.desiredAngleMax = atand(obj.baseline / (2 * obj.objDistMin));
+            obj.vergAngleMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
+            obj.vergAngleMax = 2 * atand(obj.baseline / (2 * obj.objDistMin));
 
             % Discrete or continuous policy
             if (PARAM{3}{14})
