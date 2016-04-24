@@ -476,7 +476,6 @@ end
 
 %this function generates anaglyphs of the large and small scale fovea and
 %one of the two unpreprocessed gray scale images
-% TODO: adjust the sizes of the montage view
 function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
     imwrite(anaglyph, [savePath '/anaglyph.png']);
