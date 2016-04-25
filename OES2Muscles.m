@@ -14,13 +14,14 @@
 % ATTENTION! Do this first:
 % $ export LD_LIBRARY_PATH='/home/lelais/Documents/MATLAB/aec/OpenSimInstall/lib'
 %%%
-function OESMuscles(trainTime, randomizationSeed, fileDescription)
+function OES2Muscles(trainTime, randomizationSeed, fileDescription, useLearnedFile)
 
 rng(randomizationSeed);
-useLearnedFile = [0, 0];
 % learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat';
 % learnedFile = '/home/lelais/Documents/MATLAB/results/model_18-Apr-2016_18:27:54_200000_nonhomeo_1_CACLAVar_NewHiddenUpdate_init00017-01-004_alpha10_var-5/model.mat';
-
+learnedFile = '';
+% do we want to keep it that way? one could also specify the model file in
+% the input parameters
 % textureFile = 'Textures_celine.mat';
 textureFile = 'Textures_vanHaterenTrain.mat';
 sparseCodingType = 'nonhomeo';
@@ -208,7 +209,7 @@ end
 
 %%% Main execution loop
 t = model.trainedUntil; % this is zero in new initiated model
-command = [0, 0];
+command = [0; 0];
 % rewardFunction_prev = 0;
 tic; % start time count
 for iter1 = 1 : (timeToTrain / model.interval)
@@ -263,8 +264,8 @@ for iter1 = 1 : (timeToTrain / model.interval)
         refreshImages(currentTexture, -angleNew/2, objDist);
         % imgRawLeft = imread([model.savePath '/left.png']);
         % imgRawRight = imread([model.savePath '/right.png']);
-        imgGrayRight = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
-        imgGrayLeft = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
+        imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
+        imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
@@ -287,7 +288,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
         %%% Feedback
         % Absolute command feedback # concatination
         if (model.rlmodel.continuous == 1)
-            feature = [feature; command(2) * model.lambdaMuscleFB];
+            feature = [feature; command * model.lambdaMuscleFB];
         end
 
         %%% Calculate metabolic costs
@@ -337,9 +338,9 @@ for iter1 = 1 : (timeToTrain / model.interval)
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
-        % command = command + relativeCommand';     %two muscels
-        command(1) = 0;
-        command(2) = command(2) + relativeCommand;  %one muscel
+        command = command + relativeCommand;     %two muscels
+        % command(1) = 0;
+        % command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
 
         if (model.rlmodel.continuous == 1)
@@ -381,7 +382,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
         model.recerr_hist(t, :) = [errorLarge; errorSmall];
         model.verge_actual(t) = angleNew;
         model.verge_desired(t) = angleDes;
-        model.relCmd_hist(t) = relativeCommand;
+        model.relCmd_hist(t, :) = relativeCommand';
         model.cmd_hist(t, :) = command;
         model.reward_hist(t) = rewardFunction;
         % model.feature_hist(t, :) = feature;

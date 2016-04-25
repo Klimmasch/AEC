@@ -29,7 +29,7 @@ classdef CACLAActor < handle
 
     methods
         function obj = CACLAActor(PARAM)
-            obj.input_dim = PARAM{1};
+            obj.input_dim = PARAM{1}(1);
             obj.hidden_dim = PARAM{2};
             obj.output_dim = PARAM{3};
             obj.w_init_range = PARAM{4};

@@ -116,9 +116,56 @@ function [tmpMetCost] = getMetCost(command)
     tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
 end
 
+%%% New renderer
+Simulator = OpenEyeSim('create');
+Simulator.initRenderer();
+% Simulator.reinitRenderer();
+
+imgRawLeft = uint8(zeros(240, 320, 3));
+imgRawRight = uint8(zeros(240, 320, 3));
+
+function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
+    Simulator.add_texture(1, texture);
+    Simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
+
+    result = Simulator.generate_left;
+    result2 = Simulator.generate_right;
+
+    imLeft=uint8(zeros(240, 320, 3));
+    k=1;l=1;
+    for i = 1:3:length(result)
+        imLeft(k,l,1) = result(i);
+        imLeft(k,l,2) = result(i+1);
+        imLeft(k,l,3) = result(i+2);
+
+        l=l+1;
+        if (l>320)
+            l=1;
+            k=k+1;
+        end
+    end
+%     imLeft = COLOR;     %320x240 image
+
+    imRight=uint8(zeros(240, 320, 3));
+    k=1;l=1;
+    for i = 1:3:length(result2)
+        imRight(k,l,1) = result2(i);
+        imRight(k,l,2) = result2(i+1);
+        imRight(k,l,3) = result2(i+2);
+
+        l=l+1;
+        if (l>320)
+            l=1;
+            k=k+1;
+        end
+    end
+%     imRight = COLOR2;     %320x240 image
+end
+
+
 %%% Main execution loop
 t = 0;
-rewardFunction_prev = -5;
+% rewardFunction_prev = -5;
 tic; % start time count
 for iter1 = 1 : (model.trainTime / model.interval)
 
@@ -145,26 +192,30 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % angleDes = 2 * atand(model.baseline / (2 * objDist));
     % angleNew = angleDes + truncLaplacian(b, range);
     
-    [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
-                                   currentTexture, objDist, angleNew, model.savePath, model.savePath));
+%     [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+%                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
+%     
+%     % abort execution if error occured
+%     if (status)
+%         sprintf('Error in checkEnvironment:\n%s', res)
+%         return;
+%     end
     
-    % abort execution if error occured
-    if (status)
-        sprintf('Error in checkEnvironment:\n%s', res)
-        return;
-    end
-
+%     [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
+        
     for iter2 = 1 : model.interval
         t = t + 1;
+
+        [imgRawLeft, imgRawRight] = refreshImages(currentTexture, -angleNew/2, objDist);
         % read input images and convert to gray scale
-        imgRawLeft = imread([model.savePath '/left.png']);
-        imgRawRight = imread([model.savePath '/right.png']);
+%         imgRawLeft = imread([model.savePath '/left.png']);
+%         imgRawRight = imread([model.savePath '/right.png']);
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
         imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-        imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
+        % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
         %more advanced functions that generated the anaglyphs of the foveal views
 %         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
 
@@ -248,15 +299,17 @@ for iter1 = 1 : (model.trainTime / model.interval)
         end
 
         % generate new view (two pictures) with new vergence angle
-        [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
-                                   currentTexture, objDist, angleNew, model.savePath, model.savePath));
-
-        % abort execution if error occured
-        if (status)
-            sprintf('Error in checkEnvironment:\n%s', res)
-            return;
-        end
-
+%         [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
+%                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
+% 
+%         % abort execution if error occured
+%         if (status)
+%             sprintf('Error in checkEnvironment:\n%s', res)
+%             return;
+%         end
+        
+%         [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
+        
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
         % compute desired vergence command, disparity and vergence error
