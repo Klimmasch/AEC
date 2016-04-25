@@ -121,6 +121,52 @@ function testModel2(model, nStim, plotIt, saveTestResults)
     %     cmd = (command * 10) + 1;                               % scale commands to table entries
     %     tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
     % end
+    
+    %%% New renderer
+    Simulator = OpenEyeSim('create');
+    Simulator.initRenderer();
+    % Simulator.reinitRenderer();
+    
+    imgRawLeft = uint8(zeros(240, 320, 3));
+    imgRawRight = uint8(zeros(240, 320, 3));
+
+    function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
+        Simulator.add_texture(1, texture);
+        Simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
+
+        result = Simulator.generate_left;
+        result2 = Simulator.generate_right;
+
+        imLeft=uint8(zeros(240, 320, 3));
+        k=1;l=1;
+        for i = 1:3:length(result)
+            imLeft(k,l,1) = result(i);
+            imLeft(k,l,2) = result(i+1);
+            imLeft(k,l,3) = result(i+2);
+
+            l=l+1;
+            if (l>320)
+                l=1;
+                k=k+1;
+            end
+        end
+    %     imLeft = COLOR;     %320x240 image
+
+        imRight=uint8(zeros(240, 320, 3));
+        k=1;l=1;
+        for i = 1:3:length(result2)
+            imRight(k,l,1) = result2(i);
+            imRight(k,l,2) = result2(i+1);
+            imRight(k,l,3) = result2(i+2);
+
+            l=l+1;
+            if (l>320)
+                l=1;
+                k=k+1;
+            end
+        end
+    %     imRight = COLOR2;     %320x240 image
+    end
 
     tic;
     for odIndex = 1 : size(objRange, 2)
@@ -138,18 +184,19 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                 command(1) = 0;
                 [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
 
-                [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
-                                               currentTexture, objRange(odIndex), angleNew, imageSavePath, imageSavePath));
-                % abort execution if error occured
-                if (status)
-                    sprintf('Error in checkEnvironment:\n%s', res)
-                    return;
-                end
-
+%                 [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
+%                                                currentTexture, objRange(odIndex), angleNew, imageSavePath, imageSavePath));
+%                 % abort execution if error occured
+%                 if (status)
+%                     sprintf('Error in checkEnvironment:\n%s', res)
+%                     return;
+%                 end
+                
                 for iter = 2 : model.interval + 1
                     % read input images and convert to gray scale
-                    imgRawLeft = imread([imageSavePath '/leftTest.png']);
-                    imgRawRight = imread([imageSavePath '/rightTest.png']);
+                    [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objRange(odIndex));
+%                     imgRawLeft = imread([imageSavePath '/leftTest.png']);
+%                     imgRawRight = imread([imageSavePath '/rightTest.png']);
                     imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                     imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
@@ -194,15 +241,17 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                     end
 
                     % generate new view (two pictures) with new vergence angle
-                    [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
-                                                   currentTexture, objRange(odIndex), angleNew, imageSavePath, imageSavePath));
+%                     [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
+%                                                    currentTexture, objRange(odIndex), angleNew, imageSavePath, imageSavePath));
+% 
+%                     % abort execution if error occured
+%                     if (status)
+%                         sprintf('Error in checkEnvironment:\n%s', res)
+%                         return;
+%                     end
 
-                    % abort execution if error occured
-                    if (status)
-                        sprintf('Error in checkEnvironment:\n%s', res)
-                        return;
-                    end
-
+%                     [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objRange(odIndex));
+                    
                     % temporary results
                     tmpResult1(stimulusIndex, iter) = angleDes - angleNew;
                     tmpResult2(stimulusIndex, iter) = relativeCommand;

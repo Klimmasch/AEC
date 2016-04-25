@@ -160,12 +160,12 @@ function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
     result = Simulator.generate_left;
     result2 = Simulator.generate_right;
 
-    COLOR=uint8(zeros(240, 320, 3));
+    imLeft=uint8(zeros(240, 320, 3));
     k=1;l=1;
     for i = 1:3:length(result)
-        COLOR(k,l,1) = result(i);
-        COLOR(k,l,2) = result(i+1);
-        COLOR(k,l,3) = result(i+2);
+        imLeft(k,l,1) = result(i);
+        imLeft(k,l,2) = result(i+1);
+        imLeft(k,l,3) = result(i+2);
 
         l=l+1;
         if (l>320)
@@ -173,14 +173,14 @@ function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
             k=k+1;
         end
     end
-    imLeft = COLOR;     %320x240 image
+%     imLeft = COLOR;     %320x240 image
 
-    COLOR2=uint8(zeros(240, 320, 3));
+    imRight=uint8(zeros(240, 320, 3));
     k=1;l=1;
     for i = 1:3:length(result2)
-        COLOR2(k,l,1) = result2(i);
-        COLOR2(k,l,2) = result2(i+1);
-        COLOR2(k,l,3) = result2(i+2);
+        imRight(k,l,1) = result2(i);
+        imRight(k,l,2) = result2(i+1);
+        imRight(k,l,3) = result2(i+2);
 
         l=l+1;
         if (l>320)
@@ -188,7 +188,7 @@ function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
             k=k+1;
         end
     end
-    imRight = COLOR2;     %320x240 image
+%     imRight = COLOR2;     %320x240 image
 end
 
 % tic
@@ -251,11 +251,12 @@ for iter1 = 1 : (timeToTrain / model.interval)
 %     for i = 1:10000
 %         initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
 %         initAngle = atand(model.baseline / (2 * initDist));
+% %         initAngle = model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1);
 %         commands(i) = getMF(initAngle*2);
 %         angles(i) = getAngle([0, commands(i)]);
 %         dists(i) = (model.baseline/ (2 * tand(angles(i))));
 %     end
-%
+% 
 %     figure; histogram(commands); title('commands');
 %     figure; histogram(angles); title('angles');
 %     figure; histogram(dists); title('distances');
@@ -270,11 +271,12 @@ for iter1 = 1 : (timeToTrain / model.interval)
     %     sprintf('Error in checkEnvironment:\n%s', res)
     %     return;
     % end
-    [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
+%     [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
 
     for iter2 = 1 : model.interval
         t = t + 1;
         % read input images and convert to gray scale
+        [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
         % imgRawLeft = imread([model.savePath '/left.png']);
         % imgRawRight = imread([model.savePath '/right.png']);
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
@@ -376,7 +378,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
         %     sprintf('Error in checkEnvironment:\n%s', res)
         %     return;
         % end
-        [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
+%         [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
 
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
