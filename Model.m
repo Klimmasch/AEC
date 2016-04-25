@@ -117,7 +117,7 @@ classdef Model < handle
             obj.td_hist = zeros(obj.trainTime, 1);
             % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.inputDim);
             obj.cmd_hist = zeros(obj.trainTime, 2);
-            obj.relCmd_hist = zeros(obj.trainTime, obj.rlmodel.inputDimension);
+            obj.relCmd_hist = zeros(obj.trainTime, obj.rlmodel.outputDimension);
             if ((PARAM{3}{18}(2) == 5) || (PARAM{3}{18}(2) == 7))
                 obj.weight_hist = zeros(obj.trainTime, 4);
             else
