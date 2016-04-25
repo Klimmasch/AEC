@@ -507,8 +507,8 @@ public:
 
 public:
   unsigned char bufferData[230400];
-  unsigned char dataTex[3*480*480][10];
-  //unsigned char dataTex[1024*1024*3][100];
+  //unsigned char dataTex[3*480*480][10];
+  unsigned char dataTex[1024*1024*3][100];
   
 
 private:

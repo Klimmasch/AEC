@@ -9,6 +9,10 @@
 % learnedFile:              previously learned policy and sparse coding model
 % textureFile:              texture settings files
 % sparseCodingType:         type of sparse coding approach
+%
+%
+% ATTENTION! Do this first:
+% $ export LD_LIBRARY_PATH='/home/lelais/Documents/MATLAB/aec/OpenSimInstall/lib'
 %%%
 function OESMuscles(trainTime, randomizationSeed, fileDescription, useLearnedFile)
 
@@ -18,8 +22,8 @@ rng(randomizationSeed);
 learnedFile = '';
 % do we want to keep it that way? one could also specify the model file in
 % the input parameters
-textureFile = 'Textures_celine.mat';
-%textureFile = 'Textures_vanHaterenTrain.mat';
+% textureFile = 'Textures_celine.mat';
+textureFile = 'Textures_vanHaterenTrain.mat';
 sparseCodingType = 'nonhomeo';
 
 % Plotting and saving flag
@@ -142,9 +146,9 @@ mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
 dmf = diff(mfunction(1 : 2, 1));        % delta in angle
 
 %%% New renderer
-% makeOpenEyeSim;
 Simulator = OpenEyeSim('create');
-% Simulator.initRenderer()
+Simulator.initRenderer();
+% Simulator.reinitRenderer();
 
 imgRawLeft = uint8(zeros(240, 320, 3));
 imgRawRight = uint8(zeros(240, 320, 3));
@@ -153,50 +157,49 @@ function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
     Simulator.add_texture(1, texture);
     Simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
 
-    tmpResLeft = Simulator.generate_left;
-    tmpResRight = Simulator.generate_right;
+    result = Simulator.generate_left;
+    result2 = Simulator.generate_right;
 
-    % creating final 320x240 color images
-    k = 1;
-    l = 1;
-    for i = 1 : 3 : length(tmpResLeft)
-        imLeft(k, l, 1) = tmpResLeft(i);
-        imLeft(k, l, 2) = tmpResLeft(i + 1);
-        imLeft(k, l, 3) = tmpResLeft(i + 2);
+    COLOR=uint8(zeros(240, 320, 3));
+    k=1;l=1;
+    for i = 1:3:length(result)
+        COLOR(k,l,1) = result(i);
+        COLOR(k,l,2) = result(i+1);
+        COLOR(k,l,3) = result(i+2);
 
-        l = l + 1;
-        if (l > 320)
-            l = 1;
-            k = k + 1;
+        l=l+1;
+        if (l>320)
+            l=1;
+            k=k+1;
         end
     end
+    imLeft = COLOR;     %320x240 image
 
-    k = 1;
-    l = 1;
-    for i = 1 : 3 : length(tmpResRight)
-        imRight(k, l, 1) = tmpResRight(i);
-        imRight(k, l, 2) = tmpResRight(i + 1);
-        imRight(k, l, 3) = tmpResRight(i + 2);
+    COLOR2=uint8(zeros(240, 320, 3));
+    k=1;l=1;
+    for i = 1:3:length(result2)
+        COLOR2(k,l,1) = result2(i);
+        COLOR2(k,l,2) = result2(i+1);
+        COLOR2(k,l,3) = result2(i+2);
 
-        l = l + 1;
-        if (l > 320)
-            l = 1;
-            k = k + 1;
+        l=l+1;
+        if (l>320)
+            l=1;
+            k=k+1;
         end
     end
+    imRight = COLOR2;     %320x240 image
 end
 
-Simulator = OpenEyeSim('create');
-Simulator.initRenderer()
-
-tic
-for i=1:200
-    tic
-    [imLeft, imRight] = refreshImages(texture{1}, 0+rand(1), 1+rand(1));
-    toc
-end
-toc
-toc;
+% tic
+% for i=1:200
+%     tic
+%     [imLeft, imRight] = refreshImages(texture{1}, 0+rand(1), 1+rand(1));
+%     toc
+%     imshow(imLeft)
+% end
+% toc
+% display('end')
 
 %%% Helper function that maps {vergenceAngle} -> {muscleForce}
 function mf = getMF(vergAngle)
@@ -252,12 +255,12 @@ for iter1 = 1 : (timeToTrain / model.interval)
 %         angles(i) = getAngle([0, commands(i)]);
 %         dists(i) = (model.baseline/ (2 * tand(angles(i))));
 %     end
-%     
+%
 %     figure; histogram(commands); title('commands');
 %     figure; histogram(angles); title('angles');
 %     figure; histogram(dists); title('distances');
-    
-        
+
+
     angleNew = getAngle(command) * 2;
     % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
     %                                currentTexture, objDist, angleNew, model.savePath, model.savePath));
