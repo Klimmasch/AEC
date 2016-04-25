@@ -16,7 +16,6 @@
 #include <cstdio>
 #include <vector>
 
-
 #include <GL/glut.h>
 
 using namespace OpenSim;
@@ -36,8 +35,6 @@ GLfloat light_diffuse[]  = {0.8f, 0.8f, 0.8f, 1.0f};
 GLfloat light_position[] = {1.0f, 1000.0f, -100.0f, 0.0f};
 GLfloat light_ambient[]  = {0.2f, 0.2f, 0.2f, 1.0f};
 
-#define PI (3.141592653589793)
-
 GLfloat n[6][3] = {  /* Normals for the 6 faces of a cube. */
   {-1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {1.0, 0.0, 0.0},
   {0.0, -1.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, 0.0, -1.0} };
@@ -55,7 +52,6 @@ static GLuint groundTexture;
 static GLuint textureID;
 
 
-
 // Hypothetical database class to be MEXed. This example is a proxy to C++ map.
 class OpenEyeSim {
 public:
@@ -63,9 +59,9 @@ public:
   OpenEyeSim() {
     mexPrintf("Simulator is running");
     init = false;
-    angle=0.0;
-    texture="1.bmp";
-    distance = 0;   
+    angle = 0.0;
+    texture = "1.bmp";
+    distance = 0.;
   }
   // Database destructor.
   virtual ~OpenEyeSim() {}
@@ -82,7 +78,7 @@ public:
   }
 
   void loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight, int number){
-      bool flipY = false;      
+      bool flipY = false;
       // Data read from the header of the BMP file
       unsigned char header[54];
       unsigned int dataPos;
@@ -171,7 +167,7 @@ public:
   }
 
   void applyTexture(void)
-  {      
+  {
       vector<float> texture1(8);
       texture1[0] = 0;
       texture1[1] = 0;
@@ -186,14 +182,14 @@ public:
       glBufferData(GL_ARRAY_BUFFER, texture1.size()*sizeof(float), &texture1[0], GL_STATIC_DRAW);
       //glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
       glTexCoordPointer(2, GL_FLOAT, 0, 0);
-      glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping ( NEW )      
+      glEnable(GL_TEXTURE_2D);                          // Enable Texture Mapping ( NEW )
       glGenTextures(1, &textureID);
       glBindTexture(GL_TEXTURE_2D, textureID);
       //mexPrintf("WidthTex:%d:", widthTex);
       //mexPrintf("HeightTex:%d:", heightTex);
       glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, widthTex, heightTex, 0, GL_BGR, GL_UNSIGNED_BYTE, &dataTex[0][texture_number]);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);      
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   }
 
 
@@ -340,7 +336,7 @@ public:
     glScaled(1.4f,1.4f,1.4f);
     applyTexture();
 
-    for (i = 1; i < 6; i++) {        
+    for (i = 1; i < 6; i++) {
         glBegin(GL_QUADS);
         glEnable(GL_TEXTURE_2D);
         glNormal3fv(&n[i][0]);
@@ -361,22 +357,24 @@ public:
 
   void
   display(int eye)
-  {            
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
+  {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
     if (eye == 1)
     {
-        gluLookAt(0.028, 1.578, 2.0,  /* eye is at (0,0,5) */
-          0.028+sin(PI*this->angle/180), 1.578, 2.0-cos(PI*this->angle/180),      /* center is at (0,0,0) */
-          0.0, 1.0, 0.);      /* up is in positive Y direction */
+        // left eye
+        gluLookAt(-0.028, 1.578, 2.0,   /* eye is at (0,0,5) */
+            -0.028 + sin(M_PI * this->angle / 180.), 1.578, 2.0 - cos(-M_PI * this->angle / 180.),  /* center is at (0,0,0) */
+            0.0, 1.0, 0.);  /* up is in positive Y direction */
     }
     else
     {
-        gluLookAt(-0.028, 1.578, 2.0,  /* eye is at (0,0,5) */
-          -0.028+sin(-PI*this->angle/180), 1.578, 2.0-cos(-PI*this->angle/180),      /* center is at (0,0,0) */
-          0.0, 1.0, 0.);      /* up is in positive Y direction */
+        // right eye
+        gluLookAt(0.028, 1.578, 2.0,    /* eye is at (0,0,5) */
+          0.028 + sin(-M_PI * this->angle / 180.), 1.578, 2.0 - cos(-M_PI * this->angle / 180.),    /* center is at (0,0,0) */
+          0.0, 1.0, 0.);    /* up is in positive Y direction */
     }
     drawGroundAndSky(16.01);
     drawBox();
@@ -509,7 +507,6 @@ public:
   unsigned char bufferData[230400];
   //unsigned char dataTex[3*480*480][10];
   unsigned char dataTex[1024*1024*3][100];
-  
 
 private:
   // Database implementation.
@@ -566,7 +563,7 @@ MEX_DEFINE(generate_left) (int nlhs, mxArray* plhs[],
   InputArguments input(nrhs, prhs, 1);
   OutputArguments output(nlhs, plhs, 1);
   OpenEyeSim* osim = Session<OpenEyeSim>::get(input.get(0));
-  osim->request(1);  
+  osim->request(1);
   std::vector<unsigned char> v(std::begin(osim->bufferData), std::end(osim->bufferData));
   plhs[0] =  MxArray::from(v);
   v.clear();
@@ -598,7 +595,7 @@ MEX_DEFINE(request) (int nlhs, mxArray* plhs[],
 MEX_DEFINE(initRenderer) (int nlhs, mxArray* plhs[],
                    int nrhs, const mxArray* prhs[]) {
   InputArguments input(nrhs, prhs, 1);
-  OutputArguments output(nlhs, plhs, 1);  
+  OutputArguments output(nlhs, plhs, 1);
   OpenEyeSim* osim = Session<OpenEyeSim>::get(input.get(0));
   osim->initRenderer();
 }

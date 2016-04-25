@@ -77,7 +77,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     % muscle commands
     angleMin = getAngle([0, 0]) * 2;
     angleMax = getAngle([0, 1]) * 2;
-    
+
     %%% New renderer
     Simulator = OpenEyeSim('create');
     Simulator.initRenderer();
@@ -86,42 +86,31 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
 
-    function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
-    Simulator.add_texture(1, texture);
-    Simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
+    % Generates two new images for both eyes
+    function refreshImages(texture, vergAngle, objDist)
+        Simulator.add_texture(1, texture);
+        Simulator.set_params(1, vergAngle, objDist);
 
-    result = Simulator.generate_left;
-    result2 = Simulator.generate_right;
+        result1 = Simulator.generate_left;
+        result2 = Simulator.generate_right;
 
-    imLeft=uint8(zeros(240, 320, 3));
-    k=1;l=1;
-    for i = 1:3:length(result)
-            imLeft(k,l,1) = result(i);
-            imLeft(k,l,2) = result(i+1);
-            imLeft(k,l,3) = result(i+2);
+        k = 1;
+        l = 1;
+        for i = 1 : 3 : length(result1)
+            imgRawLeft(k,l,1) = result1(i);
+            imgRawLeft(k,l,2) = result1(i + 1);
+            imgRawLeft(k,l,3) = result1(i + 2);
 
-            l=l+1;
-            if (l>320)
-                l=1;
-                k=k+1;
+            imgRawRight(k,l,1) = result2(i);
+            imgRawRight(k,l,2) = result2(i + 1);
+            imgRawRight(k,l,3) = result2(i + 2);
+
+            l = l + 1;
+            if (l > 320)
+                l = 1;
+                k = k + 1;
             end
         end
-    %     imLeft = COLOR;     %320x240 image
-
-        imRight=uint8(zeros(240, 320, 3));
-        k=1;l=1;
-        for i = 1:3:length(result2)
-            imRight(k,l,1) = result2(i);
-            imRight(k,l,2) = result2(i+1);
-            imRight(k,l,3) = result2(i+2);
-
-            l=l+1;
-            if (l>320)
-                l=1;
-                k=k+1;
-            end
-        end
-    %     imRight = COLOR2;     %320x240 image
     end
 
     %%% Average VergErr over Trial loop
@@ -160,15 +149,13 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
 %                 sprintf('Error in checkEnvironment:\n%s', res)
 %                 return;
 %             end
+            refreshImages(currentTexture, angleNew / 2, tmpObjRange);
 
             for iter3 = 1 : model.interval
-                % read input images and convert to gray scale
-                [imgRawLeft, imgRawRight] = refreshImages(currentTexture, -angleNew/2, tmpObjRange);
-%                 imgRawLeft = imread([imagesSavePath '/leftTest.png']);
-%                 imgRawRight = imread([imagesSavePath '/rightTest.png']);
+                % convert images to gray scale
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
-                
+
                 imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imagesSavePath '/anaglyph.png']);
                 % generateAnaglyphs(model, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, imagesSavePath);
 
@@ -212,15 +199,16 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 % generate new view (two pictures) with new vergence angle
 %                 [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
 %                                                currentTexture, tmpObjRange, angleNew, imagesSavePath, imagesSavePath));
-% 
+%
 %                 % abort execution if error occured
 %                 if (status)
 %                     sprintf('Error in checkEnvironment:\n%s', res)
 %                     return;
 %                 end
-                
+
 %                 [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, tmpObjRange);
-                
+                refreshImages(currentTexture, angleNew / 2, tmpObjRange);
+
                 %%% Track results
                 % compute desired vergence command, disparity and vergence error
                 fixDepth = (model.baseline / 2) / tand(angleNew / 2);           %fixation depth [m]
@@ -353,24 +341,22 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 end
 
                 %generate two new pictures
-%                 [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
-%                                                currentTexture, objRange(objDist), angleDes + vergRange(verg), imagesSavePath, imagesSavePath));
-% 
-%                 % Abort execution if error occured
-%                 if (status)
-%                     sprintf('Error in checkEnvironment:\n%s', res)
-%                     return;
-%                 end
-                [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleDes + vergRange(verg), objRange(objDist));
+                % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
+                %                                currentTexture, objRange(objDist), angleDes + vergRange(verg), imagesSavePath, imagesSavePath));
 
-                % Read input images and convert to gray scale
-%                 imgRawLeft = imread([imagesSavePath '/leftTest.png']);
-%                 imgRawRight = imread([imagesSavePath '/rightTest.png']);
+                % % Abort execution if error occured
+                % if (status)
+                %     sprintf('Error in checkEnvironment:\n%s', res)
+                %     return;
+                % end
+                refreshImages(currentTexture, (angleDes + vergRange(verg)) / 2, objRange(objDist));
+
+                % convert images to gray scale
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                 imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
                 % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, );
-%               % imshow(stereoAnaglyph(imgGrayLeft, imgGrayRight));
+                % imshow(stereoAnaglyph(imgGrayLeft, imgGrayRight));
 
                 % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
                 [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);

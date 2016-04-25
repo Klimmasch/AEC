@@ -240,31 +240,18 @@ for iter1 = 1 : (timeToTrain / model.interval)
     %     angles(i) = getAngle([0, commands(i)]);
     %     dists(i) = (model.baseline/ (2 * tand(angles(i))));
     % end
-
     % figure; histogram(commands); title('commands');
     % figure; histogram(angles); title('angles');
     % figure; histogram(dists); title('distances');
 
     angleNew = getAngle(command) * 2;
-    % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
-    %                                currentTexture, objDist, angleNew, model.savePath, model.savePath));
-
-    % % abort execution if error occured
-    % if (status)
-    %     sprintf('Error in checkEnvironment:\n%s', res)
-    %     return;
-    % end
-%     [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
-%     refreshImages(currentTexture, angleNew, objDist);
+    refreshImages(currentTexture, angleNew / 2, objDist);
 
     for iter2 = 1 : model.interval
         t = t + 1;
-        % read input images and convert to gray scale
-        refreshImages(currentTexture, -angleNew/2, objDist);
-        % imgRawLeft = imread([model.savePath '/left.png']);
-        % imgRawRight = imread([model.savePath '/right.png']);
-        imgGrayRight = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
-        imgGrayLeft = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
+        % convert images to gray scale
+        imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
+        imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
@@ -354,16 +341,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
         end
 
         % generate new view (two pictures) with new vergence angle
-        % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
-        %                            currentTexture, objDist, angleNew, model.savePath, model.savePath));
-
-        % % abort execution if error occured
-        % if (status)
-        %     sprintf('Error in checkEnvironment:\n%s', res)
-        %     return;
-        % end
-%         [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
-%         refreshImages(currentTexture, angleNew, objDist);
+        refreshImages(currentTexture, angleNew / 2, objDist);
 
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
