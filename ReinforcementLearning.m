@@ -49,7 +49,7 @@ classdef ReinforcementLearning < handle
             obj.gamma = PARAM{6};
             obj.Temperature = PARAM{7};
             obj.lambda = PARAM{8};
-            obj.inputDim = PARAM{9};
+            obj.inputDim = PARAM{9}(1);
             obj.S2 = length(obj.Action);
             obj.Action_num = length(obj.Action);
 

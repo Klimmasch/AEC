@@ -89,7 +89,7 @@ end
 model.notes = [model.notes fileDescription]; %just and idea to store some more information
 
 % Save model every #saveInterval training iterations
-saveInterval = ceil(model.trainTime / 10);
+saveInterval = ceil(model.trainTime / 5);
 
 % Image process variables
 patchSize = 8;
@@ -261,11 +261,11 @@ for iter1 = 1 : (timeToTrain / model.interval)
     for iter2 = 1 : model.interval
         t = t + 1;
         % read input images and convert to gray scale
-        refreshImages(currentTexture, angleNew, objDist);
+        refreshImages(currentTexture, -angleNew/2, objDist);
         % imgRawLeft = imread([model.savePath '/left.png']);
         % imgRawRight = imread([model.savePath '/right.png']);
-        imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
-        imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
+        imgGrayRight = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
+        imgGrayLeft = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer

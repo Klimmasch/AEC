@@ -163,7 +163,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
 
             for iter3 = 1 : model.interval
                 % read input images and convert to gray scale
-                [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, tmpObjRange);
+                [imgRawLeft, imgRawRight] = refreshImages(currentTexture, -angleNew/2, tmpObjRange);
 %                 imgRawLeft = imread([imagesSavePath '/leftTest.png']);
 %                 imgRawRight = imread([imagesSavePath '/rightTest.png']);
                 imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);

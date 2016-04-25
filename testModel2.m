@@ -194,7 +194,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                 
                 for iter = 2 : model.interval + 1
                     % read input images and convert to gray scale
-                    [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objRange(odIndex));
+                    [imgRawLeft, imgRawRight] = refreshImages(currentTexture, -angleNew/2, objRange(odIndex));
 %                     imgRawLeft = imread([imageSavePath '/leftTest.png']);
 %                     imgRawRight = imread([imageSavePath '/rightTest.png']);
                     imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);

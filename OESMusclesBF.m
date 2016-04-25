@@ -206,7 +206,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
     for iter2 = 1 : model.interval
         t = t + 1;
 
-        [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
+        [imgRawLeft, imgRawRight] = refreshImages(currentTexture, -angleNew/2, objDist);
         % read input images and convert to gray scale
 %         imgRawLeft = imread([model.savePath '/left.png']);
 %         imgRawRight = imread([model.savePath '/right.png']);
@@ -215,7 +215,7 @@ for iter1 = 1 : (model.trainTime / model.interval)
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-        imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
+        % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
         %more advanced functions that generated the anaglyphs of the foveal views
 %         generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
 

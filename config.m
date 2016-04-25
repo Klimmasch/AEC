@@ -88,20 +88,21 @@ else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); %action variance decay factor
 end
 if continuous
-    inputDim = PARAMSC_L{3} + PARAMSC_S{3} + 1; %number of neurons in the input layer (Small + Large scale + Muscle activities)
+    dimensions = PARAMSC_L{3} + PARAMSC_S{3} + 2; %number of neurons in the input layer (Small + Large scale + Muscle activities)
+    dimensions = [dimensions, 2];                 %number of output neurons
 else
-    inputDim = PARAMSC_L{3} + PARAMSC_S{3};     % only small + large scale basis function inputs in discrete case
+    dimensions = PARAMSC_L{3} + PARAMSC_S{3};     % only small + large scale basis function inputs in discrete case
     varianceRange = 1;
 end
 hiddenDim = 50;                                     %number of neurons in the hidden layer
-weight_range = [1 / inputDim, ...                   %maximum initial weight [critic_ji, actor_ji, actor_kj]
+weight_range = [1 / dimensions(1), ...              %maximum initial weight [critic_ji, actor_ji, actor_kj]
                 0.01, ...%100 / (inputDim * hiddenDim), ...   %origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05]
                 2 / hiddenDim];                     %linear [1/inputDim, 1/inputDim, -]
 lambda = 0.01;                                      %reguralization factor | origin 0.01
 deltaVar = 1;                                       %TD error variance tracking/approximating (CACLAVar)
 eta = 0.001;                                        %TD error variance variance scaling factor (CACLAVar)
 fiScale = 1e-5;                                     %scaling factor of Fisher Information matrix (CNGFI)
-PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, inputDim, weight_range, ...
+PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
            loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour, varDec, hiddenDim};
 
 %%% Model parameters
@@ -126,7 +127,7 @@ lambdaMuscleFB = 1.0722;    %factor of muscle activity feedback to RL feature ve
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
 lambdaRec = 4.929;          %reconstruction error factor | 4.929
-lambdaMet = 0;              %metabolic costs factor | 0.204
+lambdaMet = 0.204;          %metabolic costs factor | 0.204
 lambdaV = 7.0282e-04;       %value networks input->output weights factor | L1 norm 7.0282e-04
 lambdaP1 = 0.019;           %policy networks input->hidden weights factor | L1 norm 0.019
 lambdaP2 = 0.309;           %policy networks hidden->output weights factor | L1 norm 0.309
