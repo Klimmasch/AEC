@@ -18,7 +18,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
     % imageSavePath = model.savePath;
     imageSavePath = '.';
 
-    command = [0, 0];
+    command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
     testResult = zeros(size(objRange, 2), 7, 66);
     tmpResult1 = zeros(nStim, model.interval + 1);
@@ -116,7 +116,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
     %%% Helper function that maps muscle activities to resulting angle
     function angle = getAngle(command)
         cmd = (command * 10) + 1;                               % calculate tabular index
-        angle = interp2(degrees.results_deg, cmd(1), cmd(2));   % interpolate in tabular
+        angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline');   % interpolate in tabular
     end
 
     function angle = getAngle2(command)
@@ -220,7 +220,8 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
                     % Absolute command feedback # concatination
                     if (model.rlmodel.continuous == 1)
-                        feature = [feature; command(2) * model.lambdaMuscleFB];
+%                         feature = [feature; command(2) * model.lambdaMuscleFB];
+                        feature = [feature; command * model.lambdaMuscleFB];
                     end
 
                     %%% Calculate metabolic costs
@@ -231,11 +232,12 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
                     % add the change in muscle Activities to current ones
                     if (model.rlmodel.continuous == 1)
-                        % command = command + relativeCommand';     %two muscels
-                        command(1) = 0;
-                        command(2) = command(2) + relativeCommand;  %one muscel
+                        command = command + relativeCommand;     %two muscels
+%                         command(1) = 0;
+%                         command(2) = command(2) + relativeCommand;  %one muscel
                         command = checkCmd(command);                %restrain motor commands to [0,1]
-                        angleNew = getAngle2(command);           %resulting angle is used for both eyes
+%                         angleNew = getAngle2(command);        %resulting angle is used for one eye
+                        angleNew = getAngle(command);           %resulting angle is used for both eyes
                     else
                         angleNew = angleNew + relativeCommand;
                         if (angleNew > angleMax || angleNew < angleMin)
@@ -247,7 +249,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
                     % temporary results
                     tmpResult1(stimulusIndex, iter) = angleDes - angleNew;
-                    tmpResult2(stimulusIndex, iter) = relativeCommand;
+                    tmpResult2(stimulusIndex, iter) = relativeCommand(1);
                     tmpResult3(stimulusIndex, iter) = model.rlmodel.CCritic.v_ji * feature;
                 end
             end

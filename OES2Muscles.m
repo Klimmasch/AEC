@@ -261,7 +261,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
     for iter2 = 1 : model.interval
         t = t + 1;
         % read input images and convert to gray scale
-        refreshImages(currentTexture, -angleNew/2, objDist);
+        refreshImages(currentTexture, angleNew / 2, objDist);
         % imgRawLeft = imread([model.savePath '/left.png']);
         % imgRawRight = imread([model.savePath '/right.png']);
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);

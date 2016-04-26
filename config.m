@@ -88,8 +88,8 @@ else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); %action variance decay factor
 end
 if continuous
-    dimensions = PARAMSC_L{3} + PARAMSC_S{3} + 2; %number of neurons in the input layer (Small + Large scale + Muscle activities)
-    dimensions = [dimensions, 2];                 %number of output neurons
+    dimensions = PARAMSC_L{3} + PARAMSC_S{3} + 1; %number of neurons in the input layer (Small + Large scale + Muscle activities)
+    dimensions = [dimensions, 1];                 %number of output neurons
 else
     dimensions = PARAMSC_L{3} + PARAMSC_S{3};     % only small + large scale basis function inputs in discrete case
     varianceRange = 1;

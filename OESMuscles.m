@@ -18,6 +18,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
 rng(randomizationSeed);
 useLearnedFile = [0, 0];
+learnedFile = '';
 % learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat';
 % learnedFile = '/home/lelais/Documents/MATLAB/results/model_18-Apr-2016_18:27:54_200000_nonhomeo_1_CACLAVar_NewHiddenUpdate_init00017-01-004_alpha10_var-5/model.mat';
 
@@ -245,7 +246,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
     % figure; histogram(dists); title('distances');
 
     angleNew = getAngle(command) * 2;
-    refreshImages(currentTexture, angleNew / 2, objDist);
+    refreshImages(currentTexture, angleNew / 2, objDist); %warum nicht einmal zu beginn des zweiten loops?
 
     for iter2 = 1 : model.interval
         t = t + 1;
@@ -255,10 +256,10 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
         % Generate & save the anaglyph picture
         % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-        imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
+        % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
         % more advanced functions that generated the anaglyphs of the foveal views
-        % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
-
+        generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+        
         % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
         [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
         [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
@@ -324,9 +325,9 @@ for iter1 = 1 : (timeToTrain / model.interval)
         relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
-        % command = command + relativeCommand';     %two muscels
+        % command = command + relativeCommand';     %two muscles
         command(1) = 0;
-        command(2) = command(2) + relativeCommand;  %one muscel
+        command(2) = command(2) + relativeCommand;  %one muscle
         command = checkCmd(command);                %restrain motor commands to [0,1]
 
         if (model.rlmodel.continuous == 1)
@@ -466,7 +467,7 @@ if (testIt)
     % testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
     testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotNsave(2), 1);
     % testModel2(model, nStim, plotIt, saveTestResults)
-    testModel2(10, 1, 1);
+    testModel2(model, 10, 1, 1);
 end
 
 end
