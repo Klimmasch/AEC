@@ -246,11 +246,11 @@ for iter1 = 1 : (timeToTrain / model.interval)
     % figure; histogram(dists); title('distances');
 
     angleNew = getAngle(command) * 2;
-    refreshImages(currentTexture, angleNew / 2, objDist); %warum nicht einmal zu beginn des zweiten loops?
 
     for iter2 = 1 : model.interval
         t = t + 1;
         % convert images to gray scale
+        refreshImages(currentTexture, angleNew / 2, objDist); %warum nicht einmal zu beginn des zweiten loops?
         imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
         imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
 
@@ -342,7 +342,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
         end
 
         % generate new view (two pictures) with new vergence angle
-        refreshImages(currentTexture, angleNew / 2, objDist);
+%         refreshImages(currentTexture, angleNew / 2, objDist);
 
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
