@@ -61,10 +61,10 @@ PARAMSC = {PARAMSC_L, PARAMSC_S};
 % 1 = CRG               Actor Continuous Regular Gradient [linear network topology]
 % 2 = CACLALin          Actor Continuous Actor Critic Learning Automaton [linear network topology]
 % 3 = CACLAVarLin       Actor Continuous Actor Critic Learning Automaton with (delta std) * update [linear network topology]
-% 4 = CACLA             Actor Continuous Actor Critic Learning Automaton
+% 4 = CACLA             Actor Continuous Actor Critic Learning Automaton (not compatible with two muscles)
 % 5 = CACLAVar          Actor Continuous Actor Critic Learning Automaton with (delta std) * update
-% 6 = CACLA2            Actor Continuous Actor Critic Learning Automaton [non-linear output layer]
-% 7 = CACLAVar2         Actor Continuous Actor Critic Learning Automaton with (delta std) * update [non-linear output layer]
+% 6 = CACLA2            Actor Continuous Actor Critic Learning Automaton [non-linear output layer] (not compatible with two muscles yet)
+% 7 = CACLAVar2         Actor Continuous Actor Critic Learning Automaton with (delta std) * update [non-linear output layer] (not compatible with two muscles yet)
 % 8 = CACLAVarLu        Actor Continuous Actor Critic Learning Automaton with (delta std) * update [Lukas interpretation of CACLA appoach]
 % 9 = CACLAVarAl        Actor Continuous Actor Critic Learning Automaton with (delta std) * update [Alex interpretation of CACLA appoach]
 %10 = CACLAVarBp        Actor Continuous Actor Critic Learning Automaton with (delta std) * update [CACLA appoach with std. Backpropagation]
@@ -88,8 +88,8 @@ else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); %action variance decay factor
 end
 if continuous
-    dimensions = PARAMSC_L{3} + PARAMSC_S{3} + 1; %number of neurons in the input layer (Small + Large scale + Muscle activities)
-    dimensions = [dimensions, 1];                 %number of output neurons
+    dimensions = PARAMSC_L{3} + PARAMSC_S{3} + 2; %number of neurons in the input layer (Small + Large scale + Muscle activities)
+    dimensions = [dimensions, 2];                 %number of output neurons
 else
     dimensions = PARAMSC_L{3} + PARAMSC_S{3};     % only small + large scale basis function inputs in discrete case
     varianceRange = 1;

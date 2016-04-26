@@ -54,13 +54,16 @@ classdef CACLAActor < handle
 
         function update(this)
             % delta_weights(hidden -> output)
-            dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
+            dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev'; %1 50
 
             % delta_weights(input -> hidden) [standard backprop]
-            dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') * (this.wp_kj * dwp_kj') * this.z_i_prev;
-
+            dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') * (this.wp_kj * dwp_kj') * this.z_i_prev; %50 1
+                        % 50 578                                        % 2 2
+                        % 
+                        %                                                                   %578 1
             this.wp_kj = this.wp_kj + this.beta_p * dwp_kj;
-            this.wp_ji = this.wp_ji + this.beta_p * dwp_ji * this.z_i_prev';
+            this.wp_ji = this.wp_ji + this.beta_p * dwp_ji * this.z_i_prev'; %50 578
+                                                    % 50 1      1 578
         end
 
         function command = act(this, z_i)

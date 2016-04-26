@@ -55,7 +55,7 @@ classdef CACLAActor2 < handle
 
         function update(this)
             % delta_weights(hidden -> output)
-            dwp_kj = (this.command_prev - this.z_k_prev) * ((1 - this.z_k_prev ^ 2) * this.z_j_prev');
+            dwp_kj = (this.command_prev - this.z_k_prev) * ((1 - this.z_k_prev .^ 2) * this.z_j_prev')';
 
             % delta_weights(input -> hidden) [standard backprop]
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') * (this.wp_kj * dwp_kj') * this.z_i_prev;

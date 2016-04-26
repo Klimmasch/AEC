@@ -66,7 +66,13 @@ classdef CACLAVarActorAl < handle
             dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
 
             % delta_weights(input -> hidden)
-            dwp_ji = (this.command_prev - this.z_k_prev) * ((1 - this.z_j_prev .^ 2) * this.z_i_prev');
+%             dwp_ji = (this.command_prev - this.z_k_prev) * ((1 - this.z_j_prev .^ 2) * this.z_i_prev'); %only works for 1-dim output case
+            tmp = 0;
+            for i = 1:this.output_dim
+                tmp = tmp + (this.command_prev(i) - this.z_k_prev(i));
+            end
+            dwp_ji = tmp * ((1 - this.z_j_prev .^ 2) * this.z_i_prev'); % not quite satisfied with this
+            
 
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
             this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji) * this.updateCount;
