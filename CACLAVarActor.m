@@ -72,8 +72,13 @@ classdef CACLAVarActor < handle
             % A = (1 - this.z_j_prev .^ 2) * this.z_i_prev';
             % tmp = ((this.command_prev - this.z_k_prev) * this.wp_kj)';
             % dwp_ji = A .* repmat(tmp, 1, this.input_dim);
+
             tmpVector = ((this.command_prev - this.z_k_prev) * this.wp_kj)';
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat(tmpVector, 1, this.input_dim);
+
+            % two muscels
+            % tmpVector = ((this.command_prev - this.z_k_prev)' * this.wp_kj)'; %50 1
+            % dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat(tmpVector, 1, this.input_dim); % 50 578
 
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
             % this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji * this.z_i_prev') * this.updateCount;

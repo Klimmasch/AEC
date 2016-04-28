@@ -14,12 +14,13 @@
 % ATTENTION! Do this first:
 % $ export LD_LIBRARY_PATH='/home/lelais/Documents/MATLAB/aec/OpenSimInstall/lib'
 %%%
-function OES2Muscles(trainTime, randomizationSeed, fileDescription, useLearnedFile)
+function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
 rng(randomizationSeed);
 % learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat';
 % learnedFile = '/home/lelais/Documents/MATLAB/results/model_18-Apr-2016_18:27:54_200000_nonhomeo_1_CACLAVar_NewHiddenUpdate_init00017-01-004_alpha10_var-5/model.mat';
 learnedFile = '';
+useLearnedFile = [0, 0];
 % do we want to keep it that way? one could also specify the model file in
 % the input parameters
 % textureFile = 'Textures_celine.mat';

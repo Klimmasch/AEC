@@ -66,10 +66,15 @@ classdef CACLAVarActorBp < handle
 
             % delta_weights(hidden -> output) [standard backprop]
             dwp_kj = ((this.command_prev - this.z_k_prev) * this.z_j_prev .* this.z_j_prev)';
+            % two muscles?
+            % dwp_kj = ((this.command_prev - this.z_k_prev) * (this.z_j_prev .* this.z_j_prev)');
 
             % delta_weights(input -> hidden) [standard backprop]
             % dwp_ji = (this.command_prev - this.z_k_prev) * this.z_j_prev' * this.wp_kj * ((1 - this.z_j_prev .^ 2) * this.z_i_prev');
+            % one muscle
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat((this.command_prev - this.z_k_prev) * this.z_j_prev' .* this.wp_kj, this.input_dim, 1)';
+            % two muscles
+            % dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat((this.command_prev - this.z_k_prev)' * this.wp_kj .* this.z_j_prev', this.input_dim, 1)';
 
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
             this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji) * this.updateCount;
