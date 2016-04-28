@@ -16,7 +16,6 @@ classdef Model < handle
         vergAngleMin;
         vergAngleMax;
 
-        learnedFile;        %previously learned model
         textureFile;        %config file containing texture stimulus list
         trainTime;          %number of training (intended) iterations
         trainedUntil;       %how long did the training actually proceed?
@@ -59,48 +58,57 @@ classdef Model < handle
         vergErrTest;
         responseResults;
         testResult;
+
+        % Image processing
+        patchSize;
+        dsRatioL;
+        dsRatioS;
+        foveaL;
+        foveaS;
+        columnIndL;
+        columnIndS;
     end
 
     methods
         function obj = Model(PARAM)
-            obj.learnedFile = PARAM{1}{1};
-            obj.textureFile = PARAM{1}{2};
-            obj.trainTime = PARAM{1}{3};
-            obj.sparseCodingType = PARAM{1}{4};
-            obj.focalLength = PARAM{1}{5};
-            obj.baseline = PARAM{1}{6};
-            obj.objDistMin = PARAM{1}{7};
-            obj.objDistMax = PARAM{1}{8};
-            obj.muscleInitMin = PARAM{1}{9};
-            obj.muscleInitMax = PARAM{1}{10};
-            obj.interval = PARAM{1}{11};
-            obj.lambdaMuscleFB = PARAM{1}{12};
-            obj.lambdaMet = PARAM{1}{13};
-            obj.lambdaRec = PARAM{1}{14};
-            obj.lambdaV = PARAM{1}{15};
-            obj.lambdaP1 = PARAM{1}{16};
-            obj.lambdaP2 = PARAM{1}{17};
+            obj.textureFile = PARAM{1}{1};
+            obj.trainTime = PARAM{1}{2};
+            obj.sparseCodingType = PARAM{1}{3};
+            obj.focalLength = PARAM{1}{4};
+            obj.baseline = PARAM{1}{5};
+            obj.objDistMin = PARAM{1}{6};
+            obj.objDistMax = PARAM{1}{7};
+            obj.muscleInitMin = PARAM{1}{8};
+            obj.muscleInitMax = PARAM{1}{9};
+            obj.interval = PARAM{1}{10};
+            obj.lambdaMuscleFB = PARAM{1}{11};
+            obj.lambdaMet = PARAM{1}{12};
+            obj.lambdaRec = PARAM{1}{13};
+            obj.lambdaV = PARAM{1}{14};
+            obj.lambdaP1 = PARAM{1}{15};
+            obj.lambdaP2 = PARAM{1}{16};
 
             % single eye
             obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
             obj.desiredAngleMax = atand(obj.baseline / (2 * obj.objDistMin));
+
             obj.vergAngleMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
             obj.vergAngleMax = 2 * atand(obj.baseline / (2 * obj.objDistMin));
 
             % Discrete or continuous policy
-            if (PARAM{3}{14})
+            if (PARAM{3}{14} == 1)
                 obj.rlmodel = ReinforcementLearningCont(PARAM{3});
             else
                 obj.rlmodel = ReinforcementLearning(PARAM{3});
             end
 
             % Create 2 sparse coding objects with same parameters
-            if (strcmp(obj.sparseCodingType, 'homeo'))
+            if (obj.sparseCodingType == 0)
+                obj.scmodel_Large = SparseCoding(PARAM{2}{1});      %coarse SCALE
+                obj.scmodel_Small = SparseCoding(PARAM{2}{2});      %fine scale
+            else
                 obj.scmodel_Large = SparseCodingHomeo(PARAM{2}{1}); %coarse scale
                 obj.scmodel_Small = SparseCodingHomeo(PARAM{2}{2}); %fine scale
-            else
-                obj.scmodel_Large = SparseCoding(PARAM{2}{1});      %coarse scale
-                obj.scmodel_Small = SparseCoding(PARAM{2}{2});      %fine scale
             end
             obj.stopSC = obj.trainTime;
             obj.SCInterval = 1;
@@ -117,12 +125,8 @@ classdef Model < handle
             obj.td_hist = zeros(obj.trainTime, 1);
             % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.inputDim);
             obj.cmd_hist = zeros(obj.trainTime, 2);
-            obj.relCmd_hist = zeros(obj.trainTime, obj.rlmodel.outputDimension);
-            if ((PARAM{3}{18}(2) == 5) || (PARAM{3}{18}(2) == 7))
-                obj.weight_hist = zeros(obj.trainTime, 4);
-            else
-                obj.weight_hist = zeros(obj.trainTime, 3);
-            end
+            obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
+            obj.weight_hist = zeros(obj.trainTime, 4);
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
             obj.variance_hist = zeros(obj.trainTime, 1);
@@ -134,6 +138,34 @@ classdef Model < handle
             obj.testResult = [];
             obj.trainedUntil = 0;
             obj.notes = '';
+
+            %%% Generate image processing constants
+            obj.patchSize = PARAM{1}{17};
+
+            obj.dsRatioL = obj.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
+            obj.dsRatioS = obj.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
+
+            % fovea = [128 128];
+            obj.foveaL = obj.patchSize + obj.patchSize ^ 2 / 2 ^ log2(obj.dsRatioL); %fovea size (Large scale) | 16
+            obj.foveaS = obj.patchSize + obj.patchSize ^ 2 / 2 ^ log2(obj.dsRatioS); %fovea size (Small scale) | 40
+
+            stOvL = obj.patchSize / obj.dsRatioL; %steps of overlap in the ds image | 1
+            stOvS = obj.patchSize / obj.dsRatioS; %steps of overlap in the ds image | 4
+
+            ncL = obj.foveaL - obj.patchSize + 1; %number of patches per column (slide of 1 px) | 9
+            ncS = obj.foveaS - obj.patchSize + 1; %number of patches per column (slide of 1 px) | 33
+
+            % prepare index matricies for image patches
+            obj.columnIndL = [];
+            for kc = 1:stOvL:ncL
+                tmpInd = (kc - 1) * ncL + 1 : stOvL : kc * ncL;
+                obj.columnIndL = [obj.columnIndL tmpInd];
+            end
+            obj.columnIndS = [];
+            for kc = 1:stOvS:ncS
+                tmpInd = (kc - 1) * ncS + 1 : stOvS : kc * ncS;
+                obj.columnIndS = [obj.columnIndS tmpInd];
+            end
         end
 
         %%% Copy constructor
@@ -162,8 +194,11 @@ classdef Model < handle
 
             imPind = find(sum(imagesLarge .^ 2)); %find non-zero patches (columns)
             if (isempty(imPind))
-                feature_L = zeros(this.scmodel_Large.Basis_num, 1);
-                reward_L = this.rlmodel.J; %TODO: not supported for continuous rlmodel
+                try
+                    feature_L = zeros(this.scmodel_Large.Basis_num, 1);
+                    reward_L = this.rlmodel.J; %TODO: not supported for continuous rlmodel
+                catch
+                end
                 sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
                 return;
             end

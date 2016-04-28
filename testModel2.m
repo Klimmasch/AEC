@@ -11,9 +11,11 @@ function testModel2(model, nStim, plotIt, saveTestResults)
     end
 
     %%% New renderer
-    Simulator = OpenEyeSim('create');
-    Simulator.initRenderer();
-%     Simulator.reinitRenderer(); % for debugging
+    simulator = OpenEyeSim('create');
+    % for debugging or if testing procedure shall be executed
+    % without prior training procedure
+    % simulator.initRenderer();
+    % simulator.reinitRenderer();
 
     % imageSavePath = model.savePath;
     imageSavePath = '.';
@@ -27,32 +29,6 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
     % Image processing variables
     textureFile = 'Textures_vanHaterenTest';
-    patchSize = 8;
-
-    dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
-    dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
-
-    % fovea = [128 128];
-    foveaL = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioL); %fovea size (Large scale) | 16
-    foveaS = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioS); %fovea size (Small scale) | 40
-
-    stOvL = patchSize / dsRatioL; %steps of overlap in the ds image | 1
-    stOvS = patchSize / dsRatioS; %steps of overlap in the ds image | 4
-
-    ncL = foveaL - patchSize + 1; %number of patches per column (slide of 1 px) | 9
-    ncS = foveaS - patchSize + 1; %number of patches per column (slide of 1 px) | 33
-
-    % Prepare index matricies for image patches
-    columnIndL = [];
-    for kc = 1:stOvL:ncL
-        tmpInd = (kc - 1) * ncL + 1 : stOvL : kc * ncL;
-        columnIndL = [columnIndL tmpInd];
-    end
-    columnIndS = [];
-    for kc = 1:stOvS:ncS
-        tmpInd = (kc - 1) * ncS + 1 : stOvS : kc * ncS;
-        columnIndS = [columnIndS tmpInd];
-    end
 
     % Prepare Textures
     texture = load(['config/' textureFile]);
@@ -133,22 +109,22 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
     % Generates two new images for both eyes
     function refreshImages(texture, vergAngle, objDist)
-        Simulator.add_texture(1, texture);
-        Simulator.set_params(1, vergAngle, objDist);
+        simulator.add_texture(1, texture);
+        simulator.set_params(1, vergAngle, objDist);
 
-        result1 = Simulator.generate_left;
-        result2 = Simulator.generate_right;
+        result1 = simulator.generate_left();
+        result2 = simulator.generate_right();
 
         k = 1;
         l = 1;
         for i = 1 : 3 : length(result1)
-            imgRawLeft(k,l,1) = result1(i);
-            imgRawLeft(k,l,2) = result1(i + 1);
-            imgRawLeft(k,l,3) = result1(i + 2);
+            imgRawLeft(k, l, 1) = result1(i);
+            imgRawLeft(k, l, 2) = result1(i + 1);
+            imgRawLeft(k, l, 3) = result1(i + 2);
 
-            imgRawRight(k,l,1) = result2(i);
-            imgRawRight(k,l,2) = result2(i + 1);
-            imgRawRight(k,l,3) = result2(i + 2);
+            imgRawRight(k, l, 1) = result2(i);
+            imgRawRight(k, l, 2) = result2(i + 1);
+            imgRawRight(k, l, 3) = result2(i + 2);
 
             l = l + 1;
             if (l > 320)
@@ -156,6 +132,67 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                 k = k + 1;
             end
         end
+    end
+
+    %%% Saturation function that keeps motor commands in [0, 1]
+    %   corresponding to the muscelActivity/metabolicCost tables
+    function [cmd] = checkCmd(cmd)
+        i0 = cmd < 0;
+        cmd(i0) = 0;
+        i1 = cmd > 1;
+        cmd(i1) = 1;
+    end
+
+    %%% Helper function for image preprocessing
+    %% Patch generation
+    function [patches] = preprocessImage(img, imgSize)
+        % img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
+
+        if (imgSize == 0)
+            % small scale
+            for i = 1:log2(model.dsRatioS)
+                img = impyramid(img, 'reduce');
+            end
+
+            % convert to double
+            img = double(img);
+
+            % cut fovea in the center
+            [h, w, ~] = size(img);
+            img = img(fix(h / 2 + 1 - model.foveaS / 2) : fix(h / 2 + model.foveaS / 2), ...
+                      fix(w / 2 + 1 - model.foveaS / 2) : fix(w / 2 + model.foveaS / 2));
+        else
+            % large scale
+            for i = 1:log2(model.dsRatioL)
+                img = impyramid(img, 'reduce');
+            end
+
+            % convert to double
+            img = double(img);
+
+            % cut fovea in the center
+            [h, w, ~] = size(img);
+            img = img(fix(h / 2 + 1 - model.foveaL / 2) : fix(h / 2 + model.foveaL / 2), ...
+                      fix(w / 2 + 1 - model.foveaL / 2) : fix(w / 2 + model.foveaL / 2));
+        end
+
+        % cut patches and store them as col vectors
+        patches = im2col(img, [model.patchSize model.patchSize], 'sliding');            %slide window of 1 px
+
+        % take patches at steps of s (8 px)
+        if (imgSize == 0)
+            patches = patches(:, model.columnIndS);                               %81 patches
+        else
+            patches = patches(:, model.columnIndL);                               %81 patches
+        end
+
+        % pre-processing steps (0 mean, unit norm)
+        patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
+        normp = sqrt(sum(patches.^2));                                      %patches norm
+
+        % normalize patches to norm 1
+        normp(normp == 0) = eps;                                            %regularizer
+        patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
     end
 
     tic;
@@ -207,10 +244,10 @@ function testModel2(model, nStim, plotIt, saveTestResults)
                     % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
                     % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
-                    [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
-                    [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
-                    [patchesRightSmall] = preprocessImage(imgGrayRight, foveaS, dsRatioS, patchSize, columnIndS);
-                    [patchesRightLarge] = preprocessImage(imgGrayRight, foveaL, dsRatioL, patchSize, columnIndL);
+                    [patchesLeftSmall] = preprocessImage(imgGrayLeft, 0);
+                    [patchesLeftLarge] = preprocessImage(imgGrayLeft, 1);
+                    [patchesRightSmall] = preprocessImage(imgGrayRight, 0);
+                    [patchesRightLarge] = preprocessImage(imgGrayRight, 1);
 
                     % Image patches matrix (input to model)
                     currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
@@ -220,8 +257,8 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
                     % Absolute command feedback # concatination
                     if (model.rlmodel.continuous == 1)
-%                         feature = [feature; command(2) * model.lambdaMuscleFB];
-                        feature = [feature; command * model.lambdaMuscleFB];
+                        feature = [feature; command(2) * model.lambdaMuscleFB]; % single muscle
+                        % feature = [feature; command * model.lambdaMuscleFB]; % two muscles
                     end
 
                     %%% Calculate metabolic costs
@@ -237,7 +274,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 %                         command(2) = command(2) + relativeCommand;  %one muscel
                         command = checkCmd(command);                %restrain motor commands to [0,1]
 %                         angleNew = getAngle2(command);        %resulting angle is used for one eye
-                        angleNew = getAngle(command);           %resulting angle is used for both eyes
+                        angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
                     else
                         angleNew = angleNew + relativeCommand;
                         if (angleNew > angleMax || angleNew < angleMin)
@@ -378,46 +415,6 @@ function testModel2(model, nStim, plotIt, saveTestResults)
             saveas(gcf, plotpath, 'png');
         end
     end
-end
-
-%%% Saturation function that keeps motor commands in [0, 1]
-%   corresponding to the muscelActivity/metabolicCost tables
-function [cmd] = checkCmd(cmd)
-    i0 = cmd < 0;
-    cmd(i0) = 0;
-    i1 = cmd > 1;
-    cmd(i1) = 1;
-end
-
-%%% Helper functions for image preprocessing
-%% Patch generation
-function [patches] = preprocessImage(img, fovea, downSampling, patchSize, columnIndicies)
-    % img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
-    for i = 1:log2(downSampling)
-        img = impyramid(img, 'reduce');
-    end
-
-    % convert to double
-    img = double(img);
-
-    % cut fovea in the center
-    [h, w, ~] = size(img);
-    img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
-              fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
-
-    % cut patches and store them as col vectors
-    patches = im2col(img, [patchSize patchSize], 'sliding');            %slide window of 1 px
-
-    % take patches at steps of s (8 px)
-    patches = patches(:, columnIndicies);                               %81 patches
-
-    % pre-processing steps (0 mean, unit norm)
-    patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
-    normp = sqrt(sum(patches.^2));                                      %patches norm
-
-    % normalize patches to norm 1
-    normp(normp == 0) = eps;                                            %regularizer
-    patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
 end
 
 %this function generates anaglyphs of the large and small scale fovea and

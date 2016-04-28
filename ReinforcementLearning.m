@@ -64,10 +64,13 @@ classdef ReinforcementLearning < handle
 
             % load/init
             if (PARAM{11})
-                obj.Weights = PARAM{12}(1:2);
-                obj.J = PARAM{12}{3};
-                obj.g = PARAM{12}{4};
-                obj.Weights_hist = PARAM{13};
+                % DEPRICATED
+                sprintf('This function is DEPRECATED!')
+                return;
+                % obj.Weights = PARAM{12}(1:2);
+                % obj.J = PARAM{12}{3};
+                % obj.g = PARAM{12}{4};
+                % obj.Weights_hist = PARAM{13};
             else
                 obj.NAC_initNetwork();
             end

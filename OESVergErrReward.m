@@ -139,19 +139,19 @@ function [tmpMetCost] = getMetCost(command)
 end
 
 %%% New renderer
-Simulator = OpenEyeSim('create');
-Simulator.initRenderer();
-% Simulator.reinitRenderer();
+simulator = OpenEyeSim('create');
+simulator.initRenderer();
+% simulator.reinitRenderer();
 
 imgRawLeft = uint8(zeros(240, 320, 3));
 imgRawRight = uint8(zeros(240, 320, 3));
 
 function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
-    Simulator.add_texture(1, texture);
-    Simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
+    simulator.add_texture(1, texture);
+    simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
 
-    result = Simulator.generate_left;
-    result2 = Simulator.generate_right;
+    result = simulator.generate_left;
+    result2 = simulator.generate_right;
 
     imLeft=uint8(zeros(240, 320, 3));
     k=1;l=1;
@@ -208,7 +208,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
 %     [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
 %                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
-% 
+%
 %     % abort execution if error occured
 %     if (status)
 %         sprintf('Error in checkEnvironment:\n%s', res)
@@ -250,13 +250,13 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
         %%% Calculate metabolic costs
         metCost = getMetCost(command) * 2;
-        
+
         % compute desired vergence command, disparity and vergence error
         fixDepth = (model.baseline / 2) / tand(angleNew / 2);   %fixation depth [m]
         angleDes = 2 * atand(model.baseline / (2 * objDist));   %desired vergence [deg]
         anglerr = angleDes - angleNew;                          %vergence error [deg]
         disparity = 2 * model.focalLength * tand(anglerr / 2);  %current disp [px]
-        
+
         %%% Calculate reward function
         %% Standard reward
         % rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
@@ -321,7 +321,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
         % generate new view (two pictures) with new vergence angle
 %         [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
 %                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
-% 
+%
 %         % abort execution if error occured
 %         if (status)
 %             sprintf('Error in checkEnvironment:\n%s', res)

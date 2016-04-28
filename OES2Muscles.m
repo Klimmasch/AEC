@@ -120,8 +120,7 @@ for kc = 1:stOvS:ncS
 end
 
 % Textures
-texturePath = sprintf('config/%s', textureFile);
-texture = load(texturePath);
+texture = load(sprintf('config/%s', textureFile));
 texture = texture.texture;
 nTextures = length(texture);
 
@@ -143,20 +142,20 @@ mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
 dmf = diff(mfunction(1 : 2, 1));        % delta in angle
 
 %%% New renderer
-Simulator = OpenEyeSim('create');
-Simulator.initRenderer();
-% Simulator.reinitRenderer(); % for debugging
+simulator = OpenEyeSim('create');
+simulator.initRenderer();
+% simulator.reinitRenderer(); % for debugging
 
 imgRawLeft = uint8(zeros(240, 320, 3));
 imgRawRight = uint8(zeros(240, 320, 3));
 
 % Generates two new images for both eyes
 function refreshImages(texture, vergAngle, objDist)
-    Simulator.add_texture(1, texture);
-    Simulator.set_params(1, vergAngle, objDist);
+    simulator.add_texture(1, texture);
+    simulator.set_params(1, vergAngle, objDist);
 
-    result1 = Simulator.generate_left();
-    result2 = Simulator.generate_right();
+    result1 = simulator.generate_left();
+    result2 = simulator.generate_right();
 
     k = 1;
     l = 1;

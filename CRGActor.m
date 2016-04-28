@@ -1,4 +1,7 @@
-%%% Continuous Regular Gradient Actor
+%%%
+% Continuous Regular Gradient Actor [linear network topology]
+% DEPRICATED
+%%%
 classdef CRGActor < handle
     properties
         % network parameters

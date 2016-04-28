@@ -1,4 +1,6 @@
-%%% Continuous Actor Critic Learning Automaton Critic
+%%%
+% Continuous Actor Critic Learning Automaton Critic
+%%%
 classdef CACLACritic < handle
     properties
         % network parameters
@@ -21,7 +23,7 @@ classdef CACLACritic < handle
 
     methods
         function obj = CACLACritic(PARAM)
-            obj.input_dim = PARAM{1}(1);
+            obj.input_dim = PARAM{1};
             obj.v_init_range = PARAM{2};
             obj.alpha_v = PARAM{3};
             obj.gamma = PARAM{4};

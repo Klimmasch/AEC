@@ -74,13 +74,12 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
     end
 
     % Camera parameters
-    % offset = 0;       %vertical offset between left and right (0 in the Simulator!!!)
+    % offset = 0;       %vertical offset between left and right (0 in the simulator!!!)
     f = 257.34;         %focal length [px]
     baseline = 0.056;   %interocular distance (baseline)
 
     % Textures
-    texturePath = sprintf('config/%s', textureFile);
-    texture = load(texturePath);
+    texture = load(sprintf('config/%s', textureFile));
     texture = texture.texture;
     nTextures = length(texture);
     % currentTexture = texture{1}; %choose first texture as initial

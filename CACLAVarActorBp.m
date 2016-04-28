@@ -1,5 +1,7 @@
-%%% Continuous Actor Critic Learning Automaton with variance Actor
+%%%
+% Continuous Actor Critic Learning Automaton with variance Actor
 % CACLA appoach with std. Backpropagation
+%%%
 classdef CACLAVarActorBp < handle
     properties
         % network parameters
@@ -33,29 +35,29 @@ classdef CACLAVarActorBp < handle
 
     methods
         function obj = CACLAVarActorBp(PARAM)
-            obj.input_dim = PARAM{1};
-            obj.hidden_dim = PARAM{2};
-            obj.output_dim = PARAM{3};
-            obj.w_init_range = PARAM{4};
+            obj.input_dim = PARAM{1}(1);
+            obj.hidden_dim = PARAM{1}(2);
+            obj.output_dim = PARAM{1}(3);
+            obj.w_init_range = PARAM{2};
             % obj.wp_ji = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1); % [0, 1] * w_init_range
             obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1); % [-1, 1] * w_init_range
             obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2); % [-1, 1] * w_init_range
 
-            obj.beta_p = PARAM{5};
-            obj.varianceRange = PARAM{6};
+            obj.beta_p = PARAM{3};
+            obj.varianceRange = PARAM{4};
             obj.variance = obj.varianceRange(1);
-            obj.varDec = PARAM{9};
+            obj.deltaVar = PARAM{5};
+            obj.eta = PARAM{6};
+            obj.varDec = PARAM{7};
             % obj.covmat = eye(obj.output_dim) * obj.variance;
 
-            obj.param_num = 3;
+            obj.param_num = 2;
             obj.params = zeros(1, obj.param_num);
 
             obj.z_i_prev = zeros(obj.input_dim, 1);
             obj.z_j_prev = zeros(obj.hidden_dim, 1);
             obj.z_k_prev = zeros(obj.output_dim, 1);
             obj.command_prev = 0;
-            obj.deltaVar = PARAM{7};
-            obj.eta = PARAM{8};
             obj.updateCount = 0;
         end
 

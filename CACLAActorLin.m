@@ -1,4 +1,7 @@
-%%% Continuous Actor Critic Learning Automaton Actor
+%%%
+% Continuous Actor Critic Learning Automaton Actor [linear network topology]
+% DEPRCATED
+%%%
 classdef CACLAActorLin < handle
     properties
         % network parameters

@@ -1,4 +1,8 @@
-%%% Continuous Actor Critic Learning Automaton with variance Actor
+%%%
+% Continuous Actor Critic Learning Automaton Actor
+% with (delta std) * update [linear network topology]
+% DEPRICATED
+%%%
 classdef CACLAVarActorLin < handle
     properties
         % network parameters

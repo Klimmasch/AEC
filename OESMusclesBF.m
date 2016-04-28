@@ -96,8 +96,7 @@ for kc = 1:stOvS:ncS
 end
 
 % Textures
-texturePath = sprintf('config/%s', textureFile);
-texture = load(texturePath);
+texture = load(sprintf('config/%s', textureFile));
 texture = texture.texture;
 nTextures = length(texture);
 
@@ -117,19 +116,19 @@ function [tmpMetCost] = getMetCost(command)
 end
 
 %%% New renderer
-Simulator = OpenEyeSim('create');
-Simulator.initRenderer();
-% Simulator.reinitRenderer();
+simulator = OpenEyeSim('create');
+simulator.initRenderer();
+% simulator.reinitRenderer();
 
 imgRawLeft = uint8(zeros(240, 320, 3));
 imgRawRight = uint8(zeros(240, 320, 3));
 
 function [imLeft, imRight] = refreshImages(texture, vergAngle, objDist)
-    Simulator.add_texture(1, texture);
-    Simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
+    simulator.add_texture(1, texture);
+    simulator.set_params(1, vergAngle, objDist); %2-angle 3-distance
 
-    result = Simulator.generate_left;
-    result2 = Simulator.generate_right;
+    result = simulator.generate_left;
+    result2 = simulator.generate_right;
 
     imLeft=uint8(zeros(240, 320, 3));
     k=1;l=1;
@@ -191,18 +190,18 @@ for iter1 = 1 : (model.trainTime / model.interval)
     % range = 5;  % maximum vergence is 5 degree
     % angleDes = 2 * atand(model.baseline / (2 * objDist));
     % angleNew = angleDes + truncLaplacian(b, range);
-    
+
 %     [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
 %                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
-%     
+%
 %     % abort execution if error occured
 %     if (status)
 %         sprintf('Error in checkEnvironment:\n%s', res)
 %         return;
 %     end
-    
+
 %     [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
-        
+
     for iter2 = 1 : model.interval
         t = t + 1;
 
@@ -301,15 +300,15 @@ for iter1 = 1 : (model.trainTime / model.interval)
         % generate new view (two pictures) with new vergence angle
 %         [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/left.png %s/right.png', ...
 %                                    currentTexture, objDist, angleNew, model.savePath, model.savePath));
-% 
+%
 %         % abort execution if error occured
 %         if (status)
 %             sprintf('Error in checkEnvironment:\n%s', res)
 %             return;
 %         end
-        
+
 %         [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, objDist);
-        
+
         %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
         % compute desired vergence command, disparity and vergence error
@@ -422,7 +421,7 @@ if (plotNsave(1) == 1)
             copyfile('CACLAVarActor2.m', model.savePath);
     end
     model.allPlotSave();
-    
+
 end
 
 %%% Testing procedure

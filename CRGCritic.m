@@ -1,4 +1,6 @@
-%%% Continuous Regular Gradient Critic
+%%%
+% Continuous Regular Gradient Critic
+%%%
 classdef CRGCritic < handle
     properties
         % network parameters

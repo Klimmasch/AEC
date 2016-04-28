@@ -1,5 +1,8 @@
-%%% Continuous Actor Critic Learning Automaton Actor
+%%%
+% Continuous Actor Critic Learning Automaton Actor
 % non-linearity at hidden and output layer
+% DEPRICATED
+%%%
 classdef CACLAActor2 < handle
     properties
         % network parameters
@@ -30,18 +33,18 @@ classdef CACLAActor2 < handle
 
     methods
         function obj = CACLAActor2(PARAM)
-            obj.input_dim = PARAM{1};
-            obj.hidden_dim = PARAM{2};
-            obj.output_dim = PARAM{3};
-            obj.w_init_range = PARAM{4};
+            obj.input_dim = PARAM{1}(1);
+            obj.hidden_dim = PARAM{1}(2);
+            obj.output_dim = PARAM{1}(3);
+            obj.w_init_range = PARAM{2};
             % obj.wp_ji = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1); % [0, 1] * w_init_range
             obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1); % [-1, 1] * w_init_range
             obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2); % [-1, 1] * w_init_range
 
-            obj.beta_p = PARAM{5};
-            obj.varianceRange = PARAM{6};
+            obj.beta_p = PARAM{3};
+            obj.varianceRange = PARAM{4};
             obj.variance = obj.varianceRange(1);
-            obj.varDec = PARAM{7};
+            obj.varDec = PARAM{5};
             % obj.covmat = eye(obj.output_dim) * obj.variance;
 
             obj.param_num = 2;

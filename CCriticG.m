@@ -1,3 +1,8 @@
+%%%
+% Continuous Natural-Gradient Actor-Critc
+% [Chong's implementation]
+% DEPRICATED
+%%%
 classdef CCriticG < handle
     properties
         alpha_v;

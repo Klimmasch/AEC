@@ -16,7 +16,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     end
 
     rng(randomizationSeed);
-%     textureFile = 'Textures_vanHaterenTrain';
+    % textureFile = 'Textures_vanHaterenTrain';
     textureFile = 'Textures_vanHaterenTest';
     imagesSavePath = '.'
 
@@ -79,20 +79,20 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     angleMax = getAngle([0, 1]) * 2;
 
     %%% New renderer
-    Simulator = OpenEyeSim('create');
-    Simulator.initRenderer();
-    % Simulator.reinitRenderer();
+    simulator = OpenEyeSim('create');
+    simulator.initRenderer();
+    % simulator.reinitRenderer();
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
 
     % Generates two new images for both eyes
     function refreshImages(texture, vergAngle, objDist)
-        Simulator.add_texture(1, texture);
-        Simulator.set_params(1, vergAngle, objDist);
+        simulator.add_texture(1, texture);
+        simulator.set_params(1, vergAngle, objDist);
 
-        result1 = Simulator.generate_left;
-        result2 = Simulator.generate_right;
+        result1 = simulator.generate_left;
+        result2 = simulator.generate_right;
 
         k = 1;
         l = 1;
