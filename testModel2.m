@@ -3,8 +3,10 @@
 %@param nStim               # stimuli to be tested
 %@pram plotIt               whether plots shall be generated
 %@param saveTestResults     whether to save the results (not recommended if model is still trained!)
+%@param reinitRenderer      1 if renderer was already initialized, e.g. when training was conducted before
+%                           0 if testModel is called stand-alone
 %%%
-function testModel2(model, nStim, plotIt, saveTestResults)
+function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
     % cancel testing procedure
     if (nStim == 0)
         return;
@@ -14,8 +16,11 @@ function testModel2(model, nStim, plotIt, saveTestResults)
     simulator = OpenEyeSim('create');
     % for debugging or if testing procedure shall be executed
     % without prior training procedure
-    % simulator.initRenderer();
-    % simulator.reinitRenderer();
+    if (reinitRenderer == 1)
+        simulator.reinitRenderer();
+    else
+        simulator.initRenderer();
+    end
 
     % imageSavePath = model.savePath;
     imageSavePath = '.';
@@ -269,9 +274,9 @@ function testModel2(model, nStim, plotIt, saveTestResults)
 
                     % add the change in muscle Activities to current ones
                     if (model.rlmodel.continuous == 1)
-                        command = command + relativeCommand;     %two muscels
+%                         command = command + relativeCommand;     %two muscels
 %                         command(1) = 0;
-%                         command(2) = command(2) + relativeCommand;  %one muscel
+                        command(2) = command(2) + relativeCommand;  %one muscel
                         command = checkCmd(command);                %restrain motor commands to [0,1]
 %                         angleNew = getAngle2(command);        %resulting angle is used for one eye
                         angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
@@ -335,7 +340,7 @@ function testModel2(model, nStim, plotIt, saveTestResults)
             xlabel('Iteration step', 'FontSize', 12);
             ylabel('Vergence Error [deg]', 'FontSize', 12);
             title(sprintf('Avg Vergence Error over Trial at Testing (objDist = %.1fm)', objRange(odIndex)));
-            plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.1fm]', model.savePath, objRange(odIndex));
+            plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.1fm].png', model.savePath, objRange(odIndex));
             saveas(gcf, plotpath, 'png');
         end
 

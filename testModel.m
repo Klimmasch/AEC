@@ -8,17 +8,29 @@
 %@param randObjRange        whether the object ranges shall be randomized at testing procedure
 %@pram plotIt               whether plots shall be generated
 %@param saveTestResults     whether to save the results (not recommended if model is still trained!)
+%@param reinitRenderer      1 if renderer was already initialized, e.g. when training was conducted before
+%                           0 if testModel is called stand-alone
 %%%
-function testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
+function testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults, reinitRenderer)
     % cancel testing procedure
     if (repeat == [0, 0])
         return;
     end
 
+    %%% New renderer
+    simulator = OpenEyeSim('create');
+    % for debugging or if testing procedure shall be executed
+    % without prior training procedure
+    if (reinitRenderer == 1)
+        simulator.reinitRenderer();
+    else
+        simulator.initRenderer();
+    end
+
     rng(randomizationSeed);
     % textureFile = 'Textures_vanHaterenTrain';
     textureFile = 'Textures_vanHaterenTest';
-    imagesSavePath = '.'
+    imagesSavePath = '.';
 
     % Image processing variables
     patchSize = 8;
@@ -77,11 +89,6 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     % muscle commands
     angleMin = getAngle([0, 0]) * 2;
     angleMax = getAngle([0, 1]) * 2;
-
-    %%% New renderer
-    simulator = OpenEyeSim('create');
-    simulator.initRenderer();
-    % simulator.reinitRenderer();
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -553,7 +560,7 @@ function deltaMFplotGenDist(model, responseResults)
     ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
     title('\Delta MF(verg_{err}) response at Testing procedure');
     if (~isempty(model.savePath))
-        plotpath = sprintf('%s/deltaMFasFktVerErrGenDist_[%.1fm,%.1fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
+        plotpath = sprintf('%s/deltaMFasFktVerErrGenDist_[%.1fm,%.1fm].png', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
         saveas(gcf, plotpath, 'png');
     end
 end
@@ -636,7 +643,7 @@ function recErrPlotGenDist(model, responseResults)
     title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(responseResults.objRange)));
 
     if (~ isempty(model.savePath))
-        plotpath = sprintf('%s/recErrVsVerErrGenDist_[%.1fm,%.1fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
+        plotpath = sprintf('%s/recErrVsVerErrGenDist_[%.1fm,%.1fm].png', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
         saveas(gcf, plotpath, 'png');
     end
 end
@@ -672,7 +679,7 @@ function criticValPlotGenDist(model, responseResults)
     title(sprintf('Critic Value over different disparities\nobject distances: [%s]', num2str(responseResults.objRange)));
 
     if (~ isempty(model.savePath))
-        plotpath = sprintf('%s/criticValvsVerErrGenDist_[%.1fm,%.1fm]', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
+        plotpath = sprintf('%s/criticValvsVerErrGenDist_[%.1fm,%.1fm].png', model.savePath, responseResults.objRange(1), responseResults.objRange(end));
         saveas(gcf, plotpath, 'png');
     end
 end

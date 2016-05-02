@@ -107,6 +107,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
     mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
     dmf = diff(mfunction(1 : 2, 1));        % delta in angle
+    dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
 
     %%% New renderer
     simulator = OpenEyeSim('create');
@@ -148,13 +149,19 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
         % look up index of vergAngle
         indVergAngle = find(mfunction(:, 1) <= vergAngle + dmf & mfunction(:, 1) >= vergAngle - dmf);
         mf = mfunction(indVergAngle, 2);
-        mf = mf(1);
+        mf = mf(ceil(length(mf) / 2));
     end
 
     %%% Helper function that maps muscle activities to resulting angle
     function [angle] = getAngle(command)
         cmd = (command * 10) + 1;                               % scale commands to table entries
         angle = interp2(degrees.results_deg, cmd(1), cmd(2));   % interpolate in tabular
+    end
+
+    function angle = getAngle2(command)
+        angleIndex = find(mfunction(:, 2) <= command(2) + dmf2 & mfunction(:, 2) >= command(2) - dmf2);
+        angle = mfunction(angleIndex, 1);
+        angle = angle(ceil(length(angle) / 2));
     end
 
     %%% Helper function that maps muscle activities to resulting metabolic costs
@@ -262,7 +269,8 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
         % figure; histogram(angles); title('angles');
         % figure; histogram(dists); title('distances');
 
-        angleNew = getAngle(command) * 2;
+        % angleNew = getAngle(command) * 2;
+        angleNew = getAngle2(command);
 
         for iter2 = 1 : model.interval
             t = t + 1;
@@ -294,9 +302,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
             %%% Feedback
             % Absolute command feedback # concatination
-            if (model.rlmodel.continuous == 1)
-                feature = [feature; command(2) * model.lambdaMuscleFB];
-            end
+            feature = [feature; command(2) * model.lambdaMuscleFB];
 
             %%% Calculate metabolic costs
             metCost = getMetCost(command) * 2;
@@ -350,17 +356,8 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
             command(2) = command(2) + relativeCommand;  %one muscle
             command = checkCmd(command);                %restrain motor commands to [0,1]
 
-            if (model.rlmodel.continuous == 1)
-                angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
-            else
-                angleNew = angleNew + relativeCommand;
-                if (angleNew > 71.5 || angleNew < 0.99) % analogous to checkCmd
-                    command(1) = 0;
-                    tmpDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
-                    command(2) = getMF(2 * atand(model.baseline / (2 * tmpDist)));
-                    angleNew = getAngle(command) * 2;
-                end
-            end
+            % angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
+            angleNew = getAngle2(command);
 
             %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
@@ -383,14 +380,12 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
             model.reward_hist(t) = rewardFunction;
             % model.feature_hist(t, :) = feature;
             model.metCost_hist(t) = metCost;
-            if (model.rlmodel.continuous == 1)
-                model.td_hist(t) = model.rlmodel.CCritic.delta;
-                model.weight_hist(t, 1) = model.rlmodel.CCritic.params(1);
-                model.weight_hist(t, 2) = model.rlmodel.CActor.params(1);
-                model.weight_hist(t, 3) = model.rlmodel.CActor.params(2);
-                model.weight_hist(t, 4) = model.rlmodel.CActor.params(3);
-                model.variance_hist(t) = model.rlmodel.CActor.variance;
-            end
+            model.td_hist(t) = model.rlmodel.CCritic.delta;
+            model.weight_hist(t, 1) = model.rlmodel.CCritic.params(1);
+            model.weight_hist(t, 2) = model.rlmodel.CActor.params(1);
+            model.weight_hist(t, 3) = model.rlmodel.CActor.params(2);
+            model.weight_hist(t, 4) = model.rlmodel.CActor.params(3);
+            model.variance_hist(t) = model.rlmodel.CActor.variance;
 
             model.trainedUntil = t;
         end
@@ -431,7 +426,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
         % testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
         % testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotIt(2), 1);
         % testModel2(model, nStim, plotIt, saveTestResults)
-        testModel2(model, 50, plotIt(2), 1);
+        testModel2(model, 50, plotIt(2), 1, 1);
     end
 end
 

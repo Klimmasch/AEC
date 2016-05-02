@@ -367,33 +367,19 @@ classdef Model < handle
             figure;
             hold on;
             grid on;
-            if (this.rlmodel.rlFlavour(2) >= 4)
-                subplot(3, 1, 1);
-                plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-                ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-                title('w_{Vji}');
-                subplot(3, 1, 2);
-                plot(this.weight_hist(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-                ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-                title('w_{Pji}');
-                subplot(3, 1, 3);
-                plot(this.weight_hist(:, 3), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
-                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-                ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-                title('w_{Pkj}');
-            else
-                try
-                    plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-                    plot(this.weight_hist(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-                    plot(this.weight_hist(:, 3), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-                    ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-                    legend('w_{Vji}', 'w_{Pki}', 'Location', 'best');
-                    title('Model weights (L1)');
-                catch
-                    sprintf('weights could not be displayed. May be you use an old version of model.')
-                end
-            end
+            subplot(3, 1, 1);
+            plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+            ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+            title('w_{Vji}');
+            subplot(3, 1, 2);
+            plot(this.weight_hist(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+            ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+            title('w_{Pji}');
+            subplot(3, 1, 3);
+            plot(this.weight_hist(:, 3), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+            title('w_{Pkj}');
             plotpath = sprintf('%s/weightsL1', this.savePath);
             saveas(gcf, plotpath, 'png');
 
