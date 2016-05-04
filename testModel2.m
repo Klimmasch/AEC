@@ -25,12 +25,15 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
     % imageSavePath = model.savePath;
     imageSavePath = '.';
 
+    % fixation interval at testing procedure
+    testInterval = model.interval;
+
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
     testResult = zeros(size(objRange, 2), 7, 66);
-    tmpResult1 = zeros(nStim, model.interval + 1);
-    tmpResult2 = zeros(nStim, model.interval + 1);
-    tmpResult3 = zeros(nStim, model.interval + 1);
+    tmpResult1 = zeros(nStim, testInterval + 1);
+    tmpResult2 = zeros(nStim, testInterval + 1);
+    tmpResult3 = zeros(nStim, testInterval + 1);
 
     % Image processing variables
     textureFile = 'Textures_vanHaterenTest';
@@ -58,6 +61,26 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
     dmf = diff(mfunction(1 : 2, 1));        % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
     indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
+
+    %%% Perfect Response function
+    indMaxFix = find(mfunction(:, 1) <= model.vergAngleMin + dmf & mfunction(:, 1) >= model.vergAngleMin - dmf); % MF(vergAngleMin)_index
+    indMaxFix = indMaxFix(1);
+    indMinFix = find(mfunction(:, 1) <= model.vergAngleMax + dmf & mfunction(:, 1) >= model.vergAngleMax - dmf); % MF(vergAngleMax)_index
+    indMinFix = indMinFix(1);
+
+    % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
+    % x = vergenceError, y = deltaMuscelForce
+    perfectResponseMaxFix = [(mfunction(indMaxFix, 1) - flipud(mfunction(indMaxFix : end, 1))), ...
+                             (mfunction(indMaxFix, 2) - flipud(mfunction(indMaxFix : end, 2))); ...
+                             (mfunction(indMaxFix, 1) - flipud(mfunction(indZero : indMaxFix - 1, 1))), ...
+                             (mfunction(indMaxFix, 2) - flipud(mfunction(indZero : indMaxFix - 1, 2)))];
+
+    perfectResponseMinFix = [(mfunction(indMinFix, 1) - flipud(mfunction(indMinFix : end, 1))), ...
+                             (mfunction(indMinFix, 2) - flipud(mfunction(indMinFix : end, 2))); ...
+                             (mfunction(indMinFix, 1) - flipud(mfunction(indZero : indMinFix - 1, 1))), ...
+                             (mfunction(indMinFix, 2) - flipud(mfunction(indZero : indMinFix - 1, 2)))];
+
+    perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
 
     % minimal and maximal angle that can be reached by one-dimensional muscle commands
     angleMin = mfunction(indZero, 1);
@@ -240,7 +263,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
                 % imshow(imgRawRight);
                 %%% DEBUGGING END
 
-                for iter = 2 : model.interval + 1
+                for iter = 2 : testInterval + 1
                     % convert images to gray scale
                     imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
                     imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
@@ -337,9 +360,10 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
                 errorbar(0 : 10, testResult(odIndex, vseIndex, 1 : 11), testResult(odIndex, vseIndex, 12 : 22), ...
                          'color', [rand, rand, rand], 'LineWidth', 1.3);
             end
-            xlabel('Iteration step', 'FontSize', 12);
+            axis([-1, testInterval + 1, -inf, inf]);
+            xlabel(sprintf('Iteration step (objDist=%.1fm, #stimuli=%d)', objRange(odIndex), nStim), 'FontSize', 12);
             ylabel('Vergence Error [deg]', 'FontSize', 12);
-            title(sprintf('Avg Vergence Error over Trial at Testing (objDist = %.1fm)', objRange(odIndex)));
+            title('Avg Vergence Error over Trial at Testing');
             plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.1fm].png', model.savePath, objRange(odIndex));
             saveas(gcf, plotpath, 'png');
         end
@@ -348,7 +372,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
         % figure;
         % hold on;
         % grid on;
-        % [x, y] = meshgrid(0 : model.interval, objRange);
+        % [x, y] = meshgrid(0 : testInterval, objRange);
         % for vseIndex = 1 : 7
         %     surf(x, y, reshape(model.testResult(:, vseIndex, 1 : 11), [4, 11]));
         % end
@@ -363,28 +387,52 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
         figure;
         hold on;
         grid on;
+        % perfect response to vergence error
+        hl1 = plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], ...
+                   'DisplayName', 'perfect (fixDist_{max})', 'LineWidth', 1.3);
+        hl2 = plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], ...
+                   'DisplayName', 'perfect (fixDist_{min})', 'LineWidth', 1.3);
+        lineHandles = [hl1, hl2];
+
+        % actual response
         for odIndex = 1 : size(objRange, 2)
             % delta_mf_t+1(vergAngle_t)
-            errorbar(reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10]), ...
-                     reshape(reshape(testResult(odIndex, :, 24 : 33), [7, 10])', [1, 7 * 10]), ...
-                     reshape(reshape(testResult(odIndex, :, 35 : 44), [7, 10])', [1, 7 * 10]), ...
-                     'DisplayName', num2str(objRange(odIndex)), 'Marker', '*', 'MarkerSize', 3, ...
-                     'color', [rand, rand, rand], 'LineWidth', 0.9, 'LineStyle', 'none');
-            % l = legend('-DynamicLegend');
-            legend('-DynamicLegend');
+            % hl3 = errorbar(reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10]), ...
+            %                reshape(reshape(testResult(odIndex, :, 24 : 33), [7, 10])', [1, 7 * 10]), ...
+            %                reshape(reshape(testResult(odIndex, :, 35 : 44), [7, 10])', [1, 7 * 10]), ...
+            %                'DisplayName', sprintf('%.1fm objDist', objRange(odIndex)), 'Marker', '*', 'MarkerSize', 2.5, ...
+            %                'color', [rand, rand, rand], 'LineWidth', 0.7, 'LineStyle', 'none');
+
+            tmpMat = sortrows([reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10])', ...
+                               reshape(reshape(testResult(odIndex, :, 24 : 33), [7, 10])', [1, 7 * 10])', ...
+                               reshape(reshape(testResult(odIndex, :, 35 : 44), [7, 10])', [1, 7 * 10])']);
+
+            [hl3, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
+
+            hl3.DisplayName = sprintf('%.1fm objDist', objRange(odIndex));
+            hl3.Marker = '*';
+            hl3.MarkerSize = 2.5;
+            hl3.Color = [rand, rand, rand];
+            hp.FaceColor = hl3.Color;
+            hl3.LineStyle = 'none';
+            % outlinebounds(hl3, hp);
+            lineHandles = [lineHandles, hl3];
         end
+        l = legend(lineHandles);
+        l.Location = 'southeast';
+        l.Box = 'off';
 
         % adjust axis to actual response ranges + std deviation
         xmin = -4;
-        xmax = 7;
+        xmax = 6;
         ymin = -0.1;
         ymax = 0.1;
-        plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
-        plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
+        plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.2);
+        plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.2);
         axis([xmin, xmax, ymin, ymax]);
         % l.Title.String = 'objDist [m]';
         % l.Title.FontSize = 12;
-        xlabel('Vergence Error [deg]', 'FontSize', 12);
+        xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
         ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
         title('\Delta MF(verg_{err}) response at Testing procedure');
         if (~isempty(model.savePath))
@@ -398,21 +446,34 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
         grid on;
         for odIndex = 1 : size(objRange, 2)
             % delta_mf_t+1(vergAngle_t)
-            errorbar(reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10]), ...
-                     reshape(reshape(testResult(odIndex, :, 46 : 55), [7, 10])', [1, 7 * 10]), ...
-                     reshape(reshape(testResult(odIndex, :, 57 : 66), [7, 10])', [1, 7 * 10]), ...
-                     'LineWidth', 0.9);
+            % errorbar(reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10]), ...
+            %          reshape(reshape(testResult(odIndex, :, 46 : 55), [7, 10])', [1, 7 * 10]), ...
+            %          reshape(reshape(testResult(odIndex, :, 57 : 66), [7, 10])', [1, 7 * 10]), ...
+            %          'Marker', '*', 'MarkerSize', 2.5, 'LineWidth', 0.9, 'LineStyle', 'none');
+
+            tmpMat = sortrows([reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10])', ...
+                               reshape(reshape(testResult(odIndex, :, 46 : 55), [7, 10])', [1, 7 * 10])', ...
+                               reshape(reshape(testResult(odIndex, :, 57 : 66), [7, 10])', [1, 7 * 10])']);
+
+            [hl, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
+
+            hl.DisplayName = sprintf('%.1fm objDist', objRange(odIndex));
+            hl.Marker = '*';
+            hl.MarkerSize = 2.5;
+            hl.Color = [0, 0.5882, 0.9608];
+            hp.FaceColor = hl.Color;
+            hl.LineStyle = 'none';
         end
 
         % adjust axis to actual response ranges + std deviation
-        % xmin = -4;
-        % xmax = 6;
-        % ymin = -0.1;
-        % ymax = 0.1;
+        xmin = -4;
+        xmax = 6;
+        ymin = -inf;
+        ymax = inf;
         % plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
         % plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-        % axis([xmin, xmax, ymin, ymax]);
-        xlabel('Vergence Error [deg]', 'FontSize', 12);
+        axis([xmin, xmax, ymin, ymax]);
+        xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
         ylabel('Value', 'FontSize', 12);
         title('Critic Value over different disparities');
         if (~isempty(model.savePath))
