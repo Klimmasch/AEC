@@ -425,8 +425,8 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
     if (testIt)
         % testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
         % testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotIt(2), 1);
-        % testModel2(model, nStim, plotIt, saveTestResults)
-        testModel2(model, 50, plotIt(2), 1, 1);
+        % testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
+        testModel2(model, 2, plotIt(2), 1, simulator, 0);
     end
 end
 

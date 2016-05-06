@@ -3,23 +3,30 @@
 %@param nStim               # stimuli to be tested
 %@pram plotIt               whether plots shall be generated
 %@param saveTestResults     whether to save the results (not recommended if model is still trained!)
-%@param reinitRenderer      1 if renderer was already initialized, e.g. when training was conducted before
-%                           0 if testModel is called stand-alone
+%@param simulator           simulator handle, provide [] if there is no simulator handle yet
+%@param reinitRenderer      1 if renderer was already initialized
+%                           0 if renderer wasn't initialized yet
 %%%
-function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
+function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer)
+
     % cancel testing procedure
-    if (nStim == 0)
+    if ((nStim == 0) && (isempty(model.testResult)))
+        sprintf('Model has no testResults!')
+        return;
+    elseif (nStim == 1)
+        sprintf('nStim must be != 1!')
         return;
     end
 
     %%% New renderer
-    simulator = OpenEyeSim('create');
-    % for debugging or if testing procedure shall be executed
-    % without prior training procedure
-    if (reinitRenderer == 1)
-        simulator.reinitRenderer();
-    else
-        simulator.initRenderer();
+    if (isempty(simulator))
+        simulator = OpenEyeSim('create');
+        if (reinitRenderer == 0)
+            simulator.initRenderer();
+        else
+            % for debugging purposes
+            simulator.reinitRenderer();
+        end
     end
 
     % imageSavePath = model.savePath;
@@ -224,130 +231,140 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
     end
 
     tic;
-    for odIndex = 1 : size(objRange, 2)
-        sprintf('Testing iteration = %d/%d', odIndex, size(objRange, 2))
+    % don't repeat testing procedure if nStim == 0, but just plot the results
+    if (nStim > 0)
+        for odIndex = 1 : size(objRange, 2)
+            sprintf('Testing iteration = %d/%d', odIndex, size(objRange, 2))
 
-        % vergence start error
-        vseRange = [-3, -2, -1, linspace(0, getVergErrMax(objRange(odIndex)), 4)];
-        angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
+            % vergence start error
+            vseRange = [-3, -2, -1, linspace(0, getVergErrMax(objRange(odIndex)), 4)];
+            angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
 
-        for vseIndex = 1 : size(vseRange, 2)
-            tmpResult1(:, 1) = vseRange(vseIndex);
+            for vseIndex = 1 : size(vseRange, 2)
+                tmpResult1(:, 1) = vseRange(vseIndex);
 
-            for stimulusIndex = 1 : nStim
-                currentTexture = texture{stimulusIndex};
-                command(1) = 0;
-                [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
-                refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
-
-                %%% DEBUGGING
-                % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
-                %                                'a.bmp',2, 2,imageSavePath, imageSavePath));
-
-                % refreshImages('b.bmp', 2/2, 2);
-
-                % figure;
-                % subplot(1,2,1)
-                % imshow(imfuse(imread([imageSavePath '/leftTest.png']), imgRawLeft, 'falsecolor'));
-                % subplot(1,2,2)
-                % imshow(imfuse(imread([imageSavePath '/rightTest.png']), imgRawRight, 'falsecolor'));
-
-                % figure
-                % subplot(2,2,1)
-                % imshow(imread([imageSavePath '/leftTest.png']));
-                % subplot(2,2,2)
-                % imshow(imread([imageSavePath '/rightTest.png']));
-                % subplot(2,2,3)
-                % imshow(imgRawLeft);
-                % subplot(2,2,4)
-                % imshow(imgRawRight);
-                %%% DEBUGGING END
-
-                for iter = 2 : testInterval + 1
-                    % convert images to gray scale
-                    imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
-                    imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
-
-                    % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imagesSavePath '/anaglyph.png']);
-                    % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
-
-                    % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
-                    [patchesLeftSmall] = preprocessImage(imgGrayLeft, 0);
-                    [patchesLeftLarge] = preprocessImage(imgGrayLeft, 1);
-                    [patchesRightSmall] = preprocessImage(imgGrayRight, 0);
-                    [patchesRightLarge] = preprocessImage(imgGrayRight, 1);
-
-                    % Image patches matrix (input to model)
-                    currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
-
-                    % Generate input feature vector from current images
-                    [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
-
-                    % Absolute command feedback # concatination
-                    if (model.rlmodel.continuous == 1)
-                        feature = [feature; command(2) * model.lambdaMuscleFB]; % single muscle
-                        % feature = [feature; command * model.lambdaMuscleFB]; % two muscles
-                    end
-
-                    %%% Calculate metabolic costs
-                    % metCost = getMetCost(command) * 2;
-
-                    %%% Action
-                    relativeCommand = model.rlmodel.act(feature);
-
-                    % add the change in muscle Activities to current ones
-                    if (model.rlmodel.continuous == 1)
-%                         command = command + relativeCommand;     %two muscels
-%                         command(1) = 0;
-                        command(2) = command(2) + relativeCommand;  %one muscel
-                        command = checkCmd(command);                %restrain motor commands to [0,1]
-%                         angleNew = getAngle2(command);        %resulting angle is used for one eye
-                        angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
-                    else
-                        angleNew = angleNew + relativeCommand;
-                        if (angleNew > angleMax || angleNew < angleMin)
-                            angleNew = model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1);
-                        end
-                    end
-
+                for stimulusIndex = 1 : nStim
+                    currentTexture = texture{stimulusIndex};
+                    command(1) = 0;
+                    [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
                     refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
 
-                    % temporary results
-                    tmpResult1(stimulusIndex, iter) = angleDes - angleNew;
-                    tmpResult2(stimulusIndex, iter) = relativeCommand(1);
-                    tmpResult3(stimulusIndex, iter) = model.rlmodel.CCritic.v_ji * feature;
+                    %%% DEBUGGING
+                    % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
+                    %                                'a.bmp',2, 2,imageSavePath, imageSavePath));
+
+                    % refreshImages('b.bmp', 2/2, 2);
+
+                    % figure;
+                    % subplot(1,2,1)
+                    % imshow(imfuse(imread([imageSavePath '/leftTest.png']), imgRawLeft, 'falsecolor'));
+                    % subplot(1,2,2)
+                    % imshow(imfuse(imread([imageSavePath '/rightTest.png']), imgRawRight, 'falsecolor'));
+
+                    % figure
+                    % subplot(2,2,1)
+                    % imshow(imread([imageSavePath '/leftTest.png']));
+                    % subplot(2,2,2)
+                    % imshow(imread([imageSavePath '/rightTest.png']));
+                    % subplot(2,2,3)
+                    % imshow(imgRawLeft);
+                    % subplot(2,2,4)
+                    % imshow(imgRawRight);
+                    %%% DEBUGGING END
+
+                    for iter = 2 : testInterval + 1
+                        % convert images to gray scale
+                        imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
+                        imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
+
+                        % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imagesSavePath '/anaglyph.png']);
+                        % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
+
+                        % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
+                        [patchesLeftSmall] = preprocessImage(imgGrayLeft, 0);
+                        [patchesLeftLarge] = preprocessImage(imgGrayLeft, 1);
+                        [patchesRightSmall] = preprocessImage(imgGrayRight, 0);
+                        [patchesRightLarge] = preprocessImage(imgGrayRight, 1);
+
+                        % Image patches matrix (input to model)
+                        currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
+
+                        % Generate input feature vector from current images
+                        [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
+
+                        % Absolute command feedback # concatination
+                        if (model.rlmodel.continuous == 1)
+                            feature = [feature; command(2) * model.lambdaMuscleFB]; % single muscle
+                            % feature = [feature; command * model.lambdaMuscleFB]; % two muscles
+                        end
+
+                        %%% Calculate metabolic costs
+                        % metCost = getMetCost(command) * 2;
+
+                        %%% Action
+                        relativeCommand = model.rlmodel.act(feature);
+
+                        % add the change in muscle Activities to current ones
+                        if (model.rlmodel.continuous == 1)
+                            % command = command + relativeCommand;     %two muscels
+                            command(1) = 0;
+                            command(2) = command(2) + relativeCommand;  %one muscel
+                            command = checkCmd(command);                %restrain motor commands to [0,1]
+                            angleNew = getAngle2(command);              %resulting angle is used for one eye
+                            % angleNew = getAngle(command) * 2;         %resulting angle is used for both eyes
+                        else
+                            angleNew = angleNew + relativeCommand;
+                            if (angleNew > angleMax || angleNew < angleMin)
+                                angleNew = model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1);
+                            end
+                        end
+
+                        refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
+
+                        % track bad or redundant stimuli
+                        % if (iter == 11)
+                        %     if (abs(angleDes - angleNew) > 0.5)
+                        %         sprintf('VergErr = %.1f\timage = %s\tstimulusIndex = %d\tobjDist = %.1f', (angleDes - angleNew), currentTexture, stimulusIndex, objRange(odIndex))
+                        %     end
+                        % end
+
+                        % temporary results
+                        tmpResult1(stimulusIndex, iter) = angleDes - angleNew;
+                        tmpResult2(stimulusIndex, iter) = relativeCommand(1);
+                        tmpResult3(stimulusIndex, iter) = model.rlmodel.CCritic.v_ji * feature;
+                    end
                 end
+
+                % final results
+                testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1);   % vergErr
+                testResult(odIndex, vseIndex, 12 : 22) = std(tmpResult1);
+                testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2);  % deltaMF
+                testResult(odIndex, vseIndex, 34 : 44) = std(tmpResult2);
+                testResult(odIndex, vseIndex, 45 : 55) = mean(tmpResult3);  % critic's response
+                testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
             end
+        end
+        toc
 
-            % final results
-            testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1);   % vergErr
-            testResult(odIndex, vseIndex, 12 : 22) = std(tmpResult1);
-            testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2);  % deltaMF
-            testResult(odIndex, vseIndex, 34 : 44) = std(tmpResult2);
-            testResult(odIndex, vseIndex, 45 : 55) = mean(tmpResult3);  % critic's response
-            testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
+        % save test results
+        try
+            model.testResult = testResult;
+            if (saveTestResults == 1)
+                save(strcat(model.savePath, '/model'), 'model');
+            end
+        catch
+            % catch non-existing variables error, occuring at old models
+            clone = model.copy();
+            delete(model);
+            clear model;
+            model = clone;
+            model.testResult = testResult;
+            if (saveTestResults == 1)
+                save(strcat(model.savePath, '/model'), 'model');
+            end
+            delete(clone);
+            clear clone;
         end
-    end
-    toc
-
-    % save test results
-    try
-        model.testResult = testResult;
-        if (saveTestResults == 1)
-            save(strcat(model.savePath, '/model'), 'model');
-        end
-    catch
-        % catch non-existing variables error, occuring at old models
-        clone = model.copy();
-        delete(model);
-        clear model;
-        model = clone;
-        model.testResult = testResult;
-        if (saveTestResults == 1)
-            save(strcat(model.savePath, '/model'), 'model');
-        end
-        delete(clone);
-        clear clone;
     end
 
     if (plotIt == 1)
@@ -356,8 +373,8 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
             figure;
             hold on;
             grid on;
-            for vseIndex = 1 : 7
-                errorbar(0 : 10, testResult(odIndex, vseIndex, 1 : 11), testResult(odIndex, vseIndex, 12 : 22), ...
+            for vseIndex = 1 : size(model.testResult, 2)
+                errorbar(0 : 10, model.testResult(odIndex, vseIndex, 1 : 11), model.testResult(odIndex, vseIndex, 12 : 22), ...
                          'color', [rand, rand, rand], 'LineWidth', 1.3);
             end
             axis([-1, testInterval + 1, -inf, inf]);
@@ -373,7 +390,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
         % hold on;
         % grid on;
         % [x, y] = meshgrid(0 : testInterval, objRange);
-        % for vseIndex = 1 : 7
+        % for vseIndex = 1 : size(model.testResult, 2)
         %     surf(x, y, reshape(model.testResult(:, vseIndex, 1 : 11), [4, 11]));
         % end
         % xlabel('Iteration step', 'FontSize', 12);
@@ -397,15 +414,15 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
         % actual response
         for odIndex = 1 : size(objRange, 2)
             % delta_mf_t+1(vergAngle_t)
-            % hl3 = errorbar(reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10]), ...
-            %                reshape(reshape(testResult(odIndex, :, 24 : 33), [7, 10])', [1, 7 * 10]), ...
-            %                reshape(reshape(testResult(odIndex, :, 35 : 44), [7, 10])', [1, 7 * 10]), ...
+            % hl3 = errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
+            %                reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
+            %                reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
             %                'DisplayName', sprintf('%.1fm objDist', objRange(odIndex)), 'Marker', '*', 'MarkerSize', 2.5, ...
             %                'color', [rand, rand, rand], 'LineWidth', 0.7, 'LineStyle', 'none');
 
-            tmpMat = sortrows([reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10])', ...
-                               reshape(reshape(testResult(odIndex, :, 24 : 33), [7, 10])', [1, 7 * 10])', ...
-                               reshape(reshape(testResult(odIndex, :, 35 : 44), [7, 10])', [1, 7 * 10])']);
+            tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])']);
 
             [hl3, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
@@ -424,7 +441,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
 
         % adjust axis to actual response ranges + std deviation
         xmin = -4;
-        xmax = 6;
+        xmax = 7;
         ymin = -0.1;
         ymax = 0.1;
         plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.2);
@@ -446,14 +463,14 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
         grid on;
         for odIndex = 1 : size(objRange, 2)
             % delta_mf_t+1(vergAngle_t)
-            % errorbar(reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10]), ...
-            %          reshape(reshape(testResult(odIndex, :, 46 : 55), [7, 10])', [1, 7 * 10]), ...
-            %          reshape(reshape(testResult(odIndex, :, 57 : 66), [7, 10])', [1, 7 * 10]), ...
+            % errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
+            %          reshape(reshape(model.testResult(odIndex, :, 46 : 55), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
+            %          reshape(reshape(model.testResult(odIndex, :, 57 : 66), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
             %          'Marker', '*', 'MarkerSize', 2.5, 'LineWidth', 0.9, 'LineStyle', 'none');
 
-            tmpMat = sortrows([reshape(reshape(testResult(odIndex, :, 1 : 10), [7, 10])', [1, 7 * 10])', ...
-                               reshape(reshape(testResult(odIndex, :, 46 : 55), [7, 10])', [1, 7 * 10])', ...
-                               reshape(reshape(testResult(odIndex, :, 57 : 66), [7, 10])', [1, 7 * 10])']);
+            tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 46 : 55), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 57 : 66), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])']);
 
             [hl, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
@@ -467,11 +484,9 @@ function testModel2(model, nStim, plotIt, saveTestResults, reinitRenderer)
 
         % adjust axis to actual response ranges + std deviation
         xmin = -4;
-        xmax = 6;
+        xmax = 7;
         ymin = -inf;
         ymax = inf;
-        % plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
-        % plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
         axis([xmin, xmax, ymin, ymax]);
         xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
         ylabel('Value', 'FontSize', 12);
