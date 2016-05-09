@@ -150,23 +150,17 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
 
-        k = 1;
-        l = 1;
-        for i = 1 : 3 : length(result1)
-            imgRawLeft(k, l, 1) = result1(i);
-            imgRawLeft(k, l, 2) = result1(i + 1);
-            imgRawLeft(k, l, 3) = result1(i + 2);
+        imgRawLeft = permute(reshape(result1, ...
+                                     [size(imgRawLeft, 3), ...
+                                      size(imgRawLeft, 2), ...
+                                      size(imgRawLeft, 1)]), ...
+                                     [3, 2, 1]);
 
-            imgRawRight(k, l, 1) = result2(i);
-            imgRawRight(k, l, 2) = result2(i + 1);
-            imgRawRight(k, l, 3) = result2(i + 2);
-
-            l = l + 1;
-            if (l > 320)
-                l = 1;
-                k = k + 1;
-            end
-        end
+        imgRawRight = permute(reshape(result2, ...
+                                      [size(imgRawRight, 3), ...
+                                       size(imgRawRight, 2), ...
+                                       size(imgRawRight, 1)]), ...
+                                      [3, 2, 1]);
     end
 
     %%% Saturation function that keeps motor commands in [0, 1]
