@@ -1,0 +1,84 @@
+Rauswerfen:
+../aec/Textures/vanHateren/cutOffScale_corrected_1967.bmp
+../aec/Textures/vanHateren/69.bmp
+../aec/Textures/vanHateren/96.bmp
+../aec/Textures/vanHateren/14.bmp
+../aec/Textures/vanHateren/98.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2512.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2332.bmp
+../aec/Textures/vanHateren/49.bmp
+../aec/Textures/vanHateren/50.bmp
+../aec/Textures/vanHateren/100.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2036.bmp
+../aec/Textures/vanHateren/79.bmp
+../aec/Textures/vanHateren/97.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_1976.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2811.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2894.bmp
+
+Training:
+../aec/Textures/vanHateren/cutOffScale_corrected_2839.bmp
+../aec/Textures/vanHateren/54.bmp
+../aec/Textures/vanHateren/9.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2608.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2262.bmp
+../aec/Textures/vanHateren/87.bmp
+../aec/Textures/vanHateren/20.bmp
+../aec/Textures/vanHateren/91.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2685.bmp
+../aec/Textures/vanHateren/78.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2542.bmp
+../aec/Textures/vanHateren/30.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2287.bmp
+../aec/Textures/vanHateren/80.bmp
+../aec/Textures/vanHateren/25.bmp
+../aec/Textures/vanHateren/19.bmp
+
+
+	Oscilators:
+../aec/Textures/vanHateren/cutOffScale_corrected_2860.bmp
+../aec/Textures/vanHateren/cutOffScale_corrected_2576.bmp
+../aec/Textures/vanHateren/95.bmp
+
+Ueberpruefen:
+../aec/Textures/vanHateren/cutOffScale_corrected_2876.bmp
+objDist: 0.5 vergErr: -2
+../aec/Textures/vanHateren/cutOffScale_corrected_2607.bmp
+0.5 -1
+../aec/Textures/vanHateren/86.bmp
+0.5 -1
+../aec/Textures/vanHateren/cutOffScale_corrected_2128.bmp
+0.5 -1
+../aec/Textures/vanHateren/51.bmp
+0.5 3.6097
+../aec/Textures/vanHateren/22.bmp
+0.5 3.6
+bad image: ../aec/Textures/vanHateren/cutOffScale_corrected_2516.bmp -?!!?!?
+0.5 3.6
+bad image: ../aec/Textures/vanHateren/62.bmp
+0.5 3.6
+bad image: ../aec/Textures/vanHateren/97.bmp
+0.5 5.4
+bad image: ../aec/Textures/vanHateren/cutOffScale_corrected_1913.bmp
+0.5 5.4
+bad image: ../aec/Textures/vanHateren/79.bmp
+0.5 5.4
+bad image: ../aec/Textures/vanHateren/31.bmp (vielleicht laenger als 10 iters) osci
+1 -3
+../aec/Textures/vanHateren/55.bmp
+[1, 1.5] [-3, ..., 1.47458858820657, 2.21188288230986]
+../aec/Textures/vanHateren/44.bmp koennte mit groesserer small scale resolution klappen
+[1.5, 2] -3
+../aec/Textures/vanHateren/cutOffScale_corrected_1887.bmp osci
+1.5 -3
+../aec/Textures/vanHateren/23.bmp
+1.5 [-3, -2]
+../aec/Textures/vanHateren/68.bmp osci
+1.5
+../aec/Textures/vanHateren/18.bmp osci
+1.5
+../aec/Textures/vanHateren/cutOffScale_corrected_2240.bmp osci
+2
+../aec/Textures/vanHateren/cutOffScale_corrected_2563.bmp osci
+2
+
