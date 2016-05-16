@@ -48,8 +48,8 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
     % Image process variables
     patchSize = 8;
 
-    dsRatioL = modelBF.model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
-    dsRatioS = modelBF.model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
+    dsRatioL = modelBF.model.scModel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
+    dsRatioS = modelBF.model.scModel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
 
     % fovea = [128 128];
     foveaL = patchSize + patchSize^2 / 2^log2(dsRatioL); %fovea size (Large scale) | 16
@@ -193,25 +193,25 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
         %%% Weight L1 regularization
         rewardFunction = model.lambdaRec * reward ...
                          - model.lambdaMet * metCost ...
-                         - model.lambdaV * (sum(sum(abs(model.rlmodel.CCritic.v_ji)))) ...
-                         - model.lambdaP1 * (sum(sum(abs(model.rlmodel.CActor.wp_ji)))) ...
-                         - model.lambdaP2 * (sum(sum(abs(model.rlmodel.CActor.wp_kj))));
+                         - model.lambdaV * (sum(sum(abs(model.rlModel.CCritic.v_ji)))) ...
+                         - model.lambdaP1 * (sum(sum(abs(model.rlModel.CActor.wp_ji)))) ...
+                         - model.lambdaP2 * (sum(sum(abs(model.rlModel.CActor.wp_kj))));
 
         %%% Weight L2 regularization
         % rewardFunction = model.lambdaRec * reward ...
         %                  - model.lambdaMet * metCost ...
-        %                  - model.lambdaV * (sum(sum(model.rlmodel.CCritic.v_ji .^ 2))) ...
-        %                  - model.lambdaP1 * (sum(sum(model.rlmodel.CActor.wp_ji .^ 2))) ...
-        %                  - model.lambdaP2 * (sum(sum(model.rlmodel.CActor.wp_kj .^ 2)));
+        %                  - model.lambdaV * (sum(sum(model.rlModel.CCritic.v_ji .^ 2))) ...
+        %                  - model.lambdaP1 * (sum(sum(model.rlModel.CActor.wp_ji .^ 2))) ...
+        %                  - model.lambdaP2 * (sum(sum(model.rlModel.CActor.wp_kj .^ 2)));
 
         %%% Learning
         % Sparse coding models
             %%% Learning
             % Sparse coding models
-%             model.scmodel_Large.stepTrain(currentView{1});
-%             model.scmodel_Small.stepTrain(currentView{2});
+%             model.scModel_Large.stepTrain(currentView{1});
+%             model.scModel_Small.stepTrain(currentView{2});
             % RL model
-            relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
+            relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
             % add the change in muscle Activities to current ones
             command(2) = command(2) + relativeCommand';
@@ -248,16 +248,16 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
             model.reward_hist(t) = rewardFunction;
             % model.feature_hist(t, :) = feature;
             model.metCost_hist(t) = metCost;
-            model.td_hist(t) = model.rlmodel.CCritic.delta;
-            model.g_hist(t) = model.rlmodel.CActor.params(7);
-            model.weight_hist(t, 1) = model.rlmodel.CCritic.params(1);
-            model.weight_hist(t, 2) = model.rlmodel.CCritic.params(2);
-            model.weight_hist(t, 3) = model.rlmodel.CActor.params(1);
-            model.weight_hist(t, 4) = model.rlmodel.CActor.params(2);
-            model.weight_hist(t, 5) = model.rlmodel.CActor.params(3);
-            model.weight_hist(t, 6) = model.rlmodel.CActor.params(4);
-            model.weight_hist(t, 7) = model.rlmodel.CActor.params(5);
-            model.weight_hist(t, 8) = model.rlmodel.CActor.params(6);
+            model.td_hist(t) = model.rlModel.CCritic.delta;
+            model.g_hist(t) = model.rlModel.CActor.params(7);
+            model.weight_hist(t, 1) = model.rlModel.CCritic.params(1);
+            model.weight_hist(t, 2) = model.rlModel.CCritic.params(2);
+            model.weight_hist(t, 3) = model.rlModel.CActor.params(1);
+            model.weight_hist(t, 4) = model.rlModel.CActor.params(2);
+            model.weight_hist(t, 5) = model.rlModel.CActor.params(3);
+            model.weight_hist(t, 6) = model.rlModel.CActor.params(4);
+            model.weight_hist(t, 7) = model.rlModel.CActor.params(5);
+            model.weight_hist(t, 8) = model.rlModel.CActor.params(6);
         end
 
         sprintf('Training Iteration = %d\nCommand = [%.3g,\t%.3g]\tCurrent Vergence = %.3g\nRec Error = %.3g\tVergence Error =\n[%.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g, %.3g]', ...
@@ -269,11 +269,11 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
             save(strcat(savePath, '/model'), 'model');
 
             %save Basis
-            model.scmodel_Large.saveBasis;
-            model.scmodel_Small.saveBasis;
+            model.scModel_Large.saveBasis;
+            model.scModel_Small.saveBasis;
 
             %save Weights
-            % model.rlmodel.saveWeights; %save policy and value net weights
+            % model.rlModel.saveWeights; %save policy and value net weights
         end
     end
     elapsedTime = toc;

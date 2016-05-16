@@ -11,10 +11,10 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
-        sprintf('Model has no testResults!')
+        sprintf('Error: Model has no testResults!')
         return;
     elseif (nStim == 1)
-        sprintf('nStim must be != 1!')
+        sprintf('Error: nStim must be != 1')
         return;
     end
 
@@ -55,12 +55,12 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
     resolution = 100001;
-    approx = spline(1:11, degrees.results_deg(:, 1));
+    approx = spline(1 : 11, degrees.results_deg(:, 1));
 
-    xValPos = ppval(approx, 1:0.0001:11)';
+    xValPos = ppval(approx, 1 : 0.0001 : 11)';
     yValPos = linspace(0, 1, resolution)';
 
-    xValNeg = flipud(ppval(approx, 1:0.0001:11)' * -1);
+    xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
     yValNeg = linspace(-1, 0, resolution)';
 
     mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
@@ -96,6 +96,17 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     % Color images for left & right eye
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
+
+    % Image patches cell array (input to model)
+    currentView = cell(1, length(model.scModel));
+
+    % Intermediate patch matricies
+    patchesLeft = cell(1, length(model.scModel));
+    patchesRight = cell(1, length(model.scModel));
+    for i = 1 : length(model.scModel)
+        patchesLeft{i} = zeros(model.patchSize ^ 2, length(model.columnInd{i}));
+        patchesRight{i} = zeros(model.patchSize ^ 2, length(model.columnInd{i}));
+    end
 
     %%% Helper function that maps {objDist, desiredVergErr} -> {muscleForce, angleInit}
     function [mf, angleInit] = getMF(objDist, desVergErr)
@@ -174,46 +185,33 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     %%% Helper function for image preprocessing
     %% Patch generation
-    function [patches] = preprocessImage(img, imgSize)
+    % img:      image to be processed
+    % scScale:  SC scale index elem {coarse, ..., fine}
+    % eyePos:   eye position index elem {1 := left, 2 := right}
+    function preprocessImage(img, scScale, eyePos)
+        % convert to gray scale image
         % img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
 
-        if (imgSize == 0)
-            % small scale
-            for i = 1:log2(model.dsRatioS)
+        % down scale image
+        if (model.dsRatio(scScale) > 0)
+            for k = 1 : log2(model.dsRatio(scScale))
                 img = impyramid(img, 'reduce');
             end
-
-            % convert to double
-            img = double(img);
-
-            % cut fovea in the center
-            [h, w, ~] = size(img);
-            img = img(fix(h / 2 + 1 - model.foveaS / 2) : fix(h / 2 + model.foveaS / 2), ...
-                      fix(w / 2 + 1 - model.foveaS / 2) : fix(w / 2 + model.foveaS / 2));
-        else
-            % large scale
-            for i = 1:log2(model.dsRatioL)
-                img = impyramid(img, 'reduce');
-            end
-
-            % convert to double
-            img = double(img);
-
-            % cut fovea in the center
-            [h, w, ~] = size(img);
-            img = img(fix(h / 2 + 1 - model.foveaL / 2) : fix(h / 2 + model.foveaL / 2), ...
-                      fix(w / 2 + 1 - model.foveaL / 2) : fix(w / 2 + model.foveaL / 2));
         end
+
+        % convert to double
+        img = double(img);
+
+        % cut fovea in the center
+        [h, w, ~] = size(img);
+        img = img(fix(h / 2 + 1 - model.pxFieldOfView(scScale) / 2) : fix(h / 2 + model.pxFieldOfView(scScale) / 2), ...
+                  fix(w / 2 + 1 - model.pxFieldOfView(scScale) / 2) : fix(w / 2 + model.pxFieldOfView(scScale) / 2));
 
         % cut patches and store them as col vectors
-        patches = im2col(img, [model.patchSize model.patchSize], 'sliding');            %slide window of 1 px
+        patches = im2col(img, [model.patchSize, model.patchSize], 'sliding');            %slide window of 1 px
 
-        % take patches at steps of s (8 px)
-        if (imgSize == 0)
-            patches = patches(:, model.columnIndS);                               %81 patches
-        else
-            patches = patches(:, model.columnIndL);                               %81 patches
-        end
+        % take patches by application of respective strides (8 px)
+        patches = patches(:, model.columnInd{scScale});
 
         % pre-processing steps (0 mean, unit norm)
         patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
@@ -222,6 +220,12 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         % normalize patches to norm 1
         normp(normp == 0) = eps;                                            %regularizer
         patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
+
+        if (eyePos == 1)
+            patchesLeft{scScale} = patches;
+        else
+            patchesRight{scScale} = patches;
+        end
     end
 
     tic;
@@ -268,38 +272,37 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                     for iter = 2 : testInterval + 1
                         % convert images to gray scale
-                        imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
-                        imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
+                        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+                        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
 
                         % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imagesSavePath '/anaglyph.png']);
                         % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
-                        % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
-                        [patchesLeftSmall] = preprocessImage(imgGrayLeft, 0);
-                        [patchesLeftLarge] = preprocessImage(imgGrayLeft, 1);
-                        [patchesRightSmall] = preprocessImage(imgGrayRight, 0);
-                        [patchesRightLarge] = preprocessImage(imgGrayRight, 1);
-
-                        % Image patches matrix (input to model)
-                        currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
+                        % Image patch generation
+                        for i = 1 : length(model.scModel)
+                            preprocessImage(imgGrayLeft, i, 1);
+                            preprocessImage(imgGrayRight, i, 2);
+                            currentView{i}  = vertcat(patchesLeft{i}, patchesRight{i});
+                        end
 
                         % Generate input feature vector from current images
-                        [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
+                        % [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
+                        [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
 
                         % Absolute command feedback # concatination
-                        if (model.rlmodel.continuous == 1)
-                            feature = [feature; command(2) * model.lambdaMuscleFB]; % single muscle
-                            % feature = [feature; command * model.lambdaMuscleFB]; % two muscles
+                        if (model.rlModel.continuous == 1)
+                            feature = [bfFeature; command(2) * model.lambdaMuscleFB]; % single muscle
+                            % feature = [bfFeature; command * model.lambdaMuscleFB]; % two muscles
                         end
 
                         %%% Calculate metabolic costs
                         % metCost = getMetCost(command) * 2;
 
                         %%% Action
-                        relativeCommand = model.rlmodel.act(feature);
+                        relativeCommand = model.rlModel.act(feature);
 
                         % add the change in muscle Activities to current ones
-                        if (model.rlmodel.continuous == 1)
+                        if (model.rlModel.continuous == 1)
                             % command = command + relativeCommand;     %two muscels
                             command(1) = 0;
                             command(2) = command(2) + relativeCommand;  %one muscel
@@ -325,7 +328,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         % temporary results
                         tmpResult1(stimulusIndex, iter) = angleDes - angleNew;
                         tmpResult2(stimulusIndex, iter) = relativeCommand(1);
-                        tmpResult3(stimulusIndex, iter) = model.rlmodel.CCritic.v_ji * feature;
+                        tmpResult3(stimulusIndex, iter) = model.rlModel.CCritic.v_ji * feature;
                     end
                 end
 
@@ -347,7 +350,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                 save(strcat(model.savePath, '/model'), 'model');
             end
         catch
-            % catch non-existing variables error, occuring at old models
+            % catch non-existing variables error, occuring in old models
             clone = model.copy();
             delete(model);
             clear model;
@@ -367,12 +370,17 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             figure;
             hold on;
             grid on;
+            grid minor;
             for vseIndex = 1 : size(model.testResult, 2)
                 errorbar(0 : 10, model.testResult(odIndex, vseIndex, 1 : 11), model.testResult(odIndex, vseIndex, 12 : 22), ...
                          'color', [rand, rand, rand], 'LineWidth', 1.3);
             end
             axis([-1, testInterval + 1, -inf, inf]);
-            xlabel(sprintf('Iteration step (objDist=%.1fm, #stimuli=%d)', objRange(odIndex), nStim), 'FontSize', 12);
+            if (nStim > 0)
+                xlabel(sprintf('Iteration step (objDist=%.1fm, #stimuli=%d)', objRange(odIndex), nStim), 'FontSize', 12);
+            else
+                xlabel(sprintf('Iteration step (objDist=%.1fm)', objRange(odIndex)), 'FontSize', 12);
+            end
             ylabel('Vergence Error [deg]', 'FontSize', 12);
             title('Avg Vergence Error over Trial at Testing');
             plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.1fm].png', model.savePath, objRange(odIndex));
@@ -455,6 +463,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         figure;
         hold on;
         grid on;
+        grid minor;
         for odIndex = 1 : size(objRange, 2)
             % delta_mf_t+1(vergAngle_t)
             % errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
@@ -477,8 +486,8 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         end
 
         % adjust axis to actual response ranges + std deviation
-        xmin = -4;
-        xmax = 7;
+        xmin = -3.5;
+        xmax = 6;
         ymin = -inf;
         ymax = inf;
         axis([xmin, xmax, ymin, ymax]);

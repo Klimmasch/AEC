@@ -95,8 +95,8 @@ saveInterval = ceil(model.trainTime / 5);
 % Image process variables
 patchSize = 8;
 
-dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
-dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
+dsRatioL = model.scModel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
+dsRatioS = model.scModel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
 
 % fovea = [128 128];
 foveaL = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioL); %fovea size (Large scale) | 16
@@ -287,7 +287,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
 
         %%% Feedback
         % Absolute command feedback # concatination
-        if (model.rlmodel.continuous == 1)
+        if (model.rlModel.continuous == 1)
             feature = [feature; command * model.lambdaMuscleFB];
         end
 
@@ -313,29 +313,29 @@ for iter1 = 1 : (timeToTrain / model.interval)
         %%% Weight L1 regularization
         % rewardFunction = model.lambdaRec * reward ...
         %                  - model.lambdaMet * metCost ...
-        %                  - model.lambdaV * (sum(sum(abs(model.rlmodel.CCritic.v_ji)))) ...
-        %                  - model.lambdaP1 * (sum(sum(abs(model.rlmodel.CActor.wp_ji)))) ...
-        %                  - model.lambdaP2 * (sum(sum(abs(model.rlmodel.CActor.wp_kj))));
+        %                  - model.lambdaV * (sum(sum(abs(model.rlModel.CCritic.v_ji)))) ...
+        %                  - model.lambdaP1 * (sum(sum(abs(model.rlModel.CActor.wp_ji)))) ...
+        %                  - model.lambdaP2 * (sum(sum(abs(model.rlModel.CActor.wp_kj))));
 
         %%% Weight L2 regularization
         % rewardFunction = model.lambdaRec * reward ...
         %                  - model.lambdaMet * metCost ...
-        %                  - model.lambdaV * (sum(sum(model.rlmodel.CCritic.v_ji .^ 2))) ...
-        %                  - model.lambdaP1 * (sum(sum(model.rlmodel.CActor.wp_ji .^ 2))) ...
-        %                  - model.lambdaP2 * (sum(sum(model.rlmodel.CActor.wp_kj .^ 2)));
+        %                  - model.lambdaV * (sum(sum(model.rlModel.CCritic.v_ji .^ 2))) ...
+        %                  - model.lambdaP1 * (sum(sum(model.rlModel.CActor.wp_ji .^ 2))) ...
+        %                  - model.lambdaP2 * (sum(sum(model.rlModel.CActor.wp_kj .^ 2)));
 
         %%% Learning
         % Sparse coding models
-        model.scmodel_Large.stepTrain(currentView{1});
-        model.scmodel_Small.stepTrain(currentView{2});
+        model.scModel_Large.stepTrain(currentView{1});
+        model.scModel_Small.stepTrain(currentView{2});
 
         % RL model
         % Variance decay, i.e. reduction of actor's output perturbation
-        % if ((model.rlmodel.continuous == 1) && (model.rlmodel.CActor.varDec > 0))
-        %     model.rlmodel.CActor.variance = model.rlmodel.CActor.varianceRange(1) * 2 ^ (-t / model.rlmodel.CActor.varDec);
+        % if ((model.rlModel.continuous == 1) && (model.rlModel.CActor.varDec > 0))
+        %     model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
         % end
 
-        relativeCommand = model.rlmodel.stepTrain(feature, rewardFunction, (iter2 > 1));
+        relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
         % add the change in muscle Activities to current ones
         command = command + relativeCommand;     %two muscels
@@ -343,7 +343,7 @@ for iter1 = 1 : (timeToTrain / model.interval)
         % command(2) = command(2) + relativeCommand;  %one muscel
         command = checkCmd(command);                %restrain motor commands to [0,1]
 
-        if (model.rlmodel.continuous == 1)
+        if (model.rlModel.continuous == 1)
             angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
         else
             angleNew = angleNew + relativeCommand;
@@ -387,18 +387,18 @@ for iter1 = 1 : (timeToTrain / model.interval)
         model.reward_hist(t) = rewardFunction;
         % model.feature_hist(t, :) = feature;
         model.metCost_hist(t) = metCost;
-        if (model.rlmodel.continuous == 1)
-            model.td_hist(t) = model.rlmodel.CCritic.delta;
-            % model.g_hist(t) = model.rlmodel.CActor.params(7);
-            model.weight_hist(t, 1) = model.rlmodel.CCritic.params(1);
-            model.weight_hist(t, 2) = model.rlmodel.CActor.params(1);
-            if (model.rlmodel.rlFlavour(2) >= 4)
-                model.weight_hist(t, 3) = model.rlmodel.CActor.params(2);
-                if ((model.rlmodel.rlFlavour(2) == 5) || (model.rlmodel.rlFlavour(2) >= 7))
-                    model.weight_hist(t, 4) = model.rlmodel.CActor.params(3);
+        if (model.rlModel.continuous == 1)
+            model.td_hist(t) = model.rlModel.CCritic.delta;
+            % model.g_hist(t) = model.rlModel.CActor.params(7);
+            model.weight_hist(t, 1) = model.rlModel.CCritic.params(1);
+            model.weight_hist(t, 2) = model.rlModel.CActor.params(1);
+            if (model.rlModel.rlFlavour(2) >= 4)
+                model.weight_hist(t, 3) = model.rlModel.CActor.params(2);
+                if ((model.rlModel.rlFlavour(2) == 5) || (model.rlModel.rlFlavour(2) >= 7))
+                    model.weight_hist(t, 4) = model.rlModel.CActor.params(3);
                 end
             end
-            model.variance_hist(t) = model.rlmodel.CActor.variance;
+            model.variance_hist(t) = model.rlModel.CActor.variance;
         end
         model.trainedUntil = t;
     end
@@ -412,12 +412,12 @@ for iter1 = 1 : (timeToTrain / model.interval)
         save(strcat(model.savePath, '/model'), 'model');
 
         % save Basis
-        model.scmodel_Large.saveBasis();
-        model.scmodel_Small.saveBasis();
+        model.scModel_Large.saveBasis();
+        model.scModel_Small.saveBasis();
 
         % TODO: DEPRECATED
         % save Weights
-        % model.rlmodel.saveWeights();
+        % model.rlModel.saveWeights();
     end
 end
 elapsedTime = toc;
@@ -435,13 +435,13 @@ if (plotNsave(1) == 1)
 
     save(strcat(model.savePath, '/model'), 'model'); % storing simulated time
 
-    if (model.rlmodel.continuous == 1)
+    if (model.rlModel.continuous == 1)
         copyfile('ReinforcementLearningCont.m', model.savePath);
     else
         copyfile('ReinforcementLearning.m', model.savePath);
     end
 
-    switch model.rlmodel.rlFlavour(1)
+    switch model.rlModel.rlFlavour(1)
         case 0
             %% Chong's implementation
             copyfile('CCriticG.m', model.savePath);
@@ -453,7 +453,7 @@ if (plotNsave(1) == 1)
             copyfile('CACLACritic.m', model.savePath);
     end
 
-    switch model.rlmodel.rlFlavour(2)
+    switch model.rlModel.rlFlavour(2)
         case 0
             %% Chong's implementation
             copyfile('CActorG.m', model.savePath);

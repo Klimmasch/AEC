@@ -69,8 +69,8 @@ testIter = 0;
 % Image process variables
 patchSize = 8;
 
-dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale)
-dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale)
+dsRatioL = model.scModel_Large.Dsratio; %downsampling ratio (Large scale)
+dsRatioS = model.scModel_Small.Dsratio; %downsampling ratio (Small scale)
 
 % fovea = [128 128];
 foveaL = patchSize + patchSize^2 / 2^log2(dsRatioL); %fovea size (Large scale)
@@ -209,9 +209,9 @@ while (true)
 
         if (learning)
             %train 2 sparse coding models
-            model.scmodel_Large.stepTrain(currentView{1});
-            model.scmodel_Small.stepTrain(currentView{2});
-            [command, ~, ~] = model.rlmodel.stepTrain(feature, reward, mod(t - 1, model.interval));
+            model.scModel_Large.stepTrain(currentView{1});
+            model.scModel_Small.stepTrain(currentView{2});
+            [command, ~, ~] = model.rlModel.stepTrain(feature, reward, mod(t - 1, model.interval));
             %### why calculate relative vergance command after first error measure?
         end
 
@@ -238,11 +238,11 @@ while (true)
             save(strcat(savePath, '/model'), 'model');
 
             %save Basis
-            model.scmodel_Large.saveBasis;
-            model.scmodel_Small.saveBasis;
+            model.scModel_Large.saveBasis;
+            model.scModel_Small.saveBasis;
 
             %save Weights
-            model.rlmodel.saveWeights; %save policy and value net weights
+            model.rlModel.saveWeights; %save policy and value net weights
 
             trialPhase = uint8(1);
         end
@@ -270,7 +270,7 @@ while (true)
         modelData.verge_actual(testIter) = angleNew; %current vergence angle
 
         if (learning)
-            command = model.rlmodel.softmaxAct(feature);
+            command = model.rlModel.softmaxAct(feature);
             %### why calculate relative vergance command after first error measure?
         end
 

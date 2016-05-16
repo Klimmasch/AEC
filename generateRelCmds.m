@@ -11,8 +11,8 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
     % Image process variables
     patchSize = 8;
 
-    dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
-    dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
+    dsRatioL = model.scModel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
+    dsRatioS = model.scModel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
 
     % fovea = [128 128];
     foveaL = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioL); %fovea size (Large scale) | 16
@@ -114,14 +114,14 @@ function responseResults = generateRelCmds(model, objRange, vergRange, repeat)
                     indTemp = indZero;
                 end
 
-                if model.rlmodel.continuous
+                if model.rlModel.continuous
                     feature = [feature; mf(indTemp(1), 2)];
-                    value = model.rlmodel.CCritic.v_ji * feature;
+                    value = model.rlModel.CCritic.v_ji * feature;
                 else
-                    value = model.rlmodel.Weights{2,1} * feature;
+                    value = model.rlModel.Weights{2,1} * feature;
                 end
 
-                relCmd = model.rlmodel.act(feature);
+                relCmd = model.rlModel.act(feature);
 
                 %Traking variables
                 relCmds = [relCmds; relCmd];

@@ -35,8 +35,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     % Image processing variables
     patchSize = 8;
 
-    dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
-    dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
+    dsRatioL = model.scModel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
+    dsRatioS = model.scModel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
 
     % fovea = [128 128];
     foveaL = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioL); %fovea size (Large scale) | 16
@@ -132,7 +132,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
 
         for iter2 = 1 : size(objRange, 2)
             % reset muscle activities to random values
-            if (model.rlmodel.continuous == 1)
+            if (model.rlModel.continuous == 1)
                 command = [0, 0];
                 command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); %only for one muscle
                 angleNew = getAngle(command) * 2;
@@ -180,7 +180,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
 
                 %%% Feedback
                 % Absolute command feedback # concatination
-                if (model.rlmodel.continuous == 1)
+                if (model.rlModel.continuous == 1)
                     feature = [feature; command(2) * model.lambdaMuscleFB];
                 end
 
@@ -188,10 +188,10 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 % metCost = getMetCost(command) * 2;
 
                 %%% Action
-                relativeCommand = model.rlmodel.act(feature);
+                relativeCommand = model.rlModel.act(feature);
 
                 % add the change in muscle Activities to current ones
-                if (model.rlmodel.continuous == 1)
+                if (model.rlModel.continuous == 1)
                     % command = command + relativeCommand';     %two muscels
                     command(2) = command(2) + relativeCommand;  %one muscel
                     command = checkCmd(command);                %restrain motor commands to [0,1]
@@ -342,7 +342,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
 
             for verg = 1 : size(vergRange, 2)
                 % when angle can't be reached by muscles
-                if (angleDes + vergRange(verg) < angleMin) && (model.rlmodel.continuous == 1) % when angle can't be reached by muscles
+                if (angleDes + vergRange(verg) < angleMin) && (model.rlModel.continuous == 1) % when angle can't be reached by muscles
                     sprintf('Warning: vergrange exceeds possible muscle commands, angleDes: %d, vergenceError: %d, angleMin: %d', angleDes, vergRange(verg), angleMin)
                     continue
                 end
@@ -377,7 +377,7 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 % Generate input feature vector from current images
                 [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
 
-                if (model.rlmodel.continuous == 1)
+                if (model.rlModel.continuous == 1)
                     % calculate muscle activity at current position
                     indTemp = find(mf(:, 1) <= angleDes + vergRange(verg) + dmf & mf(:, 1) >= angleDes + vergRange(verg) - dmf);
                     if (size(indTemp, 1) < 1)
@@ -385,12 +385,12 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                     end
                     % add it to feature vector
                     feature = [feature; mf(indTemp(1), 2)];
-                    value = model.rlmodel.CCritic.v_ji * feature;
+                    value = model.rlModel.CCritic.v_ji * feature;
                 else
-                    value = model.rlmodel.Weights{2,1} * feature;
+                    value = model.rlModel.Weights{2,1} * feature;
                 end
 
-                relCmd = model.rlmodel.act(feature);
+                relCmd = model.rlModel.act(feature);
 
                 %Tracking variables
                 relCmds = [relCmds; relCmd];

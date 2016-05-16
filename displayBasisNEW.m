@@ -1,21 +1,22 @@
 %%% Display the basis according to the binocularity
+%TODO update depricated sparse coding handling
 close all
 r = 16; c = 18; %how to arrange the basis in rows and cols
 
-len = size(model.scmodel_Small.Basis_hist,3);  %# of trials saved
+len = size(model.scModel_Small.basisHist,3);  %# of trials saved
 basisTrack = cell(2,len);           %variable to store all the saved basis
 
 % copy into the new var
 for j = 1:len
-    basisTrack{1,j} = model.scmodel_Large.Basis_hist(:,:,j);
-    basisTrack{2,j} = model.scmodel_Small.Basis_hist(:,:,j);
+    basisTrack{1,j} = model.scModel_Large.basisHist(:,:,j);
+    basisTrack{2,j} = model.scModel_Small.basisHist(:,:,j);
 end
 
 % k = 11;
 
 % basisTrack = this.drecord.basisTrack(1:len);
-% basisTrack{1} = model.scmodel_Large.Basis_hist(:,:,1);
-% basisTrack{1} = model.scmodel_Small.Basis_hist(:,:,k);
+% basisTrack{1} = model.scModel_Large.basisHist(:,:,1);
+% basisTrack{1} = model.scModel_Small.basisHist(:,:,k);
 % checkPoint = 1;
 
 h = figure(1);

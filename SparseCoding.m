@@ -23,10 +23,10 @@ classdef SparseCoding < handle
                 obj.Basis = PARAM{7};
                 obj.Basis_hist = PARAM{7};
             else
-                a = rand(obj.Basis_size, obj.Basis_num)-0.5; % basis function set
-                a = a*diag(1./sqrt(sum(a.*a)));
-                thenorm = ones(obj.Basis_size, 1)*sqrt(sum(a.*a, 1));
-                a = a./thenorm;
+                a = rand(obj.Basis_size, obj.Basis_num) - 0.5; % basis function set
+                a = a * diag(1 ./ sqrt(sum(a .* a)));
+                thenorm = ones(obj.Basis_size, 1) * sqrt(sum(a .* a, 1));
+                a = a ./ thenorm;
                 obj.Basis = a;
                 obj.Basis_hist = a;
             end
@@ -47,18 +47,18 @@ classdef SparseCoding < handle
             batch_size = size(Images, 2);
             Coef = zeros(this.Basis_num, batch_size);
             I = Images;
-            for count = 1:this.Basis_num_used
-                corr = abs(this.Basis'*I)/this.Temperature;
+            for count = 1 : this.Basis_num_used
+                corr = abs(this.Basis' * I) / this.Temperature;
                 corr = corr - kron(ones(this.Basis_num, 1), max(corr));
                 softmaxcorr = softmax(corr);
 
                 softmaxcorr = tril(ones(this.Basis_num)) * softmaxcorr - kron(ones(this.Basis_num, 1), rand(1, batch_size));
-                softmaxcorr(softmaxcorr<0) = 2;
+                softmaxcorr(softmaxcorr < 0) = 2;
                 [~, index] = min(softmaxcorr);
-                corr = this.Basis'*I;
-                linearindex = sub2ind(size(corr), index, 1:batch_size);
+                corr = this.Basis' * I;
+                linearindex = sub2ind(size(corr), index, 1 : batch_size);
                 Coef(linearindex) = Coef(linearindex) + corr(linearindex);
-                I = Images - this.Basis*Coef;
+                I = Images - this.Basis * Coef;
             end
             Error = I;
         end
@@ -86,16 +86,16 @@ classdef SparseCoding < handle
             % Error = I;
             size_Batch = size(imageBatch, 2);
             coef = zeros(this.Basis_num, size_Batch);
-            corr = this.Basis'*imageBatch;      %correlation of each basis with each patch
-            corrBB = this.Basis'*this.Basis;    %correlation between basis
-            for count = 1:this.Basis_num_used
+            corr = this.Basis' * imageBatch;      %correlation of each basis with each patch
+            corrBB = this.Basis' * this.Basis;    %correlation between basis
+            for count = 1 : this.Basis_num_used
                 [~, index] = max(abs(corr));                            %indices of bases with max corr per patch
-                linearindex = sub2ind(size(corr), index, 1:size_Batch); %corresponding linear indices in corr matrix
+                linearindex = sub2ind(size(corr), index, 1 : size_Batch); %corresponding linear indices in corr matrix
                 pCorr = corr(linearindex);                              %vector of correlations per patch (coefs per patch)
                 coef(linearindex) = coef(linearindex) + pCorr;          %stores corr coefs into coef matrix
                 corr = corr - bsxfun(@times, corrBB(:, index), pCorr);  %(see Yu's doc)
             end
-            error = imageBatch - this.Basis*coef;
+            error = imageBatch - this.Basis * coef;
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,8 +106,8 @@ classdef SparseCoding < handle
         %%% Coef is the output correlation
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function [Coef, Error] = fullEncode(this, Images)
-            Coef = this.Basis'*Images;
-            Error = Images - this.Basis*Coef;
+            Coef = this.Basis' * Images;
+            Error = Images - this.Basis * Coef;
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

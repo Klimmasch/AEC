@@ -1,8 +1,7 @@
 classdef Model < handle
     properties
-        scmodel_Large;      %SparseCoding class (downsampled version)
-        scmodel_Small;      %SparseCoding class
-        rlmodel;            %ReinforcementLearning class
+        scModel;            %SparseCoding cell array containing respective classes
+        rlModel;            %ReinforcementLearning class
 
         focalLength;        %focal length [px]
         baseline;           %interocular distance
@@ -22,8 +21,6 @@ classdef Model < handle
         simulatedTime;      %how long did the model take to be learned (min)
 
         sparseCodingType;   %type of sparse coding
-        stopSC;
-        SCInterval;
 
         lambdaMuscleFB;     %factor of muscle activity feedback to RL feature vector
         lambdaMet;          %factor of metCosts for reward function
@@ -61,12 +58,10 @@ classdef Model < handle
 
         % Image processing
         patchSize;
-        dsRatioL;
-        dsRatioS;
-        foveaL;
-        foveaS;
-        columnIndL;
-        columnIndS;
+        pxFieldOfView
+        dsRatio;
+        columnInd;
+        stride;
     end
 
     methods
@@ -95,25 +90,15 @@ classdef Model < handle
             obj.vergAngleMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
             obj.vergAngleMax = 2 * atand(obj.baseline / (2 * obj.objDistMin));
 
+            %%% Create RL models
             % Discrete or continuous policy
             if (PARAM{3}{14} == 1)
-                obj.rlmodel = ReinforcementLearningCont(PARAM{3});
+                obj.rlModel = ReinforcementLearningCont(PARAM{3});
             else
-                obj.rlmodel = ReinforcementLearning(PARAM{3});
+                obj.rlModel = ReinforcementLearning(PARAM{3});
             end
 
-            % Create 2 sparse coding objects with same parameters
-            if (obj.sparseCodingType == 0)
-                obj.scmodel_Large = SparseCoding(PARAM{2}{1});      %coarse SCALE
-                obj.scmodel_Small = SparseCoding(PARAM{2}{2});      %fine scale
-            else
-                obj.scmodel_Large = SparseCodingHomeo(PARAM{2}{1}); %coarse scale
-                obj.scmodel_Small = SparseCodingHomeo(PARAM{2}{2}); %fine scale
-            end
-            obj.stopSC = obj.trainTime;
-            obj.SCInterval = 1;
-
-            obj.recerr_hist = zeros(obj.trainTime, 2);
+            obj.recerr_hist = zeros(obj.trainTime, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
             obj.disp_hist = zeros(obj.trainTime, 1);
             obj.vergerr_hist = zeros(obj.trainTime, 1);
             obj.verge_actual = zeros(obj.trainTime, 1);
@@ -123,7 +108,7 @@ classdef Model < handle
 
             obj.g_hist = zeros(obj.trainTime, 1);
             obj.td_hist = zeros(obj.trainTime, 1);
-            % obj.feature_hist = zeros(obj.trainTime, obj.rlmodel.inputDim);
+            % obj.feature_hist = zeros(obj.trainTime, obj.rlModel.inputDim);
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
             obj.weight_hist = zeros(obj.trainTime, 4);
@@ -141,30 +126,40 @@ classdef Model < handle
 
             %%% Generate image processing constants
             obj.patchSize = PARAM{1}{17};
+            obj.pxFieldOfView = PARAM{1}{18};
+            obj.dsRatio = PARAM{1}{19};
+            obj.stride = PARAM{1}{20};
 
-            obj.dsRatioL = obj.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
-            obj.dsRatioS = obj.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
-
-            % fovea = [128 128];
-            obj.foveaL = obj.patchSize + obj.patchSize ^ 2 / 2 ^ log2(obj.dsRatioL); %fovea size (Large scale) | 16
-            obj.foveaS = obj.patchSize + obj.patchSize ^ 2 / 2 ^ log2(obj.dsRatioS); %fovea size (Small scale) | 40
-
-            stOvL = obj.patchSize / obj.dsRatioL; %steps of overlap in the ds image | 1
-            stOvS = obj.patchSize / obj.dsRatioS; %steps of overlap in the ds image | 4
-
-            ncL = obj.foveaL - obj.patchSize + 1; %number of patches per column (slide of 1 px) | 9
-            ncS = obj.foveaS - obj.patchSize + 1; %number of patches per column (slide of 1 px) | 33
-
-            % prepare index matricies for image patches
-            obj.columnIndL = [];
-            for kc = 1:stOvL:ncL
-                tmpInd = (kc - 1) * ncL + 1 : stOvL : kc * ncL;
-                obj.columnIndL = [obj.columnIndL tmpInd];
+            % Prepare index matrix for image patches
+            obj.columnInd = {};
+            npc = obj.pxFieldOfView - obj.patchSize + 1; % number of patches per column
+            % for #scales
+            for i = 1 : length(obj.dsRatio)
+                k = 1;
+                l = length(1 : obj.stride(i) : npc(i));
+                obj.columnInd{end + 1} = zeros(1, l ^ 2);
+                % obj.columnInd{end + 1} = [];
+                for j = 1 : obj.stride(i) : npc(i)
+                    % obj.columnInd{i} = [obj.columnInd{i}, (j - 1) * npc(i) + 1 : obj.stride(i) : j * npc(i)];
+                    obj.columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : obj.stride(i) : j * npc(i);
+                    k = k + 1;
+                end
             end
-            obj.columnIndS = [];
-            for kc = 1:stOvS:ncS
-                tmpInd = (kc - 1) * ncS + 1 : stOvS : kc * ncS;
-                obj.columnIndS = [obj.columnIndS tmpInd];
+
+            %%% Create SC models
+            obj.scModel = {};
+            PARAM{2}{end + 1} = [cellfun('length', obj.columnInd)]; % append image batch size's 2nd dimensions
+            if (obj.sparseCodingType == 0)
+                for i = 1 : length(PARAM{2}{1})
+                    % pick respective parameters from PARAM cell array for ith SC model constructor
+                    obj.scModel{end + 1} = SparseCoding2(cellfun(@(x) x(i), PARAM{2}, 'UniformOutput', true));
+                end
+            else
+                %TODO: update depricated SparseCodingHomeo class
+                sprintf('SparseCodingHomeo class is DEPRICATED and therefore currently not supported!')
+                return;
+                % obj.scModel_Large = SparseCodingHomeo(PARAM{2}{1}); %coarse scale
+                % obj.scModel_Small = SparseCodingHomeo(PARAM{2}{2}); %fine scale
             end
         end
 
@@ -185,55 +180,34 @@ classdef Model < handle
         end
 
         %%% Generate Feature Vector and Reward
-        % Feature is concatenation of small and large scale feature vector
-        % Reward is sum of separate sc errors (small and large scale)
-        % Error is sum of errors
-        function [feature, reward, Error, Error_L, Error_S] = generateFR(this, Images)
-           %LARGE SCALE (downsampled version)
-           imagesLarge = Images{1};
+        function [totalFeature, totalReward, errorArray] = generateFR(this, imageBatch)
+            errorArray = zeros(1, length(this.scModel));
+            rewardArray = zeros(1, length(this.scModel));
+            featureArray = cell(1, 2);
 
-            imPind = find(sum(imagesLarge .^ 2)); %find non-zero patches (columns)
-            if (isempty(imPind))
-                try
-                    feature_L = zeros(this.scmodel_Large.Basis_num, 1);
-                    reward_L = this.rlmodel.J; %TODO: not supported for continuous rlmodel
-                catch
+            for i = 1 : length(this.scModel)
+                tmpImages = imageBatch{i};
+                imPind = find(sum(tmpImages .^ 2)); %find non-zero patches (columns)
+                if (isempty(imPind))
+                    % try
+                    %     feature_L = zeros(this.scModel_Large.Basis_num, 1);
+                    %     reward_L = this.rlModel.J; %TODO: not supported for continuous rlModel
+                    % catch
+                    % end
+                    sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
+                    return;
                 end
-                sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
-                return;
+                this.scModel{i}.sparseEncode(tmpImages);
+                errorArray(i) = sum(sum(this.scModel{i}.currentError .^ 2)) / sum(sum(tmpImages .^ 2));
+                rewardArray(i) = -errorArray(i);
+                % feature vector, i.e. average activation, Eq. 3.1
+                featureArray{i} = mean(this.scModel{i}.currentCoef(:, imPind) .^ 2, 2);
             end
-            [Coef_L, Error_L] = this.scmodel_Large.sparseEncode(imagesLarge);
 
-            %cost_L = sum(Error_L.^2);        %Error for each patch
-            %Error_L = mean(cost_L(imPind));  %can be changed with new rec error formula  (error relative to original patch)
-            Error_L = sum(sum(Error_L .^ 2)) / sum(sum(imagesLarge .^ 2));
-
-            reward_L = -Error_L;
-            feature_L = mean(Coef_L(:, imPind) .^ 2, 2); %feature vector for large scale (*5), average activation, Eq. 3.1
-
-            %SMALL SCALE
-            imagesSmall = Images{2};
-
-            imPind = find(sum(imagesSmall .^ 2)); %find non-zero patches
-            if (isempty(imPind))
-                feature_S = zeros(this.scmodel_Small.Basis_num, 1);
-                reward_S = this.rlmodel.J; %TODO: not supported for continuous rlmodel
-                sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
-                return;
-            end
-            [Coef_S, Error_S] = this.scmodel_Small.sparseEncode(imagesSmall);
-
-            %cost_S = sum(Error_S.^2);          %Error for each patch
-            %Error_S = mean(cost_S(imPind));    %can be changed with new rec error formula (error relative to original patch)
-            Error_S = sum(sum(Error_S .^ 2)) / sum(sum(imagesSmall .^ 2));
-
-            reward_S = -Error_S;
-            feature_S = mean(Coef_S(:, imPind) .^ 2, 2); %feature vector for small scale
-
-            %compute total rec error and reward
-            Error = Error_L + Error_S;          %total reconstruction error
-            reward = reward_L + reward_S;       %sum rewards
-            feature = [feature_L; feature_S];   %join feature vectors
+            % Compute total reconstruction error and reward
+            % totalError = sum(errorArray);             % total reconstruction error
+            totalReward = sum(rewardArray);             % sum rewards
+            totalFeature = vertcat(featureArray{:});    % join feature vectors
         end
 
         %% Plotting everything and save graphs
@@ -262,7 +236,7 @@ classdef Model < handle
 
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Vergence Error [deg]', 'FontSize', 12);
-            title('Moving Average of the Vergence Error');
+            title('Moving Average of Vergence Error');
             legend('|verg_{err}|', 'SMA(|verg_{err}|)');
             plotpath = sprintf('%s/mvngAvgVergErrFull', this.savePath);
             saveas(gcf, plotpath, 'png');
@@ -276,7 +250,7 @@ classdef Model < handle
 
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('SMA(|verg_{err}|) [deg]', 'FontSize', 12);
-            title('Moving Average of the Vergence Error');
+            title('Moving Average of Vergence Error');
             plotpath = sprintf('%s/mvngAvgVergErr', this.savePath);
             saveas(gcf, plotpath, 'png');
 
@@ -304,27 +278,38 @@ classdef Model < handle
                 axis([-inf, inf, 0, inf]);
                 xlabel(sprintf('Iteration # (windowSize=%d)', windowSize * this.interval), 'FontSize', 12);
                 ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
-                title('RMSE of the Vergence Error');
+                title('RMSE of Vergence Error');
                 plotpath = sprintf('%s/rmseVergErr', this.savePath);
                 saveas(gcf, plotpath, 'png');
             catch
                 % if windowsize > values in vergerr
+                sprintf('Warning: windowSize >= vergerr')
             end
 
             %% Reconstruction Error
-            recerr_L = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(ind, 1));
-            recerr_S = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(ind, 2));
-
-            figure;
-            hold on;
-            grid on;
-            plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist), recerr_L(windowSize + 1 : end), 'r', 'LineWidth', 1.3);
-            plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist), recerr_S(windowSize + 1 : end), 'b', 'LineWidth', 1.3);
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            ylabel('Reconstruction Error [AU]', 'FontSize', 12);
-            legend('Coarse', 'Fine');
-            plotpath = sprintf('%s/recErr', this.savePath);
-            saveas(gcf, plotpath, 'png');
+            try
+                figure;
+                hold on;
+                grid on;
+                handleArray = zeros(1, length(this.scModel));
+                for i = 1 : length(this.scModel)
+                    tmpError = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(ind, i));
+                    handleArray(i) = plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist, 1), tmpError(windowSize + 1 : end), ...
+                                          'color', [rand, rand, rand], 'LineWidth', 1.3);
+                end
+                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                ylabel('Reconstruction Error [AU]', 'FontSize', 12);
+                captions = cell(1, length(handleArray));
+                for i = 1 : length(handleArray)
+                    captions{i} = strcat('scale', sprintf(' %d', i));
+                end
+                l = legend(handleArray, captions);
+                plotpath = sprintf('%s/recErr', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            catch
+                % if windowsize > values in recerr_hist
+                sprintf('Warning: windowSize >= recerr_hist')
+            end
 
             %% Vergence angle
             figure;
@@ -346,12 +331,12 @@ classdef Model < handle
             subplot(3, 1, 1);
             plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
             ylabel('Value', 'FontSize', 12);
-            title('Absolute Muscle Commands');
+            title('Total Muscle Commands');
 
             subplot(3, 1, 2);
             plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
             ylabel('Value', 'FontSize', 12);
-            title('Relative Muscle Commands');
+            title('\Delta Muscle Commands');
 
             subplot(3, 1, 3);
             plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);

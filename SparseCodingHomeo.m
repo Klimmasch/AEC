@@ -1,7 +1,7 @@
 classdef SparseCodingHomeo < handle
     properties
         Basis;          %all the basis
-        Basis_hist;     %save basis at regular intervals
+        basisHist;     %save basis at regular intervals
 
         Basis_num_used; %number of basis used to encode in sparse mode
         Basis_size;     %size of each base vector
@@ -46,7 +46,7 @@ classdef SparseCodingHomeo < handle
             obj.Dsratio = PARAM{6};
             if (PARAM{8})
                 obj.Basis = PARAM{7};
-                obj.Basis_hist = PARAM{7};
+                obj.basisHist = PARAM{7};
             else
                 a = rand(obj.Basis_size, obj.Basis_num)-0.5; % basis function set
                 a = a*diag(1./sqrt(sum(a.*a)));
@@ -54,7 +54,7 @@ classdef SparseCodingHomeo < handle
                 thenorm = ones(obj.Basis_size, 1)*sqrt(sum(a.*a, 1));
                 a = a./thenorm;
                 obj.Basis = a;
-                obj.Basis_hist = a;
+                obj.basisHist = a;
             end
 
             obj.switch_sym = 1;
@@ -208,7 +208,7 @@ classdef SparseCodingHomeo < handle
         %%% save the Basis during training
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function saveBasis(this)
-            this.Basis_hist = cat(3, this.Basis_hist, this.Basis);
+            this.basisHist = cat(3, this.basisHist, this.Basis);
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

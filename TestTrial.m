@@ -38,8 +38,8 @@ function TestTrial(model, randomizationSeed, fileDescription)
     % Image process variables
     patchSize = 8;
 
-    dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
-    dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
+    dsRatioL = model.scModel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
+    dsRatioS = model.scModel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
 
     % fovea = [128 128];
     foveaL = patchSize + patchSize^2 / 2^log2(dsRatioL); %fovea size (Large scale) | 16
@@ -162,21 +162,21 @@ function TestTrial(model, randomizationSeed, fileDescription)
             %%% Weight L1 regularization
             rewardFunction = model.lambdaRec * reward ...
                              - model.lambdaMet * metCost ...
-                             - model.lambdaV * (sum(sum(abs(model.rlmodel.CCritic.v_ji)))) ...
-                             - model.lambdaP1 * (sum(sum(abs(model.rlmodel.CActor.wp_ji)))) ...
-                             - model.lambdaP2 * (sum(sum(abs(model.rlmodel.CActor.wp_kj))));
+                             - model.lambdaV * (sum(sum(abs(model.rlModel.CCritic.v_ji)))) ...
+                             - model.lambdaP1 * (sum(sum(abs(model.rlModel.CActor.wp_ji)))) ...
+                             - model.lambdaP2 * (sum(sum(abs(model.rlModel.CActor.wp_kj))));
 
             %%% Weight L2 regularization
             % rewardFunction = model.lambdaRec * reward ...
             %                  - model.lambdaMet * metCost ...
-            %                  - model.lambdaV * (sum(sum(model.rlmodel.CCritic.v_ji .^ 2))) ...
-            %                  - model.lambdaP1 * (sum(sum(model.rlmodel.CActor.wp_ji .^ 2))) ...
-            %                  - model.lambdaP2 * (sum(sum(model.rlmodel.CActor.wp_kj .^ 2)));
+            %                  - model.lambdaV * (sum(sum(model.rlModel.CCritic.v_ji .^ 2))) ...
+            %                  - model.lambdaP1 * (sum(sum(model.rlModel.CActor.wp_ji .^ 2))) ...
+            %                  - model.lambdaP2 * (sum(sum(model.rlModel.CActor.wp_kj .^ 2)));
 
 
             % generation of motor command without learning and noise
-            % [relativeCommand, ~, ~] = model.rlmodel.stepTrain(feature, rewardFunction, 0);
-            relativeCommand = model.rlmodel.softmaxAct(feature);
+            % [relativeCommand, ~, ~] = model.rlModel.stepTrain(feature, rewardFunction, 0);
+            relativeCommand = model.rlModel.softmaxAct(feature);
 
             % command = command + relativeCommand';     %two muscels
             command(2) = command(2) + relativeCommand;  %one muscel
