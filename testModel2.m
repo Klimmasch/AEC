@@ -366,6 +366,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     if (plotIt == 1)
         % Vergence Error vs. iteration
+        rng(0);
         for odIndex = 1 : size(objRange, 2)
             figure;
             hold on;
