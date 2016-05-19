@@ -291,8 +291,8 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                         % Absolute command feedback # concatination
                         if (model.rlModel.continuous == 1)
-                            feature = [bfFeature; command(2) * model.lambdaMuscleFB]; % single muscle
-                            % feature = [bfFeature; command * model.lambdaMuscleFB]; % two muscles
+%                             feature = [bfFeature; command(2) * model.lambdaMuscleFB]; % single muscle
+                            feature = [bfFeature; command * model.lambdaMuscleFB]; % two muscles
                         end
 
                         %%% Calculate metabolic costs
@@ -303,9 +303,9 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                         % add the change in muscle Activities to current ones
                         if (model.rlModel.continuous == 1)
-                            % command = command + relativeCommand;     %two muscels
-                            command(1) = 0;
-                            command(2) = command(2) + relativeCommand;  %one muscel
+                            command = command + relativeCommand;     %two muscels
+%                             command(1) = 0;
+%                             command(2) = command(2) + relativeCommand;  %one muscel
                             command = checkCmd(command);                %restrain motor commands to [0,1]
                             angleNew = getAngle2(command);              %resulting angle is used for one eye
                             % angleNew = getAngle(command) * 2;         %resulting angle is used for both eyes

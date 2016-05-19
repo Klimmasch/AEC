@@ -46,14 +46,14 @@ else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
 end
 
+outputDim = 2;                                      % number of neurons in the output layer
 if (continuous == 1)
-    inputDim = sum(PARAMSC{1}) + 1;                 % number of neurons in the input layer (Small + Large scale + Muscle activities)
+    inputDim = sum(PARAMSC{1}) + outputDim;                 % number of neurons in the input layer (Small + Large scale + Muscle activities)
 else
     inputDim = sum(PARAMSC{1});                     % only small + large scale basis function inputs in discrete case
     varianceRange = 1;
 end
 hiddenDim = 50;                                     % number of neurons in the hidden layer
-outputDim = 1;                                      % number of neurons in the output layer
 dimensions = [inputDim, hiddenDim, outputDim];
 
 weight_range = [1 / inputDim, ...                   % maximum initial weight [critic_ji, actor_ji, actor_kj]
@@ -85,8 +85,10 @@ baseline = 0.056;           % interocular distance
 objDistMin = 0.5;
 objDistMax = 2;
 
-muscleInitMin = 0;          % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = 0.1;        % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+% muscle initialization: correspond now to the minimum and maximum distance
+% the eyes should be looking at
+muscleInitMin = 0.3379;       %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = 3.2219;       % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 interval = 10;              % period for changing the stimulus for the eye | origin 10
 lambdaMuscleFB = 1.0722;    % factor of muscle activity feedback to RL feature vector
