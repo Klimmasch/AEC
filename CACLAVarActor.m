@@ -50,7 +50,7 @@ classdef CACLAVarActor < handle
             obj.varDec = PARAM{7};
             % obj.covmat = eye(obj.output_dim) * obj.variance;
 
-            obj.param_num = 2;
+            obj.param_num = 3;
             obj.params = zeros(1, obj.param_num);
 
             obj.z_i_prev = zeros(obj.input_dim, 1);
