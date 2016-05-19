@@ -111,12 +111,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
     dmf = diff(mfunction(1 : 2, 1));        % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
-    indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
+    % indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
 
     %%% New renderer
     simulator = OpenEyeSim('create');
-%     simulator.initRenderer();
-    simulator.reinitRenderer(); % for debugging
+    simulator.initRenderer();
+    % simulator.reinitRenderer(); % for debugging
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -163,8 +163,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     %%% Helper function that maps muscle activities to resulting angle
     function angle = getAngle(command)
-        cmd = (command * 10) + 1;                               % scale commands to table entries
-        angle = interp2(degrees.results_deg, cmd(1), cmd(2));   % interpolate in tabular
+        cmd = (command * 10) + 1;                                       % scale commands to table entries
+        angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline'); % interpolate in table by cubic splines
     end
 
     function angle = getAngle2(command)
@@ -175,8 +175,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     %%% Helper function that maps muscle activities to resulting metabolic costs
     function tmpMetCost = getMetCost(command)
-        cmd = (command * 10) + 1;                               % scale commands to table entries
-        tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
+        cmd = (command * 10) + 1;                                           % scale commands to table entries
+        tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2), 'spline');   % interpolate in table by cubic splines
     end
 
     %%% Saturation function that keeps motor commands in [0, 1]
@@ -251,11 +251,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         command(1) = 0; % single muscle
         % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
         % command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
-        % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
-%         initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
-        initDist = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1,1); %###! TODO: edit config
-
-        command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
+        % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        % command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
+        command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
 
         % testing input distribution
         % nSamples = 10000;
@@ -273,8 +271,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % figure; histogram(angles); title('angles');
         % figure; histogram(dists); title('distances');
 
-        % angleNew = getAngle(command) * 2;
-        angleNew = getAngle2(command);
+        angleNew = getAngle(command) * 2;
+        % angleNew = getAngle2(command);
 
         for iter2 = 1 : model.interval
             t = t + 1;
@@ -355,11 +353,11 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
             % add the change in muscle Activities to current ones
-            command = command + relativeCommand;     % two muscles
-            command = checkCmd(command);                % restrain motor commands to [0, 1]
+            command = command + relativeCommand;    % two muscles
+            command = checkCmd(command);            % restrain motor commands to [0, 1]
 
-            % angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
-            angleNew = getAngle2(command);
+            angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
+            % angleNew = getAngle2(command);
 
             %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
@@ -432,7 +430,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotIt(2), 1);
 
         % testModel2(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-        testModel2(model, 33, plotIt(2), 1, simulator, 0);
+%         testModel2(model, 33, plotIt(2), 1, simulator, 0);
+        testModel2(model, 5, plotIt(2), 1, simulator, 0);
     end
 end
 

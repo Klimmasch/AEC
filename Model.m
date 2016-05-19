@@ -12,8 +12,12 @@ classdef Model < handle
         interval;           %period of eye stimulus change
         desiredAngleMin;    %min/max desired vergence angle
         desiredAngleMax;
+        fixDistMin;
+        fixDistMax;
         vergAngleMin;
         vergAngleMax;
+        vergAngleFixMin;
+        vergAngleFixMax;
 
         textureFile;        %config file containing texture stimulus list
         trainTime;          %number of training (intended) iterations
@@ -55,6 +59,7 @@ classdef Model < handle
         vergErrTest;
         responseResults;
         testResult;
+        testResult2;
 
         % Image processing
         patchSize;
@@ -82,13 +87,18 @@ classdef Model < handle
             obj.lambdaV = PARAM{1}{14};
             obj.lambdaP1 = PARAM{1}{15};
             obj.lambdaP2 = PARAM{1}{16};
+            obj.fixDistMin = PARAM{1}{21};
+            obj.fixDistMax = PARAM{1}{22};
 
             % single eye
             obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
             obj.desiredAngleMax = atand(obj.baseline / (2 * obj.objDistMin));
 
-            obj.vergAngleMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
-            obj.vergAngleMax = 2 * atand(obj.baseline / (2 * obj.objDistMin));
+            obj.vergAngleMin = 2 * atand(obj.baseline / (2 * obj.fixDistMax));
+            obj.vergAngleMax = 2 * atand(obj.baseline / (2 * obj.fixDistMin));
+
+            obj.vergAngleFixMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
+            obj.vergAngleFixMax = 2 * atand(obj.baseline / (2 * obj.objDistMin));
 
             %%% Create RL models
             % Discrete or continuous policy
@@ -121,6 +131,7 @@ classdef Model < handle
             obj.vergErrTest = [];
             obj.responseResults = struct();
             obj.testResult = [];
+            obj.testResult2 = [];
             obj.trainedUntil = 0;
             obj.notes = '';
 
@@ -325,18 +336,19 @@ classdef Model < handle
             saveas(gcf, plotpath, 'png');
 
             %% Muscel graphs
+            % Lateral Rectus
             figure;
             hold on;
             grid on;
             subplot(3, 1, 1);
-            plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            plot(this.cmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
             ylabel('Value', 'FontSize', 12);
-            title('Total Muscle Commands');
+            title('Total Muscle Commands (lateral rectus)');
 
             subplot(3, 1, 2);
-            plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            plot(this.relCmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
             ylabel('Value', 'FontSize', 12);
-            title('\Delta Muscle Commands');
+            title('\Delta Muscle Commands (lateral rectus)');
 
             subplot(3, 1, 3);
             plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
@@ -344,7 +356,53 @@ classdef Model < handle
             ylabel('Value', 'FontSize', 12);
             title('Metabolic Costs');
 
-            plotpath = sprintf('%s/muscleGraphs', this.savePath);
+            plotpath = sprintf('%s/muscleGraphsLateralRectus', this.savePath);
+            saveas(gcf, plotpath, 'png');
+
+            % Medial Rectus
+            figure;
+            hold on;
+            grid on;
+            subplot(3, 1, 1);
+            plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            ylabel('Value', 'FontSize', 12);
+            title('Total Muscle Commands (medial rectus)');
+
+            subplot(3, 1, 2);
+            plot(this.relCmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            ylabel('Value', 'FontSize', 12);
+            title('\Delta Muscle Commands (medial rectus)');
+
+            subplot(3, 1, 3);
+            plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            ylabel('Value', 'FontSize', 12);
+            title('Metabolic Costs');
+
+            plotpath = sprintf('%s/muscleGraphsMedialRectus', this.savePath);
+            saveas(gcf, plotpath, 'png');
+
+            % Muscle correlation check
+            % Total
+            figure;
+            hold on;
+            scatter(this.cmd_hist(:, 1), this.cmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            corrl = corr(this.cmd_hist(:, 1), this.cmd_hist(:, 2));
+            xlabel('Lateral rectus [%]', 'FontSize', 12);
+            ylabel('Medial rectus [%]', 'FontSize', 12);
+            title(strcat('Total Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
+            plotpath = sprintf('%s/muscleGraphsScatterTotal', this.savePath);
+            saveas(gcf, plotpath, 'png');
+
+            % Delta
+            figure;
+            hold on;
+            scatter(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            corrl = corr(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2));
+            xlabel('Lateral rectus [%]', 'FontSize', 12);
+            ylabel('Medial rectus [%]', 'FontSize', 12);
+            title(strcat('\Delta Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
+            plotpath = sprintf('%s/muscleGraphsScatterDelta', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Weights
@@ -384,41 +442,42 @@ classdef Model < handle
             % plotpath = sprintf('%s/weightsL2', this.savePath);
             % saveas(gcf, plotpath, 'png');
 
-            %% Reward
-            % figure;
-            % hold on;
-            % grid on;
-            % % r = [- this.lambdaMet * this.metCost_hist, ...
-            % %      - this.lambdaP2 * this.weight_hist(:, 5), ...
-            % %      - this.lambdaP1 * this.weight_hist(:, 3), ...
-            % %      - this.lambdaV * this.weight_hist(:, 1), ...
-            % %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
-            % r = [- this.lambdaMet * this.metCost_hist, ...
-            %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
-            % handle = area(r, 'LineStyle','none');
-            % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            % ylabel('Value', 'FontSize', 12);
-            % % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
-            % l = legend('\lambdametCost', '\lambdaRecErr');
-            % if(version('-release') == '2015b')
-            %     handle(1).FaceColor = [1, 0.25, 0];
-            %     handle(2).FaceColor = [1, 0.549, 0];
-            %     l.Location = 'southwest';
-            % end
-            % % title('Reward composition (L1)');
-            % title('Reward composition');
-            % plotpath = sprintf('%s/rewardComp', this.savePath);
-            % saveas(gcf, plotpath, 'png');
-
+            %% Reward composition
             figure;
             hold on;
             grid on;
-            plot(this.reward_hist, 'color', [1, 0.25, 0]);
-            xlabel('Iteration #', 'FontSize', 12);
+            % r = [- this.lambdaMet * this.metCost_hist, ...
+            %      - this.lambdaP2 * this.weight_hist(:, 5), ...
+            %      - this.lambdaP1 * this.weight_hist(:, 3), ...
+            %      - this.lambdaV * this.weight_hist(:, 1), ...
+            %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
+            r = [- this.lambdaMet * this.metCost_hist, ...
+                 - this.lambdaRec * sum(this.recerr_hist, 2)];
+            handle = area(r, 'LineStyle','none');
+            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Value', 'FontSize', 12);
-            title('Reward');
+            % % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+            l = legend('\lambdametCost', '\lambdaRecErr');
+            if(version('-release') == '2015b')
+                handle(1).FaceColor = [1, 0.25, 0];
+                handle(2).FaceColor = [1, 0.549, 0];
+                l.Location = 'southwest';
+            end
+            % % title('Reward composition (L1)');
+            title('Reward composition');
             plotpath = sprintf('%s/rewardComp', this.savePath);
             saveas(gcf, plotpath, 'png');
+
+            %% Total reward
+            % figure;
+            % hold on;
+            % grid on;
+            % plot(this.reward_hist, 'color', [1, 0.25, 0]);
+            % xlabel('Iteration #', 'FontSize', 12);
+            % ylabel('Value', 'FontSize', 12);
+            % title('Reward');
+            % plotpath = sprintf('%s/rewardTotal', this.savePath);
+            % saveas(gcf, plotpath, 'png');
 
             %% delta_MF(Vergence_error)
             %
@@ -431,100 +490,100 @@ classdef Model < handle
             % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
             % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
 
-            actualResponse = [this.vergerr_hist, this.relCmd_hist];
+            % actualResponse = [this.vergerr_hist, this.relCmd_hist];
 
-            % observation Window, i.e. plot statistics over last #obsWin iterations
-            obsWin = 1000;
-            if (size(actualResponse, 1) <= obsWin)
-                obsWin = size(actualResponse, 1) - 1;
-            end
-            nVal = 20; % #bins of statistics
+            % % observation Window, i.e. plot statistics over last #obsWin iterations
+            % obsWin = 1000;
+            % if (size(actualResponse, 1) <= obsWin)
+            %     obsWin = size(actualResponse, 1) - 1;
+            % end
+            % nVal = 20; % #bins of statistics
 
-            actualResponse = sortrows(actualResponse(end - obsWin + 1 : end, :));
-            if (all(actualResponse == 0)) % skip plot if empty or still training
-                return;
-            end
-            deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
-            % actualResponseStat = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
-            actualResponseStat = zeros(nVal, 3);
+            % actualResponse = sortrows(actualResponse(end - obsWin + 1 : end, :));
+            % if (all(actualResponse == 0)) % skip plot if empty or still training
+            %     return;
+            % end
+            % deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
+            % % actualResponseStat = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
+            % actualResponseStat = zeros(nVal, 3);
 
-            for i = 1:nVal
-                actualResponseStat(i, 1) = (actualResponse(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
-                actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
-                                                & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
-                actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
-                                               & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
-            end
-            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
+            % for i = 1:nVal
+            %     actualResponseStat(i, 1) = (actualResponse(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
+            %     actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+            %                                     & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+            %     actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
+            %                                    & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
+            % end
+            % actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
 
-            degrees = load('Degrees.mat');
-            resolution = 10001;
-            approx = spline(1:11, degrees.results_deg(:, 1));
+            % degrees = load('Degrees.mat');
+            % resolution = 10001;
+            % approx = spline(1:11, degrees.results_deg(:, 1));
 
-            xValPos = ppval(approx, 1:0.001:11)';
-            yValPos = linspace(0, 1, resolution)';
+            % xValPos = ppval(approx, 1:0.001:11)';
+            % yValPos = linspace(0, 1, resolution)';
 
-            xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
-            yValNeg = linspace(-1, 0, resolution)';
+            % xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
+            % yValNeg = linspace(-1, 0, resolution)';
 
-            % calculate muscle function :=  mf(vergence_angle) = muscle force [single muuscle]
-            mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
-            dmf = diff(mf(1:2, 1)); % delta in angle
-            indZero = find(mf(:, 2) == 0); % MF == 0_index
-            indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-            indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
+            % % calculate muscle function :=  mf(vergence_angle) = muscle force [single muuscle]
+            % mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+            % dmf = diff(mf(1:2, 1)); % delta in angle
+            % indZero = find(mf(:, 2) == 0); % MF == 0_index
+            % indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
+            % indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
 
-            % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
-            % x = vergenceError, y = deltaMuscelForce
-            perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
-                                     (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
-                                     (mf(indMaxFix, 1) - flipud(mf(indZero : indMaxFix - 1, 1))) * 2, ...
-                                     (mf(indMaxFix, 2) - flipud(mf(indZero : indMaxFix - 1, 2)))];
+            % % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
+            % % x = vergenceError, y = deltaMuscelForce
+            % perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
+            %                          (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
+            %                          (mf(indMaxFix, 1) - flipud(mf(indZero : indMaxFix - 1, 1))) * 2, ...
+            %                          (mf(indMaxFix, 2) - flipud(mf(indZero : indMaxFix - 1, 2)))];
 
-            perfectResponseMinFix = [(mf(indMinFix, 1) - flipud(mf(indMinFix : end, 1))) * 2, ...
-                                     (mf(indMinFix, 2) - flipud(mf(indMinFix : end, 2))); ...
-                                     (mf(indMinFix, 1) - flipud(mf(indZero : indMinFix - 1, 1))) * 2, ...
-                                     (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
+            % perfectResponseMinFix = [(mf(indMinFix, 1) - flipud(mf(indMinFix : end, 1))) * 2, ...
+            %                          (mf(indMinFix, 2) - flipud(mf(indMinFix : end, 2))); ...
+            %                          (mf(indMinFix, 1) - flipud(mf(indZero : indMinFix - 1, 1))) * 2, ...
+            %                          (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
 
-            perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
+            % perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
 
-            figure;
-            hold on;
-            grid on;
-            % perfect response to vergence error
-            plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            % error bars of actual response of the model
-            errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
-            % actual response of the model
-            plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-            l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-            if(version('-release') == '2015b')
-                l.FontSize = 7;
-                l.Orientation = 'horizontal';
-                l.Location = 'southoutside';
-            end
-            % adjust axis to actual response ranges + std deviation
-            xmin = min(actualResponseStat(:, 1)) * 1.1;
-            xmax = max(actualResponseStat(:, 1)) * 1.1;
-            if (xmin >= xmax)
-                xmin = -5.5;
-                xmax = 5.5;
-            end
-            ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.1]);
-            ymax = max([max(perfectResponse(:, 4)) * 1.1, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.1]);
-            if (ymin >= ymax)
-                ymin = -0.1;
-                ymax = 0.1;
-            end
-            plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
-            plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-            axis([xmin, xmax, ymin, ymax]);
-            xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
-            ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            title(strcat('\Delta MF(verg_{err}) response after ', sprintf(' %d iterations', size(this.vergerr_hist, 1) - obsWin)));
-            plotpath = sprintf('%s/deltaMFasFktVerErr', this.savePath);
-            saveas(gcf, plotpath, 'png');
+            % figure;
+            % hold on;
+            % grid on;
+            % % perfect response to vergence error
+            % plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+            % plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+            % % error bars of actual response of the model
+            % errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
+            % % actual response of the model
+            % plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
+            % l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
+            % if(version('-release') == '2015b')
+            %     l.FontSize = 7;
+            %     l.Orientation = 'horizontal';
+            %     l.Location = 'southoutside';
+            % end
+            % % adjust axis to actual response ranges + std deviation
+            % xmin = min(actualResponseStat(:, 1)) * 1.1;
+            % xmax = max(actualResponseStat(:, 1)) * 1.1;
+            % if (xmin >= xmax)
+            %     xmin = -5.5;
+            %     xmax = 5.5;
+            % end
+            % ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.1]);
+            % ymax = max([max(perfectResponse(:, 4)) * 1.1, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.1]);
+            % if (ymin >= ymax)
+            %     ymin = -0.1;
+            %     ymax = 0.1;
+            % end
+            % plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
+            % plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
+            % axis([xmin, xmax, ymin, ymax]);
+            % xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
+            % ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
+            % title(strcat('\Delta MF(verg_{err}) response after ', sprintf(' %d iterations', size(this.vergerr_hist, 1) - obsWin)));
+            % plotpath = sprintf('%s/deltaMFasFktVerErr', this.savePath);
+            % saveas(gcf, plotpath, 'png');
         end
 
         %% plot & save delta_MF(Vergence_error)

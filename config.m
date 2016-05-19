@@ -39,7 +39,7 @@ alpha_p = 1;                                    % learning rate to update the po
 xi = 0.3;                                       % discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                    % learning rate to update cumulative value | origin 1
 
-varianceRange = [1e-5, 1e-5];                   % variance of action output, i.e. variance of Gaussean policy [start, end]
+varianceRange = [1e-5, 1e-5];                   % variance of action output, i.e. variance of Gaussian policy [start, end]
 if (size(varianceRange, 2) == 1 || varianceRange(1) <= varianceRange(2))
     varDec = 0; % no variance decay
 else
@@ -85,10 +85,15 @@ baseline = 0.056;           % interocular distance
 objDistMin = 0.5;
 objDistMax = 2;
 
+% Fixation distance [m]
+% used for eye fixation initialization
+fixDistMin = 0.3379;
+fixDistMax = 3.2219;
+
 % muscle initialization: correspond now to the minimum and maximum distance
 % the eyes should be looking at
-muscleInitMin = 0.3379;       %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = 3.2219;       % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+muscleInitMin = 0.00807;       %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = 0.07186;       % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 interval = 10;              % period for changing the stimulus for the eye | origin 10
 lambdaMuscleFB = 1.0722;    % factor of muscle activity feedback to RL feature vector
@@ -106,7 +111,7 @@ lambdaP2 = 0.309;           % policy networks hidden->output weights factor | L1
 PARAMModel = {textureFile, trainTime, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2, ...
-              patchSize, pxFieldOfView, dsRatio, stride};
+              patchSize, pxFieldOfView, dsRatio, stride, fixDistMin, fixDistMax};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);

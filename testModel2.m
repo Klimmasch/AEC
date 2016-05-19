@@ -41,6 +41,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     tmpResult1 = zeros(nStim, testInterval + 1);
     tmpResult2 = zeros(nStim, testInterval + 1);
     tmpResult3 = zeros(nStim, testInterval + 1);
+    testResult2 = zeros(size(objRange, 2) * 7 * nStim, 1 + length(model.scModel));
 
     % Image processing variables
     textureFile = 'Textures_vanHaterenTest';
@@ -70,9 +71,9 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
 
     %%% Perfect Response function
-    indMaxFix = find(mfunction(:, 1) <= model.vergAngleMin + dmf & mfunction(:, 1) >= model.vergAngleMin - dmf); % MF(vergAngleMin)_index
+    indMaxFix = find(mfunction(:, 1) <= model.vergAngleFixMin + dmf & mfunction(:, 1) >= model.vergAngleFixMin - dmf); % MF(vergAngleFixMin)_index
     indMaxFix = indMaxFix(1);
-    indMinFix = find(mfunction(:, 1) <= model.vergAngleMax + dmf & mfunction(:, 1) >= model.vergAngleMax - dmf); % MF(vergAngleMax)_index
+    indMinFix = find(mfunction(:, 1) <= model.vergAngleFixMax + dmf & mfunction(:, 1) >= model.vergAngleFixMax - dmf); % MF(vergAngleFixMax)_index
     indMinFix = indMinFix(1);
 
     % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
@@ -137,8 +138,8 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     %%% Helper function that maps muscle activities to resulting angle
     function angle = getAngle(command)
-        cmd = (command * 10) + 1;                               % calculate tabular index
-        angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline');   % interpolate in tabular
+        cmd = (command * 10) + 1;                                       % scale commands to table entries
+        angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline'); % interpolate in table by cubic splines
     end
 
     function angle = getAngle2(command)
@@ -148,9 +149,9 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     end
 
     %%% Helper function that maps muscle activities to resulting metabolic costs
-    % function [tmpMetCost] = getMetCost(command)
-    %     cmd = (command * 10) + 1;                               % scale commands to table entries
-    %     tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
+    % function tmpMetCost = getMetCost(command)
+    %     cmd = (command * 10) + 1;                                           % scale commands to table entries
+    %     tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2), 'spline');   % interpolate in table by cubic splines
     % end
 
     % Generates two new images for both eyes
@@ -229,6 +230,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     end
 
     tic;
+    tr2Ind = 1;
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
         for odIndex = 1 : size(objRange, 2)
@@ -246,29 +248,6 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                     command(1) = 0;
                     [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
                     refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
-
-                    %%% DEBUGGING
-                    % [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
-                    %                                'a.bmp',2, 2,imageSavePath, imageSavePath));
-
-                    % refreshImages('b.bmp', 2/2, 2);
-
-                    % figure;
-                    % subplot(1,2,1)
-                    % imshow(imfuse(imread([imageSavePath '/leftTest.png']), imgRawLeft, 'falsecolor'));
-                    % subplot(1,2,2)
-                    % imshow(imfuse(imread([imageSavePath '/rightTest.png']), imgRawRight, 'falsecolor'));
-
-                    % figure
-                    % subplot(2,2,1)
-                    % imshow(imread([imageSavePath '/leftTest.png']));
-                    % subplot(2,2,2)
-                    % imshow(imread([imageSavePath '/rightTest.png']));
-                    % subplot(2,2,3)
-                    % imshow(imgRawLeft);
-                    % subplot(2,2,4)
-                    % imshow(imgRawRight);
-                    %%% DEBUGGING END
 
                     for iter = 2 : testInterval + 1
                         % convert images to gray scale
@@ -291,7 +270,6 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                         % Absolute command feedback # concatination
                         if (model.rlModel.continuous == 1)
-%                             feature = [bfFeature; command(2) * model.lambdaMuscleFB]; % single muscle
                             feature = [bfFeature; command * model.lambdaMuscleFB]; % two muscles
                         end
 
@@ -303,16 +281,13 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                         % add the change in muscle Activities to current ones
                         if (model.rlModel.continuous == 1)
-                            command = command + relativeCommand;     %two muscels
-%                             command(1) = 0;
-%                             command(2) = command(2) + relativeCommand;  %one muscel
-                            command = checkCmd(command);                %restrain motor commands to [0,1]
-                            angleNew = getAngle2(command);              %resulting angle is used for one eye
-                            % angleNew = getAngle(command) * 2;         %resulting angle is used for both eyes
+                            command = command + relativeCommand;
+                            command = checkCmd(command);                %restrain motor commands to [0, 1]
+                            angleNew = getAngle(command) * 2;         %resulting angle is used for both eyes
                         else
                             angleNew = angleNew + relativeCommand;
                             if (angleNew > angleMax || angleNew < angleMin)
-                                angleNew = model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1);
+                                angleNew = model.vergAngleFixMin + (model.vergAngleFixMax - model.vergAngleFixMin) * rand(1, 1);
                             end
                         end
 
@@ -327,8 +302,10 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                         % temporary results
                         tmpResult1(stimulusIndex, iter) = angleDes - angleNew;
-                        tmpResult2(stimulusIndex, iter) = relativeCommand(1);
+                        tmpResult2(stimulusIndex, iter) = relativeCommand(2); %TODO: fix that, extend to 2 muscles!
                         tmpResult3(stimulusIndex, iter) = model.rlModel.CCritic.v_ji * feature;
+                        testResult2(tr2Ind, :) = [angleDes - angleNew, recErrorArray];
+                        tr2Ind = tr2Ind + 1;
                     end
                 end
 
@@ -346,6 +323,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         % save test results
         try
             model.testResult = testResult;
+            model.testResult2 = testResult2;
             if (saveTestResults == 1)
                 save(strcat(model.savePath, '/model'), 'model');
             end
@@ -356,6 +334,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             clear model;
             model = clone;
             model.testResult = testResult;
+            model.testResult2 = testResult2;
             if (saveTestResults == 1)
                 save(strcat(model.savePath, '/model'), 'model');
             end
@@ -497,6 +476,76 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         title('Critic Value over different disparities');
         if (~isempty(model.savePath))
             plotpath = sprintf('%s/criticValvsVerErr', model.savePath);
+            saveas(gcf, plotpath, 'png');
+        end
+
+        %%% Plot the resonstruction error of basis functions over different disparities
+        nBins = 31;
+        % calculate mean and std of reconstruction error
+        tmpRsp = sortrows(testResult2);
+        deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nBins;
+        recErrs = zeros(nBins, 1 + 2 * (length(model.scModel) + 1));
+        tmp = zeros(nBins, 3);
+
+        % total reconstruction error
+        for i = 1 : nBins
+            tmp(i, 1) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                         & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 1));
+
+            tmp(i, 2) = mean(sum(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                        & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2 : end), 2));
+
+            tmp(i, 3) = std(sum(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+                                       & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2 : end), 2));
+        end
+        recErrs(:, 1 : 3) = tmp;
+
+        % reconstruction error over different scales
+        tmp = zeros(nBins, 2);
+        k = 4;
+        for i = 2 : length(model.scModel) + 1
+            for j = 1 : nBins
+                tmp(j, 1) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (j - 1) * deltaVergErr ...
+                                            & tmpRsp(:, 1) <= tmpRsp(1, 1) + j * deltaVergErr), i));
+
+                tmp(j, 2) = std(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (j - 1) * deltaVergErr ...
+                                           & tmpRsp(:, 1) <= tmpRsp(1, 1) + j * deltaVergErr), i));
+            end
+            recErrs(:, k : k + 1) = tmp;
+            k = k + 2;
+        end
+        recErrs(isnan(recErrs(:, 2)), :) = []; % drop NaN elements
+
+        figure;
+        hold on;
+        grid on;
+        grid minor;
+        handleArray = zeros(1, 1 + length(model.scModel));
+
+        k = 2;
+        for i = 1 : length(model.scModel) + 1
+            handleArray(i) = errorbar(recErrs(:, 1), recErrs(:, k), recErrs(:, k + 1), 'LineWidth', 0.9);
+            k = k + 2;
+        end
+
+        captions = cell(1, length(handleArray));
+        captions{1} = 'Total Error';
+        for i = 2 : length(handleArray)
+            captions{i} = sprintf('Scale %d Error', i - 1);
+        end
+        l = legend(handleArray, captions);
+
+        if(version('-release') == '2015b')
+            l.FontSize = 7;
+            l.Orientation = 'horizontal';
+            l.Location = 'southoutside';
+        end
+        xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
+        ylabel('Resonstruction Error', 'FontSize', 12);
+        title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
+
+        if (~ isempty(model.savePath))
+            plotpath = sprintf('%s/recErrVsVergErr_[%.1fm,%.1fm].png', model.savePath, objRange(1), objRange(end));
             saveas(gcf, plotpath, 'png');
         end
     end

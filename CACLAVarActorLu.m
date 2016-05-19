@@ -17,7 +17,7 @@ classdef CACLAVarActorLu < handle
         variance;       % variance of perturbation distribution
         varianceRange;
         varDec;
-        % covmat;         % action perturbation matrix
+        covmat;         % action perturbation matrix
 
         % model state tracking of previous time step
         z_i_prev;       % input layer activation
@@ -49,7 +49,7 @@ classdef CACLAVarActorLu < handle
             obj.deltaVar = PARAM{5};
             obj.eta = PARAM{6};
             obj.varDec = PARAM{7};
-            % obj.covmat = eye(obj.output_dim) * obj.variance;
+            obj.covmat = eye(obj.output_dim) * obj.variance;
 
             obj.param_num = 3;
             obj.params = zeros(1, obj.param_num);
@@ -57,7 +57,7 @@ classdef CACLAVarActorLu < handle
             obj.z_i_prev = zeros(obj.input_dim, 1);
             obj.z_j_prev = zeros(obj.hidden_dim, 1);
             obj.z_k_prev = zeros(obj.output_dim, 1);
-            obj.command_prev = 0;
+            obj.command_prev = zeros(obj.output_dim, 1);
             obj.updateCount = 0;
         end
 
@@ -68,9 +68,6 @@ classdef CACLAVarActorLu < handle
             dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
 
             % delta_weights(input -> hidden)
-            % A = (1 - this.z_j_prev .^ 2) * this.z_i_prev';
-            % tmp = ((this.command_prev - this.z_k_prev) * this.wp_kj)';
-            % dwp_ji = A .* repmat(tmp, 1, this.input_dim);
             tmpVector = ((this.command_prev - this.z_k_prev)' * this.wp_kj)';
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat(tmpVector, 1, this.input_dim);
 
@@ -82,8 +79,7 @@ classdef CACLAVarActorLu < handle
             z_j = tanh(this.wp_ji * z_i);           % activity of hidden layer
             z_k = this.wp_kj * z_j;                 % activity of output layer
 
-            % command = mvnrnd(z_k, this.covmat)';  % perturbation of actor's output multivariate version
-            command = mvnrnd(z_k, this.variance);
+            command = mvnrnd(z_k, this.covmat)';    % perturbation of actor's output by multivariate Gaussian
 
             % model state tracking
             this.z_i_prev = z_i;
