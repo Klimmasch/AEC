@@ -132,10 +132,13 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         patchesRight{i} = zeros(model.patchSize ^ 2, length(model.columnInd{i}));
     end
 
-    % Generates two new images for both eyes
-    function refreshImages(texture, vergAngle, objDist)
+    %%% Generates two new images for both eyes
+    % texture:  file path of texture input
+    % eyeAngle: angle of single eye (rotation from offspring)
+    % objDist:  distance of stimulus
+    function refreshImages(texture, eyeAngle, objDist)
         simulator.add_texture(1, texture);
-        simulator.set_params(1, vergAngle, objDist);
+        simulator.set_params(1, eyeAngle, objDist);
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -198,10 +201,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
 
         % down scale image
-        if (model.dsRatio(scScale) > 0)
-            for k = 1 : log2(model.dsRatio(scScale))
-                img = impyramid(img, 'reduce');
-            end
+        for k = 1 : log2(model.dsRatio(scScale))
+            img = impyramid(img, 'reduce');
         end
 
         % convert to double
@@ -294,7 +295,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             for i = 1 : length(model.scModel)
                 preprocessImage(imgGrayLeft, i, 1);
                 preprocessImage(imgGrayRight, i, 2);
-                currentView{i}  = vertcat(patchesLeft{i}, patchesRight{i});
+                currentView{i} = vertcat(patchesLeft{i}, patchesRight{i});
             end
 
             % Generate basis function feature vector from current images

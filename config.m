@@ -72,9 +72,8 @@ PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, 
 patchSize = 8;
 % [peripheral vision, ..., central vision]
 pxFieldOfView = [16, 40];                   % size of respective fields of view in pixel (previously called fovea)
-dsRatio = [8, 2];                           % downsampling ratio (target resolution = 8x8)
-% stride = [patchSize / 2, patchSize / 2];    % image patch strides
-stride = [1, patchSize / 2];    % image patch strides
+dsRatio = [8, 2];                           % downsampling ratio, i.e. how many pixels in orig image correspond to how many px in downsampled img
+stride = [patchSize / 2, patchSize / 2];    % image patch strides | orig [1, patchSize / 2]
 
 % Camera parameters
 % offset = 0;               % vertical offset between left and right (0 in the Simulator!!!)

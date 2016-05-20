@@ -132,10 +132,13 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
         patchesRight{i} = zeros(model.patchSize ^ 2, length(model.columnInd{i}));
     end
 
-    % Generates two new images for both eyes
-    function refreshImages(texture, vergAngle, objDist)
+    %%% Generates two new images for both eyes
+    % texture:  file path of texture input
+    % eyeAngle: angle of single eye (rotation from offspring)
+    % objDist:  distance of stimulus
+    function refreshImages(texture, eyeAngle, objDist)
         simulator.add_texture(1, texture);
-        simulator.set_params(1, vergAngle, objDist);
+        simulator.set_params(1, eyeAngle, objDist);
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();

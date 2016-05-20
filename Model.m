@@ -60,6 +60,7 @@ classdef Model < handle
         responseResults;
         testResult;
         testResult2;
+        testResult3;
 
         % Image processing
         patchSize;
@@ -132,6 +133,7 @@ classdef Model < handle
             obj.responseResults = struct();
             obj.testResult = [];
             obj.testResult2 = [];
+            obj.testResult3 = [];
             obj.trainedUntil = 0;
             obj.notes = '';
 

@@ -42,6 +42,8 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     tmpResult2 = zeros(nStim, testInterval + 1);
     tmpResult3 = zeros(nStim, testInterval + 1);
     testResult2 = zeros(size(objRange, 2) * 7 * nStim, 1 + length(model.scModel));
+    % testResult2 = zeros(size(objRange, 2) * 7 * nStim * testInterval, 1 + length(model.scModel));
+    testResult3 = zeros(10, size(objRange, 2) * 7 * nStim);
 
     % Image processing variables
     textureFile = 'Textures_vanHaterenTest';
@@ -154,10 +156,13 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     %     tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2), 'spline');   % interpolate in table by cubic splines
     % end
 
-    % Generates two new images for both eyes
-    function refreshImages(texture, vergAngle, objDist)
+    %%% Generates two new images for both eyes
+    % texture:  file path of texture input
+    % eyeAngle: angle of single eye (rotation from offspring)
+    % objDist:  distance of stimulus
+    function refreshImages(texture, eyeAngle, objDist)
         simulator.add_texture(1, texture);
-        simulator.set_params(1, vergAngle, objDist);
+        simulator.set_params(1, eyeAngle, objDist);
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -231,6 +236,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     tic;
     tr2Ind = 1;
+    tr3Ind = 1;
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
         for odIndex = 1 : size(objRange, 2)
@@ -247,9 +253,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                     currentTexture = texture{stimulusIndex};
                     command(1) = 0;
                     [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
-                    refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
 
                     for iter = 2 : testInterval + 1
+                        % update stimuli
+                        refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
+
                         % convert images to gray scale
                         imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
                         imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
@@ -261,12 +269,16 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         for i = 1 : length(model.scModel)
                             preprocessImage(imgGrayLeft, i, 1);
                             preprocessImage(imgGrayRight, i, 2);
-                            currentView{i}  = vertcat(patchesLeft{i}, patchesRight{i});
+                            currentView{i} = vertcat(patchesLeft{i}, patchesRight{i});
                         end
 
                         % Generate input feature vector from current images
                         % [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
                         [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
+
+                        % Track reconstruction error statistics
+                        testResult2(tr2Ind, :) = [angleDes - angleNew, recErrorArray];
+                        tr2Ind = tr2Ind + 1;
 
                         % Absolute command feedback # concatination
                         if (model.rlModel.continuous == 1)
@@ -282,16 +294,14 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         % add the change in muscle Activities to current ones
                         if (model.rlModel.continuous == 1)
                             command = command + relativeCommand;
-                            command = checkCmd(command);                %restrain motor commands to [0, 1]
-                            angleNew = getAngle(command) * 2;         %resulting angle is used for both eyes
+                            command = checkCmd(command);        %restrain motor commands to [0, 1]
+                            angleNew = getAngle(command) * 2;   %resulting angle is used for both eyes
                         else
                             angleNew = angleNew + relativeCommand;
                             if (angleNew > angleMax || angleNew < angleMin)
                                 angleNew = model.vergAngleFixMin + (model.vergAngleFixMax - model.vergAngleFixMin) * rand(1, 1);
                             end
                         end
-
-                        refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
 
                         % track bad or redundant stimuli
                         % if (iter == 11)
@@ -304,9 +314,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         tmpResult1(stimulusIndex, iter) = angleDes - angleNew;
                         tmpResult2(stimulusIndex, iter) = relativeCommand(2); %TODO: fix that, extend to 2 muscles!
                         tmpResult3(stimulusIndex, iter) = model.rlModel.CCritic.v_ji * feature;
-                        testResult2(tr2Ind, :) = [angleDes - angleNew, recErrorArray];
-                        tr2Ind = tr2Ind + 1;
+
+                        % total error measurement
+                        testResult3(iter - 1, tr3Ind) = angleDes - angleNew;
                     end
+                    tr3Ind = tr3Ind + 1;
                 end
 
                 % final results
@@ -352,7 +364,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             grid on;
             grid minor;
             for vseIndex = 1 : size(model.testResult, 2)
-                errorbar(0 : 10, model.testResult(odIndex, vseIndex, 1 : 11), model.testResult(odIndex, vseIndex, 12 : 22), ...
+                errorbar(0 : testInterval, model.testResult(odIndex, vseIndex, 1 : 11), model.testResult(odIndex, vseIndex, 12 : 22), ...
                          'color', [rand, rand, rand], 'LineWidth', 1.3);
             end
             axis([-1, testInterval + 1, -inf, inf]);
@@ -396,15 +408,15 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         % actual response
         for odIndex = 1 : size(objRange, 2)
             % delta_mf_t+1(vergAngle_t)
-            % hl3 = errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
-            %                reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
-            %                reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
+            % hl3 = errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
+            %                reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
+            %                reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
             %                'DisplayName', sprintf('%.1fm objDist', objRange(odIndex)), 'Marker', '*', 'MarkerSize', 2.5, ...
             %                'color', [rand, rand, rand], 'LineWidth', 0.7, 'LineStyle', 'none');
 
-            tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])']);
+            tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])']);
 
             [hl3, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
@@ -446,14 +458,14 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         grid minor;
         for odIndex = 1 : size(objRange, 2)
             % delta_mf_t+1(vergAngle_t)
-            % errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
-            %          reshape(reshape(model.testResult(odIndex, :, 46 : 55), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
-            %          reshape(reshape(model.testResult(odIndex, :, 57 : 66), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10]), ...
+            % errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
+            %          reshape(reshape(model.testResult(odIndex, :, 46 : 55), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
+            %          reshape(reshape(model.testResult(odIndex, :, 57 : 66), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
             %          'Marker', '*', 'MarkerSize', 2.5, 'LineWidth', 0.9, 'LineStyle', 'none');
 
-            tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : 10), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 46 : 55), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 57 : 66), [size(model.testResult, 2), 10])', [1, size(model.testResult, 2) * 10])']);
+            tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 46 : 55), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 57 : 66), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])']);
 
             [hl, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 

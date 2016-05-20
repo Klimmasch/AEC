@@ -93,31 +93,28 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
 
-    % Generates two new images for both eyes
-    function refreshImages(texture, vergAngle, objDist)
+    %%% Generates two new images for both eyes
+    % texture:  file path of texture input
+    % eyeAngle: angle of single eye (rotation from offspring)
+    % objDist:  distance of stimulus
+    function refreshImages(texture, eyeAngle, objDist)
         simulator.add_texture(1, texture);
-        simulator.set_params(1, vergAngle, objDist);
+        simulator.set_params(1, eyeAngle, objDist);
 
-        result1 = simulator.generate_left;
-        result2 = simulator.generate_right;
+        result1 = simulator.generate_left();
+        result2 = simulator.generate_right();
 
-        k = 1;
-        l = 1;
-        for i = 1 : 3 : length(result1)
-            imgRawLeft(k,l,1) = result1(i);
-            imgRawLeft(k,l,2) = result1(i + 1);
-            imgRawLeft(k,l,3) = result1(i + 2);
+        imgRawLeft = permute(reshape(result1, ...
+                                     [size(imgRawLeft, 3), ...
+                                      size(imgRawLeft, 2), ...
+                                      size(imgRawLeft, 1)]), ...
+                                     [3, 2, 1]);
 
-            imgRawRight(k,l,1) = result2(i);
-            imgRawRight(k,l,2) = result2(i + 1);
-            imgRawRight(k,l,3) = result2(i + 2);
-
-            l = l + 1;
-            if (l > 320)
-                l = 1;
-                k = k + 1;
-            end
-        end
+        imgRawRight = permute(reshape(result2, ...
+                                      [size(imgRawRight, 3), ...
+                                       size(imgRawRight, 2), ...
+                                       size(imgRawRight, 1)]), ...
+                                      [3, 2, 1]);
     end
 
     %%% Average VergErr over Trial loop
@@ -149,13 +146,6 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
             %desired vergence [deg]
             angleDes = 2 * atand(model.baseline / (2 * tmpObjRange));
 
-%             [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
-%                                            currentTexture, tmpObjRange, angleNew, imagesSavePath, imagesSavePath));
-%             % abort execution if error occured
-%             if (status)
-%                 sprintf('Error in checkEnvironment:\n%s', res)
-%                 return;
-%             end
             refreshImages(currentTexture, angleNew / 2, tmpObjRange);
 
             for iter3 = 1 : model.interval
@@ -204,16 +194,6 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
                 end
 
                 % generate new view (two pictures) with new vergence angle
-%                 [status, res] = system(sprintf('./checkEnvironment %s %d %d %s/leftTest.png %s/rightTest.png', ...
-%                                                currentTexture, tmpObjRange, angleNew, imagesSavePath, imagesSavePath));
-%
-%                 % abort execution if error occured
-%                 if (status)
-%                     sprintf('Error in checkEnvironment:\n%s', res)
-%                     return;
-%                 end
-
-%                 [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, tmpObjRange);
                 refreshImages(currentTexture, angleNew / 2, tmpObjRange);
 
                 %%% Track results

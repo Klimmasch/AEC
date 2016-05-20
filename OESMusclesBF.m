@@ -5,6 +5,8 @@
 % learnedFile:              file with policy and sparse coding to test if not empty
 % textureFile:              texture settings files
 % sparseCodingType:         type of sparse coding approach
+%
+% Attention: Function is DEPICATED
 %%%
 function OESMusclesBF(trainTime, randomizationSeed, fileDescription)
 
