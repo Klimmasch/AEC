@@ -51,6 +51,10 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     texture = load(['config/' textureFile]);
     texture = texture.texture;
     nTextures = length(texture);
+    if nTextures < nStim
+        sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
+        nStim = nTextures;
+    end
 
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
