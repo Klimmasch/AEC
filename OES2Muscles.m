@@ -431,8 +431,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotIt(2), 1);
 
         % testModel2(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-%         testModel2(model, 33, plotIt(2), 1, simulator, 0);
-        testModel2(model, 5, plotIt(2), 1, simulator, 0);
+        testModel2(model, 33, plotIt(2), 1, simulator, 0);
     end
 end
 

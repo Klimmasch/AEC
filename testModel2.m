@@ -41,9 +41,8 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     tmpResult1 = zeros(nStim, testInterval + 1);
     tmpResult2 = zeros(nStim, testInterval + 1);
     tmpResult3 = zeros(nStim, testInterval + 1);
-    testResult2 = zeros(size(objRange, 2) * 7 * nStim, 1 + length(model.scModel));
-    % testResult2 = zeros(size(objRange, 2) * 7 * nStim * testInterval, 1 + length(model.scModel));
-    testResult3 = zeros(10, size(objRange, 2) * 7 * nStim);
+    testResult2 = zeros(size(objRange, 2) * 7 * nStim * testInterval, 1 + length(model.scModel));
+    testResult3 = zeros(size(objRange, 2) * 7 * nStim, 10);
 
     % Image processing variables
     textureFile = 'Textures_vanHaterenTest';
@@ -316,7 +315,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         tmpResult3(stimulusIndex, iter) = model.rlModel.CCritic.v_ji * feature;
 
                         % total error measurement
-                        testResult3(iter - 1, tr3Ind) = angleDes - angleNew;
+                        testResult3(tr3Ind, iter - 1) = angleDes - angleNew;
                     end
                     tr3Ind = tr3Ind + 1;
                 end
@@ -492,7 +491,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         end
 
         %%% Plot the resonstruction error of basis functions over different disparities
-        nBins = 31;
+        nBins = 30;
         % calculate mean and std of reconstruction error
         tmpRsp = sortrows(testResult2);
         deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nBins;
@@ -558,6 +557,23 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
         if (~ isempty(model.savePath))
             plotpath = sprintf('%s/recErrVsVergErr_[%.1fm,%.1fm].png', model.savePath, objRange(1), objRange(end));
+            saveas(gcf, plotpath, 'png');
+        end
+
+        % Total error
+        figure;
+        hold on;
+        grid on;
+        boxplot(testResult3);
+        if (nStim > 0)
+            xlabel(sprintf('Iteration step (#stimuli=%d)', nStim), 'FontSize', 12);
+        else
+            xlabel('Iteration step', 'FontSize', 12);
+        end
+        ylabel('Vergence Error [deg]', 'FontSize', 12);
+        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %5.3f, Median = %5.3f', mean(testResult3(:, 10)), median(testResult3(:, 10))));
+        if (~isempty(model.savePath))
+            plotpath = sprintf('%s/totalError', model.savePath);
             saveas(gcf, plotpath, 'png');
         end
     end

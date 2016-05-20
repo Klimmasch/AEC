@@ -71,7 +71,8 @@ PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, 
 % Image processing variable
 patchSize = 8;
 % [peripheral vision, ..., central vision]
-pxFieldOfView = [16, 40];                   % size of respective fields of view in pixel (previously called fovea)
+pxFieldOfView = [16, 40];                   % size of respective fields of view in pixel (previously called fovea).
+                                            % FieldOfView in original image [pixel] = pxFieldOfView * dsRatio
 dsRatio = [8, 2];                           % downsampling ratio, i.e. how many pixels in orig image correspond to how many px in downsampled img
 stride = [patchSize / 2, patchSize / 2];    % image patch strides | orig [1, patchSize / 2]
 
