@@ -9,6 +9,18 @@
 %%%
 function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer)
 
+    % Image processing variables
+    textureFile = 'Textures_vanHaterenTest';
+
+    % Prepare Textures
+    texture = load(['config/' textureFile]);
+    texture = texture.texture;
+    nTextures = length(texture);
+    if nTextures < nStim
+        sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
+        nStim = nTextures;
+    end
+    
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
         sprintf('Error: Model has no testResults!')
@@ -43,18 +55,6 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     tmpResult3 = zeros(nStim, testInterval + 1);
     testResult2 = zeros(size(objRange, 2) * 7 * nStim * testInterval, 1 + length(model.scModel));
     testResult3 = zeros(size(objRange, 2) * 7 * nStim, 10);
-
-    % Image processing variables
-    textureFile = 'Textures_vanHaterenTest';
-
-    % Prepare Textures
-    texture = load(['config/' textureFile]);
-    texture = texture.texture;
-    nTextures = length(texture);
-    if nTextures < nStim
-        sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
-        nStim = nTextures;
-    end
 
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'

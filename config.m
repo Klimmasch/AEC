@@ -103,8 +103,8 @@ lambdaMuscleFB = 1.0722;    % factor of muscle activity feedback to RL feature v
 
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
-lambdaRec = 4.929;          % reconstruction error factor | 4.929
-lambdaMet = 0;              % metabolic costs factor | 0.204
+lambdaRec = 6.391;          % reconstruction error factor | 4.929 | 100% = 6.391
+lambdaMet = 0;              % metabolic costs factor | 0.204 | 30% = 0.484 | 20% = 0.323 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016
 lambdaV = 7.0282e-04;       % value networks input->output weights factor | L1 norm 7.0282e-04
 lambdaP1 = 0.019;           % policy networks input->hidden weights factor | L1 norm 0.019
 lambdaP2 = 0.309;           % policy networks hidden->output weights factor | L1 norm 0.309
