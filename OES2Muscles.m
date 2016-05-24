@@ -111,26 +111,20 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
     dmf = diff(mfunction(1 : 2, 1));        % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
-    % indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
 
     %%% New renderer
     simulator = OpenEyeSim('create');
-%     simulator.initRenderer();
-    simulator.reinitRenderer(); % for debugging
+
+    simulator.initRenderer();
+    % simulator.reinitRenderer(); % for debugging
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
+    imgGrayLeft = uint8(zeros(240, 320, 3));
+    imgGrayRight = uint8(zeros(240, 320, 3));
 
     % Image patches cell array (input to model)
     currentView = cell(1, length(model.scModel));
-
-    % Intermediate patch matricies
-    patchesLeft = cell(1, length(model.scModel));
-    patchesRight = cell(1, length(model.scModel));
-    for i = 1 : length(model.scModel)
-        patchesLeft{i} = zeros(model.patchSize ^ 2, length(model.columnInd{i}));
-        patchesRight{i} = zeros(model.patchSize ^ 2, length(model.columnInd{i}));
-    end
 
     %%% Generates two new images for both eyes
     % texture:  file path of texture input
@@ -154,6 +148,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                                        size(imgRawRight, 2), ...
                                        size(imgRawRight, 1)]), ...
                                       [3, 2, 1]);
+
+        % convert images to gray scale
+        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
     end
 
     %%% Helper function that maps {vergenceAngle} -> {muscleForce}
@@ -189,49 +187,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         cmd(i0) = 0;
         i1 = cmd > 1;
         cmd(i1) = 1;
-    end
-
-    %%% Helper function for image preprocessing
-    %% Patch generation
-    % img:      image to be processed
-    % scScale:  SC scale index elem {coarse, ..., fine}
-    % eyePos:   eye position index elem {1 := left, 2 := right}
-    function preprocessImage(img, scScale, eyePos)
-        % convert to gray scale image
-        % img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
-
-        % down scale image
-        for k = 1 : log2(model.dsRatio(scScale))
-            img = impyramid(img, 'reduce');
-        end
-
-        % convert to double
-        img = double(img);
-
-        % cut fovea in the center
-        [h, w, ~] = size(img);
-        img = img(fix(h / 2 + 1 - model.pxFieldOfView(scScale) / 2) : fix(h / 2 + model.pxFieldOfView(scScale) / 2), ...
-                  fix(w / 2 + 1 - model.pxFieldOfView(scScale) / 2) : fix(w / 2 + model.pxFieldOfView(scScale) / 2));
-
-        % cut patches and store them as col vectors
-        patches = im2col(img, [model.patchSize, model.patchSize], 'sliding');            %slide window of 1 px
-
-        % take patches by application of respective strides (8 px)
-        patches = patches(:, model.columnInd{scScale});
-
-        % pre-processing steps (0 mean, unit norm)
-        patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
-        normp = sqrt(sum(patches.^2));                                      %patches norm
-
-        % normalize patches to norm 1
-        normp(normp == 0) = eps;                                            %regularizer
-        patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
-
-        if (eyePos == 1)
-            patchesLeft{scScale} = patches;
-        else
-            patchesRight{scScale} = patches;
-        end
     end
 
     %%% Main execution loop
@@ -281,10 +236,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             % update stimuli
             refreshImages(currentTexture, angleNew / 2, objDist);
 
-            % convert images to gray scale
-            imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
-            imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
-
             % Generate & save the anaglyph picture
             % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
             % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
@@ -293,9 +244,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             % Image patch generation
             for i = 1 : length(model.scModel)
-                preprocessImage(imgGrayLeft, i, 1);
-                preprocessImage(imgGrayRight, i, 2);
-                currentView{i} = vertcat(patchesLeft{i}, patchesRight{i});
+                model.preprocessImageFilled(imgGrayLeft, i, 1);
+                model.preprocessImageFilled(imgGrayRight, i, 2);
+                currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
             end
 
             % Generate basis function feature vector from current images

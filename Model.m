@@ -68,6 +68,8 @@ classdef Model < handle
         dsRatio;
         columnInd;
         stride;
+        patchesLeft;
+        patchesRight;
     end
 
     methods
@@ -144,20 +146,9 @@ classdef Model < handle
             obj.stride = PARAM{1}{20};
 
             % Prepare index matrix for image patches
-            obj.columnInd = {};
-            npc = obj.pxFieldOfView - obj.patchSize + 1; % number of patches per column
-            % for #scales
-            for i = 1 : length(obj.dsRatio)
-                k = 1;
-                l = length(1 : obj.stride(i) : npc(i));
-                obj.columnInd{end + 1} = zeros(1, l ^ 2);
-                % obj.columnInd{end + 1} = [];
-                for j = 1 : obj.stride(i) : npc(i)
-                    % obj.columnInd{i} = [obj.columnInd{i}, (j - 1) * npc(i) + 1 : obj.stride(i) : j * npc(i)];
-                    obj.columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : obj.stride(i) : j * npc(i);
-                    k = k + 1;
-                end
-            end
+            obj.columnInd = obj.prepareColumnIndFilled();
+            % TODO: implement obj.prepareColumnIndCutout();
+            % index matrix preperation where image has a cut out in the center of respective scale's images
 
             %%% Create SC models
             obj.scModel = {};
@@ -173,6 +164,14 @@ classdef Model < handle
                 return;
                 % obj.scModel_Large = SparseCodingHomeo(PARAM{2}{1}); %coarse scale
                 % obj.scModel_Small = SparseCodingHomeo(PARAM{2}{2}); %fine scale
+            end
+
+            % Intermediate patch matricies
+            obj.patchesLeft = cell(1, length(obj.scModel));
+            obj.patchesRight = cell(1, length(obj.scModel));
+            for i = 1 : length(obj.scModel)
+                obj.patchesLeft{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
+                obj.patchesRight{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
             end
         end
 
@@ -190,6 +189,75 @@ classdef Model < handle
             for i = 1 : length(p)
                 new.(p{i}) = this.(p{i});
             end
+        end
+
+        % Generates index matrix for image patches
+        % Filled image batch, i.e. all patches for the respective scale are used
+        function columnInd = prepareColumnIndFilled(this)
+            % index matrix
+            columnInd = {};
+            % number of patches per column
+            npc = this.pxFieldOfView - this.patchSize + 1;
+            % for #scales
+            for i = 1 : length(this.dsRatio)
+                k = 1;
+                l = length(1 : this.stride(i) : npc(i));
+                columnInd{end + 1} = zeros(1, l ^ 2);
+                for j = 1 : this.stride(i) : npc(i)
+                    columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : this.stride(i) : j * npc(i);
+                    k = k + 1;
+                end
+            end
+        end
+
+        % TODO: implement this function
+        function columnInd = prepareColumnIndCutout(this)
+            columnInd = {};
+        end
+
+        %%% Patch generation
+        % img:      image to be processed
+        % scScale:  SC scale index elem {coarse, ..., fine}
+        % eyePos:   eye position index elem {1 := left, 2 := right}
+        function preprocessImageFilled(this, img, scScale, eyePos)
+            % down scale image
+            for k = 1 : log2(this.dsRatio(scScale))
+                img = impyramid(img, 'reduce');
+            end
+
+            % convert to double
+            img = double(img);
+
+            % cut fovea in the center
+            [h, w, ~] = size(img);
+            img = img(fix(h / 2 + 1 - this.pxFieldOfView(scScale) / 2) : fix(h / 2 + this.pxFieldOfView(scScale) / 2), ...
+                      fix(w / 2 + 1 - this.pxFieldOfView(scScale) / 2) : fix(w / 2 + this.pxFieldOfView(scScale) / 2));
+
+            % cut patches and store them as col vectors
+            patches = im2col(img, [this.patchSize, this.patchSize], 'sliding'); % slide window of 1 px
+
+            % take patches by application of respective strides (8 px)
+            patches = patches(:, this.columnInd{scScale});
+
+            % pre-processing steps (0 mean, unit norm)
+            patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    % 0 mean
+            normp = sqrt(sum(patches.^2));                                      % patches norm
+
+            % normalize patches to norm 1
+            normp(normp == 0) = eps;                                            % regularizer
+            patches = patches ./ repmat(normp, [size(patches, 1) 1]);           % normalized patches
+
+            if (eyePos == 1)
+                this.patchesLeft{scScale} = patches;
+            else
+                this.patchesRight{scScale} = patches;
+            end
+        end
+
+        % TODO: implement this function
+        function preprocessImageCutout(this, img, scScale, eyePos)
+            sprintf('Error: Function not supported yet!')
+            return;
         end
 
         %%% Generate Feature Vector and Reward
