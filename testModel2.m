@@ -9,6 +9,18 @@
 %%%
 function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer)
 
+    % Image processing variables
+    textureFile = 'Textures_vanHaterenTest';
+
+    % Prepare Textures
+    texture = load(['config/' textureFile]);
+    texture = texture.texture;
+    nTextures = length(texture);
+    if nTextures < nStim
+        sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
+        nStim = nTextures;
+    end
+    
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
         sprintf('Error: Model has no testResults!')
@@ -43,18 +55,6 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     tmpResult3 = zeros(nStim, testInterval + 1);
     testResult2 = zeros(size(objRange, 2) * 7 * nStim * testInterval, 1 + length(model.scModel));
     testResult3 = zeros(size(objRange, 2) * 7 * nStim, 10);
-
-    % Image processing variables
-    textureFile = 'Textures_vanHaterenTest';
-
-    % Prepare Textures
-    texture = load(['config/' textureFile]);
-    texture = texture.texture;
-    nTextures = length(texture);
-    if nTextures < nStim
-        sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
-        nStim = nTextures;
-    end
 
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
@@ -246,7 +246,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             sprintf('Testing iteration = %d/%d', odIndex, size(objRange, 2))
 
             % vergence start error
-            vseRange = [-3, -2, -1, linspace(0, getVergErrMax(objRange(odIndex)), 4)];
+            vergMax = getVergErrMax(objRange(odIndex));
+            if vergMax > 3
+                vergMax = 3;
+            end
+            vseRange = [-3, -2, -1, linspace(0, vergMax, 4)];
             angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
 
             for vseIndex = 1 : size(vseRange, 2)
@@ -339,6 +343,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         try
             model.testResult = testResult;
             model.testResult2 = testResult2;
+            model.testResult3 = testResult3;
             if (saveTestResults == 1)
                 save(strcat(model.savePath, '/model'), 'model');
             end
@@ -350,6 +355,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             model = clone;
             model.testResult = testResult;
             model.testResult2 = testResult2;
+            model.testResult3 = testResult3;
             if (saveTestResults == 1)
                 save(strcat(model.savePath, '/model'), 'model');
             end
@@ -565,7 +571,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         end
 
         % Total error
-        figure;
+        figure;box
         hold on;
         grid on;
         boxplot(testResult3);
