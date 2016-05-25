@@ -200,6 +200,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         % random depth
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
 
         % reset muscle activities to random values
         % initialization for muscle in between borders of desired actvity
@@ -315,7 +316,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             % compute desired vergence command, disparity and vergence error
             fixDepth = (model.baseline / 2) / tand(angleNew / 2);   % fixation depth [m]
-            angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
             anglerr = angleDes - angleNew;                          % vergence error [deg]
             disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
 
