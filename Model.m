@@ -61,6 +61,7 @@ classdef Model < handle
         testResult;
         testResult2;
         testResult3;
+        testResult4;
 
         % Image processing
         patchSize;
@@ -136,6 +137,7 @@ classdef Model < handle
             obj.testResult = [];
             obj.testResult2 = [];
             obj.testResult3 = [];
+            obj.testResult4 = [];
             obj.trainedUntil = 0;
             obj.notes = '';
 
@@ -407,27 +409,29 @@ classdef Model < handle
 
             %% Muscel graphs
             % Lateral Rectus
-            figure;
-            hold on;
-            grid on;
-            subplot(3, 1, 1);
-            plot(this.cmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            ylabel('Value', 'FontSize', 12);
-            title('Total Muscle Commands (lateral rectus)');
+            if (this.rlModel.CActor.output_dim == 2)
+                figure;
+                hold on;
+                grid on;
+                subplot(3, 1, 1);
+                plot(this.cmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                ylabel('Value', 'FontSize', 12);
+                title('Total Muscle Commands (lateral rectus)');
 
-            subplot(3, 1, 2);
-            plot(this.relCmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            ylabel('Value', 'FontSize', 12);
-            title('\Delta Muscle Commands (lateral rectus)');
+                subplot(3, 1, 2);
+                plot(this.relCmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                ylabel('Value', 'FontSize', 12);
+                title('\Delta Muscle Commands (lateral rectus)');
 
-            subplot(3, 1, 3);
-            plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            ylabel('Value', 'FontSize', 12);
-            title('Metabolic Costs');
+                subplot(3, 1, 3);
+                plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                ylabel('Value', 'FontSize', 12);
+                title('Metabolic Costs');
 
-            plotpath = sprintf('%s/muscleGraphsLateralRectus', this.savePath);
-            saveas(gcf, plotpath, 'png');
+                plotpath = sprintf('%s/muscleGraphsLateralRectus', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            end
 
             % Medial Rectus
             figure;
@@ -439,7 +443,11 @@ classdef Model < handle
             title('Total Muscle Commands (medial rectus)');
 
             subplot(3, 1, 2);
-            plot(this.relCmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            if (this.rlModel.CActor.output_dim == 2)
+                plot(this.relCmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            else
+                plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+            end
             ylabel('Value', 'FontSize', 12);
             title('\Delta Muscle Commands (medial rectus)');
 
@@ -452,28 +460,30 @@ classdef Model < handle
             plotpath = sprintf('%s/muscleGraphsMedialRectus', this.savePath);
             saveas(gcf, plotpath, 'png');
 
-            % Muscle correlation check
-            % Total
-            figure;
-            hold on;
-            scatter(this.cmd_hist(:, 1), this.cmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-            corrl = corr(this.cmd_hist(:, 1), this.cmd_hist(:, 2));
-            xlabel('Lateral rectus [%]', 'FontSize', 12);
-            ylabel('Medial rectus [%]', 'FontSize', 12);
-            title(strcat('Total Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
-            plotpath = sprintf('%s/muscleGraphsScatterTotal', this.savePath);
-            saveas(gcf, plotpath, 'png');
+            if (this.rlModel.CActor.output_dim == 2)
+                % Muscle correlation check
+                % Total
+                figure;
+                hold on;
+                scatter(this.cmd_hist(:, 1), this.cmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                corrl = corr(this.cmd_hist(:, 1), this.cmd_hist(:, 2));
+                xlabel('Lateral rectus [%]', 'FontSize', 12);
+                ylabel('Medial rectus [%]', 'FontSize', 12);
+                title(strcat('Total Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
+                plotpath = sprintf('%s/muscleGraphsScatterTotal', this.savePath);
+                saveas(gcf, plotpath, 'png');
 
-            % Delta
-            figure;
-            hold on;
-            scatter(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-            corrl = corr(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2));
-            xlabel('Lateral rectus [%]', 'FontSize', 12);
-            ylabel('Medial rectus [%]', 'FontSize', 12);
-            title(strcat('\Delta Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
-            plotpath = sprintf('%s/muscleGraphsScatterDelta', this.savePath);
-            saveas(gcf, plotpath, 'png');
+                % Delta
+                figure;
+                hold on;
+                scatter(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                corrl = corr(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2));
+                xlabel('Lateral rectus [%]', 'FontSize', 12);
+                ylabel('Medial rectus [%]', 'FontSize', 12);
+                title(strcat('\Delta Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
+                plotpath = sprintf('%s/muscleGraphsScatterDelta', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            end
 
             %% Weights
             % L1 norm
