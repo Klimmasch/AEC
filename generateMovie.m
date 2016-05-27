@@ -7,7 +7,8 @@
 %@param randStimuli         whether the stimuli shall be randomized at the 1st part of the testing procedure
 %@param randObjRange        whether the object ranges shall be randomized at testing procedure
 %%%
-
+%% todo:    also plot the reconstruction error in the movie (and in the scales)
+%%          make the plotting of scales generic
 function generateMovie(randomizationSeed, objRange, randObjRange, nStimuli, randStimuli, reinitRenderer)
 
 %     model = load('/home/klimmasch/projects/results/model_10-May-2016_12:00:35_1000000_nonhomeo_3_2m_Met0204_newimages2/model.mat');
@@ -114,16 +115,16 @@ function generateMovie(randomizationSeed, objRange, randObjRange, nStimuli, rand
     %%% Helper function that maps muscle activities to resulting angle
     function [angle] = getAngle(command)
         cmd = (command * 10) + 1;                               % calculate tabular index
-        angle = interp2(degrees.results_deg, cmd(1), cmd(2));   % interpolate in tabular
+        angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline');   % interpolate in tabular
     end
 
     
     %%% same function as getAngle but with better performance
-    function angle = getAngle2(command)
-        angleIndex = find(mfunction(:, 2) <= command(2) + dmf2 & mfunction(:, 2) >= command(2) - dmf2);
-        angle = mfunction(angleIndex, 1);
-        angle = angle(ceil(length(angle) / 2));
-    end
+%     function angle = getAngle2(command)
+%         angleIndex = find(mfunction(:, 2) <= command(2) + dmf2 & mfunction(:, 2) >= command(2) - dmf2);
+%         angle = mfunction(angleIndex, 1);
+%         angle = angle(ceil(length(angle) / 2));
+%     end
     
     %%% Helper function that maps muscle activities to resulting metabolic costs
     % function [tmpMetCost] = getMetCost(command)
@@ -150,6 +151,11 @@ function generateMovie(randomizationSeed, objRange, randObjRange, nStimuli, rand
     end
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
+    imgGrayLeft = uint8(zeros(240, 320, 3));
+    imgGrayRight = uint8(zeros(240, 320, 3));
+
+    % Image patches cell array (input to model)
+    currentView = cell(1, length(model.scModel))
 
     function refreshImages(texture, vergAngle, objDist)
 
@@ -170,6 +176,10 @@ function generateMovie(randomizationSeed, objRange, randObjRange, nStimuli, rand
                                        size(imgRawRight, 2), ...
                                        size(imgRawRight, 1)]), ...
                                       [3, 2, 1]);
+                                  
+        % convert images to gray scale
+        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
     end
 
     t = 1;
@@ -234,29 +244,40 @@ function generateMovie(randomizationSeed, objRange, randObjRange, nStimuli, rand
                 for iteration = 1 : model.interval
                     % read input images and convert to gray scale
                     refreshImages(currentTexture, angleNew/2, tmpObjRange);
+                    
+                    % Image patch generation
+                    for i = 1 : length(model.scModel)
+                        model.preprocessImageFilled(imgGrayLeft, i, 1);
+                        model.preprocessImageFilled(imgGrayRight, i, 2);
+                        currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
+                    end
+                    
+                    % this params are now all gobal
     %                 imgRawLeft = imread(savePathLeft);
     %                 imgRawRight = imread(savePathRight);
-                    imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
-                    imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
-
-                    % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
-                    [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
-                    [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
-                    [patchesRightSmall] = preprocessImage(imgGrayRight, foveaS, dsRatioS, patchSize, columnIndS);
-                    [patchesRightLarge] = preprocessImage(imgGrayRight, foveaL, dsRatioL, patchSize, columnIndL);
-
-                    % Image patches matrix (input to model)
-                    currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
+%                     imgGrayLeft = .2989 * imgRawLeft(:,:,1) + .5870 * imgRawLeft(:,:,2) + .1140 * imgRawLeft(:,:,3);
+%                     imgGrayRight = .2989 * imgRawRight(:,:,1) + .5870 * imgRawRight(:,:,2) + .1140 * imgRawRight(:,:,3);
+                        % depricated:
+%                     % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
+%                     [patchesLeftSmall] = preprocessImage(imgGrayLeft, foveaS, dsRatioS, patchSize, columnIndS);
+%                     [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
+%                     [patchesRightSmall] = preprocessImage(imgGrayRight, foveaS, dsRatioS, patchSize, columnIndS);
+%                     [patchesRightLarge] = preprocessImage(imgGrayRight, foveaL, dsRatioL, patchSize, columnIndL);
+% 
+%                     % Image patches matrix (input to model)
+%                     currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
 
                     % Generate input feature vector from current images
-                    [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
+%                     [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
+                    [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
+
 
                     %%% Feedback
                     % Absolute command feedback # concatination
-                    if (model.rlmodel.continuous == 1)
+%                     if (model.rlmodel.continuous == 1)
     %                     feature = [feature; command(2) * model.lambdaMuscleFB];
-                        feature = [feature; command * model.lambdaMuscleFB];
-                    end
+                        feature = [bfFeature; command * model.lambdaMuscleFB];
+%                     end
 
                     %%% Calculate metabolic costs
                     % metCost = getMetCost(command) * 2;
@@ -267,7 +288,7 @@ function generateMovie(randomizationSeed, objRange, randObjRange, nStimuli, rand
                     %% now generate anaglyphs before the movement is executed
     %                 imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imagesSavePath '/anaglyph.png']);
                     generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, imagesSavePath, t, markScales, [iteration, tmpObjRange, vseRange(vseIndex), angleDes - angleNew, command', relativeCommand']);
-
+                    generateAnaglyphs()% hier jetzt alle params rausschmeissen die global oder im model sind!
 
                     
                     % add the change in muscle Activities to current ones
@@ -279,7 +300,7 @@ function generateMovie(randomizationSeed, objRange, randObjRange, nStimuli, rand
     
                     
                     
-                        angleNew = getAngle2(command);
+                        angleNew = getAngle(command);
     %                 else
     %                     angleNew = angleNew + relativeCommand;
     %                     if (angleNew > angleMax || angleNew < angleMin)
@@ -349,35 +370,35 @@ function [cmd] = checkCmd(cmd)
     cmd(i1) = 1;
 end
 
-%% Patch generation
-function [patches] = preprocessImage(img, fovea, downSampling, patchSize, columnIndicies)
-    % img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
-    for i = 1:log2(downSampling)
-        img = impyramid(img, 'reduce');
-    end
-
-    % convert to double
-    img = double(img);
-
-    % cut fovea in the center
-    [h, w, ~] = size(img);
-    img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
-              fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
-
-    % cut patches and store them as col vectors
-    patches = im2col(img, [patchSize patchSize], 'sliding');            %slide window of 1 px
-
-    % take patches at steps of s (8 px)
-    patches = patches(:, columnIndicies);                               %81 patches
-
-    % pre-processing steps (0 mean, unit norm)
-    patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
-    normp = sqrt(sum(patches.^2));                                      %patches norm
-
-    % normalize patches to norm 1
-    normp(normp == 0) = eps;                                            %regularizer
-    patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
-end
+%% Patch generation --> now inside the model
+% function [patches] = preprocessImage(img, fovea, downSampling, patchSize, columnIndicies)
+%     % img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
+%     for i = 1:log2(downSampling)
+%         img = impyramid(img, 'reduce');
+%     end
+% 
+%     % convert to double
+%     img = double(img);
+% 
+%     % cut fovea in the center
+%     [h, w, ~] = size(img);
+%     img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
+%               fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
+% 
+%     % cut patches and store them as col vectors
+%     patches = im2col(img, [patchSize patchSize], 'sliding');            %slide window of 1 px
+% 
+%     % take patches at steps of s (8 px)
+%     patches = patches(:, columnIndicies);                               %81 patches
+% 
+%     % pre-processing steps (0 mean, unit norm)
+%     patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
+%     normp = sqrt(sum(patches.^2));                                      %patches norm
+% 
+%     % normalize patches to norm 1
+%     normp(normp == 0) = eps;                                            %regularizer
+%     patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
+% end
 
 
 function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath, identifier, markScales, infos)

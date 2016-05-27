@@ -264,7 +264,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             %%% Calculate reward function
             %% Standard reward
             rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
-            % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
+            
+            %% Vergence error reward
+            % rewardFunction = -abs(angleDes - angleNew);
 
             %% Delta reward
             % rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
