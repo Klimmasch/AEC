@@ -34,16 +34,18 @@ function completePlotting(reinitRenderer)
     objDists = [0.5:0.5:2];
     objRange = length(objDists);
     zeroVergInd = ceil(vergRange/2);
+    takeLastValues = 1;
+    imageFlag = sprintf('last%dvalues_oldScale', takeLastValues);
 
-    meanOffset = zeros(objRange, length(files), stimulusRange);
+    meanOffset = zeros(objRange, length(files), stimulusRange * takeLastValues);
     for i = 1:length(files)
         model = load(files{i});
         model = model.model;
 %         model.allPlotSave;
 %         testModel(model, 23, [0.5, 1, 1.5, 2], [-2 : 0.2 : 2], [20, 20], 1, 0, 1, 1);
-        testModel2(model, 50, 0, 1, simulator, 0); % use more stimuli than in the textures file, just in case
+%         testModel2(model, 50, 0, 1, simulator, 0); % use more stimuli than in the textures file, just in case
 
-        sprintf('######plotting and testing completed in %s #######', files{i});
+%         sprintf('######plotting and testing completed in %s #######', files{i});
 %         close all;
 %         nSamples = size(model.testResult3, 1);
 %         if nSamples == 0
@@ -53,7 +55,7 @@ function completePlotting(reinitRenderer)
 %             testModel2(model, 50, 0, 1, simulator, 0);
 %         end
         nSamples = size(model.testResult3, 1)
-        if nSamples ~= 924
+        if nSamples == 0
             testModel2(model, 50, 0, 1, simulator, 0);
         end
         % extract all values that are generated with zero vergErr init
@@ -62,10 +64,13 @@ function completePlotting(reinitRenderer)
 
 
             if mod(j, vergRange) == zeroVergInd % if we started at zero vergence Error
-                tmpResult = [tmpResult, model.testResult3(j,end)]; %append the last value
+                % append the last value(s)
+                for v = 1:takeLastValues
+                    tmpResult = [tmpResult, model.testResult3(j, end - v + 1)];
+                end
             end
 
-            if length(tmpResult) == stimulusRange
+            if length(tmpResult) == stimulusRange * takeLastValues
                 objInd = ceil((j * objRange) / nSamples);
                 meanOffset(objInd, i, :) = tmpResult;
                 tmpResult = [];
@@ -80,7 +85,8 @@ function completePlotting(reinitRenderer)
         title(sprintf('Offset from zero vergence error at %.1f m', objDists(k)));
         xlabel('lambda_{MF} in %');
         ylabel('Vergence Error in deg');
-        saveas(gcf, sprintf('../results/biasesAt%.2f_OldScale.png', objDists(k)), 'png');
+        ylim([-1, 2]);
+        saveas(gcf, sprintf('../results/biasesAt%.2f_%s.png', objDists(k), imageFlag), 'png');
 
     end
 end
