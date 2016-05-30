@@ -25,7 +25,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     % Plotting flag
     % Whether figures should be generated and saved
-    % plotIt: [training, test]
+    % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
     plotIt = [uint8(1), uint8(1)];
@@ -255,7 +255,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             %%% Feedback
             % Generate RL model's input feature vector by
-            % absolute command & feedback concatination
+            % basis function feature vector & total muscle command concatination
             feature = [bfFeature; command * model.lambdaMuscleFB];
 
             %%% Calculate metabolic costs
@@ -264,7 +264,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             %%% Calculate reward function
             %% Standard reward
             rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
-            
+
             %% Vergence error reward
             % rewardFunction = -abs(angleDes - angleNew);
 
@@ -350,7 +350,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             sprintf('Training Iteration = %d\nAbs Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nAbs Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
                 t, model.cmd_hist(t - model.interval + 1 : t, 1), model.relCmd_hist(t - model.interval + 1 : t, 1), model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t, 2), model.vergerr_hist(t - model.interval + 1 : t))
         end
-        
+
         % Display per cent completed of training and save model
         if (~mod(t, saveInterval))
             sprintf('%g%% is finished', (t / timeToTrain * 100))

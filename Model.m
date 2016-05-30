@@ -462,25 +462,28 @@ classdef Model < handle
 
             if (this.rlModel.CActor.output_dim == 2)
                 % Muscle correlation check
+                % extract last x per cent of iterations
+                pcOffset = 0.01;
+                tmpOffset = ceil(size(this.cmd_hist, 1) * pcOffset);
                 % Total
                 figure;
                 hold on;
-                scatter(this.cmd_hist(:, 1), this.cmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-                corrl = corr(this.cmd_hist(:, 1), this.cmd_hist(:, 2));
+                scatter(this.cmd_hist(end - tmpOffset : end, 1), this.cmd_hist(end - tmpOffset : end, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                corrl = corr(this.cmd_hist(end - tmpOffset : end, 1), this.cmd_hist(end - tmpOffset : end, 2));
                 xlabel('Lateral rectus [%]', 'FontSize', 12);
                 ylabel('Medial rectus [%]', 'FontSize', 12);
-                title(strcat('Total Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
+                title(strcat('Total Muscle Commands', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
                 plotpath = sprintf('%s/muscleGraphsScatterTotal', this.savePath);
                 saveas(gcf, plotpath, 'png');
 
                 % Delta
                 figure;
                 hold on;
-                scatter(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-                corrl = corr(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2));
+                scatter(this.relCmd_hist(end - tmpOffset : end, 1), this.relCmd_hist(end - tmpOffset : end, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                corrl = corr(this.relCmd_hist(end - tmpOffset : end, 1), this.relCmd_hist(end - tmpOffset : end, 2));
                 xlabel('Lateral rectus [%]', 'FontSize', 12);
                 ylabel('Medial rectus [%]', 'FontSize', 12);
-                title(strcat('\Delta Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
+                title(strcat('\Delta Muscle Commands', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
                 plotpath = sprintf('%s/muscleGraphsScatterDelta', this.savePath);
                 saveas(gcf, plotpath, 'png');
             end

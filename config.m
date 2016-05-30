@@ -35,7 +35,7 @@ Action = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... % vergence angles (discrete poli
           0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
 alpha_v = 1;                                    % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                                % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 1;                                    % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
+alpha_p = 0.5;                                  % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                       % discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                    % learning rate to update cumulative value | origin 1
 
@@ -61,20 +61,34 @@ weight_range = [1 / inputDim, ...                   % maximum initial weight [cr
                 2 / hiddenDim * outputDim];         % linear [1/inputDim, 1/inputDim, -]
 lambda = 0.01;                                      % reguralization factor | origin 0.01
 deltaVar = 1;                                       % TD error variance tracking/approximating (CACLAVar)
-eta = 0.001;                                        % TD error variance variance scaling factor (CACLAVar)
+eta = 0.001;                                        % TD error variance scaling factor (CACLAVar)
 fiScale = 1e-5;                                     % scaling factor of Fisher Information matrix (CNGFI)
 
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
            loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour, varDec};
 
 %%% Model parameters
-% Image processing variable
+% Image processing constants
 patchSize = 8;
 % [peripheral vision, ..., central vision]
-pxFieldOfView = [16, 40];                   % size of respective fields of view in pixel (previously called fovea).
-                                            % FieldOfView in original image [pixel] = pxFieldOfView * dsRatio
-dsRatio = [8, 2];                           % downsampling ratio, i.e. how many pixels in orig image correspond to how many px in downsampled img
-stride = [patchSize / 2, patchSize / 2];    % image patch strides | orig [1, patchSize / 2]
+dsRatio = [8, 1];                               % downsampling ratio, i.e. how many pixels in original image
+                                                % correspond to how many pixels in downsampled image | orig [8, 2]
+pxFieldOfViewOrig = [128, 40];                  % fields of view in original image [pixel] | orig [128, 80]
+pxFieldOfView = pxFieldOfViewOrig ./ dsRatio;   % fields of view in downsampled image [pixel] (previously called fovea).
+                                                % pxFieldOfView = FieldOfView in original image [pixel] / dsRatio
+stride = [patchSize / 2, patchSize / 2];        % image patch strides | orig [1, patchSize / 2]
+
+% check parameter values
+if (~all(diff(pxFieldOfViewOrig) < 0))
+    sprintf('pxFieldOfViewOrig must contain decreasing values,\nbecause it must hold [peripheral vision, ..., central vision] by convention')
+    return;
+% elseif (mod(pxFieldOfView(2 : end), dsRatio(1 : end - 1) ./ dsRatio(2 : end)))
+%     sprintf('pxFieldOfView(scale + 1) / (dsRatio(scale) / dsRatio(scale + 1)) must be an integer')
+%     return;
+% elseif (mod(pxFieldOfView(1 : end - 1) - pxFieldOfView(2 : end) ./ dsRatio(1 : end - 1) ./ dsRatio(2 : end), 2))
+%     sprintf('pxFieldOfView(scale) - (pxFieldOfView(scale + 1) / (dsRatio(scale) / dsRatio(scale + 1))) must be an even integer')
+%     return;
+end
 
 % Camera parameters
 % offset = 0;               % vertical offset between left and right (0 in the Simulator!!!)
@@ -96,7 +110,7 @@ muscleInitMin = 0.00807;       %minimal initial muscle innervation orig: 0.00807
 muscleInitMax = 0.07186;       % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 interval = 10;              % period for changing the stimulus for the eye | origin 10
-lambdaMuscleFB = 1.0722;    % factor of muscle activity feedback to RL feature vector
+lambdaMuscleFB = 0.0357;    % factor of muscle activity feedback to RL feature vector
                             % Proportion MF/feature:
                             % 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
                             % 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741

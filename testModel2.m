@@ -20,7 +20,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     texture = load(['config/' textureFile]);
     texture = texture.texture;
     nTextures = length(texture);
-    if nTextures < nStim
+    if (nTextures < nStim)
         sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
         nStim = nTextures;
     end
@@ -53,15 +53,17 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
-    testResult = zeros(length(objRange), 7, 66);
+
     tmpResult1 = zeros(nStim, testInterval + 1);
     tmpResult2 = zeros(nStim, testInterval + 1);
     tmpResult3 = zeros(nStim, testInterval + 1);
+
+    testResult = zeros(length(objRange), 7, 66);
     testResult2 = zeros(length(objRange) * 7 * nStim * testInterval, 1 + length(model.scModel));
     testResult3 = zeros(length(objRange) * 7 * nStim, 10);
     % testResult4 = zeros(length(objRange) * 7 * nStim * testInterval, 2);
     % testResult4 = zeros(test2Resolution * length(objRange) * nStim, 3 + length(model.scModel));
-    testResult4 = zeros(length(objRange), test2Resolution, 2 + length(model.scModel));
+    testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
 
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
@@ -197,10 +199,9 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         cmd(i1) = 1;
     end
 
-    tic;
     tr2Ind = 1;
     tr3Ind = 1;
-    % tr4Ind = 1;
+    tic;
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
         for odIndex = 1 : size(objRange, 2)
@@ -250,10 +251,6 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         else
                             feature = bfFeature;
                         end
-
-                        % Track Critic's response for single graph
-                        % testResult4(tr4Ind, :) = [angleDes - angleNew, model.rlModel.CCritic.v_ji * feature];
-                        % tr4Ind = tr4Ind + 1;
 
                         %%% Calculate metabolic costs
                         % metCost = getMetCost(command) * 2;
@@ -308,10 +305,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         end
 
         %% Reconstruction error and Critic's response additional testing procedure
-        tmp = zeros(nStim, 2 + length(model.scModel));
+        sprintf('Testing procedure 2 started...')
+
+        tmp = zeros(1, nStim * (2 + length(model.scModel)));
         % vergence start error
         vseRange = linspace(-1, 1, test2Resolution);
-        angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
 
         for odIndex = 1 : length(objRange)
             for vseIndex = 1 : length(vseRange)
@@ -336,8 +334,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                     end
 
                     % Generate input feature vector from current images
-                    % [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
-                    [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
+                    [bfFeature, ~, recErrorArray] = model.generateFR(currentView);
 
                     % Absolute command feedback # concatination
                     if (model.rlModel.continuous == 1)
@@ -348,9 +345,13 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                     end
 
                     % Track reconstruction error and Critic's response
-                    tmp(stimulusIndex, :) = [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
+                    % tmp(stimulusIndex, :) = [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
+                    tmp(1 + (stimulusIndex - 1) * (2 + length(model.scModel)) : stimulusIndex * (2 + length(model.scModel))) = ...
+                        [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
                 end
-                testResult4(odIndex, vseIndex, :) = mean(tmp);
+                % testResult4(odIndex, vseIndex, :) = mean(tmp);
+                % testResult4(odIndex, vseIndex, :) = reshape(tmp', [1, size(tmp, 1) * size(tmp, 2)]);
+                testResult4(odIndex, vseIndex, :) = tmp;
             end
         end
         testResult4(testResult4 == 0) = NaN;
@@ -383,6 +384,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         end
     end
 
+    %%% Plotting
     if (plotIt == 1)
         % Vergence Error vs. iteration
         rng(0);
@@ -397,12 +399,12 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             end
             axis([-1, testInterval + 1, -inf, inf]);
             if (nStim > 0)
-                xlabel(sprintf('Iteration step (objDist=%.1fm, #stimuli=%d)', objRange(odIndex), nStim), 'FontSize', 12);
+                xlabel(sprintf('Iteration step (#stimuli=%d)', nStim), 'FontSize', 12);
             else
-                xlabel(sprintf('Iteration step (objDist=%.1fm)', objRange(odIndex)), 'FontSize', 12);
+                xlabel('Iteration step', 'FontSize', 12);
             end
             ylabel('Vergence Error [deg]', 'FontSize', 12);
-            title('Avg Vergence Error over Trial at Testing');
+            title(sprintf('Avg Vergence Error over Trial at Testing\nObject Distance = %.1fm', objRange(odIndex)));
             plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.1fm].png', model.savePath, objRange(odIndex));
             saveas(gcf, plotpath, 'png');
         end
@@ -431,12 +433,13 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                    'DisplayName', 'perfect (fixDist_{max})', 'LineWidth', 1.3);
         hl2 = plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], ...
                    'DisplayName', 'perfect (fixDist_{min})', 'LineWidth', 1.3);
-        lineHandles = [hl1, hl2];
+        lineHandles = zeros(1, 2 + length(objRange));
+        lineHandles(1 : 2) = [hl1, hl2];
 
         % actual response
         xmin = 0;
         xmax = 0;
-        for odIndex = 1 : size(objRange, 2)
+        for odIndex = 1 : length(objRange)
             % delta_mf_t+1(vergAngle_t)
             % hl3 = errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
             %                reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
@@ -457,7 +460,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             hp.FaceColor = hl3.Color;
             hl3.LineStyle = 'none';
             % outlinebounds(hl3, hp);
-            lineHandles = [lineHandles, hl3];
+            lineHandles(odIndex + 2) = hl3;
 
             % for axis adjustment
             tmp = [min(tmpMat(:, 1)), max(tmpMat(:, 1))];
@@ -478,8 +481,6 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         plot([xmin * 1.1, xmax * 1.1], [0, 0], 'k', 'LineWidth', 0.2);
         plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.2);
         axis([xmin * 1.1, xmax * 1.1, ymin, ymax]);
-        % l.Title.String = 'objDist [m]';
-        % l.Title.FontSize = 12;
         xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
         ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
         title('\Delta MF(verg_{err}) response at Testing procedure');
@@ -493,9 +494,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         hold on;
         grid on;
         grid minor;
+        markers = {'p', '+', 'o', '*', '.', 'x', 's', 'd'};
         xmin = 0;
         xmax = 0;
-        for odIndex = 1 : size(objRange, 2)
+        lineHandles = zeros(1, length(objRange));
+        for odIndex = 1 : length(objRange)
             % delta_mf_t+1(vergAngle_t)
             % errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
             %          reshape(reshape(model.testResult(odIndex, :, 46 : 55), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
@@ -509,11 +512,14 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             [hl, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
             hl.DisplayName = sprintf('%.1fm objDist', objRange(odIndex));
-            hl.Marker = '*';
+            hl.Marker = markers{odIndex};
             hl.MarkerSize = 2.5;
-            hl.Color = [0, 0.5882, 0.9608];
+            % hl.Color = [0, 0.5882, 0.9608];
+            hl.Color = [rand, rand, rand];
             hp.FaceColor = hl.Color;
             hl.LineStyle = 'none';
+
+            lineHandles(odIndex) = hl;
 
             % for axis adjustment
             tmp = [min(tmpMat(:, 1)), max(tmpMat(:, 1))];
@@ -525,69 +531,84 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             end
         end
 
+        l = legend(lineHandles);
+        % l.Location = 'southeast';
+        l.Box = 'off';
+
         % adjust axis to actual response ranges + std deviation
-        ymin = -inf;
-        ymax = inf;
-        axis([xmin * 1.1, xmax * 1.1, ymin, ymax]);
+        xlim([xmin * 1.1, xmax * 1.1]);
         xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
         ylabel('Value', 'FontSize', 12);
-        title('Critic Value over different disparities');
+        title('Critic Value vs. Vergence Error');
         if (~isempty(model.savePath))
             plotpath = sprintf('%s/criticValvsVerErr', model.savePath);
             saveas(gcf, plotpath, 'png');
         end
 
         % critic's response fine resolution
-        figure;
-        hold on;
-        grid on;
-        grid minor;
-
         vseRange = linspace(-1, 1, test2Resolution);
-        % errorbar(vseRange, mean(model.testResult4(:, :, 1), 'omitnan'), std(model.testResult4(:, :, 1), 'omitnan'));
-        % [hl3, hp] = boundedline(vseRange, mean(model.testResult4(:, :, 1), 'omitnan'), std(model.testResult4(:, :, 1), 'omitnan'), 'alpha');
-        [hl, hp] = boundedline(vseRange, mean(model.testResult4(:, :, 1), 'omitnan'), std(model.testResult4(:, :, 1), 'omitnan'));
+        for odIndex = 1 : length(objRange)
+            figure;
+            hold on;
+            grid on;
+            grid minor;
 
-        % hl.Marker = '*';
-        % hl.MarkerSize = 2.5;
-        % hl.Color = [rand, rand, rand];
-        % hp.FaceColor = hl.Color;
-        % hl.LineStyle = 'none';
-        % outlinebounds(hl3, hp);
+            % handle NaNs
+            tmpMean = mean(model.testResult4(odIndex, :, 1 : 2 + length(model.scModel) : end), 3, 'omitnan');
+            tmpMean(isnan(tmpMean)) = [];
 
-        if (nStim > 0)
-            xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
-        else
-            xlabel('Vergence Error [deg]', 'FontSize', 12);
-        end
-        ylabel('Value', 'FontSize', 12);
-        title('Critic Value over different disparities');
-        if (~isempty(model.savePath))
-            plotpath = sprintf('%s/criticValvsVerErrFine', model.savePath);
-            saveas(gcf, plotpath, 'png');
+            vseRange = vseRange(1 : length(tmpMean));
+            tmpMax = vseRange(tmpMean == max(tmpMean));
+
+            tmpStd = std(model.testResult4(odIndex, :, 1 : 2 + length(model.scModel) : end), 0, 3, 'omitnan');
+            tmpStd(isnan(tmpStd)) = [];
+
+            [hl, hp] = boundedline(vseRange, ...
+                                   tmpMean, ...
+                                   tmpStd, ...
+                                   'alpha');
+
+            % hl.Marker = '*';
+            % hl.MarkerSize = 2.5;
+            % hl.Color = [rand, rand, rand];
+            % hp.FaceColor = hl.Color;
+            % hl.LineStyle = 'none';
+            % outlinebounds(hl3, hp);
+
+            if (nStim > 0)
+                xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
+            else
+                xlabel('Vergence Error [deg]', 'FontSize', 12);
+            end
+            ylabel('Value', 'FontSize', 12);
+            title(sprintf('Critic Value vs. Vergence Error\nobjDist = %.1fm, max@vergErr = %.3f°', objRange(odIndex), tmpMax));
+            if (~isempty(model.savePath))
+                plotpath = sprintf('%s/criticValvsVerErrFine[%.1f].png', model.savePath, objRange(odIndex));
+                saveas(gcf, plotpath, 'png');
+            end
         end
 
         %%% Plot the resonstruction error of basis functions over different disparities
-        nBins = 1000;
-        % calculate mean and std of reconstruction error
-        tmpRsp = sortrows(model.testResult2);
-        deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nBins;
-        % recErrs = nBins x [recErr; total_mean; total_std; scale1_mean; scale1_std; ...]
-        recErrs = zeros(nBins, 1 + 2 * (length(model.scModel) + 1));
-        tmp = zeros(nBins, 3);
+        % nBins = 1000;
+        % % calculate mean and std of reconstruction error
+        % tmpRsp = sortrows(model.testResult2);
+        % deltaVergErr = (abs(tmpRsp(1, 1)) + abs(tmpRsp(end, 1))) / nBins;
+        % % recErrs = nBins x [recErr; total_mean; total_std; scale1_mean; scale1_std; ...]
+        % recErrs = zeros(nBins, 1 + 2 * (length(model.scModel) + 1));
+        % tmp = zeros(nBins, 3);
 
-        % total reconstruction error
-        for i = 1 : nBins
-            tmp(i, 1) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                         & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 1));
+        % % total reconstruction error
+        % for i = 1 : nBins
+        %     tmp(i, 1) = mean(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+        %                                  & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 1));
 
-            tmp(i, 2) = mean(sum(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                        & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2 : end), 2));
+        %     tmp(i, 2) = mean(sum(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+        %                                 & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2 : end), 2));
 
-            tmp(i, 3) = std(sum(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
-                                       & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2 : end), 2));
-        end
-        recErrs(:, 1 : 3) = tmp;
+        %     tmp(i, 3) = std(sum(tmpRsp(find(tmpRsp(:, 1) >= tmpRsp(1, 1) + (i - 1) * deltaVergErr ...
+        %                                & tmpRsp(:, 1) <= tmpRsp(1, 1) + i * deltaVergErr), 2 : end), 2));
+        % end
+        % recErrs(:, 1 : 3) = tmp;
 
         % reconstruction error over different scales
         % tmp = zeros(nBins, 2);
@@ -634,44 +655,52 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         % title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
 
         % if (~ isempty(model.savePath))
-        %     plotpath = sprintf('%s/recErrVsVergErr_[%.1fm,%.1fm].png', model.savePath, objRange(1), objRange(end));
+        %     plotpath = sprintf('%s/recErrVsVergErr[%.1fm,%.1fm].png', model.savePath, objRange(1), objRange(end));
         %     saveas(gcf, plotpath, 'png');
         % end
 
         % reconstruction error fine
-        figure;
-        hold on;
-        grid on;
-        grid minor;
-        handleArray = zeros(1, 1 + length(model.scModel));
         vseRange = linspace(-1, 1, test2Resolution);
-
-        for i = 2 : size(model.testResult4, 3)
-            handleArray(i - 1) = errorbar(vseRange, ...
-                                          mean(model.testResult4(:, :, i), 'omitnan'), ...
-                                          std(model.testResult4(:, :, i), 'omitnan'), ...
-                                          'LineWidth', 0.9);
-        end
-
+        handleArray = zeros(1, 1 + length(model.scModel));
         captions = cell(1, length(handleArray));
         captions{1} = 'Total Error';
         for i = 2 : length(handleArray)
             captions{i} = sprintf('Scale %d Error', i - 1);
         end
-        l = legend(handleArray, captions);
 
-        if(version('-release') == '2015b')
-            l.FontSize = 7;
-            l.Orientation = 'horizontal';
-            l.Location = 'southoutside';
-        end
-        xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
-        ylabel('Resonstruction Error', 'FontSize', 12);
-        title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
+        for odIndex = 1 : length(objRange)
+            figure;
+            hold on;
+            grid on;
+            grid minor;
 
-        if (~ isempty(model.savePath))
-            plotpath = sprintf('%s/recErrVsVergErrFine_[%.1fm,%.1fm].png', model.savePath, objRange(1), objRange(end));
-            saveas(gcf, plotpath, 'png');
+            for i = 2 : length(handleArray) + 1
+                handleArray(i - 1) = errorbar(vseRange, ...
+                                              mean(model.testResult4(odIndex, :, i : 2 + length(model.scModel) : end), 3, 'omitnan'), ...
+                                              std(model.testResult4(odIndex, :, i : 2 + length(model.scModel) : end), 0, 3, 'omitnan'), ...
+                                              'LineWidth', 0.9);
+            end
+
+            % get min value in total reconstruction error
+            tmpMean = mean(model.testResult4(odIndex, :, 2 : 2 + length(model.scModel) : end), 3, 'omitnan');
+            tmpMin = vseRange(tmpMean == min(tmpMean));
+
+            l = legend(handleArray, captions);
+            if(version('-release') == '2015b')
+                l.FontSize = 7;
+                l.Orientation = 'horizontal';
+                l.Location = 'southoutside';
+            end
+            xlim([vseRange(1) * 1.1, vseRange(end) * 1.1]);
+            % xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
+            xlabel('Vergence Error [deg]', 'FontSize', 12);
+            ylabel('Resonstruction Error', 'FontSize', 12);
+            title(sprintf('Reconstruction Error vs. Vergence Error\nobjDist = %.1fm, TotalMin@vergErr = %.4f°', objRange(odIndex), tmpMin));
+
+            if (~ isempty(model.savePath))
+                plotpath = sprintf('%s/recErrVsVergErrFine[%.1fm].png', model.savePath, objRange(odIndex));
+                saveas(gcf, plotpath, 'png');
+            end
         end
 
         % Total error
@@ -697,7 +726,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             xlabel('Iteration step', 'FontSize', 12);
         end
         ylabel('Vergence Error [deg]', 'FontSize', 12);
-        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %5.3f, Median = %5.3f', mean(testResult3(:, 10)), median(testResult3(:, 10))));
+        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f° at %dth step', mean(testResult3(:, 10)), median(testResult3(:, 10)), testInterval));
         if (~isempty(model.savePath))
             plotpath = sprintf('%s/totalError', model.savePath);
             saveas(gcf, plotpath, 'png');
