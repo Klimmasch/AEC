@@ -15,6 +15,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     % Image processing variables
     textureFile = 'Textures_vanHaterenTest';
+    % textureFile = 'Textures_vanHaterenTrain.mat';
 
     % Prepare Textures
     texture = load(['config/' textureFile]);
@@ -52,7 +53,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     testInterval = model.interval;
 
     command = [0; 0];
-    objRange = [model.objDistMin : 0.5 : model.objDistMax];
+    objRange = [model.objDistMin : 0.25 : model.objDistMax];
 
     tmpResult1 = zeros(nStim, testInterval + 1);
     tmpResult2 = zeros(nStim, testInterval + 1);
@@ -64,6 +65,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     % testResult4 = zeros(length(objRange) * 7 * nStim * testInterval, 2);
     % testResult4 = zeros(test2Resolution * length(objRange) * nStim, 3 + length(model.scModel));
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
+    testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2);
 
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
@@ -201,6 +203,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
     tr2Ind = 1;
     tr3Ind = 1;
+    tr5Ind = 1;
     tic;
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
@@ -262,7 +265,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         if (model.rlModel.continuous == 1)
                             % command(1) = 0;
                             % command(2) = command(2) + relativeCommand;  % one muscle
-                            command = command + relativeCommand;  % one muscle
+                            command = command + relativeCommand;        % two muscles
                             command = checkCmd(command);                % restrain motor commands to [0,1]
                             angleNew = getAngle(command) * 2;           % resulting angle is used for both eyes
                         else
@@ -271,6 +274,9 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                                 angleNew = model.vergAngleFixMin + (model.vergAngleFixMax - model.vergAngleFixMin) * rand(1, 1);
                             end
                         end
+
+                        testResult5(tr5Ind, :) = [command; relativeCommand];
+                        tr5Ind = tr5Ind + 1;
 
                         % track bad or redundant stimuli
                         % if (iter == 11)
@@ -292,6 +298,12 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         testResult3(tr3Ind, iter - 1) = angleDes - angleNew;
                     end
                     tr3Ind = tr3Ind + 1;
+
+                    % anaglyph
+                    % if (abs(tmpResult1(stimulusIndex, 11)) > 0.5)
+                    %     imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), ...
+                    %             sprintf('%s/anaglyph%d_vergerr_%.2f_img%d.png', model.savePath, tr3Ind, tmpResult1(stimulusIndex, 11), stimulusIndex));
+                    % end
                 end
 
                 % final results
@@ -363,24 +375,32 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             model.testResult2 = testResult2;
             model.testResult3 = testResult3;
             model.testResult4 = testResult4;
+            model.testResult5 = testResult5;
             if (saveTestResults == 1)
                 save(strcat(model.savePath, '/model'), 'model');
             end
         catch
-            % catch non-existing variables error, occuring in old models
-            clone = model.copy();
-            delete(model);
-            clear model;
-            model = clone;
-            model.testResult = testResult;
-            model.testResult2 = testResult2;
-            model.testResult3 = testResult3;
-            model.testResult4 = testResult4;
-            if (saveTestResults == 1)
-                save(strcat(model.savePath, '/model'), 'model');
+            % catch non-existing variables error, occuring in non-up-to-date models
+            try
+                clone = model.copy();
+                delete(model);
+                clear model;
+                model = clone;
+                model.testResult = testResult;
+                model.testResult2 = testResult2;
+                model.testResult3 = testResult3;
+                model.testResult4 = testResult4;
+                model.testResult5 = testResult5;
+                if (saveTestResults == 1)
+                    save(strcat(model.savePath, '/model'), 'model');
+                end
+                delete(clone);
+                clear clone;
+            catch
+                % catch when new model property isn't present in Model class yet
+                sprintf('Error: One or more new model properties (variables) are not present in Model.m class yet!')
+                return;
             end
-            delete(clone);
-            clear clone;
         end
     end
 
@@ -726,11 +746,90 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             xlabel('Iteration step', 'FontSize', 12);
         end
         ylabel('Vergence Error [deg]', 'FontSize', 12);
-        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f° at %dth step', mean(testResult3(:, 10)), median(testResult3(:, 10)), testInterval));
+        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f° at %dth step', mean(model.testResult3(:, 10)), median(model.testResult3(:, 10)), testInterval));
         if (~isempty(model.savePath))
             plotpath = sprintf('%s/totalError', model.savePath);
             saveas(gcf, plotpath, 'png');
         end
+
+        % Check for bias at 0° vergence start error
+        if (nStim == 0)
+            nStim = size(model.testResult3, 1) / (length(objRange) * 7);
+        end
+
+        boxlabels = cell(1, length(objRange));
+        tmp = zeros(nStim, length(objRange));
+        startInd = nStim * 3 + 1;
+        endInd = 0;
+        for i = 1 : length(objRange)
+            endInd = startInd + nStim - 1;
+            tmp(:, i) = model.testResult3(startInd : endInd, testInterval);
+            startInd = endInd + nStim * 6 + 1;
+            boxlabels{i} = num2str(objRange(i));
+        end
+
+        figure;
+        axArray = zeros(1, 2);
+        axArray(1) = subplot(1, 4, [1, 3]);
+        hold on;
+        grid on;
+        boxplot(tmp, 'labels', boxlabels);
+        xlabel('Object Distance [m]');
+        ylabel('Vergence Error [deg]', 'FontSize', 12);
+
+        axArray(2) = subplot(1, 4, 4);
+        hold on;
+        grid on;
+        boxplot(model.testResult3(:, testInterval), 'widths', 0.5, 'labels', 'total');
+        xlabel('\forallVerg_{err}, \forallObj_{dist}');
+
+        for i = 1 : length(axArray)
+            % remove outliers
+            outl = findobj(axArray(i),'tag','Outliers');
+            set(outl, 'Visible', 'off');
+
+            % rescale axis to whiskers + offset
+            upWi = findobj(axArray(i), 'tag', 'Upper Whisker');
+            lowWi = findobj(axArray(i), 'tag', 'Lower Whisker');
+            ylim([min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+                  max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+        end
+        % force same y-axis ranges
+        linkaxes(fliplr(axArray), 'y');
+
+        % if (nStim > 0)
+        %     xlabel(sprintf('Iteration step (#stimuli=%d)', nStim), 'FontSize', 12);
+        % else
+        %     xlabel('Iteration step', 'FontSize', 12);
+        % end
+        suptitle(sprintf('Model bias with 0° vergence start error\nafter %d iterations for %d stimuli', testInterval, nStim));
+        if (~isempty(model.savePath))
+            plotpath = sprintf('%s/ModelBiasAt0VergErr', model.savePath);
+            saveas(gcf, plotpath, 'png');
+        end
+
+        %%% Muscle correlation check
+        % Total
+        figure;
+        hold on;
+        scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+        corrl = corr(model.testResult5(:, 1), model.testResult5(:, 2));
+        xlabel('Lateral rectus [%]', 'FontSize', 12);
+        ylabel('Medial rectus [%]', 'FontSize', 12);
+        title(strcat('Total Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
+        plotpath = sprintf('%s/muscleGraphsScatterTotalTesting', model.savePath);
+        saveas(gcf, plotpath, 'png');
+
+        % Delta
+        figure;
+        hold on;
+        scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+        corrl = corr(model.testResult5(:, 1), model.testResult5(:, 2));
+        xlabel('Lateral rectus [%]', 'FontSize', 12);
+        ylabel('Medial rectus [%]', 'FontSize', 12);
+        title(strcat('\Delta Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
+        plotpath = sprintf('%s/muscleGraphsScatterDeltaTesting', model.savePath);
+        saveas(gcf, plotpath, 'png');
     end
 end
 

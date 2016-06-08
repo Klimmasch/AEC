@@ -62,6 +62,7 @@ classdef Model < handle
         testResult2;
         testResult3;
         testResult4;
+        testResult5;
 
         % Image processing
         patchSize;
@@ -138,6 +139,8 @@ classdef Model < handle
             obj.testResult2 = [];
             obj.testResult3 = [];
             obj.testResult4 = [];
+            obj.testResult5 = [];
+            obj.simulatedTime = 0;
             obj.trainedUntil = 0;
             obj.notes = '';
 
@@ -472,8 +475,8 @@ classdef Model < handle
                 corrl = corr(this.cmd_hist(end - tmpOffset : end, 1), this.cmd_hist(end - tmpOffset : end, 2));
                 xlabel('Lateral rectus [%]', 'FontSize', 12);
                 ylabel('Medial rectus [%]', 'FontSize', 12);
-                title(strcat('Total Muscle Commands', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
-                plotpath = sprintf('%s/muscleGraphsScatterTotal', this.savePath);
+                title(strcat('Total Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
+                plotpath = sprintf('%s/muscleGraphsScatterTotalTraining', this.savePath);
                 saveas(gcf, plotpath, 'png');
 
                 % Delta
@@ -483,8 +486,8 @@ classdef Model < handle
                 corrl = corr(this.relCmd_hist(end - tmpOffset : end, 1), this.relCmd_hist(end - tmpOffset : end, 2));
                 xlabel('Lateral rectus [%]', 'FontSize', 12);
                 ylabel('Medial rectus [%]', 'FontSize', 12);
-                title(strcat('\Delta Muscle Commands', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
-                plotpath = sprintf('%s/muscleGraphsScatterDelta', this.savePath);
+                title(strcat('\Delta Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
+                plotpath = sprintf('%s/muscleGraphsScatterDeltaTraining', this.savePath);
                 saveas(gcf, plotpath, 'png');
             end
 
@@ -506,7 +509,7 @@ classdef Model < handle
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('\Sigma \midweights\mid', 'FontSize', 12);
             title('w_{Pkj}');
-            plotpath = sprintf('%s/weightsL1', this.savePath);
+            plotpath = sprintf('%s/weightsDevelopment', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             % L2 norm
