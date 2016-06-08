@@ -61,6 +61,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         model = config(textureFile, trainTime, sparseCodingType);
     end
 
+    % check if main script and model are compatible
+    if (model.rlModel.CActor.output_dim < 2)
+        sprintf('Error: This training/main script is not compatible with %d eye muscle models!\nPlease execute OES1Muscle.m instead.', model.rlModel.CActor.output_dim)
+        return;
+    end
+
     % safety check for plotting functions
     if (trainTime <= model.interval)
         sprintf('Error: trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
@@ -323,7 +329,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             command = command + relativeCommand;    % two muscles
             command = checkCmd(command);            % restrain motor commands to [0, 1]
 
-            angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
+            % calculate resulting angle which is used for both eyes
+            angleNew = getAngle(command) * 2;
             % angleNew = getAngle2(command);
 
             %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%

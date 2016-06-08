@@ -46,7 +46,7 @@ else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
 end
 
-outputDim = 2;                                      % number of neurons in the output layer
+outputDim = 2;                                      % number of neurons in the output layer and amount of eye muscles
 if (continuous == 1)
     inputDim = sum(PARAMSC{1}) + outputDim;         % number of neurons in the input layer (Small + Large scale + Muscle activities)
 else
@@ -118,7 +118,7 @@ lambdaMuscleFB = 0.0357;    % factor of muscle activity feedback to RL feature v
 % Reward function parameters, i.e. their proportions to the reward function
 % R elem [-2, 0]
 lambdaRec = 4.929;          % reconstruction error factor | privious 77.12% = 4.929 | 100% = 6.391
-lambdaMet = 0;              % metabolic costs factor | privious 12.75% =  0.204 | 30% = 0.484 | 20% = 0.323 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.5% = 0.008
+lambdaMet = 0.012;          % metabolic costs factor | privious 12.75% =  0.204 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.75% = 0.012 | 0.5% = 0.008
 lambdaV = 7.0282e-04;       % value networks input->output weights factor | L1 norm 7.0282e-04
 lambdaP1 = 0.019;           % policy networks input->hidden weights factor | L1 norm 0.019
 lambdaP2 = 0.309;           % policy networks hidden->output weights factor | L1 norm 0.309

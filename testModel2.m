@@ -207,8 +207,8 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
     tic;
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
-        for odIndex = 1 : size(objRange, 2)
-            sprintf('Testing iteration = %d/%d', odIndex, size(objRange, 2))
+        for odIndex = 1 : length(objRange)
+            sprintf('Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
 
             % vergence start error
             vergMax = getVergErrMax(objRange(odIndex));
@@ -218,7 +218,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             vseRange = [-3, -2, -1, linspace(0, vergMax, 4)];
             angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
 
-            for vseIndex = 1 : size(vseRange, 2)
+            for vseIndex = 1 : length(vseRange)
                 tmpResult1(:, 1) = vseRange(vseIndex);
 
                 for stimulusIndex = 1 : nStim
@@ -230,7 +230,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         % update stimuli
                         refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
 
-                        % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imagesSavePath '/anaglyph.png']);
+                        % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
                         % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
                         % Image patch generation
@@ -241,8 +241,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         end
 
                         % Generate input feature vector from current images
-                        % [feature, ~, ~, errorLarge, errorSmall] = model.generateFR(currentView);
-                        [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
+                        [bfFeature, ~, recErrorArray] = model.generateFR(currentView);
 
                         % Track reconstruction error statistics
                         testResult2(tr2Ind, :) = [angleDes - angleNew, recErrorArray];
@@ -250,7 +249,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                         % Absolute command feedback # concatination
                         if (model.rlModel.continuous == 1)
-                            feature = [bfFeature; command * model.lambdaMuscleFB]; % single muscle
+                            if (model.rlModel.CActor.output_dim == 1)
+                                feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                            else
+                                feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                            end
                         else
                             feature = bfFeature;
                         end
@@ -261,13 +264,15 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                         %%% Action
                         relativeCommand = model.rlModel.act(feature);
 
-                        % add the change in muscle Activities to current ones
+                        % add the change in muscle activities to current ones
                         if (model.rlModel.continuous == 1)
-                            % command(1) = 0;
-                            % command(2) = command(2) + relativeCommand;  % one muscle
-                            command = command + relativeCommand;        % two muscles
-                            command = checkCmd(command);                % restrain motor commands to [0,1]
-                            angleNew = getAngle(command) * 2;           % resulting angle is used for both eyes
+                            if (model.rlModel.CActor.output_dim == 1)
+                                command(2) = command(2) + relativeCommand;  % single muscle
+                            else
+                                command = command + relativeCommand;        % two muscles
+                            end
+                            command = checkCmd(command);                    % restrain motor commands to [0,1]
+                            angleNew = getAngle(command) * 2;               % resulting angle is used for both eyes
                         else
                             angleNew = angleNew + relativeCommand;
                             if (angleNew > angleMax || angleNew < angleMin)
@@ -275,8 +280,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                             end
                         end
 
-                        testResult5(tr5Ind, :) = [command; relativeCommand];
-                        tr5Ind = tr5Ind + 1;
+                        % track commands for correlation plot
+                        if (model.rlModel.CActor.output_dim >= 2)
+                            testResult5(tr5Ind, :) = [command; relativeCommand];
+                            tr5Ind = tr5Ind + 1;
+                        end
 
                         % track bad or redundant stimuli
                         % if (iter == 11)
@@ -316,14 +324,14 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             end
         end
 
-        %% Reconstruction error and Critic's response additional testing procedure
-        sprintf('Testing procedure 2 started...')
-
+        %% Reconstruction error and critic's response additional testing procedure
         tmp = zeros(1, nStim * (2 + length(model.scModel)));
         % vergence start error
         vseRange = linspace(-1, 1, test2Resolution);
 
         for odIndex = 1 : length(objRange)
+            sprintf('Test iteration = %d/%d', odIndex + size(objRange, 2), size(objRange, 2) * 2)
+
             for vseIndex = 1 : length(vseRange)
                 if (getVergErrMax(objRange(odIndex)) < vseRange(vseIndex))
                     continue
@@ -335,7 +343,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
                     currentTexture = texture{stimulusIndex};
                     refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
 
-                    % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imagesSavePath '/anaglyph.png']);
+                    % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
                     % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
                     % Image patch generation
@@ -350,8 +358,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                     % Absolute command feedback # concatination
                     if (model.rlModel.continuous == 1)
-                        % feature = [bfFeature; command(2) * model.lambdaMuscleFB]; % single muscle
-                        feature = [bfFeature; command * model.lambdaMuscleFB]; % single muscle
+                        if (model.rlModel.CActor.output_dim == 1)
+                            feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                        else
+                            feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                        end
                     else
                         feature = bfFeature;
                     end
@@ -367,7 +378,11 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             end
         end
         testResult4(testResult4 == 0) = NaN;
-        toc
+
+        elapsedTime = toc;
+        sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
+                elapsedTime / 3600, elapsedTime / 60, elapsedTime, ...
+                (length(objRange) * 7 * nStim * testInterval + length(objRange) * length(vseRange) * nStim) / elapsedTime)
 
         % save test results
         try
@@ -421,7 +436,7 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
             if (nStim > 0)
                 xlabel(sprintf('Iteration step (#stimuli=%d)', nStim), 'FontSize', 12);
             else
-                xlabel('Iteration step', 'FontSize', 12);
+                xlabel('Iteration step', 'FontSize', 12); % TODO: add nstim from model size
             end
             ylabel('Vergence Error [deg]', 'FontSize', 12);
             title(sprintf('Avg Vergence Error over Trial at Testing\nObject Distance = %.1fm', objRange(odIndex)));
@@ -760,7 +775,6 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
         boxlabels = cell(1, length(objRange));
         tmp = zeros(nStim, length(objRange));
         startInd = nStim * 3 + 1;
-        endInd = 0;
         for i = 1 : length(objRange)
             endInd = startInd + nStim - 1;
             tmp(:, i) = model.testResult3(startInd : endInd, testInterval);
@@ -810,26 +824,28 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
         %%% Muscle correlation check
         % Total
-        figure;
-        hold on;
-        scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-        corrl = corr(model.testResult5(:, 1), model.testResult5(:, 2));
-        xlabel('Lateral rectus [%]', 'FontSize', 12);
-        ylabel('Medial rectus [%]', 'FontSize', 12);
-        title(strcat('Total Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
-        plotpath = sprintf('%s/muscleGraphsScatterTotalTesting', model.savePath);
-        saveas(gcf, plotpath, 'png');
+        if (model.rlModel.CActor.output_dim >= 2)
+            figure;
+            hold on;
+            scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            corrl = corr(model.testResult5(:, 1), model.testResult5(:, 2));
+            xlabel('Lateral rectus [%]', 'FontSize', 12);
+            ylabel('Medial rectus [%]', 'FontSize', 12);
+            title(strcat('Total Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
+            plotpath = sprintf('%s/muscleGraphsScatterTotalTesting', model.savePath);
+            saveas(gcf, plotpath, 'png');
 
-        % Delta
-        figure;
-        hold on;
-        scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-        corrl = corr(model.testResult5(:, 1), model.testResult5(:, 2));
-        xlabel('Lateral rectus [%]', 'FontSize', 12);
-        ylabel('Medial rectus [%]', 'FontSize', 12);
-        title(strcat('\Delta Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
-        plotpath = sprintf('%s/muscleGraphsScatterDeltaTesting', model.savePath);
-        saveas(gcf, plotpath, 'png');
+            % Delta
+            figure;
+            hold on;
+            scatter(model.testResult5(:, 3), model.testResult5(:, 4), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            corrl = corr(model.testResult5(:, 3), model.testResult5(:, 4));
+            xlabel('Lateral rectus [%]', 'FontSize', 12);
+            ylabel('Medial rectus [%]', 'FontSize', 12);
+            title(strcat('\Delta Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
+            plotpath = sprintf('%s/muscleGraphsScatterDeltaTesting', model.savePath);
+            saveas(gcf, plotpath, 'png');
+        end
     end
 end
 
