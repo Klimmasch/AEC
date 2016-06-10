@@ -223,8 +223,8 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
             model.reward_hist(t) = reward;
             % model.feature_hist(t, :) = bfFeature;
             % model.td_hist(t) = model.rlModel.td;
-            model.weight_hist(t, 1) = sum(sum(abs(model.rlModel.Weights{2, 1})));
-            model.weight_hist(t, 2) = sum(sum(abs(model.rlModel.Weights{1, 1})));
+            model.weight_hist(t, 1) = sum(sum(abs(model.rlModel.weightArray{2, 1})));
+            model.weight_hist(t, 2) = sum(sum(abs(model.rlModel.weightArray{1, 1})));
 
             model.trainedUntil = t;
         end

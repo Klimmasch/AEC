@@ -1,17 +1,20 @@
+%%%
+% Wrapper class for RL actor and critic instances of continuous action space models
+%%%
 classdef ReinforcementLearningCont < handle
     properties
-        weight_range;
-        continuous;     %flag whether policy is discrete or continous
-        rlFlavour;      %which critic and actor implementation is chosen
-        CCritic;
-        CActor;
+        weight_range;   % network weight ranges [critic_ji, actor_ji, actor_kj]
+        continuous;     % flag whether policy is discrete or continous
+        rlFlavour;      % which critic and actor implementation is chosen
+        CCritic;        % RL critic instance
+        CActor;         % RL actor instance
     end
 
     methods
         function obj = ReinforcementLearningCont(PARAM)
             obj.weight_range = PARAM{10};
-            obj.continuous = PARAM{14};
-            obj.rlFlavour = PARAM{18};
+            obj.continuous = PARAM{11};
+            obj.rlFlavour = PARAM{15};
 
             % instantiate chosen Actor and Critic
             switch obj.rlFlavour(1)
@@ -26,7 +29,7 @@ classdef ReinforcementLearningCont < handle
                     criticParams = {PARAM{9}(1), obj.weight_range(1), PARAM{2}, PARAM{5}, PARAM{6}};
                     obj.CCritic = CRGCritic(criticParams);
                 otherwise
-                    sprintf('Critic algorithm not supported (anymore)!')
+                    sprintf('Critic algorithm [No. #%d] not supported (anymore)!', obj.rlFlavour(1))
                     return;
             end
 
@@ -34,103 +37,54 @@ classdef ReinforcementLearningCont < handle
                 case 0
                     %% CACLAVar [Lukas's interpretation of CACLA appoach]
                     % actorParams = {[obj.inputDim, obj.hiddenDim, obj.outputDim], obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
-                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{12}, PARAM{13}, PARAM{16}};
                     obj.CActor = CACLAVarActorLu(actorParams);
                 case 1
                     %% CACLAVar [Alex's interpretation of CACLA appoach]
                     % actorParams = {[obj.inputDim, obj.hiddenDim, obj.outputDim], obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
-                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{12}, PARAM{13}, PARAM{16}};
                     obj.CActor = CACLAVarActorAl(actorParams);
                 case 2
                     %% CACLAVar [CACLA appoach with std. Backpropagation]
                     % actorParams = {[obj.inputDim, obj.hiddenDim, obj.outputDim], obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
-                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{12}, PARAM{13}, PARAM{16}};
                     obj.CActor = CACLAVarActorBp(actorParams);
                 case 3
                     %% CACLAVar
                     % actorParams = {[obj.inputDim, obj.hiddenDim, obj.outputDim], obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
-                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{12}, PARAM{13}, PARAM{16}};
                     obj.CActor = CACLAVarActor(actorParams);
                 case 4
                     %% CACLAVar2
                     % actorParams = {[obj.inputDim, obj.hiddenDim, obj.outputDim], obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
-                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{15}, PARAM{16}, PARAM{19}};
+                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{12}, PARAM{13}, PARAM{16}};
                     obj.CActor = CACLAVarActor2(actorParams);
                 % case 5
                 %     % TODO: unsupported yet
                 %     %% CNGFI
                 %     % actorParams = {obj.inputDim, obj.outputDim, obj.weight_range(2:3), obj.alpha_p, obj.alpha_v, obj.varianceRange, obj.fiScale, obj.varDec};
-                %     actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{2}, PARAM{7}, PARAM{17}, PARAM{19}};
+                %     actorParams = {PARAM{9}, 1, obj.weight_range(2:3), PARAM{4}, PARAM{2}, PARAM{7}, PARAM{14}, PARAM{16}};
                 %     obj.CActor = CNGFIActor(actorParams);
                 otherwise
-                    sprintf('Actor algorithm not supported (anymore)!')
+                    sprintf('Actor algorithm [No. #%d] not supported (anymore)!', obj.rlFlavour(2))
                     return;
             end
-
-            % DEPRECATED
-            % TODO: update model reload
-            % obj.Weights_hist = cell(2, 1);
-            % load/init
-            if (PARAM{11})
-                sprintf('Model reloading function is DEPRECATED and therefore currently not supported!')
-                return;
-                % obj.Weights = PARAM{12}(1:2);
-                % obj.J = PARAM{12}{3};
-                % obj.g = PARAM{12}{4};
-                % obj.Weights_hist = PARAM{13};
-            end
         end
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%% generate command according to the softmax distribution of the
-        %%% output in the policy network
-        %%% Xin: feature input to the network
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function command = act(this, Xin)
-            command = this.CActor.actHard(Xin);
+        %%% Generate a pure action output without Gaussean policy noise
+        %   @param feature: input feature vector
+        function command = act(this, feature)
+            command = this.CActor.actHard(feature);
         end
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%% Train the reinforcement network for one step
-        %%%
-        %%% feature is the input to the network
-        %%% reward is the reward for reinforement learning
-        %%% flag_update indicates whether the network should updated
-        %%%
-        %%% command is the output command
-        %%% parameters is the intermedia values keeped for debug
-        %%% En is the entropy of policy
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%% Train the critic's and actor's networks and generate action output according to policy
+        %   @param feature:         input feature vector
+        %   @param reward:          reward signal from sparse coders
+        %   @param flag_update:     indicates whether weights shall be updated (additional fine grained control)
+        %   @return:                delta muscle, i.e. change in eye muscle excitation(s)
         function command = stepTrain(this, feature, reward, flag_update)
             this.CCritic.train(feature, reward, flag_update);
             command = this.CActor.train(feature, this.CCritic.delta, flag_update);
-        end
-
-        % DEPRECATED
-        % TODO: update model reload
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%% save the weights during training
-        %%% 3rd dim corresponds to iteration, col to weight
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function saveWeights(this)
-            sprintf('Model reloading function is DEPRECATED and therefore currently not supported!')
-            return;
-            % this.Weights_hist{1} = cat(3, this.Weights_hist{1}, this.Weights{1}); %policy net
-            % this.Weights_hist{2} = cat(3, this.Weights_hist{2}, this.Weights{2}); %value net
-        end
-
-        % DEPRECATED
-        % TODO: update model reload
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%% save the parameters in a file
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        function saveClass(this, configfile)
-            sprintf('Model reloading function is DEPRECATED and therefore currently not supported!')
-            return;
-            % weights = cell(2, 1);
-            % weights{1} = this.Weights;
-            % weights{2} = this.g;
-            % save(configfile, 'weights', '-append');
         end
     end
 end

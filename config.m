@@ -1,9 +1,9 @@
 function model = config(textureFile, trainTime, sparseCodingType)
 
-weights = [];
-weightsHist = cell(2, 1);
-loadBasis = uint8(0);
-loadweights = uint8(0);
+% weights = [];
+% weightsHist = cell(2, 1);
+% loadBasis = uint8(0);
+% loadweights = uint8(0);
 
 %%% Sparce Coding parameters
 % Scales := [coarse, less_coarse, ..., fine], i.e. [peripheral vision, ..., central vision]
@@ -47,12 +47,13 @@ else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
 end
 
-outputDim = 2;                                      % number of neurons in the output layer and amount of eye muscles
+outputDim = 1;                                      % number of neurons in the output layer and amount of eye muscles
 if (continuous == 1)
     inputDim = sum(PARAMSC{1}) + outputDim;         % number of neurons in the input layer (Small + Large scale + Muscle activities)
 else
-    inputDim = sum(PARAMSC{1});                     % only small + large scale basis function inputs in discrete case
+    inputDim = sum(PARAMSC{1});                     % only small + large scale basis function inputs in discrete models
     varianceRange = 1;
+    outputDim = 1;                                  % only one delta angle output in discrete models
 end
 hiddenDim = 50;                                     % number of neurons in the hidden layer
 dimensions = [inputDim, hiddenDim, outputDim];
@@ -66,7 +67,7 @@ eta = 0.001;                                        % TD error variance scaling 
 fiScale = 1e-5;                                     % scaling factor of Fisher Information matrix (CNGFI)
 
 PARAMRL = {actionSpace, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
-           loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour, varDec};
+           continuous, deltaVar, eta, fiScale, rlFlavour, varDec};
 
 %%% Model parameters
 % Image processing constants
@@ -116,17 +117,14 @@ lambdaMuscleFB = 0.0357;    % factor of muscle activity feedback to RL feature v
                             % 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
                             % 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741
 
-% Reward function parameters, i.e. their proportions to the reward function
-% R elem [-2, 0]
+% Reward function parameters, i.e. their "proportions" to the reward function
 lambdaRec = 4.929;          % reconstruction error factor | privious 77.12% = 4.929 | 100% = 6.391
 lambdaMet = 0.012;          % metabolic costs factor | privious 12.75% =  0.204 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.75% = 0.012 | 0.5% = 0.008
-lambdaV = 7.0282e-04;       % value networks input->output weights factor | L1 norm 7.0282e-04
-lambdaP1 = 0.019;           % policy networks input->hidden weights factor | L1 norm 0.019
-lambdaP2 = 0.309;           % policy networks hidden->output weights factor | L1 norm 0.309
+
 PARAMModel = {textureFile, trainTime, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
-              lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2, ...
-              patchSize, pxFieldOfView, dsRatio, stride, fixDistMin, fixDistMax};
+              lambdaMuscleFB, lambdaRec, lambdaMet, patchSize, pxFieldOfView, ...
+              dsRatio, stride, fixDistMin, fixDistMax};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);

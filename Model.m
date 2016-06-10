@@ -27,11 +27,8 @@ classdef Model < handle
         sparseCodingType;   %type of sparse coding
 
         lambdaMuscleFB;     %factor of muscle activity feedback to RL feature vector
-        lambdaMet;          %factor of metCosts for reward function
         lambdaRec;          %reconstruction error factor
-        lambdaV;            %value networks input->output weights factor
-        lambdaP1;           %policy networks input->hidden weights factor
-        lambdaP2;           %policy networks hidden->output weights factor
+        lambdaMet;          %factor of metCosts for reward function
 
         % Model data history
         recerr_hist;        %reconstruction error [coarse scale, fine scale]
@@ -87,13 +84,10 @@ classdef Model < handle
             obj.muscleInitMax = PARAM{1}{9};
             obj.interval = PARAM{1}{10};
             obj.lambdaMuscleFB = PARAM{1}{11};
-            obj.lambdaMet = PARAM{1}{12};
-            obj.lambdaRec = PARAM{1}{13};
-            obj.lambdaV = PARAM{1}{14};
-            obj.lambdaP1 = PARAM{1}{15};
-            obj.lambdaP2 = PARAM{1}{16};
-            obj.fixDistMin = PARAM{1}{21};
-            obj.fixDistMax = PARAM{1}{22};
+            obj.lambdaRec = PARAM{1}{12};
+            obj.lambdaMet = PARAM{1}{13};
+            obj.fixDistMin = PARAM{1}{18};
+            obj.fixDistMax = PARAM{1}{19};
 
             % single eye
             obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
@@ -107,7 +101,7 @@ classdef Model < handle
 
             %%% Create RL models
             % Discrete or continuous policy
-            if (PARAM{3}{14} == 1)
+            if (PARAM{3}{11} == 1)
                 obj.rlModel = ReinforcementLearningCont(PARAM{3});
             else
                 obj.rlModel = ReinforcementLearning(PARAM{3});
@@ -145,10 +139,10 @@ classdef Model < handle
             obj.notes = '';
 
             %%% Generate image processing constants
-            obj.patchSize = PARAM{1}{17};
-            obj.pxFieldOfView = PARAM{1}{18};
-            obj.dsRatio = PARAM{1}{19};
-            obj.stride = PARAM{1}{20};
+            obj.patchSize = PARAM{1}{14};
+            obj.pxFieldOfView = PARAM{1}{15};
+            obj.dsRatio = PARAM{1}{16};
+            obj.stride = PARAM{1}{17};
 
             % Prepare index matrix for image patches
             obj.columnInd = obj.prepareColumnIndFilled();
@@ -537,11 +531,6 @@ classdef Model < handle
                 figure;
                 hold on;
                 grid on;
-                % r = [- this.lambdaMet * this.metCost_hist, ...
-                %      - this.lambdaP2 * this.weight_hist(:, 5), ...
-                %      - this.lambdaP1 * this.weight_hist(:, 3), ...
-                %      - this.lambdaV * this.weight_hist(:, 1), ...
-                %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
                 r = [- this.lambdaMet * this.metCost_hist, ...
                      - this.lambdaRec * sum(this.recerr_hist, 2)];
                 handle = area(r, 'LineStyle','none');
