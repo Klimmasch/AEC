@@ -28,18 +28,19 @@ PARAMSC = {nBasis, nBasisUsed, basisSize, eta, temperature};
 % # = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
 rlFlavour = [uint8(0), uint8(0)];
 
-continuous = uint8(1);                               % indicates if the policy is discrete or continuous
+continuous = uint8(1);                               % indicates if the policy is discrete (= 0) or continuous (= 1)
 % actionSpace = [-8, -4, -2, -1, -0.5, 0, ...        % vergence angles (discrete policy)
 %                 0.5, 1, 2, 4, 8];
 actionSpace = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... % vergence angles (discrete policy) enable half pixel resolution
                 0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
-alpha_v = 1;                                    % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
-alpha_n = 0.025;                                % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 1;                                    % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
-xi = 0.3;                                       % discount factor | origin 0.3 | Alex P 0.3
-gamma = 0.3;                                    % learning rate to update cumulative value | origin 1
+alpha_v = 1;                                         % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
+alpha_n = 0.025;                                     % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
+alpha_p = 1;                                         % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
+xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
+gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
 
-varianceRange = [1e-5, 1e-5];                   % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
+varianceRange = [1e-5, 1e-5];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
+                                                     % corresponds to softMax temperature in discrete RL models
 if (size(varianceRange, 2) == 1 || varianceRange(1) <= varianceRange(2))
     varDec = 0; % no variance decay
 else

@@ -62,7 +62,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     end
 
     % check if main script and model are compatible
-    if (model.rlModel.CActor.output_dim < 2)
+    if (model.rlModel.continuous == 0)
+        sprintf('Error: This training/main script is not compatible with discrete action space models!\nPlease execute OESDiscrete.m instead.')
+        return;
+    elseif (model.rlModel.CActor.output_dim < 2)
         sprintf('Error: This training/main script is not compatible with %d eye muscle models!\nPlease execute OES1Muscle.m instead.', model.rlModel.CActor.output_dim)
         return;
     end
@@ -319,7 +322,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             %% RL model
             % Variance decay, i.e. reduction of actor's output perturbation
-            % if ((model.rlModel.continuous == 1) && (model.rlModel.CActor.varDec > 0))
+            % if (model.rlModel.CActor.varDec > 0)
             %     model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
             % end
 
@@ -400,8 +403,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     %%% Testing procedure
     if (testIt == 1)
-        % testModel2(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-        testModel2(model, 33, plotIt(2), 1, simulator, 0);
+        % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
+        testModelContinuous(model, 33, plotIt(2), 1, simulator, 0);
     end
 
     if (closeFigures == 1)
