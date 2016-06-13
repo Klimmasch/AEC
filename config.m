@@ -35,7 +35,7 @@ actionSpace = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... % vergence angles (discrete
                 0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
 alpha_v = 1;                                         % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                                     % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 1;                                         % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
+alpha_p = 0.5;                                       % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
 
@@ -47,7 +47,7 @@ else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
 end
 
-outputDim = 1;                                      % number of neurons in the output layer and amount of eye muscles
+outputDim = 2;                                      % number of neurons in the output layer and amount of eye muscles
 if (continuous == 1)
     inputDim = sum(PARAMSC{1}) + outputDim;         % number of neurons in the input layer (Small + Large scale + Muscle activities)
 else
@@ -112,14 +112,15 @@ muscleInitMin = 0.00807;       % minimal initial muscle innervation orig: 0.0080
 muscleInitMax = 0.07186;       % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 interval = 10;              % period for changing the stimulus for the eyes | origin 10
-lambdaMuscleFB = 0.0357;    % factor of muscle activity feedback to RL feature vector
+lambdaMuscleFB = 0;         % factor of muscle activity feedback to RL feature vector
                             % Proportion MF/feature:
                             % 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
                             % 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741
 
 % Reward function parameters, i.e. their "proportions" to the reward function
-lambdaRec = 4.929;          % reconstruction error factor | privious 77.12% = 4.929 | 100% = 6.391
-lambdaMet = 0.012;          % metabolic costs factor | privious 12.75% =  0.204 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.75% = 0.012 | 0.5% = 0.008
+lambdaRec = 6.391;          % reconstruction error factor | privious 77.12% = 4.929 | 100% = 6.391
+lambdaMet = 0;              % metabolic costs factor:
+                            % privious 12.75% =  0.204 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.8% = 0.0128 | 0.75% = 0.012 | 0.6% = 0.0096 | 0.5% = 0.008
 
 PARAMModel = {textureFile, trainTime, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...

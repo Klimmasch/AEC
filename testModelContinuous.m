@@ -439,8 +439,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 xlabel('Iteration step', 'FontSize', 12); % TODO: add nstim from model size
             end
             ylabel('Vergence Error [deg]', 'FontSize', 12);
-            title(sprintf('Avg Vergence Error over Trial at Testing\nObject Distance = %.1fm', objRange(odIndex)));
-            plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.1fm].png', model.savePath, objRange(odIndex));
+            title(sprintf('Avg Vergence Error over Trial at Testing\nObject Distance = %.2fm', objRange(odIndex)));
+            plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.2fm].png', model.savePath, objRange(odIndex));
             saveas(gcf, plotpath, 'png');
         end
 
@@ -616,9 +616,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 xlabel('Vergence Error [deg]', 'FontSize', 12);
             end
             ylabel('Value', 'FontSize', 12);
-            title(sprintf('Critic Value vs. Vergence Error\nobjDist = %.1fm, max@vergErr = %.3f°', objRange(odIndex), tmpMax));
+            title(sprintf('Critic Value vs. Vergence Error\nobjDist = %.2fm, max@vergErr = %.3f°', objRange(odIndex), tmpMax));
             if (~isempty(model.savePath))
-                plotpath = sprintf('%s/criticValvsVerErrFine[%.1f].png', model.savePath, objRange(odIndex));
+                plotpath = sprintf('%s/criticValvsVerErrFine[%.2f].png', model.savePath, objRange(odIndex));
                 saveas(gcf, plotpath, 'png');
             end
         end
@@ -761,7 +761,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             xlabel('Iteration step', 'FontSize', 12);
         end
         ylabel('Vergence Error [deg]', 'FontSize', 12);
-        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f° at %dth step', mean(model.testResult3(:, 10)), median(model.testResult3(:, 10)), testInterval));
+        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f°, 4*IQR = %.4f at %dth step', ...
+                      mean(model.testResult3(:, 10)), median(model.testResult3(:, 10)), iqr(model.testResult3(:, testInterval)) * 4, testInterval));
         if (~isempty(model.savePath))
             plotpath = sprintf('%s/totalError', model.savePath);
             saveas(gcf, plotpath, 'png');
@@ -816,7 +817,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         % else
         %     xlabel('Iteration step', 'FontSize', 12);
         % end
-        suptitle(sprintf('Model bias with 0° vergence start error\nafter %d iterations for %d stimuli', testInterval, nStim));
+        suptitle(sprintf('Model bias with 0° vergence start error and total\nafter %d iterations for %d stimuli', ...
+                         testInterval, nStim));
         if (~isempty(model.savePath))
             plotpath = sprintf('%s/ModelBiasAt0VergErr', model.savePath);
             saveas(gcf, plotpath, 'png');
