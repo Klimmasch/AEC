@@ -1,363 +1,366 @@
-%%% Main script for launching application
-%@param trainTime           training time in number of iterations
-%@param randomizationSeed   randomization seed
-%
-% learnedFile:              file with policy and sparse coding to test if not empty
-% textureFile:              texture settings files
-% sparseCodingType:         type of sparse coding approach
+%%% Main script for launching experimental procedure
+% @param trainTime           training time in number of iterations
+% @param randomizationSeed   randomization seed
+% @param fileDescription     description of approach used as file name
 %%%
-function OESDiscrete(trainTime, randomizationSeed)
+function OESDiscrete(trainTime, randomizationSeed, fileDescription)
+    rng(randomizationSeed);
 
-rng(randomizationSeed);
-learnedFile = '';
-textureFile = 'Textures_New.mat';
-sparseCodingType = 'nonhomeo';
+    % useLearnedFile(1):    0 = don't do it
+    %                       1 = use previously learned policy specified in learnedFile
+    % useLearnedFile(2):    0 = retrain with same/new parameters
+    %                       1 = complete/continue training
+    %
+    % If useLearnedFile = [1, 1] and you want to continue training, trainTime must be the overall desired train time,
+    % i.e. trained at first 100k iterations with useLearnedFile = [0, 0], then decided to continue training for 100k more
+    % iterations, then the overall train time for the model is 200k and you set useLearnedFile = [1, 1] and execute with
+    % OES2Muscles(200000, randomizationSeed, fileDescription)
+    useLearnedFile = [0, 0];
+    learnedFile = '';
+    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_20-May-2016_13:10:14_500000_nonhomeo_1_2m_newImplem_highResSmSc_noMF/model.mat';
 
-% Plotting flag
-% Whether figures should be generated, saved and plotted
-% plotIt:   0 = no plot
-%           1 = plot
-plotIt = uint8(0);
+    %%% Stimulus declaration
+    textureFile = 'Textures_vanHaterenTrain.mat';   % vanHateren database
+    % textureFile = 'Textures_celine.mat';          % Celine's images
 
-% Learning flag
-% learning: 0 = no model is being learned
-%           1 = model is being learned
-learning = uint8(isempty(learnedFile));
+    % Sparse coding approach
+    % sparseCodingType: 0 = non-homeostatic
+    %                   1 = homeostatic
+    sparseCodingType = uint8(0);
+    sparseCodingTypeName = cellstr(['nonhomeo'; 'homeo___']);
 
-% Predefine testing phases
-testingWindow = uint8(0);
-testingCounter = 0;
+    % Plotting flag
+    % Whether figures should be generated and saved
+    % plotIt: [training, testing]
+    %            0 = don't do it
+    %            1 = do it
+    plotIt = [uint8(1), uint8(1)];
 
-% Save model and conduct testing every saveInterval training iterations (+1)
-saveInterval = 10;
+    % Whether figures should be closed after generation
+    % closeFigures: 0 = don't do it
+    %               1 = do it
+    closeFigures = uint8(1);
 
-% Testing flag
-% testing or training, we do this every 10% of learning
-% trialPhase: 0 = training
-%             1 = testing
-trialPhase = uint8(0);
+    % Testing flag
+    % Whether the testing procedure shall be executed after training
+    % testIt:   0 = don't do it
+    %           1 = do it
+    testIt = uint8(0);
 
-% Instantiate and initiate model and test_data objects
-model = config(learnedFile, textureFile, trainTime, sparseCodingType);
-modelData = ModelTestdata((trainTime / saveInterval) * testingWindow + 1);
-
-if (trainTime <= model.interval)
-    sprintf('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
-    return;
-elseif (~exist(fullfile(cd, 'checkEnvironment'), 'file'))
-    sprintf('Rendering binary \"checkEnvironment\" not present in current dir\n\"%s\"', cd)
-    return;
-end
-
-% File management
-savePath = sprintf('model_%s_%i_%i_%i_%s_%i', ...
-                    datestr(now), ...
-                    trainTime, ...
-                    sparseCodingType, ...
-                    randomizationSeed);
-mkdir('results', savePath);
-savePath = strcat('results/', savePath);
-
-% Control Parameters
-vergeMax = 16;
-angleNew = 0; %init new vergence command
-
-% Iteration counter
-t = 0;
-testIter = 0;
-
-% Image process variables
-patchSize = 8;
-
-dsRatioL = model.scModel_Large.Dsratio; %downsampling ratio (Large scale)
-dsRatioS = model.scModel_Small.Dsratio; %downsampling ratio (Small scale)
-
-% fovea = [128 128];
-foveaL = patchSize + patchSize^2 / 2^log2(dsRatioL); %fovea size (Large scale)
-foveaS = patchSize + patchSize^2 / 2^log2(dsRatioS); %fovea size (Small scale)
-
-stOvL = patchSize / dsRatioL; %steps of overlap in the ds image
-stOvS = patchSize / dsRatioS; %steps of overlap in the ds image
-
-ncL = foveaL - patchSize + 1; %number of patches per column (slide of 1 px)
-ncS = foveaS - patchSize + 1; %number of patches per column (slide of 1 px)
-
-% Prepare index matricies for image patches
-columnIndL = [];
-for kc = 1:stOvL:ncL
-    tmpInd = (kc - 1) * ncL + 1 : stOvL : kc * ncL;
-    columnIndL = [columnIndL tmpInd];
-end
-columnIndS = [];
-for kc = 1:stOvS:ncS
-    tmpInd = (kc - 1) * ncS + 1 : stOvS : kc * ncS;
-    columnIndS = [columnIndS tmpInd];
-end
-
-% Camera parameters
-% offset = 0;       %vertical offset between left and right (0 in the Simulator!!!)
-f = 257.34;         %focal length [px]
-baseline = 0.056;   %interocular distance (baseline)
-
-% Textures
-texturePath = sprintf('config/%s', textureFile);
-texture = load(texturePath);
-texture = texture.texture;
-nTextures = length(texture);
-currentTexture = texture{1}; %choose first texture as initial
-
-% Object distance to eyes [m]
-objDistMin = 0.5;
-objDistMax = 2;
-objDist = objDistMax; %object init position
-
-%%% Main execution loop
-tic %start time count
-while (true)
-    if (trialPhase == 0)
-        t = t + 1;
-        if (t > model.trainTime)
-            trialPhase = uint8(1);
+    % Load model from file or instantiate and initiate new model object
+    if (useLearnedFile(1) == 1)
+        if isempty(learnedFile)
+            sprintf('could not open the learned file! %s', learnedFile)
+            return;
+        else
+            model = load(learnedFile, 'model');
+            model = model.model;
+            model.trainTime = trainTime;
         end
-
-        % pick random texture every #interval times
-        if (~mod(t - 1, model.interval))
-            currentTexture = texture{(randi(nTextures, 1))};
-            % random depth
-            objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
-            % reset vergence to random value
-            angleNew = randi(vergeMax, 1); % relax the eyes
-            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                           currentTexture, objDist, angleNew));
-
-            % Abort execution if error occured
-            if (status)
-                sprintf('Error in checkEnvironment:\n%s', res)
-                return;
-            end
-        end
-    elseif (trialPhase == 1)
-        testingCounter = testingCounter + 1;
-        testIter = testIter + 1;
-        if (testingCounter > testingWindow)
-            if (testingWindow > 0)
-                save(strcat(savePath, '/modelData'), 'modelData');
-            end
-
-            % Exit condition
-            if (t == model.trainTime)
-                break;
-            end
-
-            trialPhase = uint8(0);
-            testingCounter = 0;
-            t = t + 1;
-        end
-
-        % pick random texture every #interval times
-        if (~mod(testingCounter - 1, model.interval))
-            currentTexture = texture{(randi(nTextures, 1))};
-            % random depth
-            objDist = objDistMin + (objDistMax - objDistMin) * rand(1, 1);
-            % reset vergence to random value
-            angleNew = randi(vergeMax, 1); % relax the eyes
-            [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                           currentTexture, objDist, angleNew));
-
-            % Abort execution if error occured
-            if (status)
-                sprintf('Error in checkEnvironment:\n%s', res)
-                return;
-            end
-        end
+    else
+        model = config(textureFile, trainTime, sparseCodingType);
     end
 
-    % Read input images
-    imgRawLeft = imread('left.png');
-    imgRawRight = imread('right.png');
+    % check if main script and model are compatible
+    if (model.rlModel.continuous == 1)
+        sprintf('Error: This training/main script is not compatible with continuous action space models!\nPlease execute OES1Muscle.m or OES2Muscles.m instead.')
+        return;
+    end
 
-    % Image patch generation: left{small scale, large scale}, right{small scale, large scale}
-    [patchesLeftSmall] = preprocessImage(imgRawLeft, foveaS, dsRatioS, patchSize, columnIndS);
-    [patchesLeftLarge] = preprocessImage(imgRawLeft, foveaL, dsRatioL, patchSize, columnIndL);
-    [patchesRightSmall] = preprocessImage(imgRawRight, foveaS, dsRatioS, patchSize, columnIndS);
-    [patchesRightLarge] = preprocessImage(imgRawRight, foveaL, dsRatioL, patchSize, columnIndL);
+    % safety check for plotting functions
+    if (trainTime <= model.interval)
+        sprintf('Error: trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
+        return;
+    end
 
-    % image patches matrix (input to model)
-    currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
+    % File management: either complete training with existing folder etc.,
+    % or create a new one
+    if ((useLearnedFile(1) == 1) && (useLearnedFile(2) == 1))
+        timeToTrain = model.trainTime - model.trainedUntil;
+    else
+        modelName = sprintf('model_%s_%i_%s_%i_%s', ...
+                            datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
+                            trainTime, ...
+                            sparseCodingTypeName{sparseCodingType + 1}, ...
+                            randomizationSeed, ...
+                            fileDescription);
+        folder = '../results/';
+        mkdir(folder, modelName);
+        model.savePath = strcat(folder, modelName);
 
-    if (trialPhase == 0)
-        %Compute Vergence Command
-        fixDepth = (0.5 * baseline) / tand(angleNew / 2);
-        %save fixaton and object depth
-        model.Z(t) = objDist;
-        model.fixZ(t) = fixDepth;
+        % backup all used files
+        copyfile(strcat(mfilename, '.m'), model.savePath);
+        copyfile('config.m', model.savePath);
+        copyfile(strcat(class(model), '.m'), model.savePath);
+        copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
 
-        %compute current disparity
-        angledes = 2 * atan(baseline / (2 * objDist)); %desired vergence [rad]
-        disparity = 2 * f * tan((angledes - angleNew * pi / 180) / 2); %current disp [px]
-        model.disp_hist(t) = disparity;
+        timeToTrain = model.trainTime;
+    end
+    % additional notes/infromation to this model/approach
+    model.notes = [model.notes fileDescription];
 
-        %compute current vergence error
-        anglerr = angledes * 180 / pi - angleNew; %vergence error [deg]
-        %save verge error
-        model.vergerr_hist(t) = anglerr;
+    % Save model every #saveInterval training iterations
+    saveInterval = ceil(model.trainTime / 5);
 
-        %generate input feature vector from current images
-        [feature, reward, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-        model.recerr_hist(t, :) = [errorLarge; errorSmall];
-        model.verge_actual(t) = angleNew; %current vergence angle
+    % Track the evolution of all basis functions of the respective sparse coders
+    trackSCBasisHistory = uint8(0);
 
-        if (learning)
-            %train 2 sparse coding models
-            model.scModel_Large.stepTrain(currentView{1});
-            model.scModel_Small.stepTrain(currentView{2});
-            [command, ~, ~] = model.rlModel.stepTrain(feature, reward, mod(t - 1, model.interval));
-            %### why calculate relative vergance command after first error measure?
+    % Textures
+    texture = load(sprintf('config/%s', textureFile));
+    texture = texture.texture;
+    nTextures = length(texture);
+
+    %%% New renderer
+    simulator = OpenEyeSim('create');
+
+    simulator.initRenderer();
+    % simulator.reinitRenderer(); % for debugging
+
+    imgRawLeft = uint8(zeros(240, 320, 3));
+    imgRawRight = uint8(zeros(240, 320, 3));
+    imgGrayLeft = uint8(zeros(240, 320, 3));
+    imgGrayRight = uint8(zeros(240, 320, 3));
+
+    % Image patches cell array (input to model)
+    currentView = cell(1, length(model.scModel));
+
+    %%% Generates two new images for both eyes
+    % texture:  file path of texture input
+    % eyeAngle: angle of single eye (rotation from offspring)
+    % objDist:  distance of stimulus
+    function refreshImages(texture, eyeAngle, objDist)
+        simulator.add_texture(1, texture);
+        simulator.set_params(1, eyeAngle, objDist);
+
+        result1 = simulator.generate_left();
+        result2 = simulator.generate_right();
+
+        imgRawLeft = permute(reshape(result1, ...
+                                     [size(imgRawLeft, 3), ...
+                                      size(imgRawLeft, 2), ...
+                                      size(imgRawLeft, 1)]), ...
+                                     [3, 2, 1]);
+
+        imgRawRight = permute(reshape(result2, ...
+                                      [size(imgRawRight, 3), ...
+                                       size(imgRawRight, 2), ...
+                                       size(imgRawRight, 1)]), ...
+                                      [3, 2, 1]);
+
+        % convert images to gray scale
+        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
+    end
+
+    %%% Main execution loop
+    t = model.trainedUntil; % this is zero in newly initiated model
+    tic; % start time count
+    for iter1 = 1 : (timeToTrain / model.interval)
+        % pick random texture every #interval times
+        currentTexture = texture{(randi(nTextures, 1))};
+
+        % random depth
+        objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
+
+        % reset vergence to random value
+        angleNew = randi(fix(model.vergAngleFixMax)); % relax the eyes
+
+        for iter2 = 1 : model.interval
+            t = t + 1;
+
+            % update stimuli
+            refreshImages(currentTexture, angleNew / 2, objDist);
+
+            % Generate & save the anaglyph picture
+            % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
+            % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
+            % more advanced functions that generated the anaglyphs of the foveal views
+            % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+
+            % Image patch generation
+            for i = 1 : length(model.scModel)
+                model.preprocessImageFilled(imgGrayLeft, i, 1);
+                model.preprocessImageFilled(imgGrayRight, i, 2);
+                currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
+            end
+
+            % Generate basis function feature vector from current images
+            [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
+
+            %%% Learning
+            %% Sparse coding models
+            for i = 1 : length(model.scModel)
+                model.scModel{i}.stepTrain();
+            end
+
+            relativeCommand = model.rlModel.stepTrain(bfFeature, reward, (iter2 > 1));
+
+            % calculate resulting angle which is used for both eyes
+            angleNew = max(0.01, angleNew + relativeCommand); % command is relative angle - constrain to positive vergence
+            % safety on control command - RESET TO a new vergence angle
+            if (angleNew > model.vergAngleFixMax)
+                angleNew = randi(fix(model.vergAngleFixMax)); % relax the eyes
+            end
+
+            %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
+
+            % compute desired vergence command, disparity and vergence error
+            fixDepth = (model.baseline / 2) / tand(angleNew / 2);   % fixation depth [m]
+            anglerr = angleDes - angleNew;                          % vergence error [deg]
+            disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
+
+            % save state
+            model.Z(t) = objDist;
+            model.fixZ(t) = fixDepth;
+            model.disp_hist(t) = disparity;
+            model.vergerr_hist(t) = anglerr;
+            model.recerr_hist(t, :) = recErrorArray;
+            model.verge_actual(t) = angleNew;
+            model.verge_desired(t) = angleDes;
+            model.relCmd_hist(t, :) = relativeCommand;
+            % model.cmd_hist(t, :) = command;
+            model.reward_hist(t) = reward;
+            % model.feature_hist(t, :) = bfFeature;
+            % model.td_hist(t) = model.rlModel.td;
+            model.weight_hist(t, 1) = sum(sum(abs(model.rlModel.weightArray{2, 1})));
+            model.weight_hist(t, 2) = sum(sum(abs(model.rlModel.weightArray{1, 1})));
+
+            model.trainedUntil = t;
         end
 
-        sprintf('Training Iteration = %d\nCommand = %.3g\tCurrent Vergence = %.3g\tVergence Error = %.3g\nRec Error = %.3g', ...
-                t, command, angleNew, anglerr, errorTotal)
-
-        angleNew = max(0.01, command + angleNew); %command is relative angle - constrain to positive vergence
-        %safety on control command - RESET TO a new vergence angle
-        if (angleNew > vergeMax)
-            angleNew = randi(vergeMax, 1);     %relax the eyes
-        end
-        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                       currentTexture, objDist, angleNew));
-
-        % Abort execution if error occured
-        if (status)
-            sprintf('Error in checkEnvironment:\n%s', res)
-            return;
+        if mod(t, 100) == 0
+            sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
+                    t, model.verge_actual(t - model.interval + 1 : t), model.relCmd_hist(t - model.interval + 1 : t), model.vergerr_hist(t - model.interval + 1 : t))
         end
 
         % Display per cent completed of training and save model
-        if (~mod(t, model.trainTime / saveInterval) && (learning))
-            sprintf('%g%% is finished', (t / model.trainTime * 100))
-            save(strcat(savePath, '/model'), 'model');
+        if (~mod(t, saveInterval))
+            sprintf('%g%% is finished', (t / timeToTrain * 100))
+            save(strcat(model.savePath, '/model'), 'model');
 
-            %save Basis
-            model.scModel_Large.saveBasis;
-            model.scModel_Small.saveBasis;
-
-            %save Weights
-            model.rlModel.saveWeights; %save policy and value net weights
-
-            trialPhase = uint8(1);
-        end
-
-    elseif (trialPhase == 1)
-        %Compute Vergence Command
-        fixDepth = (0.5 * baseline) / tand(angleNew / 2);
-        %save fixaton and object depth
-        modelData.Z(testIter) = objDist;
-        modelData.fixZ(testIter) = fixDepth;
-
-        %compute current disparity
-        angledes = 2 * atan(baseline / (2 * objDist)); %desired vergence [rad]
-        disparity = 2 * f * tan((angledes - angleNew * pi / 180) / 2); %current disp [px]
-        modelData.disp_hist(testIter) = disparity;
-
-        %compute current vergence error
-        anglerr = angledes * 180 / pi - angleNew; %vergence error [deg]
-        %save verge error
-        modelData.vergerr_hist(testIter) = anglerr;
-
-        %generate input feature vector from current images
-        [feature, ~, errorTotal, errorLarge, errorSmall] = model.generateFR(currentView);
-        modelData.recerr_hist(testIter, :) = [errorLarge; errorSmall];
-        modelData.verge_actual(testIter) = angleNew; %current vergence angle
-
-        if (learning)
-            command = model.rlModel.softmaxAct(feature);
-            %### why calculate relative vergance command after first error measure?
-        end
-
-        sprintf('Testing Iteration = %d\nCommand = %.3g\tCurrent Vergence = %.3g\tVergence Error = %.3g\nRec Error = %.3g', ...
-                testingCounter, command, angleNew, anglerr, errorTotal)
-
-        angleNew = max(0.01, command + angleNew); %command is relative angle - constrain to positive vergence
-        %safety on control command - RESET TO a new vergence angle
-        if (angleNew > vergeMax)
-            angleNew = randi(vergeMax, 1);     %relax the eyes
-        end
-        [status, res] = system(sprintf('./checkEnvironment %s %d %d left.png right.png', ...
-                                       currentTexture, objDist, angleNew));
-
-        % Abort execution if error occured
-        if (status)
-            sprintf('Error in checkEnvironment:\n%s', res)
-            return;
+            % track basis history
+            if (trackSCBasisHistory == 1)
+                for i = 1 : length(model.scModel)
+                    model.scModel{i}.saveBasis();
+                end
+            end
         end
     end
-end
-elapsedTime = toc;
+    elapsedTime = toc;
 
-% Total simulation time
-model.simulatedTime = elapsedTime / 60;
-sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]', elapsedTime / 3600, elapsedTime / 60, elapsedTime)
-sprintf('Frequency = %.4f [iterations/sec]', trainTime / elapsedTime)
+    % Total simulation time
+    model.simulatedTime = model.simulatedTime + elapsedTime / 60;
+    sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
+            elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
 
-% Plot results
-if (plotIt)
-    model.errPlot();
-    % model.errPlotSave(savePath);
-end
+    % store simulated time
+    save(strcat(model.savePath, '/model'), 'model');
 
-% Save results data
-save(strcat(savePath, '/model'), 'model');
-save(strcat(savePath, '/modelData'), 'modelData');
-
-end
-
-%%% Helper functions for image preprocessing
-%% Patch generation
-function [patches] = preprocessImage(img, fovea, downSampling, patchSize, columnIndicies)
-    img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
-    for i = 1:log2(downSampling)
-        img = impyramid(img, 'reduce');
+    % plot results
+    if (plotIt(1) == 1)
+        model.allPlotSave();
     end
 
-    % convert to double
-    img = double(img);
+    %%% Testing procedure
+    if (testIt == 1)
+        % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
+        % testModelContinuous(model, 33, plotIt(2), 1, simulator, 0);
+        sprintf('Warning: Testing procedure is currently not supported.')
+    end
+
+    if (closeFigures == 1)
+        close all;
+    end
+end
+
+% Generates anaglyphs of the large and small scale fovea and
+% one of the two unpreprocessed gray scale images
+function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
+    anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
+    imwrite(anaglyph, [savePath '/anaglyph.png']);
+
+    %Downsampling Large
+    imgLeftL = leftGray(:);
+    imgLeftL = reshape(imgLeftL, size(leftGray));
+    imgRightL = rightGray(:);
+    imgRightL = reshape(imgRightL, size(rightGray));
+    for i = 1:log2(dsRatioL)
+        imgLeftL = impyramid(imgLeftL, 'reduce');
+        imgRightL = impyramid(imgRightL, 'reduce');
+    end
 
     % cut fovea in the center
-    [h, w, ~] = size(img);
-    img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
-              fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
+    [h, w, ~] = size(imgLeftL);
+    imgLeftL = imgLeftL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
+              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
+    imgRightL = imgRightL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
+              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
 
-    % cut patches and store them as col vectors
-    patches = im2col(img, [patchSize patchSize], 'sliding');            %slide window of 1 px
+    % create an anaglyph of the two pictures, scale it up and save it
+    anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
+    imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
+    largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    imwrite(imresize(largeScaleView, 20), [savePath '/LargeScaleMontage.png']);
 
-    % take patches at steps of s (8 px)
-    patches = patches(:, columnIndicies);                               %81 patches
+    % Downsampling Small
+    imgLeftS = leftGray(:);
+    imgLeftS = reshape(imgLeftS, size(leftGray));
+    imgRightS = rightGray(:);
+    imgRightS = reshape(imgRightS, size(rightGray));
+    for i = 1:log2(dsRatioS)
+        imgLeftS = impyramid(imgLeftS, 'reduce');
+        imgRightS = impyramid(imgRightS, 'reduce');
+    end
 
-    % pre-processing steps (0 mean, unit norm)
-    patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
-    normp = sqrt(sum(patches.^2));                                      %patches norm
+    % cut fovea in the center
+    [h, w, ~] = size(imgLeftS);
+    imgLeftS = imgLeftS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
+              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
+    imgRightS = imgRightS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
+              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
 
-    % normalize patches to norm 1
-    normp(normp == 0) = eps;                                            %regularizer
-    patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
+    % create an anaglyph of the two pictures, scale it up and save it
+    anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
+    imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
+    smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    imwrite(imresize(smallScaleView, 8), [savePath '/smallScaleMontage.png']);
 end
 
 %% Not overlapping Patch generation
-function patchesNoOv = preprocessImageNoOv(img, fovea, downSampling, patchSize)
-    img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
-    for i = 1:log2(downSampling)
-        img = impyramid(img, 'reduce');
-    end
+% function patchesNoOv = preprocessImageNoOv(img, fovea, downSampling, patchSize)
+%     img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
+%     for i = 1:log2(downSampling)
+%         img = impyramid(img, 'reduce');
+%     end
 
-    % convert to double
-    img = double(img);
+%     % convert to double
+%     img = double(img);
 
-    % cut fovea in the center
-    [h, w, ~] = size(img);
-    img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
-              fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
+%     % cut fovea in the center
+%     [h, w, ~] = size(img);
+%     img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
+%               fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
 
-    % cut patches and store them as col vectors
-    % no overlapping patches (for display)
-    patchesNoOv = im2col(img, [patchSize patchSize], 'distinct');
-end
+%     % cut patches and store them as col vectors
+%     % no overlapping patches (for display)
+%     patchesNoOv = im2col(img, [patchSize patchSize], 'distinct');
+% end
+
+%% Generation of random vergence angles according to truncated Laplace distribution
+% function l = truncLaplacian(diversity, range)
+%     % see wikipedia for the generation of random numbers according to the
+%     % LaPlace distribution via the inversion method
+%     r = rand;
+
+%     switch r < 0.5
+%         case 1
+%             l = 1 / diversity * log(2 * r);
+%         case 0
+%             l = -1 / diversity * log(2 * (1 - r));
+%     end
+
+%     if (abs(l) > range)
+%         l = 0;
+%     end
+% end

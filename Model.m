@@ -27,11 +27,8 @@ classdef Model < handle
         sparseCodingType;   %type of sparse coding
 
         lambdaMuscleFB;     %factor of muscle activity feedback to RL feature vector
-        lambdaMet;          %factor of metCosts for reward function
         lambdaRec;          %reconstruction error factor
-        lambdaV;            %value networks input->output weights factor
-        lambdaP1;           %policy networks input->hidden weights factor
-        lambdaP2;           %policy networks hidden->output weights factor
+        lambdaMet;          %factor of metCosts for reward function
 
         % Model data history
         recerr_hist;        %reconstruction error [coarse scale, fine scale]
@@ -62,6 +59,7 @@ classdef Model < handle
         testResult2;
         testResult3;
         testResult4;
+        testResult5;
 
         % Image processing
         patchSize;
@@ -86,13 +84,10 @@ classdef Model < handle
             obj.muscleInitMax = PARAM{1}{9};
             obj.interval = PARAM{1}{10};
             obj.lambdaMuscleFB = PARAM{1}{11};
-            obj.lambdaMet = PARAM{1}{12};
-            obj.lambdaRec = PARAM{1}{13};
-            obj.lambdaV = PARAM{1}{14};
-            obj.lambdaP1 = PARAM{1}{15};
-            obj.lambdaP2 = PARAM{1}{16};
-            obj.fixDistMin = PARAM{1}{21};
-            obj.fixDistMax = PARAM{1}{22};
+            obj.lambdaRec = PARAM{1}{12};
+            obj.lambdaMet = PARAM{1}{13};
+            obj.fixDistMin = PARAM{1}{18};
+            obj.fixDistMax = PARAM{1}{19};
 
             % single eye
             obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
@@ -106,7 +101,7 @@ classdef Model < handle
 
             %%% Create RL models
             % Discrete or continuous policy
-            if (PARAM{3}{14} == 1)
+            if (PARAM{3}{11} == 1)
                 obj.rlModel = ReinforcementLearningCont(PARAM{3});
             else
                 obj.rlModel = ReinforcementLearning(PARAM{3});
@@ -138,14 +133,16 @@ classdef Model < handle
             obj.testResult2 = [];
             obj.testResult3 = [];
             obj.testResult4 = [];
+            obj.testResult5 = [];
+            obj.simulatedTime = 0;
             obj.trainedUntil = 0;
             obj.notes = '';
 
             %%% Generate image processing constants
-            obj.patchSize = PARAM{1}{17};
-            obj.pxFieldOfView = PARAM{1}{18};
-            obj.dsRatio = PARAM{1}{19};
-            obj.stride = PARAM{1}{20};
+            obj.patchSize = PARAM{1}{14};
+            obj.pxFieldOfView = PARAM{1}{15};
+            obj.dsRatio = PARAM{1}{16};
+            obj.stride = PARAM{1}{17};
 
             % Prepare index matrix for image patches
             obj.columnInd = obj.prepareColumnIndFilled();
@@ -408,20 +405,49 @@ classdef Model < handle
             saveas(gcf, plotpath, 'png');
 
             %% Muscel graphs
-            % Lateral Rectus
-            if (this.rlModel.CActor.output_dim == 2)
+            if (this.rlModel.continuous == 1)
+                % Lateral Rectus
+                if (this.rlModel.CActor.output_dim == 2)
+                    figure;
+                    hold on;
+                    grid on;
+                    subplot(3, 1, 1);
+                    plot(this.cmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    ylabel('Value', 'FontSize', 12);
+                    title('Total Muscle Commands (lateral rectus)');
+
+                    subplot(3, 1, 2);
+                    plot(this.relCmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    ylabel('Value', 'FontSize', 12);
+                    title('\Delta Muscle Commands (lateral rectus)');
+
+                    subplot(3, 1, 3);
+                    plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                    ylabel('Value', 'FontSize', 12);
+                    title('Metabolic Costs');
+
+                    plotpath = sprintf('%s/muscleGraphsLateralRectus', this.savePath);
+                    saveas(gcf, plotpath, 'png');
+                end
+
+                % Medial Rectus
                 figure;
                 hold on;
                 grid on;
                 subplot(3, 1, 1);
-                plot(this.cmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 ylabel('Value', 'FontSize', 12);
-                title('Total Muscle Commands (lateral rectus)');
+                title('Total Muscle Commands (medial rectus)');
 
                 subplot(3, 1, 2);
-                plot(this.relCmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                if (this.rlModel.CActor.output_dim == 2)
+                    plot(this.relCmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                else
+                    plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                end
                 ylabel('Value', 'FontSize', 12);
-                title('\Delta Muscle Commands (lateral rectus)');
+                title('\Delta Muscle Commands (medial rectus)');
 
                 subplot(3, 1, 3);
                 plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
@@ -429,135 +455,120 @@ classdef Model < handle
                 ylabel('Value', 'FontSize', 12);
                 title('Metabolic Costs');
 
-                plotpath = sprintf('%s/muscleGraphsLateralRectus', this.savePath);
-                saveas(gcf, plotpath, 'png');
-            end
-
-            % Medial Rectus
-            figure;
-            hold on;
-            grid on;
-            subplot(3, 1, 1);
-            plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            ylabel('Value', 'FontSize', 12);
-            title('Total Muscle Commands (medial rectus)');
-
-            subplot(3, 1, 2);
-            if (this.rlModel.CActor.output_dim == 2)
-                plot(this.relCmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            else
-                plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            end
-            ylabel('Value', 'FontSize', 12);
-            title('\Delta Muscle Commands (medial rectus)');
-
-            subplot(3, 1, 3);
-            plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            ylabel('Value', 'FontSize', 12);
-            title('Metabolic Costs');
-
-            plotpath = sprintf('%s/muscleGraphsMedialRectus', this.savePath);
-            saveas(gcf, plotpath, 'png');
-
-            if (this.rlModel.CActor.output_dim == 2)
-                % Muscle correlation check
-                % Total
-                figure;
-                hold on;
-                scatter(this.cmd_hist(:, 1), this.cmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-                corrl = corr(this.cmd_hist(:, 1), this.cmd_hist(:, 2));
-                xlabel('Lateral rectus [%]', 'FontSize', 12);
-                ylabel('Medial rectus [%]', 'FontSize', 12);
-                title(strcat('Total Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
-                plotpath = sprintf('%s/muscleGraphsScatterTotal', this.savePath);
+                plotpath = sprintf('%s/muscleGraphsMedialRectus', this.savePath);
                 saveas(gcf, plotpath, 'png');
 
-                % Delta
-                figure;
-                hold on;
-                scatter(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-                corrl = corr(this.relCmd_hist(:, 1), this.relCmd_hist(:, 2));
-                xlabel('Lateral rectus [%]', 'FontSize', 12);
-                ylabel('Medial rectus [%]', 'FontSize', 12);
-                title(strcat('\Delta Muscle Commands', sprintf('\nCorrelation = %1.2e', corrl)));
-                plotpath = sprintf('%s/muscleGraphsScatterDelta', this.savePath);
-                saveas(gcf, plotpath, 'png');
+                if (this.rlModel.CActor.output_dim == 2)
+                    % Muscle correlation check
+                    % extract last x per cent of iterations
+                    pcOffset = 0.01;
+                    tmpOffset = ceil(size(this.cmd_hist, 1) * pcOffset);
+                    % Total
+                    figure;
+                    hold on;
+                    scatter(this.cmd_hist(end - tmpOffset : end, 1), this.cmd_hist(end - tmpOffset : end, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                    corrl = corr(this.cmd_hist(end - tmpOffset : end, 1), this.cmd_hist(end - tmpOffset : end, 2));
+                    xlabel('Lateral rectus [%]', 'FontSize', 12);
+                    ylabel('Medial rectus [%]', 'FontSize', 12);
+                    title(strcat('Total Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
+                    plotpath = sprintf('%s/muscleGraphsScatterTotalTraining', this.savePath);
+                    saveas(gcf, plotpath, 'png');
+
+                    % Delta
+                    figure;
+                    hold on;
+                    scatter(this.relCmd_hist(end - tmpOffset : end, 1), this.relCmd_hist(end - tmpOffset : end, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                    corrl = corr(this.relCmd_hist(end - tmpOffset : end, 1), this.relCmd_hist(end - tmpOffset : end, 2));
+                    xlabel('Lateral rectus [%]', 'FontSize', 12);
+                    ylabel('Medial rectus [%]', 'FontSize', 12);
+                    title(strcat('\Delta Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
+                    plotpath = sprintf('%s/muscleGraphsScatterDeltaTraining', this.savePath);
+                    saveas(gcf, plotpath, 'png');
+                end
             end
 
             %% Weights
-            % L1 norm
-            figure;
-            hold on;
-            grid on;
-            subplot(3, 1, 1);
-            plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-            title('w_{Vji}');
-            subplot(3, 1, 2);
-            plot(this.weight_hist(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-            title('w_{Pji}');
-            subplot(3, 1, 3);
-            plot(this.weight_hist(:, 3), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            ylabel('\Sigma \midweights\mid', 'FontSize', 12);
-            title('w_{Pkj}');
-            plotpath = sprintf('%s/weightsL1', this.savePath);
-            saveas(gcf, plotpath, 'png');
-
-            % L2 norm
-            % figure;
-            % hold on;
-            % grid on;
-            % plot(this.weight_hist(:, 2), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            % plot(this.weight_hist(:, 4), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            % % plot(this.weight_hist(:, 6), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
-            % % plot(this.weight_hist(:, 8), 'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-            % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            % ylabel('\Sigma weights^{2}', 'FontSize', 12);
-            % % legend('w_{Vji}', 'w_{Pji}', 'w_{Pkj}', 'w_{Pnji}', 'Location', 'best');
-            % legend('w_{Vji}', 'w_{Pki}', 'Location', 'best');
-            % title('Model weights (L2)')
-            % plotpath = sprintf('%s/weightsL2', this.savePath);
-            % saveas(gcf, plotpath, 'png');
+            if (this.rlModel.continuous == 1)
+                % L1 norm
+                figure;
+                hold on;
+                grid on;
+                subplot(3, 1, 1);
+                plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+                ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+                title('w_{Vji}');
+                subplot(3, 1, 2);
+                plot(this.weight_hist(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+                ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+                title('w_{Pji}');
+                subplot(3, 1, 3);
+                plot(this.weight_hist(:, 3), 'color', [1, 0.5098, 0.1961], 'LineWidth', 1.3);
+                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+                title('w_{Pkj}');
+                plotpath = sprintf('%s/weightsDevelopment', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            else
+                % L1 norm
+                figure;
+                hold on;
+                grid on;
+                subplot(2, 1, 1);
+                plot(this.weight_hist(:, 1), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
+                ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+                title('w_{Vji}');
+                subplot(2, 1, 2);
+                plot(this.weight_hist(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
+                ylabel('\Sigma \midweights\mid', 'FontSize', 12);
+                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                title('w_{Pji}');
+                plotpath = sprintf('%s/weightsDevelopment', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            end
 
             %% Reward composition
-            figure;
-            hold on;
-            grid on;
-            % r = [- this.lambdaMet * this.metCost_hist, ...
-            %      - this.lambdaP2 * this.weight_hist(:, 5), ...
-            %      - this.lambdaP1 * this.weight_hist(:, 3), ...
-            %      - this.lambdaV * this.weight_hist(:, 1), ...
-            %      - this.lambdaRec * (this.recerr_hist(:, 1) + this.recerr_hist(:, 2))];
-            r = [- this.lambdaMet * this.metCost_hist, ...
-                 - this.lambdaRec * sum(this.recerr_hist, 2)];
-            handle = area(r, 'LineStyle','none');
-            xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            ylabel('Value', 'FontSize', 12);
-            % % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
-            l = legend('\lambdametCost', '\lambdaRecErr');
-            if(version('-release') == '2015b')
-                handle(1).FaceColor = [1, 0.25, 0];
-                handle(2).FaceColor = [1, 0.549, 0];
-                l.Location = 'southwest';
-            end
-            % % title('Reward composition (L1)');
-            title('Reward composition');
-            plotpath = sprintf('%s/rewardComp', this.savePath);
-            saveas(gcf, plotpath, 'png');
+            if (this.rlModel.continuous == 1)
+                figure;
+                hold on;
+                grid on;
+                r = [- this.lambdaMet * this.metCost_hist, ...
+                     - this.lambdaRec * sum(this.recerr_hist, 2)];
+                handle = area(r, 'LineStyle','none');
+                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                ylabel('Value', 'FontSize', 12);
+                % % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
+                l = legend('\lambdametCost', '\lambdaRecErr');
+                if(version('-release') == '2015b')
+                    handle(1).FaceColor = [1, 0.25, 0];
+                    handle(2).FaceColor = [1, 0.549, 0];
+                    l.Location = 'southwest';
+                end
+                % % title('Reward composition (L1)');
+                title('Reward composition');
+                plotpath = sprintf('%s/rewardComp', this.savePath);
+                saveas(gcf, plotpath, 'png');
 
-            %% Total reward
-            % figure;
-            % hold on;
-            % grid on;
-            % plot(this.reward_hist, 'color', [1, 0.25, 0]);
-            % xlabel('Iteration #', 'FontSize', 12);
-            % ylabel('Value', 'FontSize', 12);
-            % title('Reward');
-            % plotpath = sprintf('%s/rewardTotal', this.savePath);
-            % saveas(gcf, plotpath, 'png');
+                %% Total reward
+                % figure;
+                % hold on;
+                % grid on;
+                % plot(this.reward_hist, 'color', [1, 0.25, 0]);
+                % xlabel('Iteration #', 'FontSize', 12);
+                % ylabel('Value', 'FontSize', 12);
+                % title('Reward');
+                % plotpath = sprintf('%s/rewardTotal', this.savePath);
+                % saveas(gcf, plotpath, 'png');
+            else
+                figure;
+                hold on;
+                grid on;
+                plot(-sum(this.recerr_hist, 2), 'color', [1, 0.549, 0]);
+                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                ylabel('Value', 'FontSize', 12);
+                title('Reward');
+                plotpath = sprintf('%s/rewardHistory', this.savePath);
+                saveas(gcf, plotpath, 'png');
+            end
 
             %% delta_MF(Vergence_error)
             %
