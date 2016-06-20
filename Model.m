@@ -117,7 +117,7 @@ classdef Model < handle
 
             obj.g_hist = zeros(obj.trainTime, 1);
             obj.td_hist = zeros(obj.trainTime, 1);
-            % obj.feature_hist = zeros(obj.trainTime, obj.rlModel.inputDim);
+            % obj.feature_hist = zeros(obj.trainTime, PARAM{3}{9}(1));
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
             obj.weight_hist = zeros(obj.trainTime, 4);

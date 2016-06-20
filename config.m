@@ -35,7 +35,7 @@ actionSpace = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... % vergence angles (discrete
                 0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
 alpha_v = 1;                                         % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                                     % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 0.5;                                       % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
+alpha_p = 1;                                         % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
 
@@ -84,6 +84,7 @@ stride = [patchSize / 2, patchSize / 2];        % image patch strides | origin [
 if (~all(diff(pxFieldOfViewOrig) < 0))
     sprintf('pxFieldOfViewOrig must contain decreasing values,\ndue to convention it must hold [peripheral vision, ..., central vision].')
     return;
+% TODO: needs to be inserted and checked when model.preprocessImageCutout() is integrated
 % elseif (mod(pxFieldOfView(2 : end), dsRatio(1 : end - 1) ./ dsRatio(2 : end)))
 %     sprintf('pxFieldOfView(scale + 1) / (dsRatio(scale) / dsRatio(scale + 1)) must be an integer')
 %     return;
@@ -108,20 +109,60 @@ fixDistMax = 3.2219;
 
 % muscle initialization: correspond now to the minimum and maximum distance
 % the eyes should be looking at
-muscleInitMin = 0.00807;       % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = 0.07186;       % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+muscleInitMin = 0.00807;    % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = 0.07186;    % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 interval = 10;              % period for changing the stimulus for the eyes | origin 10
-lambdaMuscleFB = 0.1688;     % factor of muscle activity feedback to RL feature vector
-                            % Proportion MF/feature:
-                            % 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
-                            % 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741
-                            % 0.1688 equalizes the mean of a basis function activation and an absolute muscle command
 
-% Reward function parameters, i.e. their "proportions" to the reward function
-lambdaRec = 1;          % reconstruction error factor | privious 77.12% = 4.929 | 100% = 6.391
-lambdaMet = 0;              % metabolic costs factor:
-                            % privious 12.75% =  0.204 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.8% = 0.0128 | 0.75% = 0.012 | 0.6% = 0.0096 | 0.5% = 0.008
+%%% Factor of Muscle activity feedback to RL feature vector
+% here the % is in respect to the feature signal,
+% i.e. 100% feedback = mean(sum(total muscle force)) ~= mean(sum(feature_vetor(1 : PARAMSC{1})))
+% 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
+% 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741
+%%%
+% here the % corresponds to the mean of all single components of the feature vector
+% mean(mean(model.feature_hist(:, 1 : 576), 2)) = 0.0059
+% mean(sum(model.feature_hist(:, 1 : 576), 2)) = 3.3721
+% mean(model.cmd_hist) = [0.0229, 0.0465], 0.0465 / 0.0059 = 1 / lambdaMuscleFB
+%
+% 1% = 0.001268817 | 5% = 0.0063
+% 10% = 0.0127 | 20% = 0.0254 | 30% = 0.0381 | 40% = 0.0508 | 50% = 0.0634
+% 60% = 0.0761 | 70% = 0.0888 | 80% = 0.1015 | 90% = 0.1142 | 100% = 0.1269
+% 150% = 0.1903 | 200% = 0.2538 | 250% = 0.3172 | 300% = 0.3806
+%
+%%%
+% 0.1688 equalizes the mean of a basis function activation and an absolute muscle command
+
+lambdaMuscleFB = 0.1688;
+
+%%% Reward function parameters, i.e. their "proportions" to the whole reward signal
+%%% Reconstruction error factor
+% the % is in respect to the reconstruction error, i.e. 100% X means signal X is as strong as
+% 6.391 * mean reconstruction error on average, whereby 6.391 * mean reconstruction error ~= 1
+% pure 15.647% = 1 | privious 77.12% = 4.929 | 100% = 6.391
+lambdaRec = 1;
+
+% due to recError reduction at dsRatio = [8, 2], lambdaRec needs to be scaled accordingly
+% this is a temporary solution, you should recalculate everything if you introduce 3 scales!
+if (dsRatio(end) > 1)
+    lambdaRec = lambdaRec * 1.7706;
+end
+
+%%% Metabolic costs factor
+% per_cent = mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec
+% privious 12.75% =  0.204 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.8% = 0.0128 | 0.75% = 0.012 | 0.6% = 0.0096 | 0.5% = 0.008
+%%% NEW
+% sum(sum(model.recerr_hist))/size(model.recerr_hist, 1) = 0.2997 @ dsRatio = [8, 1]
+% sum(sum(model.recerr_hist))/size(model.recerr_hist, 1) = 0.1693 @ dsRatio = [8, 2]
+% mean(model.metCost_hist) = 1.0380
+%
+% 1% = 0.0029 | 2% = 0.0058 | 3% =  0.0087 | 4% = 0.0114 | 5% = 0.0144 | 6% = 0.0173
+% 10% = 0.0289 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
+lambdaMet = 0;
+
+% due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
+% lambdaMet needs to be scaled accordingly
+lambdaMet = lambdaMet * lambdaRec;
 
 PARAMModel = {textureFile, trainTime, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
