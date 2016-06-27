@@ -9,10 +9,7 @@
 %%%
 function generateMovie(objRange, nStimuli, reinitRenderer)
 
-%     model = load('/home/klimmasch/projects/results/model_10-May-2016_12:00:35_1000000_nonhomeo_3_2m_Met0204_newimages2/model.mat');
-%     model = load('/home/klimmasch/projects/results/model_13-May-2016_21:55:24_500000_nonhomeo_11_2m_noMet_unif05-2/model.mat');
-%     model = load('/home/klimmasch/projects/results/model_20-May-2016_13:04:15_500000_nonhomeo_1_2m_newImplem_highRes-halfSize-SmallScale/model.mat');
-    model = load('/home/klimmasch/projects/results/model_27-May-2016_16:14:11_100_nonhomeo_1_test3scales/model.mat');
+    model = load('/home/klimmasch/projects/results/model_21-Jun-2016_17:38:34_500000_nonhomeo_1_lrec77_lmet0_lmf0.035_fovS128-40_dsR8-1_str05-05_lrP1_lrC1/model.mat');
     model = model.model;
     
     randomizationSeed = 13;

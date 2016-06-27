@@ -117,8 +117,9 @@ interval = 10;              % period for changing the stimulus for the eyes | or
 %%% Factor of Muscle activity feedback to RL feature vector
 % here the % is in respect to the feature signal,
 % i.e. 100% feedback = mean(sum(total muscle force)) ~= mean(sum(feature_vetor(1 : PARAMSC{1})))
-% 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
-% 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741
+% 0.1% = 0.036 | 0.5% = 0.0179 | 1% = 0.0357 | 2.5% = 0.0893 | 5% = 0.1787 | 7.5% = 0.2678
+% 10% = 0.3574 | 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741
+%
 %%%
 % here the % corresponds to the mean of all single components of the feature vector
 % mean(mean(model.feature_hist(:, 1 : 576), 2)) = 0.0059
@@ -130,16 +131,21 @@ interval = 10;              % period for changing the stimulus for the eyes | or
 % 60% = 0.0761 | 70% = 0.0888 | 80% = 0.1015 | 90% = 0.1142 | 100% = 0.1269
 % 150% = 0.1903 | 200% = 0.2538 | 250% = 0.3172 | 300% = 0.3806
 %
-%%%
 % 0.1688 equalizes the mean of a basis function activation and an absolute muscle command
+%%%
 
-lambdaMuscleFB = 0.1688;
+lambdaMuscleFB = 0.0357;
+% matlab -nodisplay -r "OES2Muscles(500000,1,'lrec1_lmet0_lmf25_fovS128-40_dsR81_str05-05_lrC1_lrA1')"
 
 %%% Reward function parameters, i.e. their "proportions" to the whole reward signal
 %%% Reconstruction error factor
 % the % is in respect to the reconstruction error, i.e. 100% X means signal X is as strong as
 % 6.391 * mean reconstruction error on average, whereby 6.391 * mean reconstruction error ~= 1
 % pure 15.647% = 1 | privious 77.12% = 4.929 | 100% = 6.391
+%%
+% set to 1 for simplicity
+%%
+
 lambdaRec = 1;
 
 % due to recError reduction at dsRatio = [8, 2], lambdaRec needs to be scaled accordingly

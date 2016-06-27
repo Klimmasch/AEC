@@ -62,7 +62,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     testResult = zeros(length(objRange), 7, 66); % mean and std of vergenceError, deltaMF and critics response for different obj dists and starting pos
     testResult2 = zeros(length(objRange) * 7 * nStim * testInterval, 1 + length(model.scModel)); % reconstruction error statistics
-    testResult3 = zeros(length(objRange) * 7 * nStim, 10);
+
+    testResult3 = zeros(length(objRange) * 7 * nStim, testInterval); % ALL single values
     % testResult4 = zeros(length(objRange) * 7 * nStim * testInterval, 2);
     % testResult4 = zeros(test2Resolution * length(objRange) * nStim, 3 + length(model.scModel));
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
@@ -762,8 +763,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             xlabel('Iteration step', 'FontSize', 12);
         end
         ylabel('Vergence Error [deg]', 'FontSize', 12);
-        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f°, 4*IQR = %.4f at %dth step', ...
-                      mean(model.testResult3(:, 10)), median(model.testResult3(:, 10)), iqr(model.testResult3(:, testInterval)) * 4, testInterval));
+        title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f°,\n4*IQR = %.4f, RMSE = %.4f° at %dth step', ...
+                      mean(model.testResult3(:, testInterval)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4, sqrt(mean(model.testResult3(:,10).^2)), testInterval));
         if (~isempty(model.savePath))
             plotpath = sprintf('%s/totalError', model.savePath);
             saveas(gcf, plotpath, 'png');
