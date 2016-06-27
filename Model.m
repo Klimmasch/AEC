@@ -148,9 +148,7 @@ classdef Model < handle
             obj.overlap = PARAM{1}{23};
 
             % Prepare index matrix for image patches
-            obj.columnInd = obj.prepareColumnIndFilled();
-            % TODO: implement obj.prepareColumnIndCutout();
-            % index matrix preperation where image has a cut out in the center of respective scale's images
+            obj.columnInd = obj.prepareColumnInd();
 
             %%% Create SC models
             obj.scModel = {};
@@ -195,7 +193,7 @@ classdef Model < handle
 
         % Generates index matrix for image patches
         % Filled image batch, i.e. all patches for the respective scale are used
-        function columnInd = prepareColumnIndFilled(this)
+        function columnInd = prepareColumnInd(this)
             % index matrix
             columnInd = {};
             % number of patches per column
@@ -212,41 +210,43 @@ classdef Model < handle
             end
         %end
 
-        %function CutoutFunc = prepareCutout(this)
+        %function CutoutFunc = prepareCutout(this) %done by Julian Corbet
            
-           for i = 1:1:(length(this.dsRatio)-1)
-               
-                %Overlap Angabe in Fine Scale Units
+           for i = 1:1:(length(this.dsRatio)-1) % most inner layer does not need a cutout 
+                                                % therefore n-1 Cuts per n layers
+                      
+               fovea_smaller_adjusted = (this.pxFieldOfView(i+1)-2*this.overlap(i))*(this.dsRatio(i+1)/this.dsRatio(i)); % Measuring which pixels are occupied by the smaller layer in the mid of the larger one and 
+                                                                                                                         % substracting the overlap and then stretching it according to the scaling factor (this.dsRatio(i+1)/this.dsRatio(i))
+                                                                                                                         % which brings us to the resolution of the coarse scale layer
            
-               scaling_factor = this.dsRatio(i)/this.dsRatio(i+1); %Skalierung
-               fovea_smaller_adjusted = (this.pxFieldOfView(i+1)-2*this.overlap(i))/scaling_factor; %Pixel die von der Mitte belegt werden
-           
-               raw_delimiter_xy = (this.pxFieldOfView(i) - fovea_smaller_adjusted)/2; %in der Klammer: uebrigbleibendes Field of View, durch 2 weil links und rechts aufteilen
+               raw_delimiter_xy = (this.pxFieldOfView(i) - fovea_smaller_adjusted)/2; % substracting the inner layer pixels from the outer layer pixels and dividing the remainder by 2 
+                                                                                      % so you get the amount of pixels which remains on between the two layers on each side
                delimiter_xy = 0; %Init
                j=0; %Init
            
-               while delimiter_xy<raw_delimiter_xy
+               while delimiter_xy<raw_delimiter_xy % While the amount of pixels is not reached add one patch to it by adding a stride - later substract one patch since stride = 0.5*patchsize
                      j = j+1;
                      delimiter_xy = this.stride(i)*j;
                end
-           
-               delimiter_xy = j-1; %could be done using for and break from it
-    
-               npc_2 = (this.pxFieldOfView(i) - this.patchSize)/this.stride(i)+1; % number of patches per column
                
-               col_2 = 1:1:(delimiter_xy*(npc_2+1));
+               delimiter_xy = j-1; 
+               
+               %Easier Way: delimiter_xy =
+               %(raw_delimiter_xy-this.patchsize)/this.stride(i)+1
+           
+               npcs = (this.pxFieldOfView(i) - this.patchSize)/this.stride(i)+1; % number of patches per column (incorporating stride)
+               
+               CutoutFunc = 1:1:(delimiter_xy*(npcs+1)); % First Batch of patches until you find thefirst patch to be thrown away because it is in the inner layer (substracted for overlap)
 
-               for j=1:1:(npc_2-2*delimiter_xy-1)
-                   C = (npc_2*(delimiter_xy+j)-delimiter_xy+1):1:(npc_2*(delimiter_xy+j)+delimiter_xy);
-                   col_2 = [col_2 C];
+               for j=1:1:(npcs-2*delimiter_xy-1) % Formula found by chance/done by myself|end patches of one row of patches beginning patches of the next row of patches that are not included in the inner layer
+                   C = (npcs*(delimiter_xy+j)-delimiter_xy+1):1:(npcs*(delimiter_xy+j)+delimiter_xy);
+                   CutoutFunc = [CutoutFunc C];
                end
 
-               C = (npc_2*(delimiter_xy+j+1)-delimiter_xy+1):1:npc_2^2;
-               col_2 = [col_2 C];
+               C = (npcs*(delimiter_xy+j+1)-delimiter_xy+1):1:npcs^2; % End patches
+               CutoutFunc = [CutoutFunc C];
                
-               CutoutFunc = col_2;
-               
-               columnInd{i} = columnInd{i}(:,CutoutFunc);
+               columnInd{i} = columnInd{i}(:,CutoutFunc); % Cutting columnInd to eradicate the inner patches in the outer layer
                
              end
  

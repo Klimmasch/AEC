@@ -75,7 +75,7 @@ pxFieldOfView = [60, 60];                   % size of respective fields of view 
                                             % FieldOfView in original image [pixel] = pxFieldOfView * dsRatio
 dsRatio = [4, 2];                           % downsampling ratio, i.e. how many pixels in orig image correspond to how many px in downsampled img
 stride = [patchSize / 2, patchSize / 2];    % image patch strides | orig [1, patchSize / 2]
-overlap = [4];                              % Overlap between the different layers measured in units of FINE scale
+overlap = [0];                              % Overlap between the different layers measured in units of FINE scale
 
 % Camera parameters
 % offset = 0;               % vertical offset between left and right (0 in the Simulator!!!)
