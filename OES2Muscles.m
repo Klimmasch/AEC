@@ -134,7 +134,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
 
     %%% New renderer
-    simulator = OpenEyeSim('create');
+%     simulator = OpenEyeSim('create');
+    simulator = OpenEyeSimV2('create');
 
     simulator.initRenderer();
     % simulator.reinitRenderer(); % for debugging
@@ -151,9 +152,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % texture:  file path of texture input
     % eyeAngle: angle of single eye (rotation from offspring)
     % objDist:  distance of stimulus
-    function refreshImages(texture, eyeAngle, objDist)
+    function refreshImages(texture, eyeAngle, objDist, scaleImSize)
         simulator.add_texture(1, texture);
-        simulator.set_params(1, eyeAngle, objDist);
+        simulator.set_params(1, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -178,9 +179,13 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     %%% Helper function that maps {vergenceAngle} -> {muscleForce}
     function mf = getMF(vergAngle)
         % look up index of vergAngle
-        indVergAngle = find(mfunction(:, 1) <= vergAngle + dmf & mfunction(:, 1) >= vergAngle - dmf);
-        mf = mfunction(indVergAngle, 2);
-        mf = mf(ceil(length(mf) / 2));
+        if vergAngle <= degrees.results_deg(1,1)*2
+            indVergAngle = find(mfunction(:, 1) <= vergAngle + dmf & mfunction(:, 1) >= vergAngle - dmf);
+            mf = mfunction(indVergAngle, 2);
+            mf = mf(ceil(length(mf) / 2));
+        else
+            mf = 0;
+        end
     end
 
     %%% Helper function that maps muscle activities to resulting angle
@@ -256,7 +261,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             t = t + 1;
 
             % update stimuli
-            refreshImages(currentTexture, angleNew / 2, objDist);
+%             refreshImages(currentTexture, angleNew / 2, objDist);
+            refreshImages(currentTexture, angleNew / 2, objDist, 3);
 
             % Generate & save the anaglyph picture
             % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer

@@ -96,9 +96,9 @@ classdef Model < handle
             obj.vergAngleMin = 2 * atand(obj.baseline / (2 * obj.fixDistMax));
             obj.vergAngleMax = 2 * atand(obj.baseline / (2 * obj.fixDistMin));
 
-            obj.vergAngleFixMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
+%             obj.vergAngleFixMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
+            obj.vergAngleFixMin = 2 * atand(obj.baseline / (2 * 2)); %###!
             obj.vergAngleFixMax = 2 * atand(obj.baseline / (2 * obj.objDistMin));
-
             %%% Create RL models
             % Discrete or continuous policy
             if (PARAM{3}{11} == 1)

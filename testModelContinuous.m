@@ -1,6 +1,6 @@
 %%% Model testing procedure
 %@param model               respective model object to be tested
-%@param nStim               # stimuli to be tested
+%@param nStim               # stimuli to be tested, provide 0 if you just want to plot results
 %@pram plotIt               whether plots shall be generated
 %@param saveTestResults     whether to save the results (not recommended if model is still trained!)
 %@param simulator           simulator handle, provide [] if there is no simulator handle yet
@@ -37,7 +37,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     %%% New renderer
     if (isempty(simulator))
-        simulator = OpenEyeSim('create');
+%         simulator = OpenEyeSim('create');
+        simulator = OpenEyeSimV2('create');
         if (reinitRenderer == 0)
             simulator.initRenderer();
         else
@@ -59,13 +60,13 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     tmpResult2 = zeros(nStim, testInterval + 1);
     tmpResult3 = zeros(nStim, testInterval + 1);
 
-    testResult = zeros(length(objRange), 7, 66);
-    testResult2 = zeros(length(objRange) * 7 * nStim * testInterval, 1 + length(model.scModel));
+    testResult = zeros(length(objRange), 7, 66); % mean and std of vergenceError, deltaMF and critics response for different obj dists and starting pos
+    testResult2 = zeros(length(objRange) * 7 * nStim * testInterval, 1 + length(model.scModel)); % reconstruction error statistics
     testResult3 = zeros(length(objRange) * 7 * nStim, 10);
     % testResult4 = zeros(length(objRange) * 7 * nStim * testInterval, 2);
     % testResult4 = zeros(test2Resolution * length(objRange) * nStim, 3 + length(model.scModel));
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
-    testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2);
+    testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
 
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
@@ -168,9 +169,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % texture:  file path of texture input
     % eyeAngle: angle of single eye (rotation from offspring)
     % objDist:  distance of stimulus
-    function refreshImages(texture, eyeAngle, objDist)
+    function refreshImages(texture, eyeAngle, objDist, scalingFactor)
         simulator.add_texture(1, texture);
-        simulator.set_params(1, eyeAngle, objDist);
+        simulator.set_params(1, eyeAngle, objDist, 0, scalingFactor);
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -228,7 +229,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                     for iter = 2 : testInterval + 1
                         % update stimuli
-                        refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
+                        refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);
 
                         % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
                         % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
@@ -289,7 +290,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                         % track bad or redundant stimuli
                         % if (iter == 11)
                         %     if (abs(angleDes - angleNew) > 0.5)
-                        %         sprintf('VergErr = %.1f\timage = %s\tstimulusIndex = %d\tobjDist = %.1f', (angleDes - angleNew), currentTexture, stimulusIndex, objRange(odIndex))
+                        %         sprintf('VergErr = %.1f\timage = %s\tstimulusIndex = %d\tobjDist = %.2f', (angleDes - angleNew), currentTexture, stimulusIndex, objRange(odIndex))
                         %     end
                         % end
 
@@ -341,7 +342,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 for stimulusIndex = 1 : nStim
                     % update stimuli
                     currentTexture = texture{stimulusIndex};
-                    refreshImages(currentTexture, angleNew / 2, objRange(odIndex));
+                    refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);
 
                     % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
                     % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
@@ -479,7 +480,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % hl3 = errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
             %                reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
             %                reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
-            %                'DisplayName', sprintf('%.1fm objDist', objRange(odIndex)), 'Marker', '*', 'MarkerSize', 2.5, ...
+            %                'DisplayName', sprintf('%.2fm objDist', objRange(odIndex)), 'Marker', '*', 'MarkerSize', 2.5, ...
             %                'color', [rand, rand, rand], 'LineWidth', 0.7, 'LineStyle', 'none');
 
             tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
@@ -488,7 +489,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
             [hl3, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
-            hl3.DisplayName = sprintf('%.1fm objDist', objRange(odIndex));
+            hl3.DisplayName = sprintf('%.2fm objDist', objRange(odIndex));
             hl3.Marker = '*';
             hl3.MarkerSize = 2.5;
             hl3.Color = [rand, rand, rand];
@@ -546,7 +547,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
             [hl, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
-            hl.DisplayName = sprintf('%.1fm objDist', objRange(odIndex));
+            hl.DisplayName = sprintf('%.2fm objDist', objRange(odIndex));
             hl.Marker = markers{odIndex};
             hl.MarkerSize = 2.5;
             % hl.Color = [0, 0.5882, 0.9608];
@@ -690,7 +691,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         % title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
 
         % if (~ isempty(model.savePath))
-        %     plotpath = sprintf('%s/recErrVsVergErr[%.1fm,%.1fm].png', model.savePath, objRange(1), objRange(end));
+        %     plotpath = sprintf('%s/recErrVsVergErr[%.2fm,%.2fm].png', model.savePath, objRange(1), objRange(end));
         %     saveas(gcf, plotpath, 'png');
         % end
 
@@ -730,10 +731,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
             xlabel('Vergence Error [deg]', 'FontSize', 12);
             ylabel('Resonstruction Error', 'FontSize', 12);
-            title(sprintf('Reconstruction Error vs. Vergence Error\nobjDist = %.1fm, TotalMin@vergErr = %.4f°', objRange(odIndex), tmpMin));
+            title(sprintf('Reconstruction Error vs. Vergence Error\nobjDist = %.2fm, TotalMin@vergErr = %.4f°', objRange(odIndex), tmpMin));
 
             if (~ isempty(model.savePath))
-                plotpath = sprintf('%s/recErrVsVergErrFine[%.1fm].png', model.savePath, objRange(odIndex));
+                plotpath = sprintf('%s/recErrVsVergErrFine[%.2fm].png', model.savePath, objRange(odIndex));
                 saveas(gcf, plotpath, 'png');
             end
         end
