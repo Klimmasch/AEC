@@ -70,6 +70,7 @@ classdef Model < handle
         stride;
         patchesLeft;
         patchesRight;
+        overlap;
     end
 
     methods
@@ -144,6 +145,7 @@ classdef Model < handle
             obj.pxFieldOfView = PARAM{1}{18};
             obj.dsRatio = PARAM{1}{19};
             obj.stride = PARAM{1}{20};
+            obj.overlap = PARAM{1}{23};
 
             % Prepare index matrix for image patches
             obj.columnInd = obj.prepareColumnIndFilled();
@@ -201,25 +203,60 @@ classdef Model < handle
             % for #scales
             for i = 1 : length(this.dsRatio)
                 k = 1;
-                l = length(1 : this.stride(i) : npc(i));
-                columnInd{end + 1} = zeros(1, l ^ 2);
+                l = length(1 : this.stride(i) : npc(i)); 
+                columnInd{end + 1} = zeros(1, l ^ 2); %not clear
                 for j = 1 : this.stride(i) : npc(i)
                     columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : this.stride(i) : j * npc(i);
                     k = k + 1;
                 end
             end
-        end
+        %end
 
-        % TODO: implement this function
-        function columnInd = prepareColumnIndCutout(this)
-            columnInd = {};
-        end
+        %function CutoutFunc = prepareCutout(this)
+           
+           for i = 1:1:(length(this.dsRatio)-1)
+               
+                %Overlap Angabe in Fine Scale Units
+           
+               scaling_factor = this.dsRatio(i)/this.dsRatio(i+1); %Skalierung
+               fovea_smaller_adjusted = (this.pxFieldOfView(i+1)-2*this.overlap(i))/scaling_factor; %Pixel die von der Mitte belegt werden
+           
+               raw_delimiter_xy = (this.pxFieldOfView(i) - fovea_smaller_adjusted)/2; %in der Klammer: uebrigbleibendes Field of View, durch 2 weil links und rechts aufteilen
+               delimiter_xy = 0; %Init
+               j=0; %Init
+           
+               while delimiter_xy<raw_delimiter_xy
+                     j = j+1;
+                     delimiter_xy = this.stride(i)*j;
+               end
+           
+               delimiter_xy = j-1; %could be done using for and break from it
+    
+               npc_2 = (this.pxFieldOfView(i) - this.patchSize)/this.stride(i)+1; % number of patches per column
+               
+               col_2 = 1:1:(delimiter_xy*(npc_2+1));
+
+               for j=1:1:(npc_2-2*delimiter_xy-1)
+                   C = (npc_2*(delimiter_xy+j)-delimiter_xy+1):1:(npc_2*(delimiter_xy+j)+delimiter_xy);
+                   col_2 = [col_2 C];
+               end
+
+               C = (npc_2*(delimiter_xy+j+1)-delimiter_xy+1):1:npc_2^2;
+               col_2 = [col_2 C];
+               
+               CutoutFunc = col_2;
+               
+               columnInd{i} = columnInd{i}(:,CutoutFunc);
+               
+             end
+ 
+         end
 
         %%% Patch generation
         % img:      image to be processed
         % scScale:  SC scale index elem {coarse, ..., fine}
         % eyePos:   eye position index elem {1 := left, 2 := right}
-        function preprocessImageFilled(this, img, scScale, eyePos)
+        function preprocessImage(this, img, scScale, eyePos)
             % down scale image
             for k = 1 : log2(this.dsRatio(scScale))
                 img = impyramid(img, 'reduce');
@@ -252,12 +289,6 @@ classdef Model < handle
             else
                 this.patchesRight{scScale} = patches;
             end
-        end
-
-        % TODO: implement this function
-        function preprocessImageCutout(this, img, scScale, eyePos)
-            sprintf('Error: Function not supported yet!')
-            return;
         end
 
         %%% Generate Feature Vector and Reward
@@ -405,7 +436,7 @@ classdef Model < handle
             plotpath = sprintf('%s/vergenceAngle', this.savePath);
             saveas(gcf, plotpath, 'png');
 
-            %% Muscel graphs
+            %% Muscle graphs
             % Lateral Rectus
             figure;
             hold on;

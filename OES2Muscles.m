@@ -116,7 +116,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     simulator = OpenEyeSim('create');
 
     simulator.initRenderer();
-    % simulator.reinitRenderer(); % for debugging
+    %simulator.reinitRenderer(); % for debugging
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -244,8 +244,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             % Image patch generation
             for i = 1 : length(model.scModel)
-                model.preprocessImageFilled(imgGrayLeft, i, 1);
-                model.preprocessImageFilled(imgGrayRight, i, 2);
+                model.preprocessImage(imgGrayLeft, i, 1);
+                model.preprocessImage(imgGrayRight, i, 2);
                 currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
             end
 
