@@ -9,10 +9,10 @@
 %%%
 function generateMovie(objRange, nStimuli, reinitRenderer)
 
-    model = load('/home/klimmasch/projects/results/model_21-Jun-2016_17:38:34_500000_nonhomeo_1_lrec77_lmet0_lmf0.035_fovS128-40_dsR8-1_str05-05_lrP1_lrC1/model.mat');
+    model = load('/home/lelais/Documents/MATLAB/results/model_28-Jun-2016_19:49:09_1000000_nonhomeo_1_2msclNEW_lrec_1_lmetc_0.0289_lmfb_0.1269_dsratio_8_1_stride_0.5_0.5_lr_1_0.5/model.mat');
     model = model.model;
     
-    randomizationSeed = 13;
+    randomizationSeed = 3;
     randObjRange = 0;
     randStimuli = 0;
     rng(randomizationSeed);
@@ -25,7 +25,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     imagesSavePath = sprintf('%s/movies', model.savePath);
     timeStamp = datestr(now, 'dd-mmm-yyyy_HH:MM:SS'); % used as a tag for the movies
     mkdir(imagesSavePath);
-    frameRate = 1.5; % frames per second in the resulting video
+    frameRate = 1; % frames per second in the resulting video »| 1.5 orig
     markScales = uint8(1); % draws rectangles inside the anaglyphs to indicate foveal regions
     set(0,'DefaulttextInterpreter','none'); % prevents underscores in image files to be interpreted as subscripts
     
@@ -73,25 +73,63 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
 
     % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
     resolution = 100001;
-    approx = spline(1:11, degrees.results_deg(:, 1));
+    approx = spline(1 : 11, degrees.results_deg(:, 1));
 
-    xValPos = ppval(approx, 1:0.0001:11)';
+    xValPos = ppval(approx, 1 : 0.0001 : 11)';
     yValPos = linspace(0, 1, resolution)';
 
-    xValNeg = flipud(ppval(approx, 1:0.0001:11)' * -1);
-    yValNeg = linspace(-1, 0, resolution)';
+    % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
+    % yValNeg = linspace(-1, 0, resolution)';
 
-    mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    % mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    mfunction = [xValPos, yValPos];
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
-    dmf = diff(mfunction(1 : 2, 1));        % delta in angle
+    dmf = abs(diff(mfunction(1 : 2, 1)));   % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
     indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
 
+    approx = spline(1 : 11, degrees.results_deg(1, :));
+    xValPos = ppval(approx, 1 : 0.0001 : 11)';
+    yValPos = linspace(0, 1, resolution)';
+
+    % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
+    % yValNeg = linspace(-1, 0, resolution)';
+
+    mfunction2 = [xValPos, yValPos];
+    mfunction2(:, 1) = mfunction2(:, 1) * 2;    % angle for two eyes
+    dmf3 = abs(diff(mfunction2(1 : 2, 1)));     % delta in angle
+    dmf4 = diff(mfunction2(1 : 2, 2));          % delta in mf
+    indZero = find(mfunction2(:, 2) == 0);      % MF == 0_index
+
     %%% Perfect Response function
-    indMaxFix = find(mfunction(:, 1) <= model.vergAngleMin + dmf & mfunction(:, 1) >= model.vergAngleMin - dmf); % MF(vergAngleMin)_index
-    indMaxFix = indMaxFix(1);
-    indMinFix = find(mfunction(:, 1) <= model.vergAngleMax + dmf & mfunction(:, 1) >= model.vergAngleMax - dmf); % MF(vergAngleMax)_index
-    indMinFix = indMinFix(1);
+    % indMaxFix = find(mfunction(:, 1) <= model.vergAngleFixMin + dmf & mfunction(:, 1) >= model.vergAngleFixMin - dmf); % MF(vergAngleFixMin)_index
+    % indMaxFix = indMaxFix(1);
+    % indMinFix = find(mfunction(:, 1) <= model.vergAngleFixMax + dmf & mfunction(:, 1) >= model.vergAngleFixMax - dmf); % MF(vergAngleFixMax)_index
+    % indMinFix = indMinFix(1);
+
+    % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
+    % x = vergenceError, y = deltaMuscelForce
+    % perfectResponseMaxFix = [(mfunction(indMaxFix, 1) - flipud(mfunction(indMaxFix : end, 1))), ...
+    %                          (mfunction(indMaxFix, 2) - flipud(mfunction(indMaxFix : end, 2))); ...
+    %                          (mfunction(indMaxFix, 1) - flipud(mfunction(indZero : indMaxFix - 1, 1))), ...
+    %                          (mfunction(indMaxFix, 2) - flipud(mfunction(indZero : indMaxFix - 1, 2)))];
+
+    % perfectResponseMinFix = [(mfunction(indMinFix, 1) - flipud(mfunction(indMinFix : end, 1))), ...
+    %                          (mfunction(indMinFix, 2) - flipud(mfunction(indMinFix : end, 2))); ...
+    %                          (mfunction(indMinFix, 1) - flipud(mfunction(indZero : indMinFix - 1, 1))), ...
+    %                          (mfunction(indMinFix, 2) - flipud(mfunction(indZero : indMinFix - 1, 2)))];
+
+    % perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
+
+    % minimal and maximal angle that can be reached by one-dimensional muscle commands
+    angleMin = min(mfunction2(mfunction2(:, 1) > 0));
+    angleMax = mfunction(end, 1);
+
+%     %%% Perfect Response function
+%     indMaxFix = find(mfunction(:, 1) <= model.vergAngleMin + dmf & mfunction(:, 1) >= model.vergAngleMin - dmf); % MF(vergAngleMin)_index
+%     indMaxFix = indMaxFix(1);
+%     indMinFix = find(mfunction(:, 1) <= model.vergAngleMax + dmf & mfunction(:, 1) >= model.vergAngleMax - dmf); % MF(vergAngleMax)_index
+%     indMinFix = indMinFix(1);
     
      %%% Helper function that maps {objDist, desiredVergErr} -> {muscleForce, angleInit}
     function [mf, angleInit] = getMF(objDist, desVergErr)
@@ -103,6 +141,26 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
         indAngleInit = find(mfunction(:, 1) <= angleInit + dmf & mfunction(:, 1) >= angleInit - dmf);
         mf = mfunction(indAngleInit, 2);
         mf = mf(ceil(length(mf) / 2));
+    end
+
+    % Calculates muscle force for two muscles
+    function [mf, angleInit] = getMF2(objDist, desVergErr)
+        % correct vergence angle for given object distance
+        angleCorrect = 2 * atand(model.baseline / (2 * objDist));
+        % desired init angle for given vergence error [deg]
+        angleInit = angleCorrect - desVergErr;
+        % look up index of angleInit
+        % if objDist not fixateable with medial rectus, use lateral rectus
+        if (angleInit >= mfunction(1, 1))
+            indAngleInit = find(mfunction(:, 1) <= angleInit + dmf & mfunction(:, 1) >= angleInit - dmf);
+            mf = mfunction(indAngleInit, 2);
+            mf = [0; mf(ceil(length(mf) / 2))];
+        else
+            indAngleInit = find(mfunction2(:, 1) <= angleInit + dmf3 & mfunction2(:, 1) >= angleInit - dmf3);
+            mf = mfunction2(indAngleInit, 2);
+            mf = [mf(ceil(length(mf) / 2)); 0];
+        end
+
     end
 
     %%% Helper function for calculating {objDist} -> {maxVergErr}
@@ -143,7 +201,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     angleMax = getAngle([0, 1]) * 2;
     
     %%% New renderer
-    simulator = OpenEyeSim('create');
+    simulator = OpenEyeSimV2('create');
     if reinitRenderer
         simulator.reinitRenderer();
     else
@@ -160,7 +218,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     function refreshImages(texture, vergAngle, objDist)
 
         simulator.add_texture(1, texture);
-        simulator.set_params(1, vergAngle, objDist);
+        simulator.set_params(1, vergAngle, objDist, 0, 3);
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -201,22 +259,22 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
             end
 %             vseRange = [-3, -2, -1, linspace(0, vergErrMax, 4)];
             vseRange = [-3, 0, vergErrMax];
+            vseRange = [-3, 0, 3];
             if stimulus == nStimuli
                 vseRange = [vseRange, vseRange(end)]; % this tries to tackle a bug with removing the last few images from the video
             end
             
             for vseIndex = 1 : size(vseRange, 2)
 
-                % reset muscle activities to random values
-    %             if (model.rlmodel.continuous == 1)
-                command = [0; 0];
-                [command(2), angleNew] = getMF(objRange(objDist), vseRange(vseIndex));
-                    
+%                 if (model.rlmodel.continuous == 1)
+%                 command = [0; 0];
+%                 [command(2), angleNew] = getMF(objRange(objDist), vseRange(vseIndex));
+                [command, angleNew] = getMF2(objRange(objDist), vseRange(vseIndex));
 %                     command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); %only for one muscle
 %                     angleNew = getAngle(command) * 2;
-    %             else
-    %                 angleNew = (model.desiredAngleMin + (model.desiredAngleMax - model.desiredAngleMin) * rand(1,1)) * 2; % same init range as above
-    %             end
+%                else
+%                   angleNew = (model.desiredAngleMin + (model.desiredAngleMax - model.desiredAngleMin) * rand(1,1)) * 2; % same init range as above
+%                 end
 
                 % Object distance = random/determined
                 if randObjRange
@@ -227,19 +285,19 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
                 %desired vergence [deg]
                 angleDes = 2 * atand(model.baseline / (2 * tmpObjRange));
 
-    %             savePathLeft = sprintf('%s/left%.3d.png', imagesSavePath,t); 
-    %             savePathRight = sprintf('%s/right%.3d.png', imagesSavePath,t);
-    %             savePathLeft = sprintf('%s/leftMovie.png', imagesSavePath); 
-    %             savePathRight = sprintf('%s/rightMovie.png', imagesSavePath);
-    %             [status, res] = system(sprintf('./checkEnvironment %s %d %d %s %s', ...
-    %                                            currentTexture, tmpObjRange, angleNew, savePathLeft, savePathRight));
-    %             % abort execution if error occured
-    %             if (status)
-    %                 sprintf('Error in checkEnvironment:\n%s', res)
-    %                 return;
-    %             end
-
-    %             [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, tmpObjRange);
+%                 savePathLeft = sprintf('%s/left%.3d.png', imagesSavePath,t); 
+%                 savePathRight = sprintf('%s/right%.3d.png', imagesSavePath,t);
+%                 savePathLeft = sprintf('%s/leftMovie.png', imagesSavePath); 
+%                 savePathRight = sprintf('%s/rightMovie.png', imagesSavePath);
+%                 [status, res] = system(sprintf('./checkEnvironment %s %d %d %s %s', ...
+%                                                currentTexture, tmpObjRange, angleNew, savePathLeft, savePathRight));
+%                 % abort execution if error occured
+%                 if (status)
+%                     sprintf('Error in checkEnvironment:\n%s', res)
+%                     return;
+%                 end
+% 
+%                 [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, tmpObjRange);
             
                 for iteration = 1 : model.interval
                     % read input images and convert to gray scale

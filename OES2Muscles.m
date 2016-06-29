@@ -6,7 +6,7 @@
 function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     rng(randomizationSeed);
 
-    % useLearnedFile(1):    0 = don't do it
+    % useLearnedFile(1):    0 e= don't do it
     %                       1 = use previously learned policy specified in learnedFile
     % useLearnedFile(2):    0 = retrain with same/new parameters
     %                       1 = complete/continue training
@@ -130,11 +130,11 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
-    dmf = diff(mfunction(1 : 2, 1));        % delta in angle
+    dmf = abs(diff(mfunction(1 : 2, 1)));   % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
 
     %%% New renderer
-%     simulator = OpenEyeSim('create');
+    % simulator = OpenEyeSim('create');
     simulator = OpenEyeSimV2('create');
 
     simulator.initRenderer();
@@ -179,7 +179,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     %%% Helper function that maps {vergenceAngle} -> {muscleForce}
     function mf = getMF(vergAngle)
         % look up index of vergAngle
-        if vergAngle <= degrees.results_deg(1,1)*2
+        if vergAngle >= degrees.results_deg(1, 1) * 2
             indVergAngle = find(mfunction(:, 1) <= vergAngle + dmf & mfunction(:, 1) >= vergAngle - dmf);
             mf = mfunction(indVergAngle, 2);
             mf = mf(ceil(length(mf) / 2));
@@ -231,12 +231,14 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % reset muscle activities to random values
         % initialization for muscle in between borders of desired actvity
         % i.e. min and max stimulus distance
-        command(1) = 0; % single muscle
+        % command(1) = 0; % single muscle
         % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
         % command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
         % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
-        command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
+        % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
+        command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
+        command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
 
         % testing input distribution
         % nSamples = 10000;
@@ -261,7 +263,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             t = t + 1;
 
             % update stimuli
-%             refreshImages(currentTexture, angleNew / 2, objDist);
+            % refreshImages(currentTexture, angleNew / 2, objDist);
             refreshImages(currentTexture, angleNew / 2, objDist, 3);
 
             % Generate & save the anaglyph picture
@@ -358,8 +360,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.trainedUntil = t;
         end
 
-        % sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
-        %         t, model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t), model.vergerr_hist(t - model.interval + 1 : t))
         if mod(t, 100) == 0
             sprintf('Training Iteration = %d\nAbs Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nAbs Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
                 t, model.cmd_hist(t - model.interval + 1 : t, 1), model.relCmd_hist(t - model.interval + 1 : t, 1), model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t, 2), model.vergerr_hist(t - model.interval + 1 : t))

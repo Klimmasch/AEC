@@ -37,7 +37,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     %%% New renderer
     if (isempty(simulator))
-%         simulator = OpenEyeSim('create');
+        % simulator = OpenEyeSim('create');
         simulator = OpenEyeSimV2('create');
         if (reinitRenderer == 0)
             simulator.initRenderer();
@@ -54,7 +54,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     testInterval = model.interval;
 
     command = [0; 0];
-    objRange = [model.objDistMin : 0.25 : model.objDistMax];
+    objRange = [model.objDistMin : 0.5 : model.objDistMax];
 
     tmpResult1 = zeros(nStim, testInterval + 1);
     tmpResult2 = zeros(nStim, testInterval + 1);
@@ -79,37 +79,51 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     xValPos = ppval(approx, 1 : 0.0001 : 11)';
     yValPos = linspace(0, 1, resolution)';
 
-    xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
-    yValNeg = linspace(-1, 0, resolution)';
+    % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
+    % yValNeg = linspace(-1, 0, resolution)';
 
-    mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    % mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    mfunction = [xValPos, yValPos];
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
-    dmf = diff(mfunction(1 : 2, 1));        % delta in angle
+    dmf = abs(diff(mfunction(1 : 2, 1)));   % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
     indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
 
+    approx = spline(1 : 11, degrees.results_deg(1, :));
+    xValPos = ppval(approx, 1 : 0.0001 : 11)';
+    yValPos = linspace(0, 1, resolution)';
+
+    % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
+    % yValNeg = linspace(-1, 0, resolution)';
+
+    mfunction2 = [xValPos, yValPos];
+    mfunction2(:, 1) = mfunction2(:, 1) * 2;    % angle for two eyes
+    dmf3 = abs(diff(mfunction2(1 : 2, 1)));     % delta in angle
+    dmf4 = diff(mfunction2(1 : 2, 2));          % delta in mf
+    indZero = find(mfunction2(:, 2) == 0);      % MF == 0_index
+
     %%% Perfect Response function
-    indMaxFix = find(mfunction(:, 1) <= model.vergAngleFixMin + dmf & mfunction(:, 1) >= model.vergAngleFixMin - dmf); % MF(vergAngleFixMin)_index
-    indMaxFix = indMaxFix(1);
-    indMinFix = find(mfunction(:, 1) <= model.vergAngleFixMax + dmf & mfunction(:, 1) >= model.vergAngleFixMax - dmf); % MF(vergAngleFixMax)_index
-    indMinFix = indMinFix(1);
+    % indMaxFix = find(mfunction(:, 1) <= model.vergAngleFixMin + dmf & mfunction(:, 1) >= model.vergAngleFixMin - dmf); % MF(vergAngleFixMin)_index
+    % indMaxFix = indMaxFix(1);
+    % indMinFix = find(mfunction(:, 1) <= model.vergAngleFixMax + dmf & mfunction(:, 1) >= model.vergAngleFixMax - dmf); % MF(vergAngleFixMax)_index
+    % indMinFix = indMinFix(1);
 
     % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
     % x = vergenceError, y = deltaMuscelForce
-    perfectResponseMaxFix = [(mfunction(indMaxFix, 1) - flipud(mfunction(indMaxFix : end, 1))), ...
-                             (mfunction(indMaxFix, 2) - flipud(mfunction(indMaxFix : end, 2))); ...
-                             (mfunction(indMaxFix, 1) - flipud(mfunction(indZero : indMaxFix - 1, 1))), ...
-                             (mfunction(indMaxFix, 2) - flipud(mfunction(indZero : indMaxFix - 1, 2)))];
+    % perfectResponseMaxFix = [(mfunction(indMaxFix, 1) - flipud(mfunction(indMaxFix : end, 1))), ...
+    %                          (mfunction(indMaxFix, 2) - flipud(mfunction(indMaxFix : end, 2))); ...
+    %                          (mfunction(indMaxFix, 1) - flipud(mfunction(indZero : indMaxFix - 1, 1))), ...
+    %                          (mfunction(indMaxFix, 2) - flipud(mfunction(indZero : indMaxFix - 1, 2)))];
 
-    perfectResponseMinFix = [(mfunction(indMinFix, 1) - flipud(mfunction(indMinFix : end, 1))), ...
-                             (mfunction(indMinFix, 2) - flipud(mfunction(indMinFix : end, 2))); ...
-                             (mfunction(indMinFix, 1) - flipud(mfunction(indZero : indMinFix - 1, 1))), ...
-                             (mfunction(indMinFix, 2) - flipud(mfunction(indZero : indMinFix - 1, 2)))];
+    % perfectResponseMinFix = [(mfunction(indMinFix, 1) - flipud(mfunction(indMinFix : end, 1))), ...
+    %                          (mfunction(indMinFix, 2) - flipud(mfunction(indMinFix : end, 2))); ...
+    %                          (mfunction(indMinFix, 1) - flipud(mfunction(indZero : indMinFix - 1, 1))), ...
+    %                          (mfunction(indMinFix, 2) - flipud(mfunction(indZero : indMinFix - 1, 2)))];
 
-    perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
+    % perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
 
     % minimal and maximal angle that can be reached by one-dimensional muscle commands
-    angleMin = mfunction(indZero, 1);
+    angleMin = min(mfunction2(mfunction2(:, 1) > 0));
     angleMax = mfunction(end, 1);
 
     % Color images for left & right eye
@@ -131,6 +145,25 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         indAngleInit = find(mfunction(:, 1) <= angleInit + dmf & mfunction(:, 1) >= angleInit - dmf);
         mf = mfunction(indAngleInit, 2);
         mf = mf(ceil(length(mf) / 2));
+    end
+
+    % Calculates muscle force for two muscles
+    function [mf, angleInit] = getMF2(objDist, desVergErr)
+        % correct vergence angle for given object distance
+        angleCorrect = 2 * atand(model.baseline / (2 * objDist));
+        % desired init angle for given vergence error [deg]
+        angleInit = angleCorrect - desVergErr;
+        % look up index of angleInit
+        % if objDist not fixateable with medial rectus, use lateral rectus
+        if (angleInit >= mfunction(1, 1))
+            indAngleInit = find(mfunction(:, 1) <= angleInit + dmf & mfunction(:, 1) >= angleInit - dmf);
+            mf = mfunction(indAngleInit, 2);
+            mf = [0; mf(ceil(length(mf) / 2))];
+        else
+            indAngleInit = find(mfunction2(:, 1) <= angleInit + dmf3 & mfunction2(:, 1) >= angleInit - dmf3);
+            mf = mfunction2(indAngleInit, 2);
+            mf = [mf(ceil(length(mf) / 2)); 0];
+        end
     end
 
     % %%% Helper function for calculating {objDist} -> {minVergErr, maxVergErr}
@@ -213,11 +246,12 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             sprintf('Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
 
             % vergence start error
-            vergMax = getVergErrMax(objRange(odIndex));
-            if vergMax > 3
-                vergMax = 3;
-            end
-            vseRange = [-3, -2, -1, linspace(0, vergMax, 4)];
+            % vergMax = getVergErrMax(objRange(odIndex));
+            % if vergMax > 3
+            %     vergMax = 3;
+            % end
+            % vseRange = [-3, -2, -1, linspace(0, vergMax, 4)];
+            vseRange = [-3:3];
             angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
 
             for vseIndex = 1 : length(vseRange)
@@ -225,8 +259,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                 for stimulusIndex = 1 : nStim
                     currentTexture = texture{stimulusIndex};
-                    command(1) = 0;
-                    [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
+                    % command(1) = 0;
+                    % [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
+                    [command, angleNew] = getMF2(objRange(odIndex), vseRange(vseIndex));
 
                     for iter = 2 : testInterval + 1
                         % update stimuli
@@ -310,7 +345,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     tr3Ind = tr3Ind + 1;
 
                     % anaglyph
-                    % if (abs(tmpResult1(stimulusIndex, 11)) > 0.5)
+                    % if (abs(tmpResult1(stimulusIndex, 11)) > 3)
                     %     imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), ...
                     %             sprintf('%s/anaglyph%d_vergerr_%.2f_img%d.png', model.savePath, tr3Ind, tmpResult1(stimulusIndex, 11), stimulusIndex));
                     % end
@@ -338,8 +373,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 if (getVergErrMax(objRange(odIndex)) < vseRange(vseIndex))
                     continue
                 end
-                command(1) = 0;
-                [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
+                % command(1) = 0;
+                % [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
+                [command, angleNew] = getMF2(objRange(odIndex), vseRange(vseIndex));
                 for stimulusIndex = 1 : nStim
                     % update stimuli
                     currentTexture = texture{stimulusIndex};
@@ -466,12 +502,13 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         hold on;
         grid on;
         % perfect response to vergence error
-        hl1 = plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], ...
-                   'DisplayName', 'perfect (fixDist_{max})', 'LineWidth', 1.3);
-        hl2 = plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], ...
-                   'DisplayName', 'perfect (fixDist_{min})', 'LineWidth', 1.3);
-        lineHandles = zeros(1, 2 + length(objRange));
-        lineHandles(1 : 2) = [hl1, hl2];
+        % hl1 = plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], ...
+        %            'DisplayName', 'perfect (fixDist_{max})', 'LineWidth', 1.3);
+        % hl2 = plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], ...
+        %            'DisplayName', 'perfect (fixDist_{min})', 'LineWidth', 1.3);
+        % lineHandles = zeros(1, 2 + length(objRange));
+        % lineHandles(1 : 2) = [hl1, hl2];
+        lineHandles = zeros(1, length(objRange));
 
         % actual response
         xmin = 0;
@@ -497,7 +534,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             hp.FaceColor = hl3.Color;
             hl3.LineStyle = 'none';
             % outlinebounds(hl3, hp);
-            lineHandles(odIndex + 2) = hl3;
+            % lineHandles(odIndex + 2) = hl3;
+            lineHandles(odIndex) = hl3;
 
             % for axis adjustment
             tmp = [min(tmpMat(:, 1)), max(tmpMat(:, 1))];
@@ -549,7 +587,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             [hl, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
             hl.DisplayName = sprintf('%.2fm objDist', objRange(odIndex));
-            hl.Marker = markers{odIndex};
+            if (odIndex <= length(markers))
+                hl.Marker = markers{odIndex};
+            else
+                hl.Marker = markers{randi(length(markers))};
+            end
             hl.MarkerSize = 2.5;
             % hl.Color = [0, 0.5882, 0.9608];
             hl.Color = [rand, rand, rand];

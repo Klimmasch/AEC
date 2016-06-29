@@ -35,7 +35,7 @@ actionSpace = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... % vergence angles (discrete
                 0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
 alpha_v = 1;                                         % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                                     % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 1;                                         % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
+alpha_p = 0.5;                                       % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
 
@@ -99,8 +99,8 @@ focalLength = 257.34;       % focal length [px]
 baseline = 0.056;           % interocular distance
 
 % Object distance to eyes [m]
-objDistMin = 0.5;
-objDistMax = 2;
+objDistMin = 1.5; % origin 0.5
+objDistMax = 6;   % origin 2
 
 % Fixation distance [m]
 % used for eye fixation initialization
@@ -108,11 +108,12 @@ fixDistMin = 0.3379;
 fixDistMax = 3.2219;
 
 % muscle initialization: correspond now to the minimum and maximum distance
-% the eyes should be looking at
-muscleInitMin = 0.00807;    % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = 0.07186;    % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+% the eyes should be looking at. [lateral rectus, medial rectus]
+muscleInitMin = [0, 0];             % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = [0.0064, 0.0011];   % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
-interval = 10;              % period for changing the stimulus for the eyes | origin 10
+% period for changing the stimulus for the eyes | origin 10
+interval = 10;
 
 %%% Factor of Muscle activity feedback to RL feature vector
 % here the % is in respect to the feature signal,
@@ -134,7 +135,7 @@ interval = 10;              % period for changing the stimulus for the eyes | or
 % 0.1688 equalizes the mean of a basis function activation and an absolute muscle command
 %%%
 
-lambdaMuscleFB = 0.0357;
+lambdaMuscleFB = 0.1269;
 % matlab -nodisplay -r "OES2Muscles(500000,1,'lrec1_lmet0_lmf25_fovS128-40_dsR81_str05-05_lrC1_lrA1')"
 
 %%% Reward function parameters, i.e. their "proportions" to the whole reward signal
@@ -164,7 +165,7 @@ end
 %
 % 1% = 0.0029 | 2% = 0.0058 | 3% =  0.0087 | 4% = 0.0114 | 5% = 0.0144 | 6% = 0.0173
 % 10% = 0.0289 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
-lambdaMet = 0;
+lambdaMet = 0.0578;
 
 % due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
 % lambdaMet needs to be scaled accordingly

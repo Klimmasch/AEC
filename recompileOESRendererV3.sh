@@ -13,7 +13,8 @@ echo "done."
 # Compile MEX object
 echo -n "Compiling MEX object..."
 LOG="./err.log"
-matlab -nodisplay -r "makeOpenEyeSim; quit" | tee -a $LOG
+# matlab -nodisplay -r "makeOpenEyeSim; quit" | tee -a $LOG
+matlab -nodisplay -r "makeOpenEyeSimV2; quit" | tee -a $LOG
 if [ $? -eq 0 ]
 then
     exit 0
