@@ -223,8 +223,8 @@ function testModel2(model, nStim, plotIt, saveTestResults, simulator, reinitRend
 
                         % Image patch generation
                         for i = 1 : length(model.scModel)
-                            model.preprocessImageFilled(imgGrayLeft, i, 1);
-                            model.preprocessImageFilled(imgGrayRight, i, 2);
+                            model.preprocessImage(imgGrayLeft, i, 1);
+                            model.preprocessImage(imgGrayRight, i, 2);
                             currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
                         end
 

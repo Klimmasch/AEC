@@ -5,13 +5,60 @@ weightsHist = cell(2, 1);
 loadBasis = uint8(0);
 loadweights = uint8(0);
 
+%%% Model parameters
+% Image processing variable
+patchSize = 10;
+% [peripheral vision, ..., central vision]
+pxFieldOfView = [60, 60];                   % size of respective fields of view in pixel (previously called fovea).
+                                            % FieldOfView in original image [pixel] = pxFieldOfView * dsRatio
+dsRatio = [4, 2];                           % downsampling ratio, i.e. how many pixels in orig image correspond to how many px in downsampled img
+stride = [patchSize / 2, patchSize / 2];    % image patch strides | orig [1, patchSize / 2]
+overlap = [0];                              % Overlap between the different layers measured in units of FINE scale
+
+% Camera parameters
+% offset = 0;               % vertical offset between left and right (0 in the Simulator!!!)
+focalLength = 257.34;       % focal length [px]
+baseline = 0.056;           % interocular distance
+
+% Object distance to eyes [m]
+objDistMin = 0.5;
+objDistMax = 2;
+
+% Fixation distance [m]
+% used for eye fixation initialization
+fixDistMin = 0.3379;
+fixDistMax = 3.2219;
+
+% muscle initialization: correspond now to the minimum and maximum distance
+% the eyes should be looking at
+muscleInitMin = 0.00807;       %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = 0.07186;       % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+
+interval = 10;              % period for changing the stimulus for the eye | origin 10
+lambdaMuscleFB = 1.0722;    % factor of muscle activity feedback to RL feature vector
+                            % Proportion MF/feature:
+                            % 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
+                            % 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741
+
+% Reward function parameters, i.e. their proportions to the reward function
+% R elem [-2, 0]
+lambdaRec = 6.391;          % reconstruction error factor | 4.929 | 100% = 6.391
+lambdaMet = 0;              % metabolic costs factor | 0.204 | 30% = 0.484 | 20% = 0.323 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016
+lambdaV = 7.0282e-04;       % value networks input->output weights factor | L1 norm 7.0282e-04
+lambdaP1 = 0.019;           % policy networks input->hidden weights factor | L1 norm 0.019
+lambdaP2 = 0.309;           % policy networks hidden->output weights factor | L1 norm 0.309
+PARAMModel = {textureFile, trainTime, sparseCodingType, focalLength, baseline, ...
+              objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
+              lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2, ...
+              patchSize, pxFieldOfView, dsRatio, stride, fixDistMin, fixDistMax, overlap};
+
 %%% Sparce Coding parameters
 % Scales := [coarse, less_coarse, ..., fine], i.e. [peripheral vision, ..., central vision]
-nBasis = [288, 288];            % total number of basis
-nBasisUsed = [10, 10];          % number of basis used to encode in sparse mode
-basisSize = [128, 128];         % size of each (binocular) base vector: patchSize * patchSize * 2 (left + right eye)
-eta = [0.2, 0.2];               % learning rate [origin 0.01 | Lukas 0.1 | Alex P 0.5, origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2]
-temperature = [0.01, 0.01];     % temperature in softmax | origin 0.01
+nBasis = [288, 288];                                        % total number of basis
+nBasisUsed = [10, 10];                                      % number of basis used to encode in sparse mode
+basisSize = [(patchSize ^ 2) * 2, (patchSize ^ 2) * 2];     % size of each (binocular) base vector: patchSize * patchSize * 2 (left + right eye)
+eta = [0.2, 0.2];                                           % learning rate [origin 0.01 | Lukas 0.1 | Alex P 0.5, origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2]
+temperature = [0.01, 0.01];                                 % temperature in softmax | origin 0.01
 
 PARAMSC = {nBasis, nBasisUsed, basisSize, eta, temperature};
 
@@ -66,53 +113,6 @@ fiScale = 1e-5;                                     % scaling factor of Fisher I
 
 PARAMRL = {Action, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
            loadweights, weights, weightsHist, continuous, deltaVar, eta, fiScale, rlFlavour, varDec};
-
-%%% Model parameters
-% Image processing variable
-patchSize = 10;
-% [peripheral vision, ..., central vision]
-pxFieldOfView = [60, 60];                   % size of respective fields of view in pixel (previously called fovea).
-                                            % FieldOfView in original image [pixel] = pxFieldOfView * dsRatio
-dsRatio = [4, 2];                           % downsampling ratio, i.e. how many pixels in orig image correspond to how many px in downsampled img
-stride = [patchSize / 2, patchSize / 2];    % image patch strides | orig [1, patchSize / 2]
-overlap = [0];                              % Overlap between the different layers measured in units of FINE scale
-
-% Camera parameters
-% offset = 0;               % vertical offset between left and right (0 in the Simulator!!!)
-focalLength = 257.34;       % focal length [px]
-baseline = 0.056;           % interocular distance
-
-% Object distance to eyes [m]
-objDistMin = 0.5;
-objDistMax = 2;
-
-% Fixation distance [m]
-% used for eye fixation initialization
-fixDistMin = 0.3379;
-fixDistMax = 3.2219;
-
-% muscle initialization: correspond now to the minimum and maximum distance
-% the eyes should be looking at
-muscleInitMin = 0.00807;       %minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = 0.07186;       % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
-
-interval = 10;              % period for changing the stimulus for the eye | origin 10
-lambdaMuscleFB = 1.0722;    % factor of muscle activity feedback to RL feature vector
-                            % Proportion MF/feature:
-                            % 0.5% = 0.0179 | 1% = 0.0357 | 5% = 0.1787 | 10% = 0.3574
-                            % 20% = 0.7148 | 30% = 1.0722 | 40% = 1.4296 | 50% = 1.7871 | 100% = 3.5741
-
-% Reward function parameters, i.e. their proportions to the reward function
-% R elem [-2, 0]
-lambdaRec = 6.391;          % reconstruction error factor | 4.929 | 100% = 6.391
-lambdaMet = 0;              % metabolic costs factor | 0.204 | 30% = 0.484 | 20% = 0.323 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016
-lambdaV = 7.0282e-04;       % value networks input->output weights factor | L1 norm 7.0282e-04
-lambdaP1 = 0.019;           % policy networks input->hidden weights factor | L1 norm 0.019
-lambdaP2 = 0.309;           % policy networks hidden->output weights factor | L1 norm 0.309
-PARAMModel = {textureFile, trainTime, sparseCodingType, focalLength, baseline, ...
-              objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
-              lambdaMuscleFB, lambdaMet, lambdaRec, lambdaV, lambdaP1, lambdaP2, ...
-              patchSize, pxFieldOfView, dsRatio, stride, fixDistMin, fixDistMax, overlap};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);
