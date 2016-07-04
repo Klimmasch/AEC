@@ -71,6 +71,7 @@ classdef Model < handle
         patchesLeft;
         patchesRight;
         overlap;
+        cutout;
     end
 
     methods
@@ -146,9 +147,15 @@ classdef Model < handle
             obj.dsRatio = PARAM{1}{19};
             obj.stride = PARAM{1}{20};
             obj.overlap = PARAM{1}{23};
+            obj.cutout = PARAM{1}{24};
 
             % Prepare index matrix for image patches
-            obj.columnInd = obj.prepareColumnInd();
+            if obj.cutout == 0
+                obj.columnInd = obj.prepareColumnInd();
+            else
+                obj.columnInd = obj.prepareColumnInd();
+                obj.columnInd = obj.prepareCutout();
+            end
 
             %%% Create SC models
             obj.scModel = {};
@@ -208,9 +215,9 @@ classdef Model < handle
                     k = k + 1;
                 end
             end
-        %end
+        end
 
-        %function CutoutFunc = prepareCutout(this) %done by Julian Corbet
+        function CutoutFunc = prepareCutout(this) %done by Julian Corbet
            
            for i = 1:1:(length(this.dsRatio)-1) % most inner layer does not need a cutout 
                                                 % therefore n-1 Cuts per n layers
@@ -246,11 +253,11 @@ classdef Model < handle
                C = (npcs*(delimiter_xy+j+1)-delimiter_xy+1):1:npcs^2; % End patches
                CutoutFunc = [CutoutFunc C];
                
-               columnInd{i} = columnInd{i}(:,CutoutFunc); % Cutting columnInd to eradicate the inner patches in the outer layer
+               obj.columnInd{i} = obj.columnInd{i}(:,CutoutFunc); % Cutting columnInd to eradicate the inner patches in the outer layer
                
-             end
+           end
  
-         end
+      end
 
         %%% Patch generation
         % img:      image to be processed
