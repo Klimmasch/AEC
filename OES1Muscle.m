@@ -3,15 +3,21 @@
 % @param randomizationSeed   randomization seed
 % @param fileDescription     description of approach used as file name
 %%%
-function OESMuscles(trainTime, randomizationSeed, fileDescription)
+function OES1Muscle(trainTime, randomizationSeed, fileDescription)
     rng(randomizationSeed);
 
-    % useLearnedFile: [use previously learned policy specified in learnedFile,
-    %                  whether the training shall be completed, or retrained with same/new parameters]
+    % useLearnedFile(1):    0 = don't do it
+    %                       1 = use previously learned policy specified in learnedFile
+    % useLearnedFile(2):    0 = retrain with same/new parameters
+    %                       1 = complete/continue training
+    %
+    % If useLearnedFile = [1, 1] and you want to continue training, trainTime must be the overall desired train time,
+    % i.e. trained at first 100k iterations with useLearnedFile = [0, 0], then decided to continue training for 100k more
+    % iterations, then the overall train time for the model is 200k and you set useLearnedFile = [1, 1] and execute with
+    % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/klimmasch/projects/results/model_13-Apr-2016_14:04:55_100_nonhomeo_2_testTrainOn/model.mat';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_18-Apr-2016_18:27:54_200000_nonhomeo_1_CACLAVar_NewHiddenUpdate_init00017-01-004_alpha10_var-5/model.mat';
+    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_20-May-2016_13:10:14_500000_nonhomeo_1_2m_newImplem_highResSmSc_noMF/model.mat';
 
     %%% Stimulus declaration
     textureFile = 'Textures_vanHaterenTrain.mat';   % vanHateren database
@@ -25,10 +31,15 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
     % Plotting flag
     % Whether figures should be generated and saved
-    % plotIt: [training, test]
+    % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
     plotIt = [uint8(1), uint8(1)];
+
+    % Whether figures should be closed after generation
+    % closeFigures: 0 = don't do it
+    %               1 = do it
+    closeFigures = uint8(1);
 
     % Testing flag
     % Whether the testing procedure shall be executed after training
@@ -44,9 +55,19 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
         else
             model = load(learnedFile, 'model');
             model = model.model;
+            model.trainTime = trainTime;
         end
     else
         model = config(textureFile, trainTime, sparseCodingType);
+    end
+
+    % check if main script and model are compatible
+    if (model.rlModel.continuous == 0)
+        sprintf('Error: This training/main script is not compatible with discrete action space models!\nPlease execute OESDiscrete.m instead.')
+        return;
+    elseif (model.rlModel.CActor.output_dim > 1)
+        sprintf('Error: This training/main script is not compatible with %d eye muscle models!\nPlease execute OES2Muscles.m instead.', model.rlModel.CActor.output_dim)
+        return;
     end
 
     % safety check for plotting functions
@@ -111,26 +132,20 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
     dmf = diff(mfunction(1 : 2, 1));        % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
-    indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
 
     %%% New renderer
     simulator = OpenEyeSim('create');
+
     simulator.initRenderer();
     % simulator.reinitRenderer(); % for debugging
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
+    imgGrayLeft = uint8(zeros(240, 320, 3));
+    imgGrayRight = uint8(zeros(240, 320, 3));
 
     % Image patches cell array (input to model)
     currentView = cell(1, length(model.scModel));
-
-    % Intermediate patch matricies
-    patchesLeft = cell(1, length(model.scModel));
-    patchesRight = cell(1, length(model.scModel));
-    for i = 1 : length(model.scModel)
-        patchesLeft{i} = zeros(model.patchSize ^ 2, length(model.columnInd{i}));
-        patchesRight{i} = zeros(model.patchSize ^ 2, length(model.columnInd{i}));
-    end
 
     %%% Generates two new images for both eyes
     % texture:  file path of texture input
@@ -154,6 +169,10 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
                                        size(imgRawRight, 2), ...
                                        size(imgRawRight, 1)]), ...
                                       [3, 2, 1]);
+
+        % convert images to gray scale
+        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
     end
 
     %%% Helper function that maps {vergenceAngle} -> {muscleForce}
@@ -166,8 +185,8 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
     %%% Helper function that maps muscle activities to resulting angle
     function angle = getAngle(command)
-        cmd = (command * 10) + 1;                               % scale commands to table entries
-        angle = interp2(degrees.results_deg, cmd(1), cmd(2));   % interpolate in tabular
+        cmd = (command * 10) + 1;                                       % scale commands to table entries
+        angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline'); % interpolate in table by cubic splines
     end
 
     function angle = getAngle2(command)
@@ -178,8 +197,8 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
     %%% Helper function that maps muscle activities to resulting metabolic costs
     function tmpMetCost = getMetCost(command)
-        cmd = (command * 10) + 1;                               % scale commands to table entries
-        tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2)); % interpolate in tabular
+        cmd = (command * 10) + 1;                                           % scale commands to table entries
+        tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2), 'spline');   % interpolate in table by cubic splines
     end
 
     %%% Saturation function that keeps motor commands in [0, 1]
@@ -191,54 +210,9 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
         cmd(i1) = 1;
     end
 
-    %%% Helper function for image preprocessing
-    %% Patch generation
-    % img:      image to be processed
-    % scScale:  SC scale index elem {coarse, ..., fine}
-    % eyePos:   eye position index elem {1 := left, 2 := right}
-    function preprocessImage(img, scScale, eyePos)
-        % convert to gray scale image
-        % img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
-
-        % down scale image
-        if (model.dsRatio(scScale) > 0)
-            for k = 1 : log2(model.dsRatio(scScale))
-                img = impyramid(img, 'reduce');
-            end
-        end
-
-        % convert to double
-        img = double(img);
-
-        % cut fovea in the center
-        [h, w, ~] = size(img);
-        img = img(fix(h / 2 + 1 - model.pxFieldOfView(scScale) / 2) : fix(h / 2 + model.pxFieldOfView(scScale) / 2), ...
-                  fix(w / 2 + 1 - model.pxFieldOfView(scScale) / 2) : fix(w / 2 + model.pxFieldOfView(scScale) / 2));
-
-        % cut patches and store them as col vectors
-        patches = im2col(img, [model.patchSize, model.patchSize], 'sliding');            %slide window of 1 px
-
-        % take patches by application of respective strides (8 px)
-        patches = patches(:, model.columnInd{scScale});
-
-        % pre-processing steps (0 mean, unit norm)
-        patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
-        normp = sqrt(sum(patches.^2));                                      %patches norm
-
-        % normalize patches to norm 1
-        normp(normp == 0) = eps;                                            %regularizer
-        patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
-
-        if (eyePos == 1)
-            patchesLeft{scScale} = patches;
-        else
-            patchesRight{scScale} = patches;
-        end
-    end
-
     %%% Main execution loop
-    t = model.trainedUntil; % this is zero in new initiated model
-    command = [0, 0];
+    t = model.trainedUntil; % this is zero in newly initiated model
+    command = [0; 0];
     % rewardFunction_prev = 0;
     tic; % start time count
     for iter1 = 1 : (timeToTrain / model.interval)
@@ -247,6 +221,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
         % random depth
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
 
         % reset muscle activities to random values
         % initialization for muscle in between borders of desired actvity
@@ -254,9 +229,9 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
         command(1) = 0; % single muscle
         % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
         % command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
-        % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
-        initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
-        command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
+        % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        % command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
+        command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
 
         % testing input distribution
         % nSamples = 10000;
@@ -274,18 +249,14 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
         % figure; histogram(angles); title('angles');
         % figure; histogram(dists); title('distances');
 
-        % angleNew = getAngle(command) * 2;
-        angleNew = getAngle2(command);
+        angleNew = getAngle(command) * 2;
+        % angleNew = getAngle2(command);
 
         for iter2 = 1 : model.interval
             t = t + 1;
 
             % update stimuli
             refreshImages(currentTexture, angleNew / 2, objDist);
-
-            % convert images to gray scale
-            imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
-            imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
 
             % Generate & save the anaglyph picture
             % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
@@ -295,9 +266,9 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
             % Image patch generation
             for i = 1 : length(model.scModel)
-                preprocessImage(imgGrayLeft, i, 1);
-                preprocessImage(imgGrayRight, i, 2);
-                currentView{i}  = vertcat(patchesLeft{i}, patchesRight{i});
+                model.preprocessImageFilled(imgGrayLeft, i, 1);
+                model.preprocessImageFilled(imgGrayRight, i, 2);
+                currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
             end
 
             % Generate basis function feature vector from current images
@@ -305,7 +276,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
             %%% Feedback
             % Generate RL model's input feature vector by
-            % absolute command & feedback concatination
+            % basis function feature vector & total muscle command concatination
             feature = [bfFeature; command(2) * model.lambdaMuscleFB];
 
             %%% Calculate metabolic costs
@@ -314,7 +285,9 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
             %%% Calculate reward function
             %% Standard reward
             rewardFunction = model.lambdaRec * reward - model.lambdaMet * metCost;
-            % rewardFunction = (model.lambdaMet * reward) + ((1 - model.lambdaMet) * - metCost);
+
+            %% Vergence error reward
+            % rewardFunction = -abs(angleDes - angleNew);
 
             %% Delta reward
             % rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
@@ -327,48 +300,32 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
 
             % rewardFunction_prev = rewardFunctionReal;
 
-            %%% Weight L1 regularization
-            % rewardFunction = model.lambdaRec * reward ...
-            %                  - model.lambdaMet * metCost ...
-            %                  - model.lambdaV * (sum(sum(abs(model.rlModel.CCritic.v_ji)))) ...
-            %                  - model.lambdaP1 * (sum(sum(abs(model.rlModel.CActor.wp_ji)))) ...
-            %                  - model.lambdaP2 * (sum(sum(abs(model.rlModel.CActor.wp_kj))));
-
-            %%% Weight L2 regularization
-            % rewardFunction = model.lambdaRec * reward ...
-            %                  - model.lambdaMet * metCost ...
-            %                  - model.lambdaV * (sum(sum(model.rlModel.CCritic.v_ji .^ 2))) ...
-            %                  - model.lambdaP1 * (sum(sum(model.rlModel.CActor.wp_ji .^ 2))) ...
-            %                  - model.lambdaP2 * (sum(sum(model.rlModel.CActor.wp_kj .^ 2)));
-
             %%% Learning
-            % Sparse coding models
+            %% Sparse coding models
             for i = 1 : length(model.scModel)
                 model.scModel{i}.stepTrain();
             end
 
-            % RL model
+            %% RL model
             % Variance decay, i.e. reduction of actor's output perturbation
-            % if ((model.rlModel.continuous == 1) && (model.rlModel.CActor.varDec > 0))
+            % if (model.rlModel.CActor.varDec > 0)
             %     model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
             % end
 
             relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
             % add the change in muscle Activities to current ones
-            % command = command + relativeCommand';     % two muscles
-            command(1) = 0;
             command(2) = command(2) + relativeCommand;  % one muscle
             command = checkCmd(command);                % restrain motor commands to [0, 1]
 
-            % angleNew = getAngle(command) * 2; %resulting angle is used for both eyes
-            angleNew = getAngle2(command);
+            % calculate resulting angle which is used for both eyes
+            angleNew = getAngle(command) * 2;
+            % angleNew = getAngle2(command);
 
             %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
 
             % compute desired vergence command, disparity and vergence error
             fixDepth = (model.baseline / 2) / tand(angleNew / 2);   % fixation depth [m]
-            angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
             anglerr = angleDes - angleNew;                          % vergence error [deg]
             disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
 
@@ -380,7 +337,7 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
             model.recerr_hist(t, :) = recErrorArray;
             model.verge_actual(t) = angleNew;
             model.verge_desired(t) = angleDes;
-            model.relCmd_hist(t) = relativeCommand;
+            model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
             model.reward_hist(t) = rewardFunction;
             % model.feature_hist(t, :) = feature;
@@ -395,8 +352,10 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
             model.trainedUntil = t;
         end
 
-        sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
-                t, model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t), model.vergerr_hist(t - model.interval + 1 : t))
+        if mod(t, 100) == 0
+            sprintf('Training Iteration = %d\nAbs Command =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command = \t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
+                    t, model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t), model.vergerr_hist(t - model.interval + 1 : t))
+        end
 
         % Display per cent completed of training and save model
         if (~mod(t, saveInterval))
@@ -414,14 +373,11 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
     elapsedTime = toc;
 
     % Total simulation time
-    model.simulatedTime = elapsedTime / 60;
+    model.simulatedTime = model.simulatedTime + elapsedTime / 60;
     sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
-            elapsedTime / 3600, elapsedTime / 60, elapsedTime, trainTime / elapsedTime)
+            elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
 
     % store simulated time
-    % if useLearnedFile(2)
-    %     model.trainTime = model.trainTime + model.trainedUntil;
-    % end
     save(strcat(model.savePath, '/model'), 'model');
 
     % plot results
@@ -430,12 +386,13 @@ function OESMuscles(trainTime, randomizationSeed, fileDescription)
     end
 
     %%% Testing procedure
-    if (testIt)
-        % testModel(model, randomizationSeed, objRange, vergRange, repeat, randStimuli, randObjRange, plotIt, saveTestResults)
-        % testModel(model, randomizationSeed, [0.5, 1, 1.5, 2], [-3 : 0.2 : 3], [50, 50], 0, 1, plotIt(2), 1);
+    if (testIt == 1)
+        % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
+        testModelContinuous(model, 33, plotIt(2), 1, simulator, 0);
+    end
 
-        % testModel2(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-        testModel2(model, 33, plotIt(2), 1, simulator, 0);
+    if (closeFigures == 1)
+        close all;
     end
 end
 
