@@ -251,7 +251,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             %     vergMax = 3;
             % end
             % vseRange = [-3, -2, -1, linspace(0, vergMax, 4)];
-            vseRange = [-3:3];
+%             vseRange = [-3:3];
+            vseRange = linspace(-1, 1, 7);
             angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
 
             for vseIndex = 1 : length(vseRange)
@@ -812,7 +813,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             saveas(gcf, plotpath, 'png');
         end
 
-        % Check for bias at 0° vergence start error
+        %% Check for bias at 0° vergence start error
         if (nStim == 0)
             nStim = size(model.testResult3, 1) / (length(objRange) * 7);
         end
@@ -826,7 +827,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             startInd = endInd + nStim * 6 + 1;
             boxlabels{i} = num2str(objRange(i));
         end
-
+        
         figure;
         axArray = zeros(1, 2);
         axArray(1) = subplot(1, 4, [1, 3]);
