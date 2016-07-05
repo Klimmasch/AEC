@@ -31,6 +31,8 @@ classdef CACLAVarActorLu < handle
         % model history tracking
         param_num;
         params;
+        
+        regularizer;
     end
 
     methods
@@ -59,11 +61,12 @@ classdef CACLAVarActorLu < handle
             obj.z_k_prev = zeros(obj.output_dim, 1);
             obj.command_prev = zeros(obj.output_dim, 1);
             obj.updateCount = 0;
+            obj.regularizer = 0.999; % percentage of the weights the vector is scaled to
         end
 
         function update(this, delta)
             this.updateCount = ceil(delta / sqrt(this.deltaVar));
-
+            
             % delta_weights(hidden -> output)
             dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
 
@@ -72,7 +75,7 @@ classdef CACLAVarActorLu < handle
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat(tmpVector, 1, this.input_dim);
 
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
-            this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji) * this.updateCount;
+            this.wp_ji = (this.regularizer * this.wp_ji) + (this.beta_p * dwp_ji) * this.updateCount;
         end
 
         function command = act(this, z_i)
