@@ -59,8 +59,8 @@ hiddenDim = 50;                                     % number of neurons in the h
 dimensions = [inputDim, hiddenDim, outputDim];
 
 weight_range = [1 / inputDim, ...                   % maximum initial weight [critic_ji, actor_ji, actor_kj]
-                0.01, ...                           % origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05] | AL 100 / (inputDim * hiddenDim)
-                2 / hiddenDim * outputDim];         % linear [1/inputDim, 1/inputDim, -]
+                1 / (inputDim * hiddenDim), ...                           % origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05] | AL 100 / (inputDim * hiddenDim)
+                2 / (hiddenDim * outputDim)];         % linear [1/inputDim, 1/inputDim, -]
 lambda = 0.01;                                      % reguralization factor | origin 0.01
 deltaVar = 1;                                       % TD error variance tracking/approximating (CACLAVar)
 eta = 0.001;                                        % TD error variance scaling factor (CACLAVar)
@@ -73,7 +73,7 @@ PARAMRL = {actionSpace, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lam
 % Image processing constants
 patchSize = 8;                                  % patch size [pixel] of one basis functon, i.e. "receptive field" size | origin 8
 % [peripheral vision, ..., central vision]
-dsRatio = [8, 1];                               % downsampling ratio, i.e. how many pixels in original image
+dsRatio = [4, 1];                               % downsampling ratio, i.e. how many pixels in original image
                                                 % correspond to how many pixels in downsampled image | origin [8, 2]
 pxFieldOfViewOrig = [128, 40];                  % fields of view in original image [pixel] | origin [128, 80]
 pxFieldOfView = pxFieldOfViewOrig ./ dsRatio;   % fields of view in downsampled image [pixel] (previously called fovea)
@@ -99,7 +99,7 @@ focalLength = 257.34;       % focal length [px]
 baseline = 0.056;           % interocular distance
 
 % Object distance to eyes [m]
-objDistMin = 1.5; % origin 0.5
+objDistMin = 3.2; % origin 0.5
 objDistMax = 6;   % origin 2
 
 % Fixation distance [m]
@@ -110,7 +110,10 @@ fixDistMax = 3.2219;
 % muscle initialization: correspond now to the minimum and maximum distance
 % the eyes should be looking at. [lateral rectus, medial rectus]
 muscleInitMin = [0, 0];             % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = [0.0064, 0.0011];   % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+muscleInitMax = [0.0064, 0];   % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+% some correspondances (distance: [lateral, medial] activation): 
+% 0.5m : [0, 0.0726], 1.5m : [0, 0.0166], 2m : [0, 0.0089], 3.22m : [0, 0],
+% 4m : [0.0027, 0], 6m : [0.0064, 0], 10m : [0.093, 0]
 
 % period for changing the stimulus for the eyes | origin 10
 interval = 10;
@@ -165,7 +168,7 @@ end
 %
 % 1% = 0.0029 | 2% = 0.0058 | 3% =  0.0087 | 4% = 0.0114 | 5% = 0.0144 | 6% = 0.0173
 % 10% = 0.0289 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
-lambdaMet = 0.0578;
+lambdaMet = 0;
 
 % due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
 % lambdaMet needs to be scaled accordingly
