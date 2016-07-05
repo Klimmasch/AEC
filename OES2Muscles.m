@@ -138,7 +138,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     simulator = OpenEyeSimV2('create');
 
     simulator.initRenderer();
-    % simulator.reinitRenderer(); % for debugging
+%     simulator.reinitRenderer(); % for debugging
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -361,8 +361,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
 
         if mod(t, 100) == 0
-            sprintf('Training Iteration = %d\nAbs Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nAbs Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
-                t, model.cmd_hist(t - model.interval + 1 : t, 1), model.relCmd_hist(t - model.interval + 1 : t, 1), model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t, 2), model.vergerr_hist(t - model.interval + 1 : t))
+            sprintf('Training Iteration: %d,\nObjectDistance:\t%.2fm,\tStart Error:\t%.3f°,\nEnd Fixation:\t%.2fm,\tEnd Error:\t%.3f°,\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
+                t, objDist, model.vergerr_hist(t - model.interval + 1), model.vergerr_hist(t), fixDepth, model.cmd_hist(t, :), mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
+%             sprintf('Training Iteration = %d\nAbs Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nAbs Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
+%                 t, model.cmd_hist(t - model.interval + 1 : t, 1), model.relCmd_hist(t - model.interval + 1 : t, 1), model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t, 2), model.vergerr_hist(t - model.interval + 1 : t))
         end
 
         % Display per cent completed of training and save model
