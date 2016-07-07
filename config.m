@@ -10,7 +10,7 @@ function model = config(textureFile, trainTime, sparseCodingType)
 nBasis = [288, 288];            % total number of basis | origin [288, 288]
 nBasisUsed = [10, 10];          % number of basis used to encode in sparse mode | origin [10, 10]
 basisSize = [128, 128];         % size of each (binocular) base vector: patchSize * patchSize * 2 (left + right eye) | origin [128, 128]
-eta = [0.2, 0.2];               % learning rate [origin 0.01 | Lukas 0.1 | Alex P 0.5, origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2]
+eta = [0.1, 0.1];               % learning rate [origin 0.01 | Lukas 0.1 | Alex P 0.5, origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2]
 temperature = [0.01, 0.01];     % temperature in softmax | origin 0.01
 
 PARAMSC = {nBasis, nBasisUsed, basisSize, eta, temperature};
@@ -59,7 +59,7 @@ hiddenDim = 50;                                     % number of neurons in the h
 dimensions = [inputDim, hiddenDim, outputDim];
 
 weight_range = [1 / inputDim, ...                   % maximum initial weight [critic_ji, actor_ji, actor_kj]
-                1 / (inputDim * hiddenDim), ...                           % origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05] | AL 100 / (inputDim * hiddenDim)
+                5 / (inputDim * hiddenDim), ...                           % origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05] | AL 100 / (inputDim * hiddenDim)
                 2 / (hiddenDim * outputDim)];         % linear [1/inputDim, 1/inputDim, -]
 lambda = 0.01;                                      % reguralization factor | origin 0.01
 deltaVar = 1;                                       % TD error variance tracking/approximating (CACLAVar)
@@ -99,7 +99,7 @@ focalLength = 257.34;       % focal length [px]
 baseline = 0.056;           % interocular distance
 
 % Object distance to eyes [m]
-objDistMin = 3.2; % origin 0.5
+objDistMin = 1.5; % origin 0.5
 objDistMax = 6;   % origin 2
 
 % Fixation distance [m]
@@ -110,10 +110,10 @@ fixDistMax = 3.2219;
 % muscle initialization: correspond now to the minimum and maximum distance
 % the eyes should be looking at. [lateral rectus, medial rectus]
 muscleInitMin = [0, 0];             % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = [0.0064, 0];   % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
+muscleInitMax = [0.0136, 0.0441];   % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 % some correspondances (distance: [lateral, medial] activation): 
-% 0.5m : [0, 0.0726], 1.5m : [0, 0.0166], 2m : [0, 0.0089], 3.22m : [0, 0],
-% 4m : [0.0027, 0], 6m : [0.0064, 0], 10m : [0.093, 0]
+% 0.5m : [0, 0.0726], 1.5m : [0, 0.0166], 1.5m-2deg : [0, 0.0441], 2m : [0, 0.0089], 3m : [0, 0.0011], 3.22m : [0, 0],
+% 4m : [0.0027, 0], 6m : [0.0064, 0], 10m : [0.0093, 0], Inf : [0.0136, 0]
 
 % period for changing the stimulus for the eyes | origin 10
 interval = 10;
@@ -135,7 +135,6 @@ interval = 10;
 % 60% = 0.0761 | 70% = 0.0888 | 80% = 0.1015 | 90% = 0.1142 | 100% = 0.1269
 % 150% = 0.1903 | 200% = 0.2538 | 250% = 0.3172 | 300% = 0.3806
 %
-% 0.1688 equalizes the mean of a basis function activation and an absolute muscle command
 %%%
 
 lambdaMuscleFB = 0.1269;
