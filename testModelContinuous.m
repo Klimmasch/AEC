@@ -246,13 +246,14 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             sprintf('Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
 
             % vergence start error
-            % vergMax = getVergErrMax(objRange(odIndex));
-            % if vergMax > 3
-            %     vergMax = 3;
-            % end
-            % vseRange = [-3, -2, -1, linspace(0, vergMax, 4)];
+            vergMax = getVergErrMax(objRange(odIndex));
+            if vergMax > 2
+                vergMax = 2;
+            end
+            vseRange = [linspace(-2, 0, 4), linspace(0, vergMax, 4)];
+            vseRange = [vseRange(1 : 3), vseRange(5 : end)];
 %             vseRange = [-3:3];
-            vseRange = linspace(-1, 1, 7);
+%             vseRange = linspace(-1, 1, 7);
             angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
 
             for vseIndex = 1 : length(vseRange)
