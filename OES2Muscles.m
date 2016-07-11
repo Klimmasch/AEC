@@ -17,6 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
+%     learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
     % learnedFile = '/home/lelais/Documents/MATLAB/results/model_20-May-2016_13:10:14_500000_nonhomeo_1_2m_newImplem_highResSmSc_noMF/model.mat';
 
     %%% Stimulus declaration
@@ -98,6 +99,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CCritic), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CActor), '.m'), model.savePath);
+        if model.rlModel.continuous == 1
+            copyfile('testModelContinuous.m', model.savePath);
+        end
 
         timeToTrain = model.trainTime;
     end
@@ -138,7 +142,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     simulator = OpenEyeSimV2('create');
 
     simulator.initRenderer();
-    % simulator.reinitRenderer(); % for debugging
+%     simulator.reinitRenderer(); % for debugging
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -321,7 +325,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             % end
 
             relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
-
+            
             % add the change in muscle Activities to current ones
             command = command + relativeCommand;    % two muscles
             command = checkCmd(command);            % restrain motor commands to [0, 1]
@@ -361,8 +365,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
 
         if mod(t, 100) == 0
-            sprintf('Training Iteration = %d\nAbs Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 1 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nAbs Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nRel Command 2 =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]\nVer Error =\t[%7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f, %7.3f]', ...
-                t, model.cmd_hist(t - model.interval + 1 : t, 1), model.relCmd_hist(t - model.interval + 1 : t, 1), model.cmd_hist(t - model.interval + 1 : t, 2), model.relCmd_hist(t - model.interval + 1 : t, 2), model.vergerr_hist(t - model.interval + 1 : t))
+%             infos = {t, objDist, model.vergerr_hist(t - model.interval + 1), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
+%             generateAnaglyphs(t, 1, infos);
+            sprintf('Training Iteration: %d,\nObjectDistance:\t%.2fm,\tStart Error:\t%.3f°,\nEnd Fixation:\t%.2fm,\tEnd Error:\t%.3f°,\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
+                t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
         end
 
         % Display per cent completed of training and save model
@@ -402,59 +408,129 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     if (closeFigures == 1)
         close all;
     end
-end
+    
+    
+    % Generates anaglyphs of the large and small scale fovea and
+    % one of the two unpreprocessed gray scale images
+    % function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath, identifier, markScales, infos)
+    function generateAnaglyphs(identifier, markScales, infos)
 
-% Generates anaglyphs of the large and small scale fovea and
-% one of the two unpreprocessed gray scale images
-function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath)
-    anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
-    imwrite(anaglyph, [savePath '/anaglyph.png']);
+        numberScales = length(model.scModel);
 
-    %Downsampling Large
-    imgLeftL = leftGray(:);
-    imgLeftL = reshape(imgLeftL, size(leftGray));
-    imgRightL = rightGray(:);
-    imgRightL = reshape(imgRightL, size(rightGray));
-    for i = 1:log2(dsRatioL)
-        imgLeftL = impyramid(imgLeftL, 'reduce');
-        imgRightL = impyramid(imgRightL, 'reduce');
+        %defining colors in the image: (from larges to smallest scale)
+        scalingColors = {'blue', 'red', 'green'};
+        textColor = 'yellow';
+
+        scaleImages = cell(numberScales);
+
+        for scale = 1:numberScales
+            %Downsampling Large
+            imgLeft = imgGrayLeft(:);
+            imgLeft = reshape(imgLeft, size(imgGrayLeft));
+            imgRight = imgGrayRight(:);
+            imgRight = reshape(imgRight, size(imgGrayRight));
+
+            for ds = 1:log2(model.dsRatio(scale))
+                imgLeft = impyramid(imgLeft, 'reduce');
+                imgRight = impyramid(imgRight, 'reduce');
+            end
+
+            % cut fovea in the center
+            [h, w, ~] = size(imgLeft);
+            cutOutVertical = [fix(h / 2 + 1 - model.pxFieldOfView(scale) / 2), fix(h / 2 + model.pxFieldOfView(scale) / 2)];
+            cutOutHorizontal = [fix(w / 2 + 1 - model.pxFieldOfView(scale) / 2), fix(w / 2 + model.pxFieldOfView(scale) / 2)];
+
+
+            imgLeft = imgLeft(cutOutVertical(1) : cutOutVertical(2) , cutOutHorizontal(1) : cutOutHorizontal(2));
+            imgRight = imgRight(cutOutVertical(1) : cutOutVertical(2) , cutOutHorizontal(1) : cutOutHorizontal(2));
+
+            %create an anaglyph of the two pictures, scale it up and save it
+            anaglyph = imfuse(imgLeft, imgRight, 'falsecolor');
+
+    %         [hAna, vAna, ~] = size(anaglyph);
+            if markScales
+                anaglyph = insertShape(anaglyph, 'rectangle', [model.pxFieldOfView(scale) + 1 - model.patchSize, 1, model.patchSize, model.patchSize], 'color', scalingColors(scale));
+            end
+
+            scaleImages{scale} = anaglyph;
+        end
+
+    %     imwrite(anaglyph, [savePath '/anaglyph.png']);
+        anaglyph = imfuse(imgGrayLeft, imgGrayRight, 'falsecolor');
+        [h, w, ~] = size(anaglyph);
+
+        if markScales
+            for scale = 1:numberScales
+                % this creates a rectangle inside the image for each scale and
+                % an examplary patch 
+                scaleSizeOrigImg = model.pxFieldOfView(scale) * model.dsRatio(scale);
+                patchSizeOrigImg = model.patchSize * model.dsRatio(scale);
+                windowStart = [fix(w / 2 + 1 - scaleSizeOrigImg / 2), fix(h / 2 + 1 - scaleSizeOrigImg / 2)];
+
+                % indexMatrix = [x, y, scaleWindow, scaleWindow; x, y, patchSize, patchSize] 
+                indexMatrix = [windowStart(1), windowStart(2), scaleSizeOrigImg, scaleSizeOrigImg; windowStart(1), windowStart(2), patchSizeOrigImg, patchSizeOrigImg];
+                anaglyph = insertShape(anaglyph, 'rectangle', indexMatrix, 'Color', scalingColors(scale)); % whole region of scale
+            end
+        end
+    %     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
+
+    %     imwrite(anaglyph, sprintf('%s/anaglyph%.3d.png', savePath, identifier));
+
+
+    %     imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
+    %     imwrite(anaglyphL, sprintf('%s/anaglyphLargeScale%.3d.png', savePath, identifier));
+    %     largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    %     imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage%.3d.png', savePath, identifier));
+
+    %     imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
+
+    %     imwrite(anaglyphS, sprintf('%s/anaglyphSmallScale%.3d.png', savePath, identifier));
+    %     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+    %     imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage%.3d.png', savePath, identifier));
+
+    %     xRange = [0, 320]; yRange = [0, 240];
+        %% todo: insert reconstruction error for all and for each scale
+        %% infos = {iteration, tmpObjRange, vseRange(vseIndex), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
+        xPos = [10, 220, 10, 10, 260, 10, 10, 240]; %display in headful modus: [10, 200, 10, 10, 260, 10, 10]
+        yPos = [10, 10, 230, 220, 230, 190, 200, 220];
+        imName = strsplit(currentTexture, '/');
+        imName = imName{end};
+        insert = {sprintf('Image: \t%s', imName), ...
+                    sprintf('Object distance: \t%.2f', infos{2}), ...
+                    sprintf('Vergence Error:          \t%.3f', infos{4}), ...
+                    sprintf('Start Vergence Error: \t%.3f', infos{3}), ...
+                    sprintf('Iteration: \t%d', infos{1}), ...
+                    sprintf('Muscle Activation:    \t%.3f,  \t%.3f', infos{5}(1), infos{5}(2)), ...
+                    sprintf('Relative Command: \t%.3f,  \t%.3f', infos{6}(1), infos{6}(2)), ...
+                    sprintf('Reward: \t%.3f', infos{7})};
+
+        fig = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
+    %     subplot(2,3,[1,2,4,5]);
+    %     title(sprintf('Object distance: %d,\titeration: %d,\tvergence error: %d', infos(1), infos(2), infos(3)));
+        subplot('Position', [0.05, 0.12, 0.6, 0.8]);
+        imshow(anaglyph);
+        text(xPos, yPos, insert, 'color', textColor); % these numbers resemble white, but white will appear black after saving ;P
+    %     text(10, 20, num2str(size(anaglyph)), 'color', 'yellow'); %[1-eps, 1-eps, 1-eps]
+    %     title('Anaglyph');
+    %     subplot(2,3,3);
+        % positionVector = [left, bottom, width, height], all between 0 and 1
+        sizeScaleImg = 0.6/numberScales;
+        for sp = 1:numberScales
+            if sp == 1
+                subplot('Position', [0.7, 0.9 - sizeScaleImg, sizeScaleImg, sizeScaleImg])
+            else
+                subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg])
+            end
+            imshow(scaleImages{sp});
+            descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{8}(sp))};
+            % todo: the fist two values in text have to be adapted, especially
+            % for more than 2 scales, also the size of the letters, 
+            text(0.03, 0.1, descr, 'color', textColor, 'Units', 'normalized')
+        end
+        saveas(fig, sprintf('%s/anaglyph.png', model.savePath), 'png');
+        fig.delete();
     end
 
-    % cut fovea in the center
-    [h, w, ~] = size(imgLeftL);
-    imgLeftL = imgLeftL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
-              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
-    imgRightL = imgRightL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
-              fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
-
-    % create an anaglyph of the two pictures, scale it up and save it
-    anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
-    imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
-    largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(largeScaleView, 20), [savePath '/LargeScaleMontage.png']);
-
-    % Downsampling Small
-    imgLeftS = leftGray(:);
-    imgLeftS = reshape(imgLeftS, size(leftGray));
-    imgRightS = rightGray(:);
-    imgRightS = reshape(imgRightS, size(rightGray));
-    for i = 1:log2(dsRatioS)
-        imgLeftS = impyramid(imgLeftS, 'reduce');
-        imgRightS = impyramid(imgRightS, 'reduce');
-    end
-
-    % cut fovea in the center
-    [h, w, ~] = size(imgLeftS);
-    imgLeftS = imgLeftS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
-              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
-    imgRightS = imgRightS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
-              fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
-
-    % create an anaglyph of the two pictures, scale it up and save it
-    anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
-    imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
-    smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    imwrite(imresize(smallScaleView, 8), [savePath '/smallScaleMontage.png']);
 end
 
 %% Not overlapping Patch generation
