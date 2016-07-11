@@ -217,47 +217,54 @@ classdef Model < handle
             end
         end
 
-        function CutoutFunc = prepareCutout(this) %done by Julian Corbet
+        %done by Julian Corbet
+        function CutoutFunc = prepareCutout(this)
+            % most inner layer does not need a cutout
+            % therefore n-1 Cuts per n layers
+            for i = 1 : (length(this.dsRatio) - 1)
+                % Measuring which pixels are occupied by the smaller layer in the mid of the larger one and
+                % substracting the overlap and then stretching it according to the scaling factor (this.dsRatio(i+1)/this.dsRatio(i))
+                % which brings us to the resolution of the coarse scale layer
+                fovea_smaller_adjusted = (this.pxFieldOfView(i + 1) - 2 * this.overlap(i)) * (this.dsRatio(i + 1) / this.dsRatio(i));
 
-           for i = 1:1:(length(this.dsRatio)-1) % most inner layer does not need a cutout
-                                                % therefore n-1 Cuts per n layers
+                % substracting the inner layer pixels from the outer layer pixels and dividing the remainder by 2
+                % so you get the amount of pixels which remains on between the two layers on each side
+                raw_delimiter_xy = (this.pxFieldOfView(i) - fovea_smaller_adjusted) / 2;
+                delimiter_xy = 0; %Init
+                j = 0; %Init
 
-               fovea_smaller_adjusted = (this.pxFieldOfView(i+1)-2*this.overlap(i))*(this.dsRatio(i+1)/this.dsRatio(i)); % Measuring which pixels are occupied by the smaller layer in the mid of the larger one and
-                                                                                                                         % substracting the overlap and then stretching it according to the scaling factor (this.dsRatio(i+1)/this.dsRatio(i))
-                                                                                                                         % which brings us to the resolution of the coarse scale layer
+                % While the amount of pixels is not reached add one patch to it
+                % by adding a stride - later substract one patch since stride = 0.5*patchsize
+                while delimiter_xy < raw_delimiter_xy
+                    j = j + 1;
+                    delimiter_xy = this.stride(i) * j;
+                end
 
-               raw_delimiter_xy = (this.pxFieldOfView(i) - fovea_smaller_adjusted)/2; % substracting the inner layer pixels from the outer layer pixels and dividing the remainder by 2
-                                                                                      % so you get the amount of pixels which remains on between the two layers on each side
-               delimiter_xy = 0; %Init
-               j=0; %Init
+                delimiter_xy = j - 1;
 
-               while delimiter_xy<raw_delimiter_xy % While the amount of pixels is not reached add one patch to it by adding a stride - later substract one patch since stride = 0.5*patchsize
-                     j = j+1;
-                     delimiter_xy = this.stride(i)*j;
-               end
+                % Easier Way: delimiter_xy =
+                %(raw_delimiter_xy-this.patchsize)/this.stride(i)+1
 
-               delimiter_xy = j-1;
+                npcs = (this.pxFieldOfView(i) - this.patchSize) / this.stride(i) + 1; % number of patches per column (incorporating stride)
 
-               %Easier Way: delimiter_xy =
-               %(raw_delimiter_xy-this.patchsize)/this.stride(i)+1
+                % First Batch of patches until you find thefirst patch to be thrown away,
+                % because it is in the inner layer (substracted for overlap)
+                CutoutFunc = 1 : (delimiter_xy * (npcs + 1));
 
-               npcs = (this.pxFieldOfView(i) - this.patchSize)/this.stride(i)+1; % number of patches per column (incorporating stride)
+                % Formula found by chance/done by myself|end patches of one row of patches beginning
+                % patches of the next row of patches that are not included in the inner layer
+                for j = 1 : (npcs - 2 * delimiter_xy - 1)
+                    C = (npcs * (delimiter_xy + j) - delimiter_xy + 1) : 1 : (npcs * (delimiter_xy + j) + delimiter_xy);
+                    CutoutFunc = [CutoutFunc C];
+                end
 
-               CutoutFunc = 1:1:(delimiter_xy*(npcs+1)); % First Batch of patches until you find thefirst patch to be thrown away because it is in the inner layer (substracted for overlap)
+                C = (npcs * (delimiter_xy + j + 1) - delimiter_xy + 1) : 1 : npcs ^ 2; % End patches
+                CutoutFunc = [CutoutFunc C];
 
-               for j=1:1:(npcs-2*delimiter_xy-1) % Formula found by chance/done by myself|end patches of one row of patches beginning patches of the next row of patches that are not included in the inner layer
-                   C = (npcs*(delimiter_xy+j)-delimiter_xy+1):1:(npcs*(delimiter_xy+j)+delimiter_xy);
-                   CutoutFunc = [CutoutFunc C];
-               end
-
-               C = (npcs*(delimiter_xy+j+1)-delimiter_xy+1):1:npcs^2; % End patches
-               CutoutFunc = [CutoutFunc C];
-
-               obj.columnInd{i} = obj.columnInd{i}(:,CutoutFunc); % Cutting columnInd to eradicate the inner patches in the outer layer
-
-           end
-
-      end
+                % Cutting columnInd to eradicate the inner patches in the outer layer
+                obj.columnInd{i} = obj.columnInd{i}(:, CutoutFunc);
+            end
+        end
 
         %%% Patch generation
         % img:      image to be processed
