@@ -99,9 +99,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CCritic), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CActor), '.m'), model.savePath);
-        if model.continuous == 1
-	    copyfile('testModelContinuous.m', model.savePath);
-	end
+        if model.rlModel.continuous == 1
+            copyfile('testModelContinuous.m', model.savePath);
+        end
 
         timeToTrain = model.trainTime;
     end

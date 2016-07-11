@@ -51,7 +51,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     imageSavePath = '.';
 
     % fixation interval at testing procedure
-    testInterval = model.interval;
+    testInterval = model.interval * 2;
 
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
@@ -354,12 +354,19 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 end
 
                 % final results
-                testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1);   % vergErr
-                testResult(odIndex, vseIndex, 12 : 22) = std(tmpResult1);
-                testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2);  % deltaMF
-                testResult(odIndex, vseIndex, 34 : 44) = std(tmpResult2);
-                testResult(odIndex, vseIndex, 45 : 55) = mean(tmpResult3);  % critic's response
-                testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
+                
+                testResult(odIndex, vseIndex, 1 : testInterval + 1) = mean(tmpResult1);   % vergErr
+                testResult(odIndex, vseIndex, testInterval + 2 : 2 * testInterval + 2) = std(tmpResult1);
+                testResult(odIndex, vseIndex, 2 * testInterval + 3 : 3 * testInterval + 3) = mean(tmpResult2);  % deltaMF
+                testResult(odIndex, vseIndex, 3 * testInterval + 4 : 4 * testInterval + 4) = std(tmpResult2);
+                testResult(odIndex, vseIndex, 4 * testInterval + 5 : 5 * testInterval + 5) = mean(tmpResult3);  % critic's response
+                testResult(odIndex, vseIndex, 5 * testInterval + 6 : 6 * testInterval + 6) = std(tmpResult3);
+%                 testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1);   % vergErr
+%                 testResult(odIndex, vseIndex, 12 : 22) = std(tmpResult1);
+%                 testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2);  % deltaMF
+%                 testResult(odIndex, vseIndex, 34 : 44) = std(tmpResult2);
+%                 testResult(odIndex, vseIndex, 45 : 55) = mean(tmpResult3);  % critic's response
+%                 testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
             end
         end
 
@@ -469,7 +476,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             grid on;
             grid minor;
             for vseIndex = 1 : size(model.testResult, 2)
-                errorbar(0 : testInterval, model.testResult(odIndex, vseIndex, 1 : 11), model.testResult(odIndex, vseIndex, 12 : 22), ...
+                errorbar(0 : testInterval, model.testResult(odIndex, vseIndex, 1 : testInterval + 1), model.testResult(odIndex, vseIndex, testInterval + 2 : 2 * testInterval + 2), ...
                          'color', [rand, rand, rand], 'LineWidth', 1.3);
             end
             axis([-1, testInterval + 1, -inf, inf]);
@@ -524,8 +531,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             %                'color', [rand, rand, rand], 'LineWidth', 0.7, 'LineStyle', 'none');
 
             tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])']);
+                               reshape(reshape(model.testResult(odIndex, :, 2 * testInterval + 4 : 3 * testInterval + 3), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 3 * testInterval + 5 : 4 * testInterval + 4), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])']);
 
             [hl3, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
@@ -583,8 +590,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             %          'Marker', '*', 'MarkerSize', 2.5, 'LineWidth', 0.9, 'LineStyle', 'none');
 
             tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 46 : 55), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 57 : 66), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])']);
+                               reshape(reshape(model.testResult(odIndex, :, 4 * testInterval + 6 : 5 * testInterval + 5), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
+                               reshape(reshape(model.testResult(odIndex, :, 5 * testInterval + 7 : 6 * testInterval + 6), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])']);
 
             [hl, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 

@@ -294,7 +294,7 @@ classdef Model < handle
         %% Plotting everything and save graphs
         function allPlotSave(this)
             % windowSize = 125;
-            windowSize = 450;
+            windowSize = 1000;
             if (this.trainTime < windowSize * this.interval)
                 windowSize = round(this.trainTime / this.interval / 5);
             end
