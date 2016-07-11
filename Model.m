@@ -150,11 +150,10 @@ classdef Model < handle
             obj.cutout = PARAM{1}{21};
 
             % Prepare index matrix for image patches
-            if obj.cutout == 0
-                obj.columnInd = obj.prepareColumnInd();
-            else
-                obj.columnInd = obj.prepareColumnInd();
-                obj.columnInd = obj.prepareCutout();
+            obj.prepareColumnInd();
+            % cut out central region
+            if (obj.cutout == 1)
+                obj.prepareCutout();
             end
 
             %%% Create SC models
@@ -200,25 +199,25 @@ classdef Model < handle
 
         % Generates index matrix for image patches
         % Filled image batch, i.e. all patches for the respective scale are used
-        function columnInd = prepareColumnInd(this)
+        function prepareColumnInd(this)
             % index matrix
-            columnInd = {};
+            obj.columnInd = {};
             % number of patches per column
             npc = this.pxFieldOfView - this.patchSize + 1;
             % for #scales
             for i = 1 : length(this.dsRatio)
                 k = 1;
                 l = length(1 : this.stride(i) : npc(i));
-                columnInd{end + 1} = zeros(1, l ^ 2); %not clear
+                obj.columnInd{end + 1} = zeros(1, l ^ 2); %not clear
                 for j = 1 : this.stride(i) : npc(i)
-                    columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : this.stride(i) : j * npc(i);
+                    obj.columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : this.stride(i) : j * npc(i);
                     k = k + 1;
                 end
             end
         end
 
         %done by Julian Corbet
-        function CutoutFunc = prepareCutout(this)
+        function prepareCutout(this)
             % most inner layer does not need a cutout
             % therefore n-1 Cuts per n layers
             for i = 1 : (length(this.dsRatio) - 1)
