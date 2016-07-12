@@ -121,7 +121,8 @@ classdef Model < handle
             % obj.feature_hist = zeros(obj.trainTime, PARAM{3}{9}(1));
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
-            obj.weight_hist = zeros(obj.trainTime, 4);
+            % obj.weight_hist = zeros(obj.trainTime, 4);
+            obj.weight_hist = zeros(obj.trainTime, 6); % for also traking change in weights
             obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
             obj.variance_hist = zeros(obj.trainTime, 1);
@@ -396,12 +397,17 @@ classdef Model < handle
             figure;
             hold on;
             grid on;
-            plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
-            plot(this.verge_actual, 'b', 'LineWidth', 1.3);
+            if length(this.verge_desired) >= 200
+                plot(this.verge_desired(end-200:end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+                plot(this.verge_actual(end-200:end), 'b', 'LineWidth', 1.3);
+            else
+                plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+                plot(this.verge_actual, 'b', 'LineWidth', 1.3);
+            end
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Angle [deg]', 'FontSize', 12);
             legend('desired', 'actual');
-            title('Vergence');
+            title('Vergence at last 200 steps of training');
             plotpath = sprintf('%s/vergenceAngle', this.savePath);
             saveas(gcf, plotpath, 'png');
 
@@ -413,17 +419,17 @@ classdef Model < handle
                     hold on;
                     grid on;
                     subplot(3, 1, 1);
-                    plot(this.cmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(this.cmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     ylabel('Value', 'FontSize', 12);
                     title('Total Muscle Commands (lateral rectus)');
 
                     subplot(3, 1, 2);
-                    plot(this.relCmd_hist(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(this.relCmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     ylabel('Value', 'FontSize', 12);
                     title('\Delta Muscle Commands (lateral rectus)');
 
                     subplot(3, 1, 3);
-                    plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                     ylabel('Value', 'FontSize', 12);
                     title('Metabolic Costs');
@@ -437,21 +443,21 @@ classdef Model < handle
                 hold on;
                 grid on;
                 subplot(3, 1, 1);
-                plot(this.cmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                plot(this.cmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 ylabel('Value', 'FontSize', 12);
                 title('Total Muscle Commands (medial rectus)');
 
                 subplot(3, 1, 2);
                 if (this.rlModel.CActor.output_dim == 2)
-                    plot(this.relCmd_hist(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(this.relCmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 else
-                    plot(this.relCmd_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(this.relCmd_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 end
                 ylabel('Value', 'FontSize', 12);
                 title('\Delta Muscle Commands (medial rectus)');
 
                 subplot(3, 1, 3);
-                plot(this.metCost_hist, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                 ylabel('Value', 'FontSize', 12);
                 title('Metabolic Costs');
