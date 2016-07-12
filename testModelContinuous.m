@@ -7,7 +7,7 @@
 %@param reinitRenderer      1 if renderer was already initialized
 %                           0 if renderer wasn't initialized yet
 %%%
-function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer)
+function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer, folder)
 
     % Vergence error resolution for 2nd testing procedure
     % Needs to be odd number to include vergErr = 0
@@ -47,8 +47,12 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
     end
 
-    % imageSavePath = model.savePath;
-    imageSavePath = '.';
+    %%% creating a new directory if (folder ~= '/.')
+    if folder(1) ~= '/'
+        folder = ['/' folder]
+    end
+    imageSavePath = [model.savePath folder];
+    mkdir(imageSavePath);
 
     % fixation interval at testing procedure
     testInterval = model.interval * 2;
@@ -349,7 +353,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     % anaglyph
                     % if (abs(tmpResult1(stimulusIndex, 11)) > 3)
                     %     imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), ...
-                    %             sprintf('%s/anaglyph%d_vergerr_%.2f_img%d.png', model.savePath, tr3Ind, tmpResult1(stimulusIndex, 11), stimulusIndex));
+                    %             sprintf('%s/anaglyph%d_vergerr_%.2f_img%d.png', imageSavePath, tr3Ind, tmpResult1(stimulusIndex, 11), stimulusIndex));
                     % end
                 end
 
@@ -439,7 +443,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             model.testResult4 = testResult4;
             model.testResult5 = testResult5;
             if (saveTestResults == 1)
-                save(strcat(model.savePath, '/model'), 'model');
+                save(strcat(imageSavePath, '/model'), 'model');
             end
         catch
             % catch non-existing variables error, occuring in non-up-to-date models
@@ -454,7 +458,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 model.testResult4 = testResult4;
                 model.testResult5 = testResult5;
                 if (saveTestResults == 1)
-                    save(strcat(model.savePath, '/model'), 'model');
+                    save(strcat(imageSavePath, '/model'), 'model');
                 end
                 delete(clone);
                 clear clone;
@@ -487,7 +491,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             end
             ylabel('Vergence Error [deg]', 'FontSize', 12);
             title(sprintf('Avg Vergence Error over Trial at Testing\nObject Distance = %.2fm', objRange(odIndex)));
-            plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.2fm].png', model.savePath, objRange(odIndex));
+            plotpath = sprintf('%s/AvgVergErrOverTrial_objDist[%.2fm].png', imageSavePath, objRange(odIndex));
             saveas(gcf, plotpath, 'png');
         end
 
@@ -503,7 +507,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         % ylabel('Object distance [m]', 'FontSize', 12);
         % zlabel('Vergence Error [deg]', 'FontSize', 12);
         % title('Avg Vergence Error over Trial at Testing');
-        % plotpath = sprintf('%s/AvgVergErrOverTrial3D', model.savePath);
+        % plotpath = sprintf('%s/AvgVergErrOverTrial3D', imageSavePath);
         % saveas(gcf, plotpath, 'png');
 
         % deltaMuscleForce vs Vergence Error
@@ -568,10 +572,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
         ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
         title('\Delta MF(verg_{err}) response at Testing procedure');
-        if (~isempty(model.savePath))
-            plotpath = sprintf('%s/deltaMFasFktVerErr', model.savePath);
+        % if (~isempty(model.savePath))
+            plotpath = sprintf('%s/deltaMFasFktVerErr', imageSavePath);
             saveas(gcf, plotpath, 'png');
-        end
+        % end
 
         % critic's response
         figure;
@@ -628,10 +632,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
         ylabel('Value', 'FontSize', 12);
         title('Critic Value vs. Vergence Error');
-        if (~isempty(model.savePath))
-            plotpath = sprintf('%s/criticValvsVerErr', model.savePath);
+        % if (~isempty(model.savePath))
+            plotpath = sprintf('%s/criticValvsVerErr', imageSavePath);
             saveas(gcf, plotpath, 'png');
-        end
+        % end
 
         % critic's response fine resolution
         vseRange = linspace(-1, 1, test2Resolution);
@@ -670,10 +674,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             end
             ylabel('Value', 'FontSize', 12);
             title(sprintf('Critic Value vs. Vergence Error\nobjDist = %.2fm, max@vergErr = %.3f°', objRange(odIndex), tmpMax));
-            if (~isempty(model.savePath))
-                plotpath = sprintf('%s/criticValvsVerErrFine[%.2f].png', model.savePath, objRange(odIndex));
+            % if (~isempty(model.savePath))
+                plotpath = sprintf('%s/criticValvsVerErrFine[%.2f].png', imageSavePath, objRange(odIndex));
                 saveas(gcf, plotpath, 'png');
-            end
+            % end
         end
 
         %%% Plot the resonstruction error of basis functions over different disparities
@@ -743,7 +747,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         % title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
 
         % if (~ isempty(model.savePath))
-        %     plotpath = sprintf('%s/recErrVsVergErr[%.2fm,%.2fm].png', model.savePath, objRange(1), objRange(end));
+        %     plotpath = sprintf('%s/recErrVsVergErr[%.2fm,%.2fm].png', imageSavePath, objRange(1), objRange(end));
         %     saveas(gcf, plotpath, 'png');
         % end
 
@@ -785,10 +789,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             ylabel('Resonstruction Error', 'FontSize', 12);
             title(sprintf('Reconstruction Error vs. Vergence Error\nobjDist = %.2fm, TotalMin@vergErr = %.4f°', objRange(odIndex), tmpMin));
 
-            if (~ isempty(model.savePath))
-                plotpath = sprintf('%s/recErrVsVergErrFine[%.2fm].png', model.savePath, objRange(odIndex));
+            % if (~ isempty(model.savePath))
+                plotpath = sprintf('%s/recErrVsVergErrFine[%.2fm].png', imageSavePath, objRange(odIndex));
                 saveas(gcf, plotpath, 'png');
-            end
+            % end
         end
 
         % Total error
@@ -816,10 +820,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         ylabel('Vergence Error [deg]', 'FontSize', 12);
         title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f°,\n4*IQR = %.4f, RMSE = %.4f° at %dth step', ...
                       mean(model.testResult3(:, testInterval)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4, sqrt(mean(model.testResult3(:,10).^2)), testInterval));
-        if (~isempty(model.savePath))
-            plotpath = sprintf('%s/totalError', model.savePath);
+        % if (~isempty(model.savePath))
+            plotpath = sprintf('%s/totalError', imageSavePath);
             saveas(gcf, plotpath, 'png');
-        end
+        % end
 
         %% Check for bias at 0° vergence start error
         if (nStim == 0)
@@ -872,10 +876,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         % end
         suptitle(sprintf('Model bias with 0° vergence start error and total\nafter %d iterations for %d stimuli', ...
                          testInterval, nStim));
-        if (~isempty(model.savePath))
-            plotpath = sprintf('%s/ModelBiasAt0VergErr', model.savePath);
+        % if (~isempty(model.savePath))
+            plotpath = sprintf('%s/ModelBiasAt0VergErr', imageSavePath);
             saveas(gcf, plotpath, 'png');
-        end
+        % end
 
         %%% Muscle correlation check
         % Total
@@ -887,7 +891,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             xlabel('Lateral rectus [%]', 'FontSize', 12);
             ylabel('Medial rectus [%]', 'FontSize', 12);
             title(strcat('Total Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
-            plotpath = sprintf('%s/muscleGraphsScatterTotalTesting', model.savePath);
+            plotpath = sprintf('%s/muscleGraphsScatterTotalTesting', imageSavePath);
             saveas(gcf, plotpath, 'png');
 
             % Delta
@@ -898,7 +902,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             xlabel('Lateral rectus [%]', 'FontSize', 12);
             ylabel('Medial rectus [%]', 'FontSize', 12);
             title(strcat('\Delta Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
-            plotpath = sprintf('%s/muscleGraphsScatterDeltaTesting', model.savePath);
+            plotpath = sprintf('%s/muscleGraphsScatterDeltaTesting', imageSavePath);
             saveas(gcf, plotpath, 'png');
         end
     end

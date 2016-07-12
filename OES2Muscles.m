@@ -24,25 +24,28 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     textureFile = 'Textures_vanHaterenTrain.mat';   % vanHateren database
     % textureFile = 'Textures_celine.mat';          % Celine's images
 
-    % Sparse coding approach
+    %%% executing the test procedure during training?
+    testAt = [500000:500000:trainTime]; 
+    
+    %%% Sparse coding approach
     % sparseCodingType: 0 = non-homeostatic
     %                   1 = homeostatic
     sparseCodingType = uint8(0);
     sparseCodingTypeName = cellstr(['nonhomeo'; 'homeo___']);
 
-    % Plotting flag
+    %%% Plotting flag
     % Whether figures should be generated and saved
     % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
     plotIt = [uint8(1), uint8(1)];
 
-    % Whether figures should be closed after generation
+    %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
     %               1 = do it
     closeFigures = uint8(1);
 
-    % Testing flag
+    %%% Testing flag
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
@@ -77,8 +80,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         return;
     end
 
-    % File management: either complete training with existing folder etc.,
-    % or create a new one
+    % File management: either complete training with existing folder etc., or create a new one
     if ((useLearnedFile(1) == 1) && (useLearnedFile(2) == 1))
         timeToTrain = model.trainTime - model.trainedUntil;
     else
@@ -105,6 +107,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         timeToTrain = model.trainTime;
     end
+    
     % additional notes/infromation to this model/approach
     model.notes = [model.notes fileDescription];
 
@@ -359,6 +362,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.weight_hist(t, 2) = model.rlModel.CActor.params(1);
             model.weight_hist(t, 3) = model.rlModel.CActor.params(2);
             model.weight_hist(t, 4) = model.rlModel.CActor.params(3);
+            model.weight_hist(t, 5) = model.rlModel.CActor.params(4); % weight change hidden layer
+            model.weight_hist(t, 6) = model.rlModel.CActor.params(5); % weight change output layer
             model.variance_hist(t) = model.rlModel.CActor.variance;
 
             model.trainedUntil = t;
@@ -369,6 +374,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 %             generateAnaglyphs(t, 1, infos);
             sprintf('Training Iteration: %d,\nObjectDistance:\t%.2fm,\tStart Error:\t%.3f°,\nEnd Fixation:\t%.2fm,\tEnd Error:\t%.3f°,\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
                 t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
+        end
+        
+        % testing during training!
+        if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
+            testModelContinuous(model, 33, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
+            close all;
         end
 
         % Display per cent completed of training and save model
@@ -400,9 +411,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     end
 
     %%% Testing procedure
-    if (testIt == 1)
+    if (testIt & (t ~= testAt(end))) % do not test again if you tested at the end of training
         % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-        testModelContinuous(model, 33, plotIt(2), 1, simulator, 0);
+        testModelContinuous(model, 33, plotIt(2), 1, simulator, 0, '.');
     end
 
     if (closeFigures == 1)
