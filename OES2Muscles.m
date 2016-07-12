@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-%     learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
+    % learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
     % learnedFile = '/home/lelais/Documents/MATLAB/results/model_20-May-2016_13:10:14_500000_nonhomeo_1_2m_newImplem_highResSmSc_noMF/model.mat';
 
     %%% Stimulus declaration
@@ -325,7 +325,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             % end
 
             relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
-            
+
             % add the change in muscle Activities to current ones
             command = command + relativeCommand;    % two muscles
             command = checkCmd(command);            % restrain motor commands to [0, 1]
@@ -408,8 +408,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     if (closeFigures == 1)
         close all;
     end
-    
-    
+
+
     % Generates anaglyphs of the large and small scale fovea and
     % one of the two unpreprocessed gray scale images
     % function generateAnaglyphs(leftGray, rightGray, dsRatioL, dsRatioS, foveaL, foveaS, savePath, identifier, markScales, infos)
@@ -462,12 +462,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         if markScales
             for scale = 1:numberScales
                 % this creates a rectangle inside the image for each scale and
-                % an examplary patch 
+                % an examplary patch
                 scaleSizeOrigImg = model.pxFieldOfView(scale) * model.dsRatio(scale);
                 patchSizeOrigImg = model.patchSize * model.dsRatio(scale);
                 windowStart = [fix(w / 2 + 1 - scaleSizeOrigImg / 2), fix(h / 2 + 1 - scaleSizeOrigImg / 2)];
 
-                % indexMatrix = [x, y, scaleWindow, scaleWindow; x, y, patchSize, patchSize] 
+                % indexMatrix = [x, y, scaleWindow, scaleWindow; x, y, patchSize, patchSize]
                 indexMatrix = [windowStart(1), windowStart(2), scaleSizeOrigImg, scaleSizeOrigImg; windowStart(1), windowStart(2), patchSizeOrigImg, patchSizeOrigImg];
                 anaglyph = insertShape(anaglyph, 'rectangle', indexMatrix, 'Color', scalingColors(scale)); % whole region of scale
             end
@@ -524,7 +524,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             imshow(scaleImages{sp});
             descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{8}(sp))};
             % todo: the fist two values in text have to be adapted, especially
-            % for more than 2 scales, also the size of the letters, 
+            % for more than 2 scales, also the size of the letters,
             text(0.03, 0.1, descr, 'color', textColor, 'Units', 'normalized')
         end
         saveas(fig, sprintf('%s/anaglyph.png', model.savePath), 'png');

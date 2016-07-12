@@ -15,7 +15,7 @@ pxFieldOfViewOrig = [128, 40];                  % fields of view in original ima
 pxFieldOfView = pxFieldOfViewOrig ./ dsRatio;   % fields of view in downsampled image [pixel] (previously called fovea)
                                                 % pxFieldOfView = FieldOfView in original image [pixel] / dsRatio
 stride = [patchSize / 2, patchSize / 2];        % image patch strides | origin [1, patchSize / 2]
-cutout = [0];                                   % Manages whether cutout procedure is applied [1] or not [0]
+cutout = uint8(1);                              % Manages whether cutout procedure is applied [1] or not [0]
 overlap = [0];                                  % Overlap between the different layers measured in units of FINE scale - works only in conjunction with cutout
 
 % Sanity check of parameter values
@@ -123,6 +123,20 @@ nBasisUsed = [10, 10];                                      % number of basis us
 basisSize = [(patchSize ^ 2) * 2, (patchSize ^ 2) * 2];     % size of each (binocular) base vector: patchSize * patchSize * 2 (left + right eye) | origin [128, 128]
 eta = [0.2, 0.2];                                           % learning rate [origin 0.01 | Lukas 0.1 | Alex P 0.5, origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2]
 temperature = [0.01, 0.01];                                 % temperature in softmax | origin 0.01
+
+% security check
+if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
+ || (length(stride) ~= length(dsRatio)) ...
+ || (length(overlap) ~= length(dsRatio) - 1) ...
+ || (length(nBasis) ~= length(dsRatio)) ...
+ || (length(nBasisUsed) ~= length(dsRatio)) ...
+ || (length(basisSize) ~= length(dsRatio)) ...
+ || (length(eta) ~= length(dsRatio)) ...
+ || (length(temperature) ~= length(dsRatio)))
+    sprintf('Error: For usage of #%d scales all respective SC and model parameters needs to have length %d.', ...
+            length(dsRatio), length(dsRatio))
+    return;
+end
 
 PARAMSC = {nBasis, nBasisUsed, basisSize, eta, temperature};
 

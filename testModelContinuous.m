@@ -274,8 +274,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                         % Image patch generation
                         for i = 1 : length(model.scModel)
-                            model.preprocessImageFilled(imgGrayLeft, i, 1);
-                            model.preprocessImageFilled(imgGrayRight, i, 2);
+                            model.preprocessImage(imgGrayLeft, i, 1);
+                            model.preprocessImage(imgGrayRight, i, 2);
                             currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
                         end
 
@@ -354,7 +354,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 end
 
                 % final results
-                
+
                 testResult(odIndex, vseIndex, 1 : testInterval + 1) = mean(tmpResult1);   % vergErr
                 testResult(odIndex, vseIndex, testInterval + 2 : 2 * testInterval + 2) = std(tmpResult1);
                 testResult(odIndex, vseIndex, 2 * testInterval + 3 : 3 * testInterval + 3) = mean(tmpResult2);  % deltaMF
@@ -395,8 +395,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                     % Image patch generation
                     for i = 1 : length(model.scModel)
-                        model.preprocessImageFilled(imgGrayLeft, i, 1);
-                        model.preprocessImageFilled(imgGrayRight, i, 2);
+                        model.preprocessImage(imgGrayLeft, i, 1);
+                        model.preprocessImage(imgGrayRight, i, 2);
                         currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
                     end
 
@@ -835,7 +835,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             startInd = endInd + nStim * 6 + 1;
             boxlabels{i} = num2str(objRange(i));
         end
-        
+
         figure;
         axArray = zeros(1, 2);
         axArray(1) = subplot(1, 4, [1, 3]);

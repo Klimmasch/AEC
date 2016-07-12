@@ -201,67 +201,63 @@ classdef Model < handle
         % Filled image batch, i.e. all patches for the respective scale are used
         function prepareColumnInd(this)
             % index matrix
-            obj.columnInd = {};
-            % number of patches per column
+            this.columnInd = {};
+            % (start) index of left upper corner of respective patches
             npc = this.pxFieldOfView - this.patchSize + 1;
             % for #scales
             for i = 1 : length(this.dsRatio)
                 k = 1;
+                % number of patches per column/row
                 l = length(1 : this.stride(i) : npc(i));
-                obj.columnInd{end + 1} = zeros(1, l ^ 2); %not clear
+                % each scale has l * l patches
+                this.columnInd{end + 1} = zeros(1, l ^ 2);
+                % calculate index of left upper corner of respective patches
                 for j = 1 : this.stride(i) : npc(i)
-                    obj.columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : this.stride(i) : j * npc(i);
+                    this.columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : this.stride(i) : j * npc(i);
                     k = k + 1;
                 end
             end
         end
 
-        %done by Julian Corbet
+        % Cuts out smaller scales from larger scales' fields of view
         function prepareCutout(this)
             % most inner layer does not need a cutout
-            % therefore n-1 Cuts per n layers
+            % therefore n-1 cuts per n layers
             for i = 1 : (length(this.dsRatio) - 1)
-                % Measuring which pixels are occupied by the smaller layer in the mid of the larger one and
-                % substracting the overlap and then stretching it according to the scaling factor (this.dsRatio(i+1)/this.dsRatio(i))
-                % which brings us to the resolution of the coarse scale layer
-                fovea_smaller_adjusted = (this.pxFieldOfView(i + 1) - 2 * this.overlap(i)) * (this.dsRatio(i + 1) / this.dsRatio(i));
+                % Calculate cutout area, upsample to orig and downsample to current (substract more if needed)
+                foveaSmallerAdjusted = ceil((this.pxFieldOfView(i + 1) - 2 * this.overlap(i)) * (this.dsRatio(i + 1) / this.dsRatio(i)));
 
-                % substracting the inner layer pixels from the outer layer pixels and dividing the remainder by 2
-                % so you get the amount of pixels which remains on between the two layers on each side
-                raw_delimiter_xy = (this.pxFieldOfView(i) - fovea_smaller_adjusted) / 2;
-                delimiter_xy = 0; %Init
-                j = 0; %Init
+                % Calculate offset of coarse scale [px]
+                offsetCoarse = (this.pxFieldOfView(i) - foveaSmallerAdjusted) / 2;
 
-                % While the amount of pixels is not reached add one patch to it
-                % by adding a stride - later substract one patch since stride = 0.5*patchsize
-                while delimiter_xy < raw_delimiter_xy
-                    j = j + 1;
-                    delimiter_xy = this.stride(i) * j;
+                % # stride applications =^ offset width
+                offsetWidth = ceil(((offsetCoarse - this.patchSize) / this.stride(i)) + 1);
+
+                % number of patches per row/column
+                nprc = floor((this.pxFieldOfView(i) - this.patchSize) / this.stride(i) + 1);
+
+                % remaining patches vector [indices]
+                remainder = [];
+
+                % full rows + first left border part
+                startPart = 1 : (offsetWidth * (nprc + 1));
+                % remainder(1 : length(startPart)) = startPart;
+                remainder = [remainder, startPart];
+
+                % right border + next row's left border patches
+                for j = 1 : (nprc - 2 * offsetWidth - 1)
+                    borderPart = (nprc * (offsetWidth + j) - offsetWidth + 1) : (nprc * (offsetWidth + j) + offsetWidth);
+                    % remainder(length(startPart) + length(borderPart) * (j - 1) + 1 : length(startPart) + length(borderPart) * j) = borderPart;
+                    remainder = [remainder, borderPart];
                 end
 
-                delimiter_xy = j - 1;
-
-                % Easier Way: delimiter_xy =
-                %(raw_delimiter_xy-this.patchsize)/this.stride(i)+1
-
-                npcs = (this.pxFieldOfView(i) - this.patchSize) / this.stride(i) + 1; % number of patches per column (incorporating stride)
-
-                % First Batch of patches until you find thefirst patch to be thrown away,
-                % because it is in the inner layer (substracted for overlap)
-                CutoutFunc = 1 : (delimiter_xy * (npcs + 1));
-
-                % Formula found by chance/done by myself|end patches of one row of patches beginning
-                % patches of the next row of patches that are not included in the inner layer
-                for j = 1 : (npcs - 2 * delimiter_xy - 1)
-                    C = (npcs * (delimiter_xy + j) - delimiter_xy + 1) : 1 : (npcs * (delimiter_xy + j) + delimiter_xy);
-                    CutoutFunc = [CutoutFunc C];
-                end
-
-                C = (npcs * (delimiter_xy + j + 1) - delimiter_xy + 1) : 1 : npcs ^ 2; % End patches
-                CutoutFunc = [CutoutFunc C];
+                % right border + remaining full rows
+                endPart = (nprc * (offsetWidth + j + 1) - offsetWidth + 1) : nprc ^ 2;
+                % remainder(length(startPart) + length(borderPart) * j + 1 : end) = endPart;
+                remainder = [remainder, endPart];
 
                 % Cutting columnInd to eradicate the inner patches in the outer layer
-                obj.columnInd{i} = obj.columnInd{i}(:, CutoutFunc);
+                this.columnInd{i} = this.columnInd{i}(:, remainder);
             end
         end
 
@@ -290,12 +286,12 @@ classdef Model < handle
             patches = patches(:, this.columnInd{scScale});
 
             % pre-processing steps (0 mean, unit norm)
-            patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    % 0 mean
-            normp = sqrt(sum(patches.^2));                                      % patches norm
+            patches = patches - repmat(mean(patches), [size(patches, 1), 1]);   % 0 mean
+            normp = sqrt(sum(patches .^ 2));                                      % patches norm
 
             % normalize patches to norm 1
             normp(normp == 0) = eps;                                            % regularizer
-            patches = patches ./ repmat(normp, [size(patches, 1) 1]);           % normalized patches
+            patches = patches ./ repmat(normp, [size(patches, 1), 1]);          % normalized patches
 
             if (eyePos == 1)
                 this.patchesLeft{scScale} = patches;
