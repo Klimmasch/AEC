@@ -442,46 +442,59 @@ classdef Model < handle
             end
 
             %% Vergence angle
-            obsWin = 250; % #last iterations to plot
+            obsWin = 249; % #last iterations to plot
             figure;
             hold on;
             grid on;
             if (length(this.verge_desired) >= obsWin)
-                plot(this.verge_desired(end - obsWin : end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+                plot(this.verge_desired(end - obsWin : end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
                 plot(this.verge_actual(end - obsWin : end), 'b', 'LineWidth', 1.3);
             else
-                plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+                plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
                 plot(this.verge_actual, 'b', 'LineWidth', 1.3);
             end
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Angle [deg]', 'FontSize', 12);
             legend('desired', 'actual');
-            title(sprintf('Vergence at last %d steps of training', obsWin));
+            title(sprintf('Vergence at last %d steps of training', obsWin + 1));
             plotpath = sprintf('%s/vergenceAngle', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Muscel graphs
             if (this.rlModel.continuous == 1)
+                %% Simple Moving Average Vergence Error
+                windowSize = 1000;
+                if (this.trainTime < windowSize * this.interval)
+                    windowSize = round(this.trainTime / this.interval / 5);
+                end
+                cmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind, 1));
+                cmd_hist_sma = [cmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind, 2))];
+                relCmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.relCmd_hist(ind, 1));
+                metCost_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.metCost_hist(ind));
+
                 % Lateral Rectus
                 if (this.rlModel.CActor.output_dim == 2)
+                    relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.relCmd_hist(ind, 2))];
                     figure;
                     hold on;
                     grid on;
                     subplot(3, 1, 1);
-                    plot(this.cmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.cmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(cmd_hist_sma(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     ylabel('Value', 'FontSize', 12);
-                    title('Total Muscle Commands (lateral rectus)');
+                    title('Total Muscle Commands (lateral rectus) SMA');
 
                     subplot(3, 1, 2);
-                    plot(this.relCmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.relCmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(relCmd_hist_sma(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     ylabel('Value', 'FontSize', 12);
-                    title('\Delta Muscle Commands (lateral rectus)');
+                    title('\Delta Muscle Commands (lateral rectus) SMA');
 
                     subplot(3, 1, 3);
-                    plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(metCost_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                     ylabel('Value', 'FontSize', 12);
-                    title('Metabolic Costs');
+                    title('Metabolic Costs SMA');
 
                     plotpath = sprintf('%s/muscleGraphsLateralRectus', this.savePath);
                     saveas(gcf, plotpath, 'png');
@@ -492,24 +505,28 @@ classdef Model < handle
                 hold on;
                 grid on;
                 subplot(3, 1, 1);
-                plot(this.cmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                % plot(this.cmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                plot(cmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 ylabel('Value', 'FontSize', 12);
-                title('Total Muscle Commands (medial rectus)');
+                title('Total Muscle Commands (medial rectus) SMA');
 
                 subplot(3, 1, 2);
                 if (this.rlModel.CActor.output_dim == 2)
-                    plot(this.relCmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.relCmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(relCmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 else
-                    plot(this.relCmd_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.relCmd_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(relCmd_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 end
                 ylabel('Value', 'FontSize', 12);
-                title('\Delta Muscle Commands (medial rectus)');
+                title('\Delta Muscle Commands (medial rectus) SMA');
 
                 subplot(3, 1, 3);
-                plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                % plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                plot(metCost_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                 ylabel('Value', 'FontSize', 12);
-                title('Metabolic Costs');
+                title('Metabolic Costs SMA');
 
                 plotpath = sprintf('%s/muscleGraphsMedialRectus', this.savePath);
                 saveas(gcf, plotpath, 'png');
