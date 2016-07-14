@@ -1,13 +1,9 @@
 function model = config(textureFile, trainTime, sparseCodingType)
 
-% weights = [];
-% weightsHist = cell(2, 1);
-% loadBasis = uint8(0);
-% loadweights = uint8(0);
-
 %%% Model parameters
 % Image processing constants
 patchSize = 8;                                  % patch size [pixel] of one basis functon, i.e. "receptive field" size | origin 8
+
 % [peripheral vision, ..., central vision]
 dsRatio = [4, 1];                               % downsampling ratio, i.e. how many pixels in original image
                                                 % correspond to how many pixels in downsampled image | origin [8, 2]
@@ -34,7 +30,7 @@ end
 % Camera parameters
 % offset = 0;               % vertical offset between left and right (0 in the iCub Simulator!)
 focalLength = 257.34;       % focal length [px]
-baseline = 0.056;           % interocular distance
+baseline = 0.056;           % interocular distance [m]
 
 % Object distance to eyes [m]
 objDistMin = 1.5; % origin 0.5
@@ -45,13 +41,13 @@ objDistMax = 6;   % origin 2
 fixDistMin = 0.3379;
 fixDistMax = 3.2219;
 
-% muscle initialization: correspond now to the minimum and maximum distance
+% Muscle initialization [%]: correspond now to the minimum and maximum distance
 % the eyes should be looking at. [lateral rectus, medial rectus]
-muscleInitMin = [0, 0];             % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-muscleInitMax = [0.0064, 0.0166];   % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 % some correspondances (distance: [lateral, medial] activation):
 % 0.5m : [0, 0.0726], 1.5m : [0, 0.0166], 1.5m-2deg : [0, 0.0441], 2m : [0, 0.0089], 3m : [0, 0.0011], 3.22m : [0, 0],
 % 4m : [0.0027, 0], 6m : [0.0064, 0], 10m : [0.0093, 0], Inf : [0.0136, 0]
+muscleInitMin = [0, 0];             % minimal initial muscle innervation orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
+muscleInitMax = [0.0064, 0.0166];   % maximal --"--, orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
 
 % period for changing the stimulus for the eyes | origin 10
 interval = 10;
@@ -74,19 +70,14 @@ interval = 10;
 % 150% = 0.1903 | 200% = 0.2538 | 250% = 0.3172 | 300% = 0.3806
 %
 %%%
-
 lambdaMuscleFB = 0.1269;
-% matlab -nodisplay -r "OES2Muscles(500000,1,'lrec1_lmet0_lmf25_fovS128-40_dsR81_str05-05_lrC1_lrA1')"
 
 %%% Reward function parameters, i.e. their "proportions" to the whole reward signal
 %%% Reconstruction error factor
 % the % is in respect to the reconstruction error, i.e. 100% X means signal X is as strong as
 % 6.391 * mean reconstruction error on average, whereby 6.391 * mean reconstruction error ~= 1
-% pure 15.647% = 1 | privious 77.12% = 4.929 | 100% = 6.391
+% pure 15.647% = 1 | privious 77.12% = 4.929 | 100% = 6.391 | set to 1 for simplicity
 %%
-% set to 1 for simplicity
-%%
-
 lambdaRec = 1;
 
 % due to recError reduction at dsRatio = [8, 2], lambdaRec needs to be scaled accordingly
@@ -124,7 +115,7 @@ basisSize = [(patchSize ^ 2) * 2, (patchSize ^ 2) * 2];     % size of each (bino
 eta = [0.2, 0.2];                                           % learning rate [origin 0.01 | Lukas 0.1 | Alex P 0.5, origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2]
 temperature = [0.01, 0.01];                                 % temperature in softmax | origin 0.01
 
-% security check
+% consistency check
 if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
  || (length(stride) ~= length(dsRatio)) ...
  || (length(overlap) ~= length(dsRatio) - 1) ...
@@ -163,6 +154,7 @@ alpha_n = 0.025;                                     % learning rate of natural 
 alpha_p = 0.5;                                       % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
+regularizer = 1 - 1e-3;                              % actor weight regularization via factorial downscaling
 
 varianceRange = [1e-5, 1e-5];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
                                                      % corresponds to softMax temperature in discrete RL models
@@ -192,7 +184,7 @@ eta = 0.001;                                        % TD error variance scaling 
 fiScale = 1e-5;                                     % scaling factor of Fisher Information matrix (CNGFI)
 
 PARAMRL = {actionSpace, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
-           continuous, deltaVar, eta, fiScale, rlFlavour, varDec};
+           continuous, deltaVar, eta, fiScale, rlFlavour, varDec, regularizer};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);

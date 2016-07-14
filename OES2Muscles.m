@@ -6,7 +6,7 @@
 function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     rng(randomizationSeed);
 
-    % useLearnedFile(1):    0 e= don't do it
+    % useLearnedFile(1):    0 = don't do it
     %                       1 = use previously learned policy specified in learnedFile
     % useLearnedFile(2):    0 = retrain with same/new parameters
     %                       1 = complete/continue training
@@ -18,14 +18,13 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
     % learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_20-May-2016_13:10:14_500000_nonhomeo_1_2m_newImplem_highResSmSc_noMF/model.mat';
 
     %%% Stimulus declaration
     textureFile = 'Textures_vanHaterenTrain.mat';   % vanHateren database
     % textureFile = 'Textures_celine.mat';          % Celine's images
 
     %%% executing the test procedure during training?
-    testAt = [500000:500000:trainTime];
+    testAt = [500000 : 500000 : trainTime];
 
     %%% Sparse coding approach
     % sparseCodingType: 0 = non-homeostatic
@@ -51,6 +50,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     %           1 = do it
     testIt = uint8(1);
 
+    %%% Amount of test stimuli
+    nStimTest = 33;
+
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
         if isempty(learnedFile)
@@ -70,7 +72,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         sprintf('Error: This training/main script is not compatible with discrete action space models!\nPlease execute OESDiscrete.m instead.')
         return;
     elseif (model.rlModel.CActor.output_dim < 2)
-        sprintf('Error: This training/main script is not compatible with %d eye muscle models!\nPlease execute OES1Muscle.m instead.', model.rlModel.CActor.output_dim)
+        sprintf('Error: This training/main script is not compatible with %d eye muscle models!\nPlease execute OES1Muscle.m instead.', ...
+                model.rlModel.CActor.output_dim)
         return;
     end
 
@@ -101,15 +104,15 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CCritic), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CActor), '.m'), model.savePath);
-        if model.rlModel.continuous == 1
+        if (model.rlModel.continuous == 1)
             copyfile('testModelContinuous.m', model.savePath);
         end
 
         timeToTrain = model.trainTime;
     end
 
-    % additional notes/infromation to this model/approach
-    model.notes = [model.notes fileDescription];
+    % additional notes/information to this model/approach
+    model.notes = [model.notes, fileDescription];
 
     % Save model every #saveInterval training iterations
     saveInterval = ceil(model.trainTime / 5);
@@ -186,7 +189,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     %%% Helper function that maps {vergenceAngle} -> {muscleForce}
     function mf = getMF(vergAngle)
         % look up index of vergAngle
-        if vergAngle >= degrees.results_deg(1, 1) * 2
+        if (vergAngle >= degrees.results_deg(1, 1) * 2)
             indVergAngle = find(mfunction(:, 1) <= vergAngle + dmf & mfunction(:, 1) >= vergAngle - dmf);
             mf = mfunction(indVergAngle, 2);
             mf = mf(ceil(length(mf) / 2));
@@ -369,16 +372,17 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.trainedUntil = t;
         end
 
-        if mod(t, 100) == 0
-%             infos = {t, objDist, model.vergerr_hist(t - model.interval + 1), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
-%             generateAnaglyphs(t, 1, infos);
-            sprintf('Training Iteration: %d,\nObjectDistance:\t%.2fm,\tStart Error:\t%.3f°,\nEnd Fixation:\t%.2fm,\tEnd Error:\t%.3f°,\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
-                t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
+        if (mod(t, 100) == 0)
+            % infos = {t, objDist, model.vergerr_hist(t - model.interval + 1), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
+            % generateAnaglyphs(t, 1, infos);
+            sprintf('Training Iteration: %d\nObjectDistance:\t%6.2fm\tStart Error:\t%6.3f°\nEnd Fixation:\t%6.2fm\tEnd Error:\t%6.3f°\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
+                    t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), ...
+                    mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
         end
 
         % testing during training!
         if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
-            testModelContinuous(model, 33, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
+            testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
             close all;
         end
 
@@ -411,9 +415,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     end
 
     %%% Testing procedure
-    if (testIt & (t ~= testAt(end))) % do not test again if you tested at the end of training
+    if (testIt && isempty(testAt))
         % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-        testModelContinuous(model, 33, plotIt(2), 1, simulator, 0, '.');
+        testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, '.');
     end
 
     if (closeFigures == 1)
@@ -428,20 +432,20 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         numberScales = length(model.scModel);
 
-        %defining colors in the image: (from larges to smallest scale)
+        % defining colors in the image: (from larges to smallest scale)
         scalingColors = {'blue', 'red', 'green'};
         textColor = 'yellow';
 
         scaleImages = cell(numberScales);
 
-        for scale = 1:numberScales
-            %Downsampling Large
+        for scale = 1 : numberScales
+            % Downsampling Large
             imgLeft = imgGrayLeft(:);
             imgLeft = reshape(imgLeft, size(imgGrayLeft));
             imgRight = imgGrayRight(:);
             imgRight = reshape(imgRight, size(imgGrayRight));
 
-            for ds = 1:log2(model.dsRatio(scale))
+            for ds = 1 : log2(model.dsRatio(scale))
                 imgLeft = impyramid(imgLeft, 'reduce');
                 imgRight = impyramid(imgRight, 'reduce');
             end
@@ -455,22 +459,22 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             imgLeft = imgLeft(cutOutVertical(1) : cutOutVertical(2) , cutOutHorizontal(1) : cutOutHorizontal(2));
             imgRight = imgRight(cutOutVertical(1) : cutOutVertical(2) , cutOutHorizontal(1) : cutOutHorizontal(2));
 
-            %create an anaglyph of the two pictures, scale it up and save it
+            % create an anaglyph of the two pictures, scale it up and save it
             anaglyph = imfuse(imgLeft, imgRight, 'falsecolor');
 
-    %         [hAna, vAna, ~] = size(anaglyph);
-            if markScales
+            % [hAna, vAna, ~] = size(anaglyph);
+            if (markScales)
                 anaglyph = insertShape(anaglyph, 'rectangle', [model.pxFieldOfView(scale) + 1 - model.patchSize, 1, model.patchSize, model.patchSize], 'color', scalingColors(scale));
             end
 
             scaleImages{scale} = anaglyph;
         end
 
-    %     imwrite(anaglyph, [savePath '/anaglyph.png']);
+        % imwrite(anaglyph, [savePath '/anaglyph.png']);
         anaglyph = imfuse(imgGrayLeft, imgGrayRight, 'falsecolor');
         [h, w, ~] = size(anaglyph);
 
-        if markScales
+        if (markScales)
             for scale = 1:numberScales
                 % this creates a rectangle inside the image for each scale and
                 % an examplary patch
@@ -483,23 +487,22 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                 anaglyph = insertShape(anaglyph, 'rectangle', indexMatrix, 'Color', scalingColors(scale)); % whole region of scale
             end
         end
-    %     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
+        % anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
 
-    %     imwrite(anaglyph, sprintf('%s/anaglyph%.3d.png', savePath, identifier));
+        % imwrite(anaglyph, sprintf('%s/anaglyph%.3d.png', savePath, identifier));
 
+        % imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
+        % imwrite(anaglyphL, sprintf('%s/anaglyphLargeScale%.3d.png', savePath, identifier));
+        % largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+        % imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage%.3d.png', savePath, identifier));
 
-    %     imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
-    %     imwrite(anaglyphL, sprintf('%s/anaglyphLargeScale%.3d.png', savePath, identifier));
-    %     largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    %     imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage%.3d.png', savePath, identifier));
+        % imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
 
-    %     imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
+        % imwrite(anaglyphS, sprintf('%s/anaglyphSmallScale%.3d.png', savePath, identifier));
+        % smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+        % imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage%.3d.png', savePath, identifier));
 
-    %     imwrite(anaglyphS, sprintf('%s/anaglyphSmallScale%.3d.png', savePath, identifier));
-    %     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
-    %     imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage%.3d.png', savePath, identifier));
-
-    %     xRange = [0, 320]; yRange = [0, 240];
+        % xRange = [0, 320]; yRange = [0, 240];
         %% todo: insert reconstruction error for all and for each scale
         %% infos = {iteration, tmpObjRange, vseRange(vseIndex), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
         xPos = [10, 220, 10, 10, 260, 10, 10, 240]; %display in headful modus: [10, 200, 10, 10, 260, 10, 10]
@@ -516,18 +519,18 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                     sprintf('Reward: \t%.3f', infos{7})};
 
         fig = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
-    %     subplot(2,3,[1,2,4,5]);
-    %     title(sprintf('Object distance: %d,\titeration: %d,\tvergence error: %d', infos(1), infos(2), infos(3)));
+        % subplot(2,3,[1,2,4,5]);
+        % title(sprintf('Object distance: %d,\titeration: %d,\tvergence error: %d', infos(1), infos(2), infos(3)));
         subplot('Position', [0.05, 0.12, 0.6, 0.8]);
         imshow(anaglyph);
         text(xPos, yPos, insert, 'color', textColor); % these numbers resemble white, but white will appear black after saving ;P
-    %     text(10, 20, num2str(size(anaglyph)), 'color', 'yellow'); %[1-eps, 1-eps, 1-eps]
-    %     title('Anaglyph');
-    %     subplot(2,3,3);
+        % text(10, 20, num2str(size(anaglyph)), 'color', 'yellow'); %[1-eps, 1-eps, 1-eps]
+        % title('Anaglyph');
+        % subplot(2,3,3);
         % positionVector = [left, bottom, width, height], all between 0 and 1
         sizeScaleImg = 0.6/numberScales;
         for sp = 1:numberScales
-            if sp == 1
+            if (sp == 1)
                 subplot('Position', [0.7, 0.9 - sizeScaleImg, sizeScaleImg, sizeScaleImg])
             else
                 subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg])

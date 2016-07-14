@@ -44,9 +44,6 @@ classdef CACLACritic < handle
             this.delta = reward + this.gamma * this.value - this.v_ji * this.feature_prev;
             dv_ji = this.alpha_v * this.delta * this.feature_prev';
             this.v_ji = this.v_ji + dv_ji;
-
-            this.params(1) = sum(sum(abs(this.v_ji)));
-            this.params(2) = sum(sum(this.v_ji .^ 2));
         end
 
         function train(this, feature, reward, flag_update)
@@ -55,6 +52,8 @@ classdef CACLACritic < handle
                 this.update(reward);
             end
             this.feature_prev = feature;
+            this.params(1) = sum(sum(abs(this.v_ji)));
+            this.params(2) = sum(sum(this.v_ji .^ 2));
         end
     end
 end

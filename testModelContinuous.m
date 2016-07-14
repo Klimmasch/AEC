@@ -48,8 +48,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     end
 
     %%% creating a new directory if (folder ~= '/.')
-    if folder(1) ~= '/'
-        folder = ['/' folder]
+    if (folder(1) ~= '/')
+        folder = ['/' folder];
     end
     imageSavePath = [model.savePath folder];
     mkdir(imageSavePath);
