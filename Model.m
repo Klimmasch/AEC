@@ -203,18 +203,21 @@ classdef Model < handle
         function prepareColumnInd(this)
             % index matrix
             this.columnInd = {};
-            % (start) index of left upper corner of respective patches
-            npc = this.pxFieldOfView - this.patchSize + 1;
+            % pixel index of left upper corner of last patch
+            ilp = this.pxFieldOfView - this.patchSize + 1;
+
             % for #scales
             for i = 1 : length(this.dsRatio)
                 k = 1;
-                % number of patches per column/row
-                l = length(1 : this.stride(i) : npc(i));
-                % each scale has l * l patches
-                this.columnInd{end + 1} = zeros(1, l ^ 2);
-                % calculate index of left upper corner of respective patches
-                for j = 1 : this.stride(i) : npc(i)
-                    this.columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : this.stride(i) : j * npc(i);
+                % number of patches per row/column
+                nprc = length(1 : this.stride(i) : ilp(i));
+
+                % each scale has nprc * nprc patches
+                this.columnInd{end + 1} = zeros(1, nprc ^ 2);
+
+                % calculate indices of patches with respect to stride
+                for j = 1 : this.stride(i) : ilp(i)
+                    this.columnInd{i}((k - 1) * nprc + 1 : k * nprc) = (j - 1) * ilp(i) + 1 : this.stride(i) : j * ilp(i);
                     k = k + 1;
                 end
             end
@@ -288,7 +291,7 @@ classdef Model < handle
 
             % pre-processing steps (0 mean, unit norm)
             patches = patches - repmat(mean(patches), [size(patches, 1), 1]);   % 0 mean
-            normp = sqrt(sum(patches .^ 2));                                      % patches norm
+            normp = sqrt(sum(patches .^ 2));                                    % patches norm
 
             % normalize patches to norm 1
             normp(normp == 0) = eps;                                            % regularizer
@@ -378,9 +381,14 @@ classdef Model < handle
 
             %% Root Mean Squared Error
             % windowSize = 125;
-            windowSize = 250;
+            % windowSize = 250;
+            windowSize = 1000;
+            if (this.trainTime < windowSize * this.interval)
+                windowSize = round(this.trainTime / this.interval / 5);
+            end
+
             vergerr = this.vergerr_hist(ind);
-            rmse = zeros(length(1 : windowSize : length(vergerr) - mod(length(vergerr), 2)), 1); %cut if odd length
+            rmse = zeros(length(1 : windowSize : length(vergerr) - mod(length(vergerr), 2)), 1); % cut if odd length
             k = 1 : windowSize : length(vergerr) - mod(length(vergerr), 2);
             for i = 1 : length(rmse)
                 try
@@ -434,12 +442,13 @@ classdef Model < handle
             end
 
             %% Vergence angle
+            obsWin = 250; % #last iterations to plot
             figure;
             hold on;
             grid on;
-            if length(this.verge_desired) >= 200
-                plot(this.verge_desired(end-200:end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
-                plot(this.verge_actual(end-200:end), 'b', 'LineWidth', 1.3);
+            if (length(this.verge_desired) >= obsWin)
+                plot(this.verge_desired(end - obsWin : end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+                plot(this.verge_actual(end - obsWin : end), 'b', 'LineWidth', 1.3);
             else
                 plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
                 plot(this.verge_actual, 'b', 'LineWidth', 1.3);
@@ -447,7 +456,7 @@ classdef Model < handle
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Angle [deg]', 'FontSize', 12);
             legend('desired', 'actual');
-            title('Vergence at last 200 steps of training');
+            title(sprintf('Vergence at last %d steps of training', obsWin));
             plotpath = sprintf('%s/vergenceAngle', this.savePath);
             saveas(gcf, plotpath, 'png');
 

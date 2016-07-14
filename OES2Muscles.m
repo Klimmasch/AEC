@@ -25,8 +25,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % textureFile = 'Textures_celine.mat';          % Celine's images
 
     %%% executing the test procedure during training?
-    testAt = [500000:500000:trainTime]; 
-    
+    testAt = [500000:500000:trainTime];
+
     %%% Sparse coding approach
     % sparseCodingType: 0 = non-homeostatic
     %                   1 = homeostatic
@@ -107,7 +107,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         timeToTrain = model.trainTime;
     end
-    
+
     % additional notes/infromation to this model/approach
     model.notes = [model.notes fileDescription];
 
@@ -145,7 +145,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     simulator = OpenEyeSimV2('create');
 
     simulator.initRenderer();
-%     simulator.reinitRenderer(); % for debugging
+    % simulator.reinitRenderer(); % for debugging
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -375,7 +375,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             sprintf('Training Iteration: %d,\nObjectDistance:\t%.2fm,\tStart Error:\t%.3f°,\nEnd Fixation:\t%.2fm,\tEnd Error:\t%.3f°,\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
                 t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
         end
-        
+
         % testing during training!
         if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, 33, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
