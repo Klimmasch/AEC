@@ -36,8 +36,8 @@ classdef ReinforcementLearningCont < handle
             switch obj.rlFlavour(2)
                 case 0
                     %% CACLAVar [Lukas's interpretation of CACLA appoach]
-                    % actorParams = {[obj.inputDim, obj.hiddenDim, obj.outputDim], obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec};
-                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{12}, PARAM{13}, PARAM{16}};
+                    % actorParams = {[obj.inputDim, obj.hiddenDim, obj.outputDim], obj.weight_range(2:3), obj.alpha_p, obj.varianceRange, obj.deltaVar, obj.eta, obj.varDec, obj.regularizer};
+                    actorParams = {PARAM{9}, obj.weight_range(2:3), PARAM{4}, PARAM{7}, PARAM{12}, PARAM{13}, PARAM{16}, PARAM{17}};
                     obj.CActor = CACLAVarActorLu(actorParams);
                 case 1
                     %% CACLAVar [Alex's interpretation of CACLA appoach]

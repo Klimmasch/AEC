@@ -27,12 +27,11 @@ classdef CACLAVarActorLu < handle
         deltaVar;       % variance of delta signal
         eta;            % scaling factor of delta variance
         updateCount;
+        regularizer;    % percentage of the weights the vector is scaled to
 
         % model history tracking
         param_num;
         params;
-        
-        regularizer;
     end
 
     methods
@@ -61,30 +60,31 @@ classdef CACLAVarActorLu < handle
             obj.z_k_prev = zeros(obj.output_dim, 1);
             obj.command_prev = zeros(obj.output_dim, 1);
             obj.updateCount = 0;
-            obj.regularizer = 0.999; % percentage of the weights the vector is scaled to
+            obj.regularizer = PARAM{8};
         end
 
         function update(this, delta)
             this.updateCount = ceil(delta / sqrt(this.deltaVar));
-            
+
             % delta_weights(hidden -> output)
             dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
 
             % delta_weights(input -> hidden)
             tmpVector = ((this.command_prev - this.z_k_prev)' * this.wp_kj)';
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat(tmpVector, 1, this.input_dim);
-            
+
 %             this.prams(5) = (this.beta_p * dwp_kj) * this.updateCount;
 %             this.wp_kj = this.wp_kj + this.params(5);
 
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
-            
-            this.params(4) = mean(mean(abs((this.beta_p * dwp_ji) * this.updateCount)));  % this tracks the change in weight because of updates
-            this.params(5) = mean(mean(abs((this.regularizer * this.wp_ji) - this.wp_ji))); % this tracks changes due to regularization
-            
+
+            this.params(4) = mean(mean(abs((this.beta_p * dwp_ji) * this.updateCount)));    % tracks the change in weight because of updates
+            this.params(5) = mean(mean(abs((this.regularizer * this.wp_ji) - this.wp_ji))); % tracks changes due to regularization
+
             this.wp_ji = (this.regularizer * this.wp_ji) + (this.beta_p * dwp_ji) * this.updateCount;
         end
 
+        % Gaussian policy (exploration)
         function command = act(this, z_i)
             z_j = tanh(this.wp_ji * z_i);           % activity of hidden layer
             z_k = this.wp_kj * z_j;                 % activity of output layer
@@ -98,6 +98,7 @@ classdef CACLAVarActorLu < handle
             this.command_prev = command;
         end
 
+        % Pure network activity calculation (exploitation policy)
         function command = actHard(this, z_i)
             z_j = tanh(this.wp_ji * z_i);   % activity of hidden layer
             command = this.wp_kj * z_j;     % activity of output layer

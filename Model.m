@@ -69,6 +69,8 @@ classdef Model < handle
         stride;
         patchesLeft;
         patchesRight;
+        overlap;
+        cutout;
     end
 
     methods
@@ -145,11 +147,15 @@ classdef Model < handle
             obj.pxFieldOfView = PARAM{1}{15};
             obj.dsRatio = PARAM{1}{16};
             obj.stride = PARAM{1}{17};
+            obj.overlap = PARAM{1}{20};
+            obj.cutout = PARAM{1}{21};
 
             % Prepare index matrix for image patches
-            obj.columnInd = obj.prepareColumnIndFilled();
-            % TODO: implement obj.prepareColumnIndCutout();
-            % index matrix preperation where image has a cut out in the center of respective scale's images
+            obj.prepareColumnInd();
+            % cut out central region
+            if (obj.cutout == 1)
+                obj.prepareCutout();
+            end
 
             %%% Create SC models
             obj.scModel = {};
@@ -194,33 +200,76 @@ classdef Model < handle
 
         % Generates index matrix for image patches
         % Filled image batch, i.e. all patches for the respective scale are used
-        function columnInd = prepareColumnIndFilled(this)
+        function prepareColumnInd(this)
             % index matrix
-            columnInd = {};
-            % number of patches per column
-            npc = this.pxFieldOfView - this.patchSize + 1;
+            this.columnInd = {};
+            % pixel index of left upper corner of last patch
+            ilp = this.pxFieldOfView - this.patchSize + 1;
+
             % for #scales
             for i = 1 : length(this.dsRatio)
                 k = 1;
-                l = length(1 : this.stride(i) : npc(i));
-                columnInd{end + 1} = zeros(1, l ^ 2);
-                for j = 1 : this.stride(i) : npc(i)
-                    columnInd{i}((k - 1) * l + 1 : k * l) = (j - 1) * npc(i) + 1 : this.stride(i) : j * npc(i);
+                % number of patches per row/column
+                nprc = length(1 : this.stride(i) : ilp(i));
+
+                % each scale has nprc * nprc patches
+                this.columnInd{end + 1} = zeros(1, nprc ^ 2);
+
+                % calculate indices of patches with respect to stride
+                for j = 1 : this.stride(i) : ilp(i)
+                    this.columnInd{i}((k - 1) * nprc + 1 : k * nprc) = (j - 1) * ilp(i) + 1 : this.stride(i) : j * ilp(i);
                     k = k + 1;
                 end
             end
         end
 
-        % TODO: implement this function
-        function columnInd = prepareColumnIndCutout(this)
-            columnInd = {};
+        % Cuts out smaller scales from larger scales' fields of view
+        function prepareCutout(this)
+            % most inner layer does not need a cutout
+            % therefore n-1 cuts per n layers
+            for i = 1 : (length(this.dsRatio) - 1)
+                % Calculate cutout area, upsample to orig and downsample to current (substract more if needed)
+                foveaSmallerAdjusted = ceil((this.pxFieldOfView(i + 1) - 2 * this.overlap(i)) * (this.dsRatio(i + 1) / this.dsRatio(i)));
+
+                % Calculate offset of coarse scale [px]
+                offsetCoarse = (this.pxFieldOfView(i) - foveaSmallerAdjusted) / 2;
+
+                % # stride applications =^ offset width
+                offsetWidth = ceil(((offsetCoarse - this.patchSize) / this.stride(i)) + 1);
+
+                % number of patches per row/column
+                nprc = floor((this.pxFieldOfView(i) - this.patchSize) / this.stride(i) + 1);
+
+                % remaining patches vector [indices]
+                remainder = [];
+
+                % full rows + first left border part
+                startPart = 1 : (offsetWidth * (nprc + 1));
+                % remainder(1 : length(startPart)) = startPart;
+                remainder = [remainder, startPart];
+
+                % right border + next row's left border patches
+                for j = 1 : (nprc - 2 * offsetWidth - 1)
+                    borderPart = (nprc * (offsetWidth + j) - offsetWidth + 1) : (nprc * (offsetWidth + j) + offsetWidth);
+                    % remainder(length(startPart) + length(borderPart) * (j - 1) + 1 : length(startPart) + length(borderPart) * j) = borderPart;
+                    remainder = [remainder, borderPart];
+                end
+
+                % right border + remaining full rows
+                endPart = (nprc * (offsetWidth + j + 1) - offsetWidth + 1) : nprc ^ 2;
+                % remainder(length(startPart) + length(borderPart) * j + 1 : end) = endPart;
+                remainder = [remainder, endPart];
+
+                % Cutting columnInd to eradicate the inner patches in the outer layer
+                this.columnInd{i} = this.columnInd{i}(:, remainder);
+            end
         end
 
         %%% Patch generation
         % img:      image to be processed
         % scScale:  SC scale index elem {coarse, ..., fine}
         % eyePos:   eye position index elem {1 := left, 2 := right}
-        function preprocessImageFilled(this, img, scScale, eyePos)
+        function preprocessImage(this, img, scScale, eyePos)
             % down scale image
             for k = 1 : log2(this.dsRatio(scScale))
                 img = impyramid(img, 'reduce');
@@ -241,24 +290,18 @@ classdef Model < handle
             patches = patches(:, this.columnInd{scScale});
 
             % pre-processing steps (0 mean, unit norm)
-            patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    % 0 mean
-            normp = sqrt(sum(patches.^2));                                      % patches norm
+            patches = patches - repmat(mean(patches), [size(patches, 1), 1]);   % 0 mean
+            normp = sqrt(sum(patches .^ 2));                                    % patches norm
 
             % normalize patches to norm 1
             normp(normp == 0) = eps;                                            % regularizer
-            patches = patches ./ repmat(normp, [size(patches, 1) 1]);           % normalized patches
+            patches = patches ./ repmat(normp, [size(patches, 1), 1]);          % normalized patches
 
             if (eyePos == 1)
                 this.patchesLeft{scScale} = patches;
             else
                 this.patchesRight{scScale} = patches;
             end
-        end
-
-        % TODO: implement this function
-        function preprocessImageCutout(this, img, scScale, eyePos)
-            sprintf('Error: Function not supported yet!')
-            return;
         end
 
         %%% Generate Feature Vector and Reward
@@ -338,9 +381,14 @@ classdef Model < handle
 
             %% Root Mean Squared Error
             % windowSize = 125;
-            windowSize = 250;
+            % windowSize = 250;
+            windowSize = 1000;
+            if (this.trainTime < windowSize * this.interval)
+                windowSize = round(this.trainTime / this.interval / 5);
+            end
+
             vergerr = this.vergerr_hist(ind);
-            rmse = zeros(length(1 : windowSize : length(vergerr) - mod(length(vergerr), 2)), 1); %cut if odd length
+            rmse = zeros(length(1 : windowSize : length(vergerr) - mod(length(vergerr), 2)), 1); % cut if odd length
             k = 1 : windowSize : length(vergerr) - mod(length(vergerr), 2);
             for i = 1 : length(rmse)
                 try
@@ -394,45 +442,59 @@ classdef Model < handle
             end
 
             %% Vergence angle
+            obsWin = 249; % #last iterations to plot
             figure;
             hold on;
             grid on;
-            if length(this.verge_desired) >= 200
-                plot(this.verge_desired(end-200:end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
-                plot(this.verge_actual(end-200:end), 'b', 'LineWidth', 1.3);
+            if (length(this.verge_desired) >= obsWin)
+                plot(this.verge_desired(end - obsWin : end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+                plot(this.verge_actual(end - obsWin : end), 'b', 'LineWidth', 1.3);
             else
-                plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.3);
+                plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
                 plot(this.verge_actual, 'b', 'LineWidth', 1.3);
             end
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             ylabel('Angle [deg]', 'FontSize', 12);
             legend('desired', 'actual');
-            title('Vergence at last 200 steps of training');
+            title(sprintf('Vergence at last %d steps of training', obsWin + 1));
             plotpath = sprintf('%s/vergenceAngle', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Muscel graphs
             if (this.rlModel.continuous == 1)
+                %% Simple Moving Average Vergence Error
+                windowSize = 1000;
+                if (this.trainTime < windowSize * this.interval)
+                    windowSize = round(this.trainTime / this.interval / 5);
+                end
+                cmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind, 1));
+                cmd_hist_sma = [cmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind, 2))];
+                relCmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.relCmd_hist(ind, 1));
+                metCost_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.metCost_hist(ind));
+
                 % Lateral Rectus
                 if (this.rlModel.CActor.output_dim == 2)
+                    relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.relCmd_hist(ind, 2))];
                     figure;
                     hold on;
                     grid on;
                     subplot(3, 1, 1);
-                    plot(this.cmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.cmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(cmd_hist_sma(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     ylabel('Value', 'FontSize', 12);
-                    title('Total Muscle Commands (lateral rectus)');
+                    title('Total Muscle Commands (lateral rectus) SMA');
 
                     subplot(3, 1, 2);
-                    plot(this.relCmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.relCmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(relCmd_hist_sma(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     ylabel('Value', 'FontSize', 12);
-                    title('\Delta Muscle Commands (lateral rectus)');
+                    title('\Delta Muscle Commands (lateral rectus) SMA');
 
                     subplot(3, 1, 3);
-                    plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(metCost_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                     ylabel('Value', 'FontSize', 12);
-                    title('Metabolic Costs');
+                    title('Metabolic Costs SMA');
 
                     plotpath = sprintf('%s/muscleGraphsLateralRectus', this.savePath);
                     saveas(gcf, plotpath, 'png');
@@ -443,24 +505,28 @@ classdef Model < handle
                 hold on;
                 grid on;
                 subplot(3, 1, 1);
-                plot(this.cmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                % plot(this.cmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                plot(cmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 ylabel('Value', 'FontSize', 12);
-                title('Total Muscle Commands (medial rectus)');
+                title('Total Muscle Commands (medial rectus) SMA');
 
                 subplot(3, 1, 2);
                 if (this.rlModel.CActor.output_dim == 2)
-                    plot(this.relCmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.relCmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(relCmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 else
-                    plot(this.relCmd_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.relCmd_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(relCmd_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 end
                 ylabel('Value', 'FontSize', 12);
-                title('\Delta Muscle Commands (medial rectus)');
+                title('\Delta Muscle Commands (medial rectus) SMA');
 
                 subplot(3, 1, 3);
-                plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                % plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                plot(metCost_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
                 xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                 ylabel('Value', 'FontSize', 12);
-                title('Metabolic Costs');
+                title('Metabolic Costs SMA');
 
                 plotpath = sprintf('%s/muscleGraphsMedialRectus', this.savePath);
                 saveas(gcf, plotpath, 'png');
