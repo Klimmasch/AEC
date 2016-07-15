@@ -49,7 +49,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     %%% creating a new directory if (folder ~= '/.')
     if folder(1) ~= '/'
-        folder = ['/' folder]
+        folder = ['/' folder];
     end
     imageSavePath = [model.savePath folder];
     mkdir(imageSavePath);
@@ -73,6 +73,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
     testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
 
+    realyBadImages = zeros(2, length(objRange), nStim); % here, the images are safed that start at the maximal vergence errors (pos & neg) and that end up worse than they started
+    %this tabular is going to be safed inside the models folder and
+    %histograms will be generated
+    
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
@@ -355,6 +359,16 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     %     imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), ...
                     %             sprintf('%s/anaglyph%d_vergerr_%.2f_img%d.png', imageSavePath, tr3Ind, tmpResult1(stimulusIndex, 11), stimulusIndex));
                     % end
+                    
+                    if vseIndex == 1 %first vergence error to be tested
+                        if (angleDes - angleNew) < vseRange(vseIndex)
+                            realyBadImages(1, odIndex, stimulusIndex) = 1;
+                        end
+                    elseif vseIndex == 7 %last vergence error to be tested
+                        if (angleDes - angleNew) > vseRange(vseIndex)
+                            realyBadImages(2, odIndex, stimulusIndex) = 1;
+                        end
+                    end
                 end
 
                 % final results
@@ -374,6 +388,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             end
         end
 
+        save(strcat(imageSavePath, '/realyBadImages'), 'realyBadImages');
         %% Reconstruction error and critic's response additional testing procedure
         tmp = zeros(1, nStim * (2 + length(model.scModel)));
         % vergence start error
@@ -802,8 +817,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         b = boxplot(model.testResult3);
 
         % remove outliers
-        outl = findobj(b,'tag','Outliers');
-        set(outl, 'Visible', 'off');
+%         outl = findobj(b,'tag','Outliers');
+%         set(outl, 'Visible', 'off');
 
         % rescale axis to whiskers + offset
         upWi = findobj(b, 'tag', 'Upper Whisker');
