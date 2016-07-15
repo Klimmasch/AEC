@@ -68,8 +68,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     testResult2 = zeros(length(objRange) * 7 * nStim * testInterval, 1 + length(model.scModel)); % reconstruction error statistics
 
     testResult3 = zeros(length(objRange) * 7 * nStim, testInterval); % ALL single values
-    % testResult4 = zeros(length(objRange) * 7 * nStim * testInterval, 2);
-    % testResult4 = zeros(test2Resolution * length(objRange) * nStim, 3 + length(model.scModel));
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
     testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
 
@@ -359,7 +357,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                 % final results
 
-                testResult(odIndex, vseIndex, 1 : testInterval + 1) = mean(tmpResult1);   % vergErr
+                testResult(odIndex, vseIndex, 1 : testInterval + 1) = mean(tmpResult1);                         % vergErr
                 testResult(odIndex, vseIndex, testInterval + 2 : 2 * testInterval + 2) = std(tmpResult1);
                 testResult(odIndex, vseIndex, 2 * testInterval + 3 : 3 * testInterval + 3) = mean(tmpResult2);  % deltaMF
                 testResult(odIndex, vseIndex, 3 * testInterval + 4 : 4 * testInterval + 4) = std(tmpResult2);
@@ -433,7 +431,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         elapsedTime = toc;
         sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
                 elapsedTime / 3600, elapsedTime / 60, elapsedTime, ...
-                (length(objRange) * 7 * nStim * testInterval + length(objRange) * length(vseRange) * nStim) / elapsedTime)
+                (length(objRange) * length(vseRange) * nStim * testInterval + length(objRange) * length(vseRange) * nStim) / elapsedTime)
 
         % save test results
         try
@@ -819,7 +817,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
         ylabel('Vergence Error [deg]', 'FontSize', 12);
         title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f°,\n4*IQR = %.4f, RMSE = %.4f° at %dth step', ...
-                      mean(model.testResult3(:, testInterval)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4, sqrt(mean(model.testResult3(:,10).^2)), testInterval));
+                      mean(model.testResult3(:, testInterval)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4, sqrt(mean(model.testResult3(:, testInterval).^2)), testInterval));
         % if (~isempty(model.savePath))
             plotpath = sprintf('%s/totalError', imageSavePath);
             saveas(gcf, plotpath, 'png');
