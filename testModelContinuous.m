@@ -37,8 +37,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     %%% New renderer
     if (isempty(simulator))
-        % simulator = OpenEyeSim('create');
-        simulator = OpenEyeSimV2('create');
+        simulator = OpenEyeSim('create');
         if (reinitRenderer == 0)
             simulator.initRenderer();
         else
@@ -74,7 +73,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     realyBadImages = zeros(2, length(objRange), nStim); % here, the images are safed that start at the maximal vergence errors (pos & neg) and that end up worse than they started
     %this tabular is going to be safed inside the models folder and
     %histograms will be generated
-    
+
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
@@ -357,7 +356,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     %     imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), ...
                     %             sprintf('%s/anaglyph%d_vergerr_%.2f_img%d.png', imageSavePath, tr3Ind, tmpResult1(stimulusIndex, 11), stimulusIndex));
                     % end
-                    
+
                     if vseIndex == 1 %first vergence error to be tested
                         if (angleDes - angleNew) < vseRange(vseIndex)
                             realyBadImages(1, odIndex, stimulusIndex) = 1;
@@ -385,8 +384,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 %                 testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
             end
         end
-
         save(strcat(imageSavePath, '/realyBadImages'), 'realyBadImages');
+
         %% Reconstruction error and critic's response additional testing procedure
         tmp = zeros(1, nStim * (2 + length(model.scModel)));
         % vergence start error
@@ -815,8 +814,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         b = boxplot(model.testResult3);
 
         % remove outliers
-%         outl = findobj(b,'tag','Outliers');
-%         set(outl, 'Visible', 'off');
+        % outl = findobj(b,'tag','Outliers');
+        % set(outl, 'Visible', 'off');
 
         % rescale axis to whiskers + offset
         upWi = findobj(b, 'tag', 'Upper Whisker');

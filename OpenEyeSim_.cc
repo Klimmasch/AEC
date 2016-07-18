@@ -43,7 +43,7 @@ GLint faces[6][4] = { /* Vertex indices for the 6 faces of a cube. */
     {4, 5, 1, 0}, {5, 6, 2, 1}, {7, 4, 0, 3} };
 GLfloat v[8][3]; /* Will be filled in with X,Y,Z vertexes. */
 static unsigned int widthTex, heightTex;
-static int width = ((DefaultWindowWidth+3)/4)*4; // must be a multiple of 4 pixels
+static int width = ((DefaultWindowWidth + 3) / 4) * 4; // must be a multiple of 4 pixels
 static int height = DefaultWindowHeight;
 static int i = 0;
 static bool initialized = false;
@@ -60,9 +60,11 @@ public:
     {
         mexPrintf("Simulator is running");
         init = false;
-        angle = 0.0;
+        angle = 0.;
+        strangle = 0.;
         texture = "1.bmp";
-        distance = 0.;
+        distance = 0.f;
+        planeScale = 1.4f;
     }
 
     // Database destructor.
@@ -70,11 +72,13 @@ public:
 
     // Set texture,angle and distance
     void
-    set_params(int texture_number, double angle_input, double distance_input)
+    set_params(int texture_number, double angle_input, float distance_input, double strabismusAngle, float planeScaling)
     {
         this->angle = angle_input;
         this->distance = distance_input;
         this->texture_number = texture_number;
+        this->strangle = strabismusAngle;
+        this->planeScale = planeScaling;
     }
 
     void
@@ -351,8 +355,8 @@ public:
     {
         glPushMatrix();
         //glRotatef(angle, 0.0, 1.0, 0.0);
-        glTranslated(0.0, 1.578, 2.0 - this->distance);
-        glScaled(1.4f, 1.4f, 1.4f);
+        glTranslatef(0.0, 1.578, 2.0 - this->distance);
+        glScalef(this->planeScale, this->planeScale, this->planeScale);
         applyTexture();
 
         for (i = 1; i < 6; i++)
@@ -391,9 +395,9 @@ public:
         }
         else
         {
-            // right eye
-            gluLookAt(0.028, 1.578, 2.0,    /* eye is at (0,0,5) */
-            0.028 + sin(-M_PI * this->angle / 180.), 1.578, 2.0 - cos(-M_PI * this->angle / 180.), /* center is at (0,0,0) */
+            // right eye with strabismus
+            gluLookAt(0.028, 1.578, 2.0, /* eye is at (0,0,5) */
+            0.028 + sin(-M_PI * (this->angle + this->strangle) / 180.), 1.578, 2.0 - cos(-M_PI * (this->angle + this->strangle) / 180.), /* center is at (0,0,0) */
             0.0, 1.0, 0.); /* up is in positive Y direction */
         }
         drawGroundAndSky(16.01);
@@ -538,8 +542,10 @@ private:
     string texture;
     int texture_number;
     double angle;
-    double distance;
+    float distance;
     bool init;
+    double strangle;
+    float planeScale;
 };
 
 // Instance manager for OpenEyeSim.
@@ -569,10 +575,10 @@ MEX_DEFINE(delete) (int nlhs, mxArray* plhs[],
 MEX_DEFINE(set_params) (int nlhs, mxArray* plhs[],
                         int nrhs, const mxArray* prhs[])
 {
-    InputArguments input(nrhs, prhs, 4);
+    InputArguments input(nrhs, prhs, 6);
     OutputArguments output(nlhs, plhs, 0);
     OpenEyeSim* osim = Session<OpenEyeSim>::get(input.get(0));
-    osim->set_params(input.get<int>(1), input.get<double>(2), input.get<double>(3));
+    osim->set_params(input.get<int>(1), input.get<double>(2), input.get<float>(3), input.get<double>(4), input.get<float>(5));
 }
 
 // Defines MEX API for set_params (non const method).

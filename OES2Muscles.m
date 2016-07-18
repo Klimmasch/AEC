@@ -144,8 +144,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
 
     %%% New renderer
-    % simulator = OpenEyeSim('create');
-    simulator = OpenEyeSimV2('create');
+    simulator = OpenEyeSim('create');
 
     simulator.initRenderer();
     % simulator.reinitRenderer(); % for debugging
