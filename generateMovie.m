@@ -15,11 +15,12 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     randomizationSeed = 3;
     randObjRange = 0;
     randStimuli = 0;
+    testInterval = model.interval*2;
     rng(randomizationSeed);
 
 %     textureFile = 'Textures_vanHaterenTrain';
 %     textureFile = 'Textures_vanHaterenGood';
-    textureFile = 'Textures_vanHaterenTest';
+    textureFile = 'Textures_vanHaterenTestMinimal';
 %     textureFile = 'Textures_celine'
 
     imagesSavePath = sprintf('%s/movies', model.savePath);
@@ -299,7 +300,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
 %
 %                 [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, tmpObjRange);
 
-                for iteration = 1 : model.interval
+                for iteration = 1 : testInterval
                     % read input images and convert to gray scale
                     refreshImages(currentTexture, angleNew/2, tmpObjRange);
 
@@ -619,8 +620,8 @@ function generateAnaglyphs(identifier, markScales, infos)
                 sprintf('Vergence Error:          \t%.3f', infos{4}), ...
                 sprintf('Start Vergence Error: \t%.3f', infos{3}), ...
                 sprintf('Iteration: \t%d', infos{1}), ...
-                sprintf('Muscle Activation:    \t%.3f,  \t%.3f', infos{5}(1), infos{5}(2)), ...
-                sprintf('Relative Command: \t%.3f,  \t%.3f', infos{6}(1), infos{6}(2)), ...
+                sprintf('Muscle Activation:    \t%.5f,  \t%.5f', infos{5}(1), infos{5}(2)), ...
+                sprintf('Relative Command: \t%.5f,  \t%.5f', infos{6}(1), infos{6}(2)), ...
                 sprintf('Reward: \t%.3f', infos{7})};
 
     f = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
@@ -641,7 +642,7 @@ function generateAnaglyphs(identifier, markScales, infos)
             subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg])
         end
         imshow(scaleImages{sp});
-        descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{8}(sp))};
+        descr = {sprintf('Scale %d', sp), sprintf('Rec. Error: %.3f', infos{8}(sp))};
         % todo: the fist two values in text have to be adapted, especially
         % for more than 2 scales, also the size of the letters,
         text(0.03, 0.1, descr, 'color', cText, 'Units', 'normalized')
