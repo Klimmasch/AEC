@@ -9,7 +9,7 @@
 %%%
 function generateMovie(objRange, nStimuli, reinitRenderer)
 
-    model = load('/home/lelais/Documents/MATLAB/results/model_28-Jun-2016_19:49:09_1000000_nonhomeo_1_2msclNEW_lrec_1_lmetc_0.0289_lmfb_0.1269_dsratio_8_1_stride_0.5_0.5_lr_1_0.5/model.mat');
+    model = load('/home/klimmasch/projects/results/model_07-Jul-2016_19:40:07_2000000_nonhomeo_1_reproduceBestSoFar_exactSameInit/model.mat');
     model = model.model;
     
     randomizationSeed = 3;
@@ -254,12 +254,12 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
         for objDist = 1 : size(objRange, 2)
             
             vergErrMax = getVergErrMax(objRange(objDist));
-            if vergErrMax > 3
-                vergErrMax = 3;
+            if vergErrMax > 2
+                vergErrMax = 2;
             end
 %             vseRange = [-3, -2, -1, linspace(0, vergErrMax, 4)];
-            vseRange = [-3, 0, vergErrMax];
-            vseRange = [-3, 0, 3];
+            vseRange = [-2, 0, vergErrMax];
+%             vseRange = [-3, 0, 3];
             if stimulus == nStimuli
                 vseRange = [vseRange, vseRange(end)]; % this tries to tackle a bug with removing the last few images from the video
             end
@@ -304,9 +304,14 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
                     refreshImages(currentTexture, angleNew/2, tmpObjRange);
                     
                     % Image patch generation
+%                     for i = 1 : length(model.scModel)
+%                         model.preprocessImageFilled(imgGrayLeft, i, 1);
+%                         model.preprocessImageFilled(imgGrayRight, i, 2);
+%                         currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
+%                     end
                     for i = 1 : length(model.scModel)
-                        model.preprocessImageFilled(imgGrayLeft, i, 1);
-                        model.preprocessImageFilled(imgGrayRight, i, 2);
+                        model.preprocessImage(imgGrayLeft, i, 1);
+                        model.preprocessImage(imgGrayRight, i, 2);
                         currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
                     end
                     
