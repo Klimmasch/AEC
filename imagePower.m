@@ -3,7 +3,18 @@
 close all;
 
 figure;
-img = imread('Textures/vanHateren/5.bmp');
+%% good ones:
+% img = imread('Textures/vanHateren/17.bmp');
+% img = imread('Textures/vanHateren/40.bmp');
+% img = imread('Textures/vanHateren/85.bmp');
+% img = imread('Textures/vanHateren/cutOffScale_corrected_2219.bmp');
+% img = imread('Textures/vanHateren/cutOffScale_corrected_2473.bmp');
+
+%% bad ones:
+% img = imread('Textures/vanHateren/suboptimal/6.bmp');
+% img = imread('Textures/vanHateren/suboptimal/cutOffScale_corrected_2894.bmp');
+% img = imread('Textures/vanHateren/suboptimal/47.bmp');
+% img = imread('samplemerry_win07_006.jpg');
 imagesc(img);
 
 % shift 0-frequency coefficient from left upper corner into center
@@ -45,10 +56,13 @@ FDF = HZ .* F(: , :, 1);
 fdf = ifft2(FDF);
 fdf = fdf(1 : size(img, 1), 1 : size(img, 2));
 
-figure;
 % use absolute function to get rid of negative frequencies
+figure;
 imshow(abs(fdf), []);
 colorbar;
 
+
 % threshold into a binary image
-% imshow(abs(fdf) > 0.2 * abs(max(fdf(:))));
+figure;
+imshow(abs(fdf) > 0.1 * abs(max(fdf(:))));
+colorbar;
