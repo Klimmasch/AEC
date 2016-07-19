@@ -1,0 +1,4 @@
+,Parameters,,,,,,,,,,,,,special remarks,Results,,,,,,,,,,,,,,,,,,
+,,,,,,,,LR,,,,,,,Critic's value,,,VergErr,,,,,Converged,,,,,,,,,,
+,,,,,,,,,,,weights,,fixation,,function,,,,,,Bias,,,,Weigths,,,,,,,,
+#R,# Iter,lRec,lMFB,lMet,FoV Size,dsRatio,stride,Cr,Ac,SC,init,regularizer,"Init (l, m)",,flat,bias,RecErr bias,RMSE at 10 (*20),median at 10 (*20),4*iqr (*20),ObjDist,Offset,RecErr,VergErrRmse,V,Pji,Pkj,Hypothesis,Conclusion,,,,Folder

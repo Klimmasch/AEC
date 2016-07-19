@@ -107,6 +107,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         if (model.rlModel.continuous == 1)
             copyfile('testModelContinuous.m', model.savePath);
         end
+        copyfile('results.ods', model.savePath);
 
         timeToTrain = model.trainTime;
     end
