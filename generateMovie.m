@@ -11,7 +11,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
 
     model = load('/home/klimmasch/projects/results/model_07-Jul-2016_19:40:07_2000000_nonhomeo_1_reproduceBestSoFar_exactSameInit/model.mat');
     model = model.model;
-    
+
     randomizationSeed = 3;
     randObjRange = 0;
     randStimuli = 0;
@@ -28,25 +28,25 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     frameRate = 1; % frames per second in the resulting video »| 1.5 orig
     markScales = uint8(1); % draws rectangles inside the anaglyphs to indicate foveal regions
     set(0,'DefaulttextInterpreter','none'); % prevents underscores in image files to be interpreted as subscripts
-    
-    
-    
+
+
+
     % Image processing variables
 %     patchSize = 8;
-% 
+%
 %     dsRatioL = model.scmodel_Large.Dsratio; %downsampling ratio (Large scale) | original 8
 %     dsRatioS = model.scmodel_Small.Dsratio; %downsampling ratio (Small scale) | original 2
-% 
+%
 %     % fovea = [128 128];
 %     foveaL = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioL); %fovea size (Large scale) | 16
 %     foveaS = patchSize + patchSize ^ 2 / 2 ^ log2(dsRatioS); %fovea size (Small scale) | 40
-% 
+%
 %     stOvL = patchSize / dsRatioL; %steps of overlap in the ds image | 1
 %     stOvS = patchSize / dsRatioS; %steps of overlap in the ds image | 4
-% 
+%
 %     ncL = foveaL - patchSize + 1; %number of patches per column (slide of 1 px) | 9
 %     ncS = foveaS - patchSize + 1; %number of patches per column (slide of 1 px) | 33
-% 
+%
 %     % Prepare index matricies for image patches
 %     columnIndL = [];
 %     for kc = 1:stOvL:ncL
@@ -130,7 +130,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
 %     indMaxFix = indMaxFix(1);
 %     indMinFix = find(mfunction(:, 1) <= model.vergAngleMax + dmf & mfunction(:, 1) >= model.vergAngleMax - dmf); % MF(vergAngleMax)_index
 %     indMinFix = indMinFix(1);
-    
+
      %%% Helper function that maps {objDist, desiredVergErr} -> {muscleForce, angleInit}
     function [mf, angleInit] = getMF(objDist, desVergErr)
         % correct vergence angle for given object distance
@@ -169,21 +169,21 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
         angleCorrect = 2 * atand(model.baseline / (2 * objDist));
         vergErrMax = angleCorrect - angleMin;
     end
-    
+
     %%% Helper function that maps muscle activities to resulting angle
     function [angle] = getAngle(command)
         cmd = (command * 10) + 1;                               % calculate tabular index
         angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline');   % interpolate in tabular
     end
 
-    
+
     %%% same function as getAngle but with better performance
 %     function angle = getAngle2(command)
 %         angleIndex = find(mfunction(:, 2) <= command(2) + dmf2 & mfunction(:, 2) >= command(2) - dmf2);
 %         angle = mfunction(angleIndex, 1);
 %         angle = angle(ceil(length(angle) / 2));
 %     end
-    
+
     %%% Helper function that maps muscle activities to resulting metabolic costs
     % function [tmpMetCost] = getMetCost(command)
     %     cmd = (command * 10) + 1;                               % scale commands to table entries
@@ -199,9 +199,9 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     % muscle commands
     angleMin = getAngle([0, 0]) * 2;
     angleMax = getAngle([0, 1]) * 2;
-    
+
     %%% New renderer
-    simulator = OpenEyeSimV2('create');
+    simulator = OpenEyeSim('create');
     if reinitRenderer
         simulator.reinitRenderer();
     else
@@ -234,7 +234,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
                                        size(imgRawRight, 2), ...
                                        size(imgRawRight, 1)]), ...
                                       [3, 2, 1]);
-                                  
+
         % convert images to gray scale
         imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
         imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
@@ -250,9 +250,9 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
             currentTexture = texture{stimulus}
         end
         sprintf('Iteration %d of %d', stimulus, nStimuli)
-        
+
         for objDist = 1 : size(objRange, 2)
-            
+
             vergErrMax = getVergErrMax(objRange(objDist));
             if vergErrMax > 2
                 vergErrMax = 2;
@@ -263,7 +263,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
             if stimulus == nStimuli
                 vseRange = [vseRange, vseRange(end)]; % this tries to tackle a bug with removing the last few images from the video
             end
-            
+
             for vseIndex = 1 : size(vseRange, 2)
 
 %                 if (model.rlmodel.continuous == 1)
@@ -285,9 +285,9 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
                 %desired vergence [deg]
                 angleDes = 2 * atand(model.baseline / (2 * tmpObjRange));
 
-%                 savePathLeft = sprintf('%s/left%.3d.png', imagesSavePath,t); 
+%                 savePathLeft = sprintf('%s/left%.3d.png', imagesSavePath,t);
 %                 savePathRight = sprintf('%s/right%.3d.png', imagesSavePath,t);
-%                 savePathLeft = sprintf('%s/leftMovie.png', imagesSavePath); 
+%                 savePathLeft = sprintf('%s/leftMovie.png', imagesSavePath);
 %                 savePathRight = sprintf('%s/rightMovie.png', imagesSavePath);
 %                 [status, res] = system(sprintf('./checkEnvironment %s %d %d %s %s', ...
 %                                                currentTexture, tmpObjRange, angleNew, savePathLeft, savePathRight));
@@ -296,13 +296,13 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
 %                     sprintf('Error in checkEnvironment:\n%s', res)
 %                     return;
 %                 end
-% 
+%
 %                 [imgRawLeft, imgRawRight] = refreshImages(currentTexture, angleNew, tmpObjRange);
-            
+
                 for iteration = 1 : model.interval
                     % read input images and convert to gray scale
                     refreshImages(currentTexture, angleNew/2, tmpObjRange);
-                    
+
                     % Image patch generation
 %                     for i = 1 : length(model.scModel)
 %                         model.preprocessImageFilled(imgGrayLeft, i, 1);
@@ -314,7 +314,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
                         model.preprocessImage(imgGrayRight, i, 2);
                         currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
                     end
-                    
+
                     % this params are now all gobal
     %                 imgRawLeft = imread(savePathLeft);
     %                 imgRawRight = imread(savePathRight);
@@ -326,7 +326,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
 %                     [patchesLeftLarge] = preprocessImage(imgGrayLeft, foveaL, dsRatioL, patchSize, columnIndL);
 %                     [patchesRightSmall] = preprocessImage(imgGrayRight, foveaS, dsRatioS, patchSize, columnIndS);
 %                     [patchesRightLarge] = preprocessImage(imgGrayRight, foveaL, dsRatioL, patchSize, columnIndL);
-% 
+%
 %                     % Image patches matrix (input to model)
 %                     currentView = {[patchesLeftLarge; patchesRightLarge] [patchesLeftSmall; patchesRightSmall]};
 
@@ -355,16 +355,16 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
                     infos = {iteration, tmpObjRange, vseRange(vseIndex), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
                     generateAnaglyphs(t, markScales, infos)
 
-                    
+
                     % add the change in muscle Activities to current ones
     %                 if (model.rlmodel.continuous == 1)
                         command = command + relativeCommand;     %two muscles
     %                     command(2) = command(2) + relativeCommand;  %one muscle
                         command = checkCmd(command);                %restrain motor commands to [0,1]
     %                     angleNew = getAngle(command) * 2;           %resulting angle is used for both eyes
-    
-                    
-                    
+
+
+
                         angleNew = getAngle(command);
     %                 else
     %                     angleNew = angleNew + relativeCommand;
@@ -372,17 +372,17 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     %                         angleNew = (model.desiredAngleMin + (model.desiredAngleMax - model.desiredAngleMin) * rand(1,1)) * 2;
     %                     end
     %                 end
-    
+
 
                     t = t + 1;
-    %                 savePathLeft = sprintf('%s/left%.3d.png', imagesSavePath,t); 
+    %                 savePathLeft = sprintf('%s/left%.3d.png', imagesSavePath,t);
     %                 savePathRight = sprintf('%s/right%.3d.png', imagesSavePath,t);
-    %                 savePathLeft = sprintf('%s/leftMovie.png', imagesSavePath); 
+    %                 savePathLeft = sprintf('%s/leftMovie.png', imagesSavePath);
     %                 savePathRight = sprintf('%s/rightMovie.png', imagesSavePath);
                     % generate new view (two pictures) with new vergence angle
     %                 [status, res] = system(sprintf('./checkEnvironment %s %d %d %s %s', ...
     %                                                currentTexture, tmpObjRange, angleNew, savePathLeft, savePathRight));
-    % 
+    %
     %                 % abort execution if error occured
     %                 if (status)
     %                     sprintf('Error in checkEnvironment:\n%s', res)
@@ -394,7 +394,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     %                 fixDepth = (model.baseline / 2) / tand(angleNew / 2);           %fixation depth [m]
     %                 anglerr = angleDes - angleNew;                                  %vergence error [deg]
                     % disparity = 2 * model.focalLength * tand(anglerr / 2);        %current disp [px]
-    % 
+    %
     %                 disZtest(iter3, iter2, iter1) = tmpObjRange;
     %                 fixZtest(iter3, iter2, iter1) = fixDepth;
     %                 vergErrTest(iter3, iter2, iter1) = anglerr;
@@ -402,25 +402,25 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
             end
         end
     end
-    
+
 
 % [status, sysout] = system(sprintf('avconv -r %d -i %s/anaglyph%%03d.png %s/anaglyph_%s.mp4', frameRate, imagesSavePath, imagesSavePath, timeStamp));
 % [status, sysout] = system(sprintf('avconv -r %d -i %s/anaglyph%%03d.png -vcodec copy %s/anaglyph_%s.mp4', frameRate, imagesSavePath, imagesSavePath, timeStamp));
 
-% if status 
+% if status
 %     sprintf('Error in generating movie anaglyphs.mp4:\n%s',sysout)
 % end
 % [status, sysout] = system(sprintf('avconv -r %d -i %s/anaglyphSmallScale%%03d.png %s/anaglyphsSmallScale_%s.mp4', frameRate, imagesSavePath, imagesSavePath, timeStamp));
-% if status 
+% if status
 %     sprintf('Error in generating movie anaglyphsSmallScale.mp4:\n%s',sysout)
 % end
 % [status, sysout] = system(sprintf('avconv -r %d -i %s/anaglyphLargeScale%%03d.png %s/anaglyphsLargeScale_%s.mp4', frameRate, imagesSavePath, imagesSavePath, timeStamp));
-% if status 
+% if status
 %     sprintf('Error in generating movie anaglyphsLargeScale.mp4:\n%s',sysout)
 % end -vcodec copy
 
 [status, sysout] = system(sprintf('avconv -r %d -i %s/anaglyphs%%03d.png %s/anaglyphs_%s.mp4', frameRate, imagesSavePath, imagesSavePath, timeStamp));
-if status 
+if status
     sprintf('Error in generating movie anaglyphs.mp4:\n%s',sysout)
 end
 % after the movies are produced, delete all images
@@ -441,25 +441,25 @@ end
 %     for i = 1:log2(downSampling)
 %         img = impyramid(img, 'reduce');
 %     end
-% 
+%
 %     % convert to double
 %     img = double(img);
-% 
+%
 %     % cut fovea in the center
 %     [h, w, ~] = size(img);
 %     img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
 %               fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
-% 
+%
 %     % cut patches and store them as col vectors
 %     patches = im2col(img, [patchSize patchSize], 'sliding');            %slide window of 1 px
-% 
+%
 %     % take patches at steps of s (8 px)
 %     patches = patches(:, columnIndicies);                               %81 patches
-% 
+%
 %     % pre-processing steps (0 mean, unit norm)
 %     patches = patches - repmat(mean(patches), [size(patches, 1) 1]);    %0 mean
 %     normp = sqrt(sum(patches.^2));                                      %patches norm
-% 
+%
 %     % normalize patches to norm 1
 %     normp(normp == 0) = eps;                                            %regularizer
 %     patches = patches ./ repmat(normp, [size(patches, 1) 1]);           %normalized patches
@@ -470,23 +470,23 @@ end
 function generateAnaglyphs(identifier, markScales, infos)
 
     numberScales = length(model.scModel);
-    
+
     %defining colors in the image: (from larges to smallest scale)
     scalingColors = {'blue', 'red', 'green'};
-    
+
 %     cLarge = 'blue';
 %     cSmall = 'red';
     cText = 'yellow';
-    
+
     scaleImages = cell(numberScales);
-    
+
     for scale = 1:numberScales
         %Downsampling Large
         imgLeft = imgGrayLeft(:);
         imgLeft = reshape(imgLeft, size(imgGrayLeft));
         imgRight = imgGrayRight(:);
         imgRight = reshape(imgRight, size(imgGrayRight));
-        
+
         for ds = 1:log2(model.dsRatio(scale))
             imgLeft = impyramid(imgLeft, 'reduce');
             imgRight = impyramid(imgRight, 'reduce');
@@ -500,19 +500,19 @@ function generateAnaglyphs(identifier, markScales, infos)
 %                   fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
         cutOutVertical = [fix(h / 2 + 1 - model.pxFieldOfView(scale) / 2), fix(h / 2 + model.pxFieldOfView(scale) / 2)];
         cutOutHorizontal = [fix(w / 2 + 1 - model.pxFieldOfView(scale) / 2), fix(w / 2 + model.pxFieldOfView(scale) / 2)];
-        
-        
+
+
         imgLeft = imgLeft(cutOutVertical(1) : cutOutVertical(2) , cutOutHorizontal(1) : cutOutHorizontal(2));
         imgRight = imgRight(cutOutVertical(1) : cutOutVertical(2) , cutOutHorizontal(1) : cutOutHorizontal(2));
 
         %create an anaglyph of the two pictures, scale it up and save it
         anaglyph = imfuse(imgLeft, imgRight, 'falsecolor');
-        
+
 %         [hAna, vAna, ~] = size(anaglyph);
         if markScales
             anaglyph = insertShape(anaglyph, 'rectangle', [model.pxFieldOfView(scale) + 1 - model.patchSize, 1, model.patchSize, model.patchSize], 'color', scalingColors(scale));
         end
-        
+
         scaleImages{scale} = anaglyph;
     end
 %     %Downsampling Large
@@ -524,22 +524,22 @@ function generateAnaglyphs(identifier, markScales, infos)
 %         imgLeftL = impyramid(imgLeftL, 'reduce');
 %         imgRightL = impyramid(imgRightL, 'reduce');
 %     end
-% 
+%
 %     % cut fovea in the center
 %     [h, w, ~] = size(imgLeftL);
 %     imgLeftL = imgLeftL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
 %               fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
 %     imgRightL = imgRightL(fix(h / 2 + 1 - foveaL / 2) : fix(h / 2 + foveaL / 2), ...
 %               fix(w / 2 + 1 - foveaL / 2) : fix(w / 2 + foveaL / 2));
-% 
+%
 %     %create an anaglyph of the two pictures, scale it up and save it
 %     anaglyphL = imfuse(imgLeftL, imgRightL, 'falsecolor');
-% 
+%
 %     if markScales
 %         anaglyphL = insertShape(anaglyphL, 'rectangle', [9, 1, 8, 8], 'color', cLarge);
 %     end
 % %     anaglyphL = imresize(anaglyphL, 20); % scales the image to 320x320 px
-%     
+%
 %     %Downsampling Small
 %     imgLeftS = leftGray(:);
 %     imgLeftS = reshape(imgLeftS, size(leftGray));
@@ -549,18 +549,18 @@ function generateAnaglyphs(identifier, markScales, infos)
 %         imgLeftS = impyramid(imgLeftS, 'reduce');
 %         imgRightS = impyramid(imgRightS, 'reduce');
 %     end
-% 
+%
 %     % cut fovea in the center
 %     [h, w, ~] = size(imgLeftS);
 %     imgLeftS = imgLeftS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
 %               fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
 %     imgRightS = imgRightS(fix(h / 2 + 1 - foveaS / 2) : fix(h / 2 + foveaS / 2), ...
 %               fix(w / 2 + 1 - foveaS / 2) : fix(w / 2 + foveaS / 2));
-% 
+%
 %     %create an anaglyph of the two pictures, scale it up and save it
 %     anaglyphS = imfuse(imgLeftS, imgRightS, 'falsecolor');
-% 
-%     if markScales 
+%
+%     if markScales
 %         anaglyphS = insertShape(anaglyphS, 'rectangle', [33, 1, 8, 8], 'color', cSmall);
 %     end
 % %     anaglyphS = imresize(anaglyphS, 8); % scales the image to 320x320 px
@@ -569,16 +569,16 @@ function generateAnaglyphs(identifier, markScales, infos)
 %     imwrite(anaglyph, [savePath '/anaglyph.png']);
     anaglyph = imfuse(imgGrayLeft, imgGrayRight, 'falsecolor');
     [h, w, ~] = size(anaglyph);
-    
+
     if markScales
         for scale = 1:numberScales
             % this creates a rectangle inside the image for each scale and
-            % an examplary patch 
+            % an examplary patch
             scaleSizeOrigImg = model.pxFieldOfView(scale) * model.dsRatio(scale);
             patchSizeOrigImg = model.patchSize * model.dsRatio(scale);
             windowStart = [fix(w / 2 + 1 - scaleSizeOrigImg / 2), fix(h / 2 + 1 - scaleSizeOrigImg / 2)];
-            
-            % indexMatrix = [x, y, scaleWindow, scaleWindow; x, y, patchSize, patchSize] 
+
+            % indexMatrix = [x, y, scaleWindow, scaleWindow; x, y, patchSize, patchSize]
             indexMatrix = [windowStart(1), windowStart(2), scaleSizeOrigImg, scaleSizeOrigImg; windowStart(1), windowStart(2), patchSizeOrigImg, patchSizeOrigImg];
             anaglyph = insertShape(anaglyph, 'rectangle', indexMatrix, 'Color', scalingColors(scale)); % whole region of scale
         end
@@ -592,21 +592,21 @@ function generateAnaglyphs(identifier, markScales, infos)
 %          rightGray = insertShape(rightGray, 'rectangle', [96, 56, 128, 128], 'Color', 'black');      % large scale
     end
 %     anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
-    
+
 %     imwrite(anaglyph, sprintf('%s/anaglyph%.3d.png', savePath, identifier));
-    
-    
+
+
 %     imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
 %     imwrite(anaglyphL, sprintf('%s/anaglyphLargeScale%.3d.png', savePath, identifier));
 %     largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
 %     imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage%.3d.png', savePath, identifier));
-    
+
 %     imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
 
 %     imwrite(anaglyphS, sprintf('%s/anaglyphSmallScale%.3d.png', savePath, identifier));
 %     smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
 %     imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage%.3d.png', savePath, identifier));
-    
+
 %     xRange = [0, 320]; yRange = [0, 240];
     %% todo: insert reconstruction error for all and for each scale
     %% infos = {iteration, tmpObjRange, vseRange(vseIndex), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
@@ -622,7 +622,7 @@ function generateAnaglyphs(identifier, markScales, infos)
                 sprintf('Muscle Activation:    \t%.3f,  \t%.3f', infos{5}(1), infos{5}(2)), ...
                 sprintf('Relative Command: \t%.3f,  \t%.3f', infos{6}(1), infos{6}(2)), ...
                 sprintf('Reward: \t%.3f', infos{7})};
-    
+
     f = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
 %     subplot(2,3,[1,2,4,5]);
 %     title(sprintf('Object distance: %d,\titeration: %d,\tvergence error: %d', infos(1), infos(2), infos(3)));
@@ -643,7 +643,7 @@ function generateAnaglyphs(identifier, markScales, infos)
         imshow(scaleImages{sp});
         descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{8}(sp))};
         % todo: the fist two values in text have to be adapted, especially
-        % for more than 2 scales, also the size of the letters, 
+        % for more than 2 scales, also the size of the letters,
         text(0.03, 0.1, descr, 'color', cText, 'Units', 'normalized')
     end
 %     subplot('Position', [0.7, 0.6, 0.25, 0.25])

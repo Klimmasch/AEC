@@ -1,6 +1,6 @@
-%mex command to build the C files
+% mex command to build the C files
 
-%dynamic linking
+% dynamic linking
 mexFile=' OpenEyeSim_.cc';
 if mislocked(mexFile)
     munlock(mexFile)
@@ -27,9 +27,8 @@ libs=[oSimLibDir 'osimSimulation.so'''...
     oSimLibDir 'SimTKcommon.so'''...
     oSimLibDir 'SimTKsimbody.so'''...
     oSimLibDir 'SimTKmath.so'''];
-    %oSimLibDir 'SimTKmath.so'''...
     %oSimLibDir 'SimTKlapack.so'''];
 disp(oSimLibDir)
 disp(libs)
 eval(['mex -v -lGL -lglut -lGLU -DGL_GLEXT_PROTOTYPES -L/usr/lib/ -llapack -lblas' mexFile libs include]);
-disp('compilation done!');
+sprintf('Compilation done!')
