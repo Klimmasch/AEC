@@ -9,6 +9,66 @@
 %%%
 function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer, folder)
 
+    % Results overview table generation
+    resultsFN = strcat(model.savePath, '/results.ods'); % file name
+    resultsFID = fopen(resultsFN, 'a');                 % file descriptor
+
+    resultsOverview = cell(1);                          % results value vector
+    resultsOverview{end} = '';
+
+    if (model.trainTime >= 1e6)
+        resultsOverview{end + 1} = strcat(num2str(model.trainTime / 1e6), 'mio');
+    elseif (model.trainTime >= 1e3)
+        resultsOverview{end + 1} = strcat(num2str(model.trainTime / 1e3), 'k');
+    else
+        resultsOverview{end + 1} = num2str(model.trainTime);
+    end
+    formatSpec = '%s, %s,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    resultsOverview = {model.lambdaRec, model.lambdaMuscleFB, model.lambdaMet};
+    formatSpec = '%.0f, %.4f, %.4f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    resultsOverview = {model.pxFieldOfView .* model.dsRatio};
+    formatSpec = {''};
+    for k = 1 : length(model.dsRatio)
+        formatSpec = strcat(formatSpec, {'%.0f '});
+    end
+    formatSpec = strcat(formatSpec, ',');
+    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
+
+    resultsOverview = {model.dsRatio};
+    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
+
+    resultsOverview = {model.stride / model.patchSize};
+    formatSpec = strrep(formatSpec, '0', '1');
+    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
+
+    resultsOverview = {model.rlModel.CCritic.alpha_v, model.rlModel.CActor.beta_p, model.scModel{1}.eta};
+    formatSpec = '%.2f, %.2f, %.2f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    resultsOverview = {model.rlModel.weight_range .* ...
+                       [model.rlModel.CCritic.input_dim, ...
+                       (model.rlModel.CActor.input_dim * model.rlModel.CActor.hidden_dim), ...
+                       (model.rlModel.CActor.hidden_dim * model.rlModel.CActor.output_dim)]};
+    formatSpec = '%.0f %.0f %.0f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    resultsOverview = {model.rlModel.CActor.regularizer};
+    formatSpec = '%.4f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    resultsOverview = {model.muscleInitMax};
+    formatSpec = '%.4f %.4f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % column fill
+    resultsOverview = {'', '', '', ''};
+    formatSpec = '%s, %s, %s, %s,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
     % Vergence error resolution for 2nd testing procedure
     % Needs to be odd number to include vergErr = 0
     test2Resolution = 101;
@@ -831,11 +891,16 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
         ylabel('Vergence Error [deg]', 'FontSize', 12);
         title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f°,\n4*IQR = %.4f, RMSE = %.4f° at %dth step', ...
-                      mean(model.testResult3(:, testInterval)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4, sqrt(mean(model.testResult3(:, testInterval).^2)), testInterval));
+                      mean(model.testResult3(:, testInterval)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4, sqrt(mean(model.testResult3(:, testInterval) .^ 2)), testInterval));
         % if (~isempty(model.savePath))
-            plotpath = sprintf('%s/totalError', imageSavePath);
-            saveas(gcf, plotpath, 'png');
+        plotpath = sprintf('%s/totalError', imageSavePath);
+        saveas(gcf, plotpath, 'png');
         % end
+
+        % results vector
+        resultsOverview = {sqrt(mean(model.testResult3(:, testInterval) .^ 2)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4};
+        formatSpec = '%.4f, %.4f, %.4f,';
+        fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
         %% Check for bias at 0° vergence start error
         if (nStim == 0)
@@ -917,6 +982,14 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             plotpath = sprintf('%s/muscleGraphsScatterDeltaTesting', imageSavePath);
             saveas(gcf, plotpath, 'png');
         end
+
+        % save remaining results table
+        resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(model.savePath)};
+        formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s';
+        fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+        % close file
+        fclose(resultsFID);
     end
 end
 

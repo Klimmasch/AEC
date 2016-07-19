@@ -93,6 +93,7 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
         copyfile('config.m', model.savePath);
         copyfile(strcat(class(model), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
+        copyfile('results.ods', model.savePath);
 
         timeToTrain = model.trainTime;
     end

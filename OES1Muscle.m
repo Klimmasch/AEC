@@ -98,6 +98,10 @@ function OES1Muscle(trainTime, randomizationSeed, fileDescription)
         copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CCritic), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CActor), '.m'), model.savePath);
+        if (model.rlModel.continuous == 1)
+            copyfile('testModelContinuous.m', model.savePath);
+        end
+        copyfile('results.ods', model.savePath);
 
         timeToTrain = model.trainTime;
     end

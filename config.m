@@ -11,7 +11,7 @@ pxFieldOfViewOrig = [128, 40];                  % fields of view in original ima
 pxFieldOfView = pxFieldOfViewOrig ./ dsRatio;   % fields of view in downsampled image [pixel] (previously called fovea)
                                                 % pxFieldOfView = FieldOfView in original image [pixel] / dsRatio
 stride = [patchSize / 2, patchSize / 2];        % image patch strides | origin [1, patchSize / 2]
-cutout = uint8(1);                              % Manages whether cutout procedure is applied [1] or not [0]
+cutout = uint8(0);                              % Manages whether cutout procedure is applied [1] or not [0]
 overlap = [0];                                  % Overlap between the different layers measured in units of FINE scale - works only in conjunction with cutout
 
 % Sanity check of parameter values
