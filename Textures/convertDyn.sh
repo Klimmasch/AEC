@@ -39,7 +39,8 @@ else
         HEIGHT=$(convert $CONVERTED_IMAGE_DIR/$NEW_IMG -print "%h" /dev/null)
         if [[ $HEIGHT -gt $WIDTH ]]
         then
-            convert "$CONVERTED_IMAGE_DIR/$NEW_IMG" -crop "$WIDTH""x""$WIDTH+0+0" "$CONVERTED_IMAGE_DIR/$NEW_IMG"
+            OFFSET=$(($(($HEIGHT - $WIDTH)) / 2))
+            convert "$CONVERTED_IMAGE_DIR/$NEW_IMG" -crop "$WIDTH""x""$WIDTH+0+$OFFSET" "$CONVERTED_IMAGE_DIR/$NEW_IMG"
         else
             OFFSET=$(($(($WIDTH - $HEIGHT)) / 2))
             convert "$CONVERTED_IMAGE_DIR/$NEW_IMG" -crop "$HEIGHT""x""$HEIGHT+$OFFSET+0" "$CONVERTED_IMAGE_DIR/$NEW_IMG"

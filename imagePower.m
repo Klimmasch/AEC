@@ -4,7 +4,7 @@ close all;
 
 figure;
 %% good ones:
-% img = imread('Textures/vanHateren/17.bmp');
+img = imread('Textures/vanHateren/17.bmp');
 % img = imread('Textures/vanHateren/40.bmp');
 % img = imread('Textures/vanHateren/85.bmp');
 % img = imread('Textures/vanHateren/cutOffScale_corrected_2219.bmp');
@@ -14,8 +14,8 @@ figure;
 % img = imread('Textures/vanHateren/suboptimal/6.bmp');
 % img = imread('Textures/vanHateren/suboptimal/cutOffScale_corrected_2894.bmp');
 % img = imread('Textures/vanHateren/suboptimal/47.bmp');
-% img = imread('samplemerry_win07_006.jpg');
-imagesc(img);
+% img = imread('/home/lelais/Documents/MATLAB/aec/Textures/mcgillManmade/pippin_win07_017.bmp');
+% imagesc(img);
 
 % shift 0-frequency coefficient from left upper corner into center
 imgs = fftshift(img(:, :, 2));
@@ -45,7 +45,14 @@ colorbar;
 title('phase spectrum');
 
 figure;
-histogram(im_logPfft, 100);
+histogram(im_logPfft, 100, 'Normalization', 'pdf');
+xlabel('Power');
+ylabel('Probability');
+
+% figure;
+% histogram(angle(im_fft), 100, 'Normalization', 'pdf');
+% xlabel('Phase');
+% ylabel('Probability');
 
 % Frequency Domain Filtering of image
 hz = fspecial('sobel');
