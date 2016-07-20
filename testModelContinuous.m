@@ -75,6 +75,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     % Image processing variables
     textureFile = 'Textures_vanHaterenTest';
+    % textureFile = 'Textures_mcGillTest';
     % textureFile = 'Textures_vanHaterenTrain.mat';
 
     % Prepare Textures

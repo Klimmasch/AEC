@@ -154,7 +154,7 @@ alpha_n = 0.025;                                     % learning rate of natural 
 alpha_p = 0.5;                                       % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
 gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
-regularizer = 1 - 1e-5;                              % actor weight regularization via factorial downscaling
+regularizer = 1 - 1e-3;                              % actor weight regularization via factorial downscaling
 
 varianceRange = [1e-5, 1e-5];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
                                                      % corresponds to softMax temperature in discrete RL models
