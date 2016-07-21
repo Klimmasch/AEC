@@ -10,7 +10,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     texture = texture.texture;
     if length(stimuli) > length(texture)
         sprintf('Texture file does not contain that many images, but I will continue anyways.')
-        stimuli = stimuli(1:length(stimuli));
+        stimuli = stimuli(1:length(texture));
     end
     
     if (isempty(simulator))
@@ -140,23 +140,24 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     %% plotting results
     figure;
     hold on;
-    resolutionFactor = 5;
+    resolutionFactor = 4;
     tableSize = size(degrees.results_deg)-1;
     
-    plotRange = [0.05, 0.05];                                         % maximum x and y values of the tabular that should be plotted
+    plotRange = [0.1, 0.1];                                         % maximum x and y values of the tabular that should be plotted
     rangeIndizes = ceil(plotRange .* tableSize)+1;
     
     degreesX = interp2(degrees.results_deg(1:rangeIndizes(1), 1:rangeIndizes(2)), resolutionFactor);
     degSize = size(degreesX);                                       % corresp. to ((rangeIndizes-1)*2^resolutionFactor)+1
     scaleSize = ((tableSize(1)-1)*2^resolutionFactor)+1;            % corresp. to the size of the whole tabular with increased resolution
-    fun = surf(degreesX);                                           % TODO: change axis labels
-    alpha(fun, 0.5)                                                 % add transparency to degree plot
+%     fun = surf(degreesX);                                           % TODO: change axis labels
+    fun = contourf(degreesX(1:ceil(degSize(1)/8), 1:ceil(degSize/8)), 'LineWidth', 0.001);  % temporary solution to enable plotRange = [0.025, 0.025]
+%     alpha(fun, 0.5)                                                 % add transparency to degree plot
     
     scalingFactor = degSize ./ plotRange;
     for stim = 1:length(stimuli)
-        plot(trajectory(stim,1,1) * scalingFactor + 1, trajectory(stim,1,2) * scalingFactor + 1, 'g.'); % first value gets a bigger dot
-        plot(trajectory(stim,:,1)' * scalingFactor + 1, trajectory(stim,:,2)' * scalingFactor + 1, '.-', 'LineWidth', 2);
-        plot(trajectory(stim,1,1) * scalingFactor + 1, trajectory(stim,1,2) * scalingFactor + 1, 'r.'); % , 'MarkerSize', 100
+        plot(trajectory(stim,1,1) * scalingFactor + 1, trajectory(stim,1,2) * scalingFactor + 1, 'g.', 'MarkerSize', 50); % first value gets a bigger dot
+        plot(trajectory(stim,:,1)' * scalingFactor + 1, trajectory(stim,:,2)' * scalingFactor + 1, '.-', 'LineWidth', 2, 'MarkerSize', 20);
+        plot(trajectory(stim,end,1) * scalingFactor + 1, trajectory(stim,end,2) * scalingFactor + 1, 'r.', 'MarkerSize', 50); % , 'MarkerSize', 100
     end
     
     
