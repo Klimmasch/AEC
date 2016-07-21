@@ -1,16 +1,24 @@
 %%% Display the basis according to the binocularity
-%TODO update depricated sparse coding handling
+%TODO test this updated version with model that kept track of their basis
 close all
 r = 16; c = 18; %how to arrange the basis in rows and cols
 
-len = size(model.scModel_Small.basisHist,3);  %# of trials saved
-basisTrack = cell(2,len);           %variable to store all the saved basis
+% len = size(model.scModel_Small.basisHist,3);  %# of trials saved
+numScales = length(model.scModel);
+len = size(model.scModel{1}.basisHist, 3);  %# of trials saved
+basisTrack = cell(numScales, len);           %variable to store all the saved basis
 
 % copy into the new var
-for j = 1:len
-    basisTrack{1,j} = model.scModel_Large.basisHist(:,:,j);
-    basisTrack{2,j} = model.scModel_Small.basisHist(:,:,j);
+% for j = 1:len
+%     basisTrack{1,j} = model.scModel_Large.basisHist(:,:,j);
+%     basisTrack{2,j} = model.scModel_Small.basisHist(:,:,j);
+% end
+for scale = 1:numScales
+    for j = 1:len
+        basisTrack{scale, j} = model.scModel{scale}.basisHist(:, :, j);
+    end
 end
+
 
 % k = 11;
 
@@ -23,8 +31,8 @@ h = figure(1);
 scrsz = get(0,'ScreenSize');
 set(h,'Position',[scrsz(1) scrsz(2) scrsz(3) scrsz(4)]);
 
-% loop for Large and Small scale
-for s = 1:2
+% loop over scales
+for s = 1:numScales
     % sort basis according to left energy norm
     endBasis = basisTrack{s,end}(1:end/2,:);
     leftEnergy = abs(sum(endBasis.^2)-0.5);
@@ -49,7 +57,7 @@ for s = 1:2
 end
 
 % Display Histogram of Norm or Energy of Left (non blurred) Bases
-for s = 1:2
+for s = 1:numScales
     endBasis = basisTrack{s,end}(1:end/2,:);
     leftEnergy = abs(sum(endBasis.^2));
     figure(2);
@@ -64,7 +72,7 @@ for s = 1:2
 end
 
 % Display Histogram of Binocularity
-for s = 1:2
+for s = 1:numScales
     Lefteye = basisTrack{s,end}(1:end/2,:);
     Righteye = basisTrack{s,end}(end/2+1:end,:);
     % binocular index
