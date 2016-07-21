@@ -20,8 +20,11 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
 
     %%% Stimulus declaration
-    textureFile = 'Textures_vanHaterenTrain.mat';   % vanHateren database
-    % textureFile = 'Textures_celine.mat';          % Celine's images
+    textureFile = 'Textures_mcgillManMadeTrain.mat';    % McGill man made database
+    % textureFile = 'Textures_mcgillFruitsAll.mat';     % McGill fruits database
+    % textureFile = 'Textures_mcgillFoliageTrain.mat';  % McGill foliage database
+    % textureFile = 'Textures_vanHaterenTrain.mat';     % vanHateren database
+    % textureFile = 'Textures_celine.mat';              % Celine's images
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
@@ -51,7 +54,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 33;
+    nStimTest = 1000;
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -121,7 +124,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Track the evolution of all basis functions of the respective sparse coders
     trackSCBasisHistory = uint8(0);
 
-    % Textures
+    % Prepare Textures
     texture = load(sprintf('config/%s', textureFile));
     texture = texture.texture;
     nTextures = length(texture);

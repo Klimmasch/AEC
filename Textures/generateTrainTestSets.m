@@ -18,11 +18,11 @@ end
 
 % special case: use all stimuli in a single set
 if (nTestFiles <= 0)
-    stimulusSet = cell(nFiles, 1);
+    texture = cell(nFiles, 1);
     for i = 1 : nFiles
-        stimulusSet{i} = sprintf('../aec/Textures/%s/%s', stimulusSetName, files(i).name);
+        texture{i} = sprintf('../aec/Textures/%s/%s', stimulusSetName, files(i).name);
     end
-    save(sprintf('../config/Textures_%sAll.mat', stimulusSetName), 'stimulusSet');
+    save(sprintf('../config/Textures_%sAll.mat', stimulusSetName), 'texture');
     sprintf('Added %d files to the stimulus set', nFiles)
     return;
 end
@@ -34,20 +34,20 @@ end
 shuffledFiles = files(randperm(nFiles));
 
 % add nTestFiles images to the testing set
-testSet = cell(nTestFiles, 1);
+texture = cell(nTestFiles, 1);
 for i = 1 : nTestFiles
-    testSet{i} = sprintf('../aec/Textures/%s/%s', stimulusSetName, shuffledFiles(i).name);
+    texture{i} = sprintf('../aec/Textures/%s/%s', stimulusSetName, shuffledFiles(i).name);
 end
-save(sprintf('../config/Textures_%sTest.mat', stimulusSetName), 'testSet');
+save(sprintf('../config/Textures_%sTest.mat', stimulusSetName), 'texture');
 
 % add remaining stimuli to training set
-trainSet = cell(nFiles - nTestFiles, 1);
+texture = cell(nFiles - nTestFiles, 1);
 j = 1;
 for i = nTestFiles + 1 : nFiles
-    trainSet{j} = sprintf('../aec/Textures/%s/%s', stimulusSetName, shuffledFiles(i).name);
+    texture{j} = sprintf('../aec/Textures/%s/%s', stimulusSetName, shuffledFiles(i).name);
     j = j + 1;
 end
-save(sprintf('../config/Textures_%sTrain.mat', stimulusSetName), 'trainSet');
+save(sprintf('../config/Textures_%sTrain.mat', stimulusSetName), 'texture');
 
 sprintf('Added %d files to the testing set and %d to the trainig set', nTestFiles, nFiles - nTestFiles)
 
