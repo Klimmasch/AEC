@@ -17,11 +17,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     resultsOverview{end} = '';
 
     if (model.trainTime >= 1e6)
-        resultsOverview{end + 1} = strcat(num2str(model.trainTime / 1e6), 'mio');
+        resultsOverview{end + 1} = strcat(num2str(model.trainedUntil / 1e6), 'mio');
     elseif (model.trainTime >= 1e3)
-        resultsOverview{end + 1} = strcat(num2str(model.trainTime / 1e3), 'k');
+        resultsOverview{end + 1} = strcat(num2str(model.trainedUntil / 1e3), 'k');
     else
-        resultsOverview{end + 1} = num2str(model.trainTime);
+        resultsOverview{end + 1} = num2str(model.trainedUntil);
     end
     formatSpec = '%s, %s,';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
@@ -985,8 +985,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
 
         % save remaining results table
-        resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(model.savePath)};
-        formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s';
+        resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(imageSavePath)};
+        formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n';
         fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
         % close file
