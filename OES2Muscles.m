@@ -54,7 +54,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 1000;
+    nStimTest = 50; %can be adjusted, but it take just very long otherwise
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
