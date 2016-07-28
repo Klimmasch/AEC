@@ -17,7 +17,7 @@ classdef CACLAVarActorLu < handle
         variance;       % variance of perturbation distribution
         varianceRange;
         varDec;
-        covmat;         % action perturbation matrix
+        % covmat;         % action perturbation matrix
 
         % model state tracking of previous time step
         z_i_prev;       % input layer activation
@@ -50,7 +50,7 @@ classdef CACLAVarActorLu < handle
             obj.deltaVar = PARAM{5};
             obj.eta = PARAM{6};
             obj.varDec = PARAM{7};
-            obj.covmat = eye(obj.output_dim) * obj.variance;
+            % obj.covmat = eye(obj.output_dim) * obj.variance;
 
             obj.param_num = 5;
             obj.params = zeros(1, obj.param_num);
@@ -91,7 +91,7 @@ classdef CACLAVarActorLu < handle
             z_j = tanh(this.wp_ji * z_i);           % activity of hidden layer
             z_k = this.wp_kj * z_j;                 % activity of output layer
 
-            command = mvnrnd(z_k, this.covmat)';    % perturbation of actor's output by multivariate Gaussian
+            command = mvnrnd(z_k, eye(this.output_dim) * this.variance)';    % perturbation of actor's output by multivariate Gaussian
 
             % model state tracking
             this.z_i_prev = z_i;
