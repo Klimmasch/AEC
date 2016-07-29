@@ -139,19 +139,28 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     xValPos = ppval(approx, 1 : 0.0001 : 11)';
     yValPos = linspace(0, 1, resolution)';
 
-    xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
-    yValNeg = linspace(-1, 0, resolution)';
+%     xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
+%     yValNeg = linspace(-1, 0, resolution)';
 
-    mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+%     mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    mfunction = [xValPos, yValPos];
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
     dmf = abs(diff(mfunction(1 : 2, 1)));   % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
-
+    
+    approx = spline(1 : 11, degrees.results_deg(1, :));
+    xValPos = ppval(approx, 1 : 0.0001 : 11)';
+    yValPos = linspace(0, 1, resolution)';
+    
+    mfunction2 = [xValPos, yValPos];
+    mfunction2(:, 1) = mfunction2(:, 1) * 2;    % angle for two eyes
+    dmf3 = abs(diff(mfunction2(1 : 2, 1)));     % delta in angle
+    
     %%% New renderer
     simulator = OpenEyeSim('create');
 
     simulator.initRenderer();
-    % simulator.reinitRenderer(); % for debugging
+%     simulator.reinitRenderer(); % for debugging
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -228,6 +237,25 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         cmd(i1) = 1;
     end
 
+    % Calculates muscle force for two muscles
+    function [mf, angleInit] = getMF2(objDist, desVergErr)
+        % correct vergence angle for given object distance
+        angleCorrect = 2 * atand(model.baseline / (2 * objDist));
+        % desired init angle for given vergence error [deg]
+        angleInit = angleCorrect - desVergErr;
+        % look up index of angleInit
+        % if objDist not fixateable with medial rectus, use lateral rectus
+        if (angleInit >= mfunction(1, 1))
+            indAngleInit = find(mfunction(:, 1) <= angleInit + dmf & mfunction(:, 1) >= angleInit - dmf);
+            mf = mfunction(indAngleInit, 2);
+            mf = [0; mf(ceil(length(mf) / 2))];
+        else
+            indAngleInit = find(mfunction2(:, 1) <= angleInit + dmf3 & mfunction2(:, 1) >= angleInit - dmf3);
+            mf = mfunction2(indAngleInit, 2);
+            mf = [mf(ceil(length(mf) / 2)); 0];
+        end
+    end
+
     %%% Main execution loop
     t = model.trainedUntil; % this is zero in newly initiated model
     command = [0; 0];
@@ -250,26 +278,30 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
         % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
-        command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
-        command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
-
+        % command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
+        % command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
+        fixationDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        [command, angleNew] = getMF2(fixationDist, 0);
+        
         % testing input distribution
-        % nSamples = 10000;
-        % commands = zeros(nSamples,1);
-        % angles = zeros(nSamples, 1);
-        % dists = zeros(nSamples, 1);
-        % for i = 1:10000
-        %     initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
-        %     initAngle = atand(model.baseline / (2 * initDist));
-        %     commands(i) = getMF(initAngle*2);
-        %     angles(i) = getAngle([0, commands(i)]);
-        %     dists(i) = (model.baseline/ (2 * tand(angles(i))));
-        % end
-        % figure; histogram(commands); title('commands');
-        % figure; histogram(angles); title('angles');
-        % figure; histogram(dists); title('distances');
+%         nSamples = 10000;
+%         commands = zeros(nSamples,2);
+%         angles = zeros(nSamples, 1);
+%         dists = zeros(nSamples, 1);
+%         for i = 1:nSamples
+%             initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+%             [cmds, angles(i)] = getMF2(initDist, 0);
+%             commands(i, :) = cmds;
+%             initAngle = atand(model.baseline / (2 * initDist));
+%             commands(i) = getMF(initAngle*2);
+%             angles(i) = getAngle([0, commands(i)]);
+%             dists(i) = ((model.baseline / 2)/ (tand(angles(i) / 2)));
+%         end
+%         figure; histogram(commands); title('commands');
+%         figure; histogram(angles); title('angles');
+%         figure; histogram(dists); title('distances');
 
-        angleNew = getAngle(command) * 2;
+%         angleNew = getAngle(command) * 2;
         % angleNew = getAngle2(command);
 
         for iter2 = 1 : model.interval
