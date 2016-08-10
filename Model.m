@@ -441,23 +441,30 @@ classdef Model < handle
                 sprintf('Warning: windowSize >= recerr_hist')
             end
 
-            %% Vergence angle
+            %% Vergence angle / fixation distance
             obsWin = 249; % #last iterations to plot
             figure;
             hold on;
             grid on;
             if (length(this.verge_desired) >= obsWin)
-                plot(this.verge_desired(end - obsWin : end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
-                plot(this.verge_actual(end - obsWin : end), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+                % plot(this.verge_desired(end - obsWin : end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+                % plot(this.verge_actual(end - obsWin : end), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+                plot(this.Z(this.trainedUntil - obsWin : this.trainedUntil), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+                plot(this.fixZ(this.trainedUntil - obsWin : this.trainedUntil), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
             else
-                plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
-                plot(this.verge_actual, 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+                % plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+                % plot(this.verge_actual, 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+                plot(this.Z, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+                plot(this.fixZ, 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
             end
+            
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-            ylabel('Angle [deg]', 'FontSize', 12);
+            % ylabel('Angle [deg]', 'FontSize', 12);
+            ylabel('Object Distance [m]', 'FontSize', 12);
             legend('desired', 'actual');
             title(sprintf('Vergence at last %d steps of training', obsWin + 1));
-            plotpath = sprintf('%s/vergenceAngle', this.savePath);
+            % plotpath = sprintf('%s/vergenceAngle', this.savePath);
+            plotpath = sprintf('%s/fixationDist', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Muscel graphs

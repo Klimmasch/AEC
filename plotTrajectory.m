@@ -5,8 +5,8 @@
 function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stimuli, simulator, reinit, savePlot)
 
     %% everything concerning rendering:
-    texture = load(['config/' 'Textures_mcGillTest']);
-%     texture = load(['config/' 'Textures_vanHaterenTest']);
+%     texture = load(['config/' 'Textures_mcGillTest']);
+    texture = load(['config/' 'Textures_vanHaterenTest']);
     texture = texture.texture;
     if length(stimuli) > length(texture)
         sprintf('Texture file does not contain that many images, but I will continue anyways.')
@@ -112,13 +112,13 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     end
     
     %% main loop:
-    
-%     if initMethod == 'simple'
-    [command, angleNew] = getMF2(objDist, startVergErr);
-%     end
     trajectory = zeros(length(stimuli), numIters, 2);
     for stim = 1:length(stimuli)
         currentTexture = texture{stimuli(stim)};
+        
+%         if initMethod == 'simple'
+            [command, angleNew] = getMF2(objDist, startVergErr);
+%         end
         for iter = 1:numIters
             trajectory(stim, iter, :) = command;
             refreshImages(currentTexture, angleNew, objDist, 3)
@@ -140,7 +140,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     %% plotting results
     figure;
     hold on;
-    resolutionFactor = 4;
+    resolutionFactor = 6;
     tableSize = size(degrees.results_deg)-1;
     
     plotRange = [0.1, 0.1];                                         % maximum x and y values of the tabular that should be plotted
@@ -161,5 +161,5 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     end
     
     
-    plot(trajectory);
+%     plot(trajectory);
 end
