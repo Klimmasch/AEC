@@ -74,12 +74,12 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     test2Resolution = 101;
 
     % Image processing variables
-    textureFile = 'Textures_mcgillManMadeTest.mat';     % McGill man made database
+    % textureFile = 'Textures_mcgillManMadeTest.mat';     % McGill man made database
     % textureFile = 'Textures_mcgillManMadeTrain.mat';
     % textureFile = 'Textures_mcgillFoliageTest.mat';   % McGill foliage database
     % textureFile = 'Textures_mcgillFoliageTrain.mat';
     % textureFile = 'Textures_mcgillFruitsAll.mat';     % McGill fruits database
-    % textureFile = 'Textures_vanHaterenTest.mat';      % vanHateren database
+    textureFile = 'Textures_vanHaterenTest.mat';      % vanHateren database
     % textureFile = 'Textures_vanHaterenTrain.mat';
     % textureFile = 'Textures_celine.mat';              % Celine's images
 
@@ -990,8 +990,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
 
         % save remaining results table
-        resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(imageSavePath)};
-        formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n';
+        resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(imageSavePath)};
+        formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n';
         fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
         % close file
