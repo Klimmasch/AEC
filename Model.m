@@ -120,7 +120,7 @@ classdef Model < handle
 
             obj.g_hist = zeros(obj.trainTime, 1);
             obj.td_hist = zeros(obj.trainTime, 1);
-            % obj.feature_hist = zeros(obj.trainTime, PARAM{3}{9}(1));
+            % obj.feature_hist = zeros(obj.trainTime, 1);%zeros(obj.trainTime, PARAM{3}{9}(1));
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
             % obj.weight_hist = zeros(obj.trainTime, 4);
@@ -442,7 +442,7 @@ classdef Model < handle
             end
 
             %% Vergence angle / fixation distance
-            obsWin = 249; % #last iterations to plot
+            obsWin = 99; %249; % #last iterations to plot
             figure;
             hold on;
             grid on;
@@ -461,6 +461,7 @@ classdef Model < handle
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             % ylabel('Angle [deg]', 'FontSize', 12);
             ylabel('Object Distance [m]', 'FontSize', 12);
+            ylim([this.objDistMin - 1, this.objDistMax + 1]) 
             legend('desired', 'actual');
             title(sprintf('Vergence at last %d steps of training', obsWin + 1));
             % plotpath = sprintf('%s/vergenceAngle', this.savePath);
