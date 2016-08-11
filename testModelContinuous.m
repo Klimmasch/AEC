@@ -103,7 +103,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     %%% New renderer
     if (isempty(simulator))
-        simulator = OpenEyeSim('create');
+        % simulator = OpenEyeSim('create');
+        simulator = OpenEyeSimV4('create');
         if (reinitRenderer == 0)
             simulator.initRenderer();
         else

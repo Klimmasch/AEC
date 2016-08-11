@@ -1,7 +1,8 @@
 % mex command to build the C files
 
 % dynamic linking
-mexFile=' OpenEyeSim_.cc';
+% mexFile=' OpenEyeSim_.cc'; % backup  old renderer
+mexFile=' OpenEyeSimV4_.cc';
 if mislocked(mexFile)
     munlock(mexFile)
 end
@@ -26,6 +27,7 @@ libs=[oSimLibDir 'osimSimulation.so'''...
     oSimLibDir 'osimAnalyses.so'''...
     oSimLibDir 'SimTKcommon.so'''...
     oSimLibDir 'SimTKsimbody.so'''...
+    oSimLibDir 'SOIL.so'''...
     oSimLibDir 'SimTKmath.so'''];
     %oSimLibDir 'SimTKlapack.so'''];
 disp(oSimLibDir)

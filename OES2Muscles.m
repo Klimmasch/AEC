@@ -51,7 +51,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(1);
+    testIt = uint8(0);
 
     %%% Amount of test stimuli
     nStimTest = 50; %can be adjusted, but it take just very long otherwise
@@ -147,17 +147,18 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
     dmf = abs(diff(mfunction(1 : 2, 1)));   % delta in angle
     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
-    
+
     approx = spline(1 : 11, degrees.results_deg(1, :));
     xValPos = ppval(approx, 1 : 0.0001 : 11)';
     yValPos = linspace(0, 1, resolution)';
-    
+
     mfunction2 = [xValPos, yValPos];
     mfunction2(:, 1) = mfunction2(:, 1) * 2;    % angle for two eyes
     dmf3 = abs(diff(mfunction2(1 : 2, 1)));     % delta in angle
-    
+
     %%% New renderer
-    simulator = OpenEyeSim('create');
+    % simulator = OpenEyeSim('create');
+    simulator = OpenEyeSimV4('create');
 
     simulator.initRenderer();
 %     simulator.reinitRenderer(); % for debugging
@@ -282,7 +283,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
         fixationDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         [command, angleNew] = getMF2(fixationDist, 0);
-        
+
         % testing input distribution
 %         nSamples = 10000;
 %         commands = zeros(nSamples,2);
