@@ -20,10 +20,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
 
     %%% Stimulus declaration
-    textureFile = 'Textures_mcgillManMadeTrain.mat';    % McGill man made database
+    % textureFile = 'Textures_mcgillManMadeTrain.mat';    % McGill man made database
     % textureFile = 'Textures_mcgillFruitsAll.mat';     % McGill fruits database
     % textureFile = 'Textures_mcgillFoliageTrain.mat';  % McGill foliage database
-    % textureFile = 'Textures_vanHaterenTrain.mat';     % vanHateren database
+    textureFile = 'Textures_vanHaterenTrain.mat';     % vanHateren database
     % textureFile = 'Textures_celine.mat';              % Celine's images
 
     %%% executing the test procedure during training?
@@ -119,7 +119,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     model.notes = [model.notes, fileDescription];
 
     % Save model every #saveInterval training iterations
-    saveInterval = ceil(model.trainTime / 5);
+    saveInterval = ceil(model.trainTime / 10);
 
     % Track the evolution of all basis functions of the respective sparse coders
     trackSCBasisHistory = uint8(0);
@@ -278,8 +278,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
         % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
-        % command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
-        % command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
+%         command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
+%         command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
         fixationDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         [command, angleNew] = getMF2(fixationDist, 0);
         
@@ -393,7 +393,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
             model.reward_hist(t) = rewardFunction;
-            % model.feature_hist(t, :) = feature;
+            % model.feature_hist(t) = mean(bfFeature);
             model.metCost_hist(t) = metCost;
             model.td_hist(t) = model.rlModel.CCritic.delta;
             model.weight_hist(t, 1) = model.rlModel.CCritic.params(1);
