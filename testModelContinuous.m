@@ -8,7 +8,12 @@
 %                           0 if renderer wasn't initialized yet
 %%%
 function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer, folder)
-
+    
+    % should the simulation time be measured? 
+    % not recommended for use during training
+    measureTime = uint(0)
+    
+    
     % Results overview table generation
     resultsFN = strcat(model.savePath, '/results.ods'); % file name
     resultsFID = fopen(resultsFN, 'a');                 % file descriptor
@@ -74,12 +79,12 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     test2Resolution = 101;
 
     % Image processing variables
-    textureFile = 'Textures_mcgillManMadeTest.mat';     % McGill man made database
+%     textureFile = 'Textures_mcgillManMadeTest.mat';     % McGill man made database
     % textureFile = 'Textures_mcgillManMadeTrain.mat';
     % textureFile = 'Textures_mcgillFoliageTest.mat';   % McGill foliage database
     % textureFile = 'Textures_mcgillFoliageTrain.mat';
     % textureFile = 'Textures_mcgillFruitsAll.mat';     % McGill fruits database
-    % textureFile = 'Textures_vanHaterenTest.mat';      % vanHateren database
+    textureFile = 'Textures_vanHaterenTest.mat';      % vanHateren database
     % textureFile = 'Textures_vanHaterenTrain.mat';
     % textureFile = 'Textures_celine.mat';              % Celine's images
 
@@ -310,7 +315,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     tr2Ind = 1;
     tr3Ind = 1;
     tr5Ind = 1;
-    tic;
+    if measureTime
+        tic;
+    end
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
         for odIndex = 1 : length(objRange)
@@ -507,12 +514,14 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             end
         end
         testResult4(testResult4 == 0) = NaN;
-
-        elapsedTime = toc;
-        sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
-                elapsedTime / 3600, elapsedTime / 60, elapsedTime, ...
-                (length(objRange) * length(vseRange) * nStim * testInterval + length(objRange) * length(vseRange) * nStim) / elapsedTime)
-
+        
+        if measureTime
+            elapsedTime = toc;
+            sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
+                    elapsedTime / 3600, elapsedTime / 60, elapsedTime, ...
+                    (length(objRange) * length(vseRange) * nStim * testInterval + length(objRange) * length(vseRange) * nStim) / elapsedTime)
+        end
+        
         % save test results
         try
             model.testResult = testResult;
