@@ -25,14 +25,14 @@ then
     echo -n "Converting images..."
     for IMAGE in $(ls $RAW_IMAGE_DIR)
     do
-        convert "$RAW_IMAGE_DIR/$IMAGE" "$CONVERTED_IMAGE_DIR/${IMAGE%.*}.bmp"
+        convert "$RAW_IMAGE_DIR/$IMAGE" "$CONVERTED_IMAGE_DIR/${IMAGE%.*}.jpg"
     done
 else
     # convert & cut
     echo -n "Converting and cutting images..."
     for IMAGE in $(ls $RAW_IMAGE_DIR)
     do
-        NEW_IMG="${IMAGE%.*}.bmp"
+        NEW_IMG="${IMAGE%.*}.jpg"
         convert "$RAW_IMAGE_DIR/$IMAGE" "$CONVERTED_IMAGE_DIR/$NEW_IMG"
 
         WIDTH=$(convert $CONVERTED_IMAGE_DIR/$NEW_IMG -print "%w" /dev/null)
