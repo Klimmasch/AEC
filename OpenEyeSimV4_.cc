@@ -68,6 +68,7 @@ public:
         texture_name = "1.bmp";
         distance = 0.;
         planeScale = 1.4f;
+        this->planeTexture = 0;
     }
 
     // Database destructor.
@@ -92,7 +93,7 @@ public:
         (
                 texture_name.c_str(),
                 SOIL_LOAD_AUTO,
-                SOIL_CREATE_NEW_ID,
+                this->planeTexture,
                 SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
         );
         //loadBMPRaw(texture_input.c_str(), widthTex, heightTex, number);
@@ -214,16 +215,16 @@ public:
         glTexCoordPointer(2, GL_FLOAT, 0, 0);
         glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping ( NEW )
         glBindTexture(GL_TEXTURE_2D, this->planeTexture);
-        glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+        //glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, this->planeTexture);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glDisable(GL_CULL_FACE);
+        //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        //glDisable(GL_CULL_FACE);
         glBindTexture(GL_TEXTURE_2D, this->planeTexture);
     }
 
@@ -245,16 +246,16 @@ public:
         glTexCoordPointer(2, GL_FLOAT, 0, 0);
         glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping ( NEW )
         glBindTexture(GL_TEXTURE_2D, this->backTexture);
-        glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+        //glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, this->backTexture);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glDisable(GL_CULL_FACE);
+        //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        //glDisable(GL_CULL_FACE);
         glBindTexture(GL_TEXTURE_2D, this->backTexture);
     }
 
@@ -421,7 +422,7 @@ public:
             glVertex3fv(&v[faces[i][3]][0]);
             glEnd();
         }
-        glEnable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
         glPopMatrix();
         glDisable(GL_TEXTURE_2D);
     }
@@ -450,7 +451,7 @@ public:
             glVertex3fv(&vBack[faces[i][3]][0]);
             glEnd();
         }
-        glEnable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
         glPopMatrix();
         glDisable(GL_TEXTURE_2D);
     }
@@ -573,7 +574,6 @@ public:
         0.0, 1.578, 0.0,            /* center is at (0,0,0) */
         0.0, 1.0, 0.);              /* up is in positive Y direction */
 
-        //"grund.jpg",
         this->backTexture = SOIL_load_OGL_texture
         (
                 "/home/aecgroup/aecdata/Textures/simulation_background.jpg",

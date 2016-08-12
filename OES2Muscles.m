@@ -20,11 +20,11 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
 
     %%% Stimulus declaration
-    % textureFile = 'Textures_mcgillManMadeTrain.mat';    % McGill man made database
-    % textureFile = 'Textures_mcgillFruitsAll.mat';     % McGill fruits database
-    % textureFile = 'Textures_mcgillFoliageTrain.mat';  % McGill foliage database
-    textureFile = 'Textures_vanHaterenTrain.mat';     % vanHateren database
-    % textureFile = 'Textures_celine.mat';              % Celine's images
+%     textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';      % McGill man made database
+    % textureFile = 'Textures_mcgillFruitsAll.mat';         % McGill fruits database
+%     textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';   % McGill foliage database
+    textureFile = 'Textures_vanHaterenTrain.mat';         % vanHateren database
+    % textureFile = 'Textures_celine.mat';                  % Celine's images
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
@@ -157,7 +157,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     dmf3 = abs(diff(mfunction2(1 : 2, 1)));     % delta in angle
 
     %%% New renderer
-    % simulator = OpenEyeSim('create');
+%     simulator = OpenEyeSim('create');
     simulator = OpenEyeSimV4('create');
 
     simulator.initRenderer();
@@ -211,7 +211,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
     end
 
-    %%% Helper function that maps muscle activities to resulting angle
+    %%% Helper function that maps muscle activities to resulting angle (for
+    %%% one eye)
     function angle = getAngle(command)
         cmd = (command * 10) + 1;                                       % scale commands to table entries
         angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline'); % interpolate in table by cubic splines
@@ -383,7 +384,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             anglerr = angleDes - angleNew;                          % vergence error [deg]
             disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
 
-            % save state
+            % save state            
             model.Z(t) = objDist;
             model.fixZ(t) = fixDepth;
             model.disp_hist(t) = disparity;
@@ -411,6 +412,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         if (mod(t, 100) == 0)
             % infos = {t, objDist, model.vergerr_hist(t - model.interval + 1), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
             % generateAnaglyphs(t, 1, infos);
+            imwrite(stereoAnaglyph(imgGrayLeft, imgGrayRight), strcat(model.savePath, '/anaglyph.png')) % offers an insight into the models view while it learns
+
             sprintf('Training Iteration: %d\nObjectDistance:\t%6.2fm\tStart Error:\t%6.3f°\nEnd Fixation:\t%6.2fm\tEnd Error:\t%6.3f°\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
                     t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), ...
                     mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
