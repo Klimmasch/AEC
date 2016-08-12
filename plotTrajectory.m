@@ -14,6 +14,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     end
     
     if (isempty(simulator))
+%         simulator = OpenEyeSimV4('create');
         simulator = OpenEyeSim('create');
         if (reinit == 0)
             simulator.initRenderer();
@@ -116,12 +117,19 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     for stim = 1:length(stimuli)
         currentTexture = texture{stimuli(stim)};
         
-%         if initMethod == 'simple'
+        if initMethod == 'simple'
             [command, angleNew] = getMF2(objDist, startVergErr);
-%         end
+        elseif initMethod == 'random'
+%             initFixation = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1,1)
+            command = [0; 0];
+            command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
+            command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1); 
+            angleNew = getAngle(command) * 2;
+        end
+            
         for iter = 1:numIters
             trajectory(stim, iter, :) = command;
-            refreshImages(currentTexture, angleNew, objDist, 3)
+            refreshImages(currentTexture, angleNew / 2, objDist, 3)
 
             for i = 1 : length(model.scModel)
                 model.preprocessImage(imgGrayLeft, i, 1);
@@ -133,7 +141,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
             feature = [bfFeature; command * model.lambdaMuscleFB];          % append muscle activities to feature vector
             relativeCommand = model.rlModel.act(feature);                   % generate change in muscle activity
             command = checkCmd(command + relativeCommand);                  % calculate new muscle activities
-            angleNew = getAngle(command);                                   % transform into angle
+            angleNew = getAngle(command) * 2;                               % transform into angle
         end
     end
     
