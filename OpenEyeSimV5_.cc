@@ -1,4 +1,4 @@
-/** OpenEyeSimV4 Simulator (As a class)
+/** OpenEyeSimV5 Simulator (As a class)
  *
  */
 #include <mexplus.h>
@@ -66,9 +66,10 @@ public:
         angle = 0.0;
         strangle = 0.0;
         texture_name = "1.bmp";
+        texture_number = 0;
         distance = 0.;
         planeScale = 1.4f;
-        this->planeTexture = 0;
+        //this->planeTexture[0] = 0;
     }
 
     // Database destructor.
@@ -89,113 +90,113 @@ public:
     add_texture(int number, const string& texture_input)
     {
         this->texture_name = texture_input;
-        this->planeTexture = SOIL_load_OGL_texture
+        this->planeTexture[number] = SOIL_load_OGL_texture
         (
                 texture_name.c_str(),
                 SOIL_LOAD_AUTO,
-                this->planeTexture,
-                SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
+                number,
+                SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_COMPRESS_TO_DXT | SOIL_FLAG_NTSC_SAFE_RGB
         );
-        //loadBMPRaw(texture_input.c_str(), widthTex, heightTex, number);
+        //loadBMPRaw(texture_input.c_str(), widthTex, heightTex, number); SOIL_FLAG_NTSC_SAFE_RGB
     }
 
-    void
-    loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight, int number)
-    {
-        bool flipY = false;
-        // Data read from the header of the BMP file
-        unsigned char header[54];
-        unsigned int dataPos;
-        unsigned int imageSize;
-        // Actual RGB data
-        unsigned char * data;
+    // void
+    // loadBMPRaw(const char * imagepath, unsigned int& outWidth, unsigned int& outHeight, int number)
+    // {
+    //     bool flipY = false;
+    //     // Data read from the header of the BMP file
+    //     unsigned char header[54];
+    //     unsigned int dataPos;
+    //     unsigned int imageSize;
+    //     // Actual RGB data
+    //     unsigned char * data;
 
-        // Open the file
-        FILE * file = fopen(imagepath, "rb");
-        if (!file)
-        {
-            printf("Image could not be opened\n");
-            //return NULL;
-        }
+    //     // Open the file
+    //     FILE * file = fopen(imagepath, "rb");
+    //     if (!file)
+    //     {
+    //         printf("Image could not be opened\n");
+    //         //return NULL;
+    //     }
 
-        // Read the header, i.e. the 54 first bytes
+    //     // Read the header, i.e. the 54 first bytes
 
-        // If less than 54 byes are read, problem
-        if (fread(header, 1, 54, file) != 54)
-        {
-            printf("Not a correct BMP file\n");
-            // return NULL;
-        }
-
-
-        // A BMP files always begins with "BM"
-        if ((header[0] != 'B') || (header[1] != 'M'))
-        {
-            printf("Not a correct BMP file\n");
-            // return NULL;
-        }
+    //     // If less than 54 byes are read, problem
+    //     if (fread(header, 1, 54, file) != 54)
+    //     {
+    //         printf("Not a correct BMP file\n");
+    //         // return NULL;
+    //     }
 
 
-        // Make sure this is a 24bpp file
-        if (*(int*)&(header[0x1E]) != 0)
-        {
-            printf("Not a correct BMP file\n");
-            //return NULL;
-        }
-        if (*(int*)&(header[0x1C]) != 24)
-        {
-            printf("Not a correct BMP file\n");
-            //return NULL;
-        }
+    //     // A BMP files always begins with "BM"
+    //     if ((header[0] != 'B') || (header[1] != 'M'))
+    //     {
+    //         printf("Not a correct BMP file\n");
+    //         // return NULL;
+    //     }
 
-        // Read the information about the image
-        dataPos     = *(int*)&(header[0x0A]);
-        imageSize   = *(int*)&(header[0x22]);
-        outWidth    = *(int*)&(header[0x12]);
-        outHeight   = *(int*)&(header[0x16]);
 
-        // Some BMP files are misformatted, guess missing information
-        if (imageSize == 0)
-            imageSize = outWidth * outHeight * 3; // 3 : one byte for each Red, Green and Blue component
-        if (dataPos == 0)
-            dataPos = 54; // The BMP header is done that way
+    //     // Make sure this is a 24bpp file
+    //     if (*(int*)&(header[0x1E]) != 0)
+    //     {
+    //         printf("Not a correct BMP file\n");
+    //         //return NULL;
+    //     }
+    //     if (*(int*)&(header[0x1C]) != 24)
+    //     {
+    //         printf("Not a correct BMP file\n");
+    //         //return NULL;
+    //     }
 
-        // Create a buffer
-        //data = new unsigned char [imageSize];
+    //     // Read the information about the image
+    //     dataPos     = *(int*)&(header[0x0A]);
+    //     imageSize   = *(int*)&(header[0x22]);
+    //     outWidth    = *(int*)&(header[0x12]);
+    //     outHeight   = *(int*)&(header[0x16]);
 
-        // Read the actual data from the file into the buffer
-        fread(&dataTex[0][number], 1, imageSize, file);
+    //     // Some BMP files are misformatted, guess missing information
+    //     if (imageSize == 0)
+    //         imageSize = outWidth * outHeight * 3; // 3 : one byte for each Red, Green and Blue component
+    //     if (dataPos == 0)
+    //         dataPos = 54; // The BMP header is done that way
 
-        // Everything is in memory now, the file wan be closed
-        fclose (file);
+    //     // Create a buffer
+    //     //data = new unsigned char [imageSize];
 
-        // if (flipY)
-        // {
-        //     // swap y-axis
-        //     unsigned char * tmpBuffer = new unsigned char[outWidth*3];
+    //     // Read the actual data from the file into the buffer
+    //     fread(&dataTex[0][number], 1, imageSize, file);
 
-        //     int size = outWidth*3;
+    //     // Everything is in memory now, the file wan be closed
+    //     fclose (file);
 
-        //     for (int i=0;i<outHeight/2;i++){
+    //     // if (flipY)
+    //     // {
+    //     //     // swap y-axis
+    //     //     unsigned char * tmpBuffer = new unsigned char[outWidth*3];
 
-        //     // copy row i to tmp
-        //     //memcpy_s(tmpBuffer,size,data+outWidth*3*i,size);
-        //     memcpy(tmpBuffer,data+outWidth*3*i,size);
+    //     //     int size = outWidth*3;
 
-        //     // copy row h-i-1 to i
-        //     //memcpy_s(data+outWidth*3*i, size, data+outWidth*3*(outHeight-i-1), size);
-        //     memcpy(data+outWidth*3*i, data+outWidth*3*(outHeight-i-1), size);
+    //     //     for (int i=0;i<outHeight/2;i++){
 
-        //     // copy tmp to row h-i-1
-        //     //memcpy_s(data+outWidth*3*(outHeight-i-1), size,tmpBuffer, size);
-        //     memcpy(data+outWidth*3*(outHeight-i-1),tmpBuffer, size);
+    //     //     // copy row i to tmp
+    //     //     //memcpy_s(tmpBuffer,size,data+outWidth*3*i,size);
+    //     //     memcpy(tmpBuffer,data+outWidth*3*i,size);
 
-        //     }
-        //     delete [] tmpBuffer;
-        // }
+    //     //     // copy row h-i-1 to i
+    //     //     //memcpy_s(data+outWidth*3*i, size, data+outWidth*3*(outHeight-i-1), size);
+    //     //     memcpy(data+outWidth*3*i, data+outWidth*3*(outHeight-i-1), size);
 
-        //return data;
-    }
+    //     //     // copy tmp to row h-i-1
+    //     //     //memcpy_s(data+outWidth*3*(outHeight-i-1), size,tmpBuffer, size);
+    //     //     memcpy(data+outWidth*3*(outHeight-i-1),tmpBuffer, size);
+
+    //     //     }
+    //     //     delete [] tmpBuffer;
+    //     // }
+
+    //     //return data;
+    // }
 
     void
     applyTexture(void)
@@ -214,18 +215,18 @@ public:
         //glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
         glTexCoordPointer(2, GL_FLOAT, 0, 0);
         glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping ( NEW )
-        glBindTexture(GL_TEXTURE_2D, this->planeTexture);
+        glBindTexture(GL_TEXTURE_2D, this->planeTexture[this->texture_number]);
         //glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, this->planeTexture);
+        glBindTexture(GL_TEXTURE_2D, this->planeTexture[this->texture_number]);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         //glDisable(GL_CULL_FACE);
-        glBindTexture(GL_TEXTURE_2D, this->planeTexture);
+        glBindTexture(GL_TEXTURE_2D, this->planeTexture[this->texture_number]);
     }
 
     void
@@ -578,7 +579,7 @@ public:
         (
                 "/home/aecgroup/aecdata/Textures/simulation_background.jpg",
                 SOIL_LOAD_AUTO,
-                SOIL_CREATE_NEW_ID,
+                371,
                 SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
         );
 
@@ -636,13 +637,13 @@ public:
 public:
     unsigned char bufferData[230400];
     // unsigned char dataTex[3 * 480 * 480][10]; // Celine's image resolution
-    unsigned char dataTex[1024 * 1024 * 3][100]; // vanHateren image resolution
+    // unsigned char dataTex[1024 * 1024 * 3][100]; // vanHateren image resolution
 
 private:
     // Database implementation.
     GLuint textureBuffer;
     GLuint textureBufferBack;
-    GLuint planeTexture;
+    GLuint planeTexture[500];
     GLuint backTexture;
     string texture_name;
     int texture_number;
