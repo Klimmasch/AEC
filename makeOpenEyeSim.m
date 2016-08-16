@@ -1,8 +1,8 @@
 % mex command to build the C files
 
 % dynamic linking
-% mexFile=' OpenEyeSim_.cc'; % backup  old renderer
-mexFile=' OpenEyeSimV4_.cc';
+% mexFile=' OpenEyeSim_.cc'; % stable renderer
+mexFile=' OpenEyeSimV5_.cc'; % experimental version
 if mislocked(mexFile)
     munlock(mexFile)
 end
