@@ -11,7 +11,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     
     % should the simulation time be measured? 
     % not recommended for use during training
-    measureTime = uint(0)
+    measureTime = false
     
     
     % Results overview table generation
@@ -109,8 +109,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     %%% New renderer
     if (isempty(simulator))
-        % simulator = OpenEyeSim('create');
-        simulator = OpenEyeSimV4('create');
+        simulator = OpenEyeSim('create');
+%         simulator = OpenEyeSimV4('create');
         if (reinitRenderer == 0)
             simulator.initRenderer();
         else
