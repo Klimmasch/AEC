@@ -20,11 +20,16 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
 
     %%% Stimulus declaration
-    textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';       % McGill man made database
+%     textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';       % McGill man made database
     % textureFile = 'Textures_mcgillFruitsAll.mat';             % McGill fruits database
     % textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';     % McGill foliage database
     % textureFile = 'Textures_vanHaterenTrain.mat';             % vanHateren database
     % textureFile = 'Textures_celine.mat';                      % Celine's images
+
+    % for the new renderer, all textures to be used during training and
+    % testing have to be loaded into the buffer at the beginning
+    % per convention, the testing images are given in the first entry!!
+    textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
@@ -54,7 +59,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 2; %can be adjusted, but it take just very long otherwise
+    nStimTest = 100; %can be adjusted, but it take just very long otherwise
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -67,7 +72,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.trainTime = trainTime;
         end
     else
-        model = config(textureFile, trainTime, sparseCodingType);
+        model = config(textureFiles(2), trainTime, sparseCodingType);
     end
 
     % check if main script and model are compatible
@@ -125,11 +130,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Track the evolution of all basis functions of the respective sparse coders
     trackSCBasisHistory = uint8(0);
 
-    % Prepare Textures
-    texture = load(sprintf('config/%s', textureFile));
-    texture = texture.texture;
-    nTextures = length(texture);
-
     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
     metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
 
@@ -162,11 +162,31 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     simulator = OpenEyeSimV5('create'); % experimental version
 
     simulator.initRenderer();
-    % simulator.reinitRenderer(); % for debugging
+%     simulator.reinitRenderer(); % for debugging
+
+        % Prepare Textures
+
 
     % load all stimuli into memory for experimental renderer
-    for i = 1 : nTextures % 140
-        simulator.add_texture(i, texture{i});
+    nTextures = 0;
+    tmpTexInd = 1;
+    for i = 1:length(textureFiles)
+        texture = load(sprintf('config/%s', textureFiles{i}));
+        texture = texture.texture;
+        nTextures = nTextures + length(texture);
+        if i == 1
+            nTestTextures = nTextures;      % save number of test textures for proper indexing later
+        end
+        for j = tmpTexInd : nTextures % 140
+            simulator.add_texture(j, texture{i});
+            sprintf('texture added: %d', j)
+        end
+        tmpTexInd = tmpTexInd + nTextures;
+    end
+
+    if nStimTest > nTestTextures
+        nStimTest = nTestTextures;
+        sprintf('The file for testing textures only contains %d images, but I will use them all!', nStimTest)
     end
 
     imgRawLeft = uint8(zeros(240, 320, 3));
@@ -302,7 +322,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     for iter1 = 1 : (timeToTrain / model.interval)
         % pick random texture every #interval times
         % currentTexture = texture{(randi(nTextures, 1))};  % stable renderer
-        currentTexture = randi(nTextures, 1);               % experimental renderer
+        currentTexture = nTestTextures + randi(nTextures, 1);               % experimental renderer
 
         % random depth
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);

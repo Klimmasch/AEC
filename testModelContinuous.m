@@ -89,13 +89,13 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % textureFile = 'Textures_celine.mat';                      % Celine's images
 
     % Prepare Textures
-    texture = load(sprintf('config/%s', textureFile));
-    texture = texture.texture;
-    nTextures = length(texture);
-    if (nTextures < nStim)
-        sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
-        nStim = nTextures;
-    end
+%     texture = load(sprintf('config/%s', textureFile));
+%     texture = texture.texture;
+%     nTextures = length(texture);
+%     if (nTextures < nStim)
+%         sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
+%         nStim = nTextures;
+%     end
 
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
@@ -120,9 +120,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     end
 
     % load all stimuli into memory for experimental renderer
-    for i = 1 : nStim
-        simulator.add_texture(i, texture{i});
-    end
+%     for i = 1 : nStim
+%         simulator.add_texture(i, texture{i});
+%     end
 
     %%% creating a new directory if (folder ~= '/.')
     if (folder(1) ~= '/')
