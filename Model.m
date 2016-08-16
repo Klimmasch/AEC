@@ -544,11 +544,15 @@ classdef Model < handle
                     % extract last x per cent of iterations
                     pcOffset = 0.01;
                     tmpOffset = ceil(size(this.cmd_hist, 1) * pcOffset);
+                    tmpEnd = this.trainedUntil;
+                    if tmpOffset > tmpEnd
+                        tmpOffset = tmpEnd;
+                    end
                     % Total
                     figure;
                     hold on;
-                    scatter(this.cmd_hist(end - tmpOffset : end, 1), this.cmd_hist(end - tmpOffset : end, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-                    corrl = corr(this.cmd_hist(end - tmpOffset : end, 1), this.cmd_hist(end - tmpOffset : end, 2));
+                    scatter(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                    corrl = corr(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2));
                     xlabel('Lateral rectus [%]', 'FontSize', 12);
                     ylabel('Medial rectus [%]', 'FontSize', 12);
                     title(strcat('Total Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
@@ -558,8 +562,8 @@ classdef Model < handle
                     % Delta
                     figure;
                     hold on;
-                    scatter(this.relCmd_hist(end - tmpOffset : end, 1), this.relCmd_hist(end - tmpOffset : end, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
-                    corrl = corr(this.relCmd_hist(end - tmpOffset : end, 1), this.relCmd_hist(end - tmpOffset : end, 2));
+                    scatter(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                    corrl = corr(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2));
                     xlabel('Lateral rectus [%]', 'FontSize', 12);
                     ylabel('Medial rectus [%]', 'FontSize', 12);
                     title(strcat('\Delta Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
