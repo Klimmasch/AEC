@@ -8,12 +8,11 @@
 %                           0 if renderer wasn't initialized yet
 %%%
 function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer, folder)
-    
-    % should the simulation time be measured? 
+
+    % should the simulation time be measured?
     % not recommended for use during training
-    measureTime = uint(0)
-    
-    
+    measureTime = false;
+
     % Results overview table generation
     resultsFN = strcat(model.savePath, '/results.ods'); % file name
     resultsFID = fopen(resultsFN, 'a');                 % file descriptor
@@ -78,16 +77,15 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % Needs to be odd number to include vergErr = 0
     test2Resolution = 101;
 
-    % Image processing variables
-    
-    % textureFile = 'Textures_mcgillManMadeTest.mat';     % McGill man made database
-    % textureFile = 'Textures_mcgillManMadeTrain.mat';
-    % textureFile = 'Textures_mcgillFoliageTest.mat';   % McGill foliage database
-    % textureFile = 'Textures_mcgillFoliageTrain.mat';
-    % textureFile = 'Textures_mcgillFruitsAll.mat';     % McGill fruits database
-    textureFile = 'Textures_vanHaterenTest.mat';      % vanHateren database
-    % textureFile = 'Textures_vanHaterenTrain.mat';
-    % textureFile = 'Textures_celine.mat';              % Celine's images
+    %%% Stimulus declaration
+    % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
+    textureFile = 'Textures_mcgillManMadeTest(jpg).mat';
+    % textureFile = 'Textures_mcgillFruitsAll(jpg).mat';        % McGill fruits database
+    % textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';     % McGill foliage database
+    % textureFile = 'Textures_mcgillFoliageTest(jpg).mat';
+    % textureFile = 'Textures_vanHaterenTrain.mat';             % vanHateren database
+    % textureFile = 'Textures_vanHaterenTest.mat';
+    % textureFile = 'Textures_celine.mat';                      % Celine's images
 
     % Prepare Textures
     texture = load(sprintf('config/%s', textureFile));
@@ -109,14 +107,19 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     %%% New renderer
     if (isempty(simulator))
-        % simulator = OpenEyeSim('create');
-        simulator = OpenEyeSimV4('create');
+        % simulator = OpenEyeSim('create'); % stable renderer
+        simulator = OpenEyeSimV5('create'); % experimental renderer
         if (reinitRenderer == 0)
             simulator.initRenderer();
         else
             % for debugging purposes
             simulator.reinitRenderer();
         end
+    end
+
+    % load all stimuli into memory for experimental renderer
+    for i = 1 : nStim
+        simulator.add_texture(i, texture{i});
     end
 
     %%% creating a new directory if (folder ~= '/.')
@@ -278,12 +281,41 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % end
 
     %%% Generates two new images for both eyes
-    % texture:  file path of texture input
-    % eyeAngle: angle of single eye (rotation from offspring)
-    % objDist:  distance of stimulus
+    % texture:      file path of texture input
+    % eyeAngle:     angle of single eye (rotation from offspring)
+    % objDist:      distance of stimulus
+    % scaleImSize:  scaling factor of stimulus plane [m]
     function refreshImages(texture, eyeAngle, objDist, scalingFactor)
         simulator.add_texture(1, texture);
         simulator.set_params(1, eyeAngle, objDist, 0, scalingFactor);
+
+        result1 = simulator.generate_left();
+        result2 = simulator.generate_right();
+
+        imgRawLeft = permute(reshape(result1, ...
+                                     [size(imgRawLeft, 3), ...
+                                      size(imgRawLeft, 2), ...
+                                      size(imgRawLeft, 1)]), ...
+                                     [3, 2, 1]);
+
+        imgRawRight = permute(reshape(result2, ...
+                                      [size(imgRawRight, 3), ...
+                                       size(imgRawRight, 2), ...
+                                       size(imgRawRight, 1)]), ...
+                                      [3, 2, 1]);
+
+        % convert images to gray scale
+        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
+    end
+
+    %%% Generates two new images for both eyes for experimental renderer
+    % textureNumber:    index of stimulus in memory buffer
+    % eyeAngle:         angle of single eye (rotation from offspring)
+    % objDist:          distance of stimulus
+    % scaleImSize:  scaling factor of stimulus plane [m]
+    function refreshImagesNew(textureNumber, eyeAngle, objDist, scaleImSize)
+        simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -317,7 +349,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     tr2Ind = 1;
     tr3Ind = 1;
     tr5Ind = 1;
-    if measureTime
+    if (measureTime == true)
         tic;
     end
     % don't repeat testing procedure if nStim == 0, but just plot the results
@@ -340,14 +372,17 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 tmpResult1(:, 1) = vseRange(vseIndex);
 
                 for stimulusIndex = 1 : nStim
-                    currentTexture = texture{stimulusIndex};
+                    % currentTexture = texture{stimulusIndex};  % stable renderer
+                    currentTexture = stimulusIndex;             % experimental renderer
+
                     % command(1) = 0;
                     % [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
                     [command, angleNew] = getMF2(objRange(odIndex), vseRange(vseIndex));
 
                     for iter = 2 : testInterval + 1
                         % update stimuli
-                        refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);
+                        % refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);    % stable renderer
+                        refreshImagesNew(currentTexture, angleNew / 2, objRange(odIndex), 3);   % experimental renderer
 
                         % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
                         % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
@@ -451,12 +486,12 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 testResult(odIndex, vseIndex, 3 * testInterval + 4 : 4 * testInterval + 4) = std(tmpResult2);
                 testResult(odIndex, vseIndex, 4 * testInterval + 5 : 5 * testInterval + 5) = mean(tmpResult3);  % critic's response
                 testResult(odIndex, vseIndex, 5 * testInterval + 6 : 6 * testInterval + 6) = std(tmpResult3);
-%                 testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1);   % vergErr
-%                 testResult(odIndex, vseIndex, 12 : 22) = std(tmpResult1);
-%                 testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2);  % deltaMF
-%                 testResult(odIndex, vseIndex, 34 : 44) = std(tmpResult2);
-%                 testResult(odIndex, vseIndex, 45 : 55) = mean(tmpResult3);  % critic's response
-%                 testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
+                % testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1);   % vergErr
+                % testResult(odIndex, vseIndex, 12 : 22) = std(tmpResult1);
+                % testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2);  % deltaMF
+                % testResult(odIndex, vseIndex, 34 : 44) = std(tmpResult2);
+                % testResult(odIndex, vseIndex, 45 : 55) = mean(tmpResult3);  % critic's response
+                % testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
             end
         end
         save(strcat(imageSavePath, '/realyBadImages'), 'realyBadImages');
@@ -478,8 +513,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 [command, angleNew] = getMF2(objRange(odIndex), vseRange(vseIndex));
                 for stimulusIndex = 1 : nStim
                     % update stimuli
-                    currentTexture = texture{stimulusIndex};
-                    refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);
+                    % currentTexture = texture{stimulusIndex};                              % stable renderer
+                    % refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);
+                    currentTexture = stimulusIndex;                                         % experimental renderer
+                    refreshImagesNew(currentTexture, angleNew / 2, objRange(odIndex), 3);
 
                     % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
                     % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
@@ -516,14 +553,14 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             end
         end
         testResult4(testResult4 == 0) = NaN;
-        
-        if measureTime
+
+        if (measureTime == true)
             elapsedTime = toc;
             sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
                     elapsedTime / 3600, elapsedTime / 60, elapsedTime, ...
                     (length(objRange) * length(vseRange) * nStim * testInterval + length(objRange) * length(vseRange) * nStim) / elapsedTime)
         end
-        
+
         % save test results
         try
             model.testResult = testResult;

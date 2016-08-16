@@ -20,8 +20,11 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
     % learnedFile = '/home/lelais/Documents/MATLAB/results/model_20-May-2016_13:10:14_500000_nonhomeo_1_2m_newImplem_highResSmSc_noMF/model.mat';
 
     %%% Stimulus declaration
-    textureFile = 'Textures_vanHaterenTrain.mat';   % vanHateren database
-    % textureFile = 'Textures_celine.mat';          % Celine's images
+    textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';       % McGill man made database
+    % textureFile = 'Textures_mcgillFruitsAll.mat';             % McGill fruits database
+    % textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';     % McGill foliage database
+    % textureFile = 'Textures_vanHaterenTrain.mat';             % vanHateren database
+    % textureFile = 'Textures_celine.mat';                      % Celine's images
 
     % Sparse coding approach
     % sparseCodingType: 0 = non-homeostatic
@@ -112,10 +115,16 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
     nTextures = length(texture);
 
     %%% New renderer
-    simulator = OpenEyeSim('create');
+    % simulator = OpenEyeSim('create'); % stable renderer
+    simulator = OpenEyeSimV5('create'); % experimental version
 
     simulator.initRenderer();
     % simulator.reinitRenderer(); % for debugging
+
+    % load all stimuli into memory for experimental renderer
+    for i = 1 : nTextures
+        simulator.add_texture(i, texture{i});
+    end
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -126,12 +135,41 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
     currentView = cell(1, length(model.scModel));
 
     %%% Generates two new images for both eyes
-    % texture:  file path of texture input
-    % eyeAngle: angle of single eye (rotation from offspring)
-    % objDist:  distance of stimulus
-    function refreshImages(texture, eyeAngle, objDist)
+    % texture:      file path of texture input
+    % eyeAngle:     angle of single eye (rotation from offspring)
+    % objDist:      distance of stimulus
+    % scaleImSize:  scaling factor of stimulus plane [m]
+    function refreshImages(texture, eyeAngle, objDist, scaleImSize)
         simulator.add_texture(1, texture);
-        simulator.set_params(1, eyeAngle, objDist);
+        simulator.set_params(1, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
+
+        result1 = simulator.generate_left();
+        result2 = simulator.generate_right();
+
+        imgRawLeft = permute(reshape(result1, ...
+                                     [size(imgRawLeft, 3), ...
+                                      size(imgRawLeft, 2), ...
+                                      size(imgRawLeft, 1)]), ...
+                                     [3, 2, 1]);
+
+        imgRawRight = permute(reshape(result2, ...
+                                      [size(imgRawRight, 3), ...
+                                       size(imgRawRight, 2), ...
+                                       size(imgRawRight, 1)]), ...
+                                      [3, 2, 1]);
+
+        % convert images to gray scale
+        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
+    end
+
+    %%% Generates two new images for both eyes for experimental renderer
+    % textureNumber:    index of stimulus in memory buffer
+    % eyeAngle:         angle of single eye (rotation from offspring)
+    % objDist:          distance of stimulus
+    % scaleImSize:  scaling factor of stimulus plane [m]
+    function refreshImagesNew(textureNumber, eyeAngle, objDist, scaleImSize)
+        simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -158,7 +196,8 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
     tic; % start time count
     for iter1 = 1 : (timeToTrain / model.interval)
         % pick random texture every #interval times
-        currentTexture = texture{(randi(nTextures, 1))};
+        % currentTexture = texture{(randi(nTextures, 1))};  % stable renderer
+        currentTexture = randi(nTextures, 1);               % experimental renderer
 
         % random depth
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
@@ -171,7 +210,8 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
             t = t + 1;
 
             % update stimuli
-            refreshImages(currentTexture, angleNew / 2, objDist);
+            % refreshImages(currentTexture, angleNew / 2, objDist, 3);  % stable renderer
+            refreshImagesNew(currentTexture, angleNew / 2, objDist, 3); % experimental renderer
 
             % Generate & save the anaglyph picture
             % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer

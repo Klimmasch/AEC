@@ -20,11 +20,11 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
 
     %%% Stimulus declaration
-%     textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';      % McGill man made database
-    % textureFile = 'Textures_mcgillFruitsAll.mat';         % McGill fruits database
-%     textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';   % McGill foliage database
-    textureFile = 'Textures_vanHaterenTrain.mat';         % vanHateren database
-    % textureFile = 'Textures_celine.mat';                  % Celine's images
+    textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';       % McGill man made database
+    % textureFile = 'Textures_mcgillFruitsAll.mat';             % McGill fruits database
+    % textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';     % McGill foliage database
+    % textureFile = 'Textures_vanHaterenTrain.mat';             % vanHateren database
+    % textureFile = 'Textures_celine.mat';                      % Celine's images
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
@@ -51,10 +51,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(0);
+    testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 50; %can be adjusted, but it take just very long otherwise
+    nStimTest = 2; %can be adjusted, but it take just very long otherwise
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -119,7 +119,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     model.notes = [model.notes, fileDescription];
 
     % Save model every #saveInterval training iterations
-    saveInterval = ceil(model.trainTime / 10);
+    % saveInterval = ceil(model.trainTime / 10);
+    saveInterval = trainTime;
 
     % Track the evolution of all basis functions of the respective sparse coders
     trackSCBasisHistory = uint8(0);
@@ -139,10 +140,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     xValPos = ppval(approx, 1 : 0.0001 : 11)';
     yValPos = linspace(0, 1, resolution)';
 
-%     xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
-%     yValNeg = linspace(-1, 0, resolution)';
+    % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
+    % yValNeg = linspace(-1, 0, resolution)';
 
-%     mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+    % mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
     mfunction = [xValPos, yValPos];
     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
     dmf = abs(diff(mfunction(1 : 2, 1)));   % delta in angle
@@ -157,11 +158,17 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     dmf3 = abs(diff(mfunction2(1 : 2, 1)));     % delta in angle
 
     %%% New renderer
-%     simulator = OpenEyeSim('create');
-    simulator = OpenEyeSimV4('create');
+    % simulator = OpenEyeSim('create'); % stable renderer
+    simulator = OpenEyeSimV5('create'); % experimental version
 
     simulator.initRenderer();
-%     simulator.reinitRenderer(); % for debugging
+    % simulator.reinitRenderer(); % for debugging
+
+    % load all stimuli into memory for experimental renderer
+    for i = 1 : nTextures % 140
+        simulator.add_texture(i, texture{i});
+        i
+    end
 
     imgRawLeft = uint8(zeros(240, 320, 3));
     imgRawRight = uint8(zeros(240, 320, 3));
@@ -172,12 +179,41 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     currentView = cell(1, length(model.scModel));
 
     %%% Generates two new images for both eyes
-    % texture:  file path of texture input
-    % eyeAngle: angle of single eye (rotation from offspring)
-    % objDist:  distance of stimulus
+    % texture:      file path of texture input
+    % eyeAngle:     angle of single eye (rotation from offspring)
+    % objDist:      distance of stimulus
+    % scaleImSize:  scaling factor of stimulus plane [m]
     function refreshImages(texture, eyeAngle, objDist, scaleImSize)
         simulator.add_texture(1, texture);
         simulator.set_params(1, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
+
+        result1 = simulator.generate_left();
+        result2 = simulator.generate_right();
+
+        imgRawLeft = permute(reshape(result1, ...
+                                     [size(imgRawLeft, 3), ...
+                                      size(imgRawLeft, 2), ...
+                                      size(imgRawLeft, 1)]), ...
+                                     [3, 2, 1]);
+
+        imgRawRight = permute(reshape(result2, ...
+                                      [size(imgRawRight, 3), ...
+                                       size(imgRawRight, 2), ...
+                                       size(imgRawRight, 1)]), ...
+                                      [3, 2, 1]);
+
+        % convert images to gray scale
+        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
+    end
+
+    %%% Generates two new images for both eyes for experimental renderer
+    % textureNumber:    index of stimulus in memory buffer
+    % eyeAngle:         angle of single eye (rotation from offspring)
+    % objDist:          distance of stimulus
+    % scaleImSize:  scaling factor of stimulus plane [m]
+    function refreshImagesNew(textureNumber, eyeAngle, objDist, scaleImSize)
+        simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -262,10 +298,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     t = model.trainedUntil; % this is zero in newly initiated model
     command = [0; 0];
     % rewardFunction_prev = 0;
+    elapsedTime = 0;
     tic; % start time count
     for iter1 = 1 : (timeToTrain / model.interval)
         % pick random texture every #interval times
-        currentTexture = texture{(randi(nTextures, 1))};
+        % currentTexture = texture{(randi(nTextures, 1))};  % stable renderer
+        currentTexture = randi(nTextures, 1);               % experimental renderer
 
         % random depth
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
@@ -280,38 +318,38 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
         % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
-%         command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
-%         command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
+        % command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
+        % command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
         fixationDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         [command, angleNew] = getMF2(fixationDist, 0);
 
         % testing input distribution
-%         nSamples = 10000;
-%         commands = zeros(nSamples,2);
-%         angles = zeros(nSamples, 1);
-%         dists = zeros(nSamples, 1);
-%         for i = 1:nSamples
-%             initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
-%             [cmds, angles(i)] = getMF2(initDist, 0);
-%             commands(i, :) = cmds;
-%             initAngle = atand(model.baseline / (2 * initDist));
-%             commands(i) = getMF(initAngle*2);
-%             angles(i) = getAngle([0, commands(i)]);
-%             dists(i) = ((model.baseline / 2)/ (tand(angles(i) / 2)));
-%         end
-%         figure; histogram(commands); title('commands');
-%         figure; histogram(angles); title('angles');
-%         figure; histogram(dists); title('distances');
+        % nSamples = 10000;
+        % commands = zeros(nSamples,2);
+        % angles = zeros(nSamples, 1);
+        % dists = zeros(nSamples, 1);
+        % for i = 1:nSamples
+        %     initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        %     [cmds, angles(i)] = getMF2(initDist, 0);
+        %     commands(i, :) = cmds;
+        %     initAngle = atand(model.baseline / (2 * initDist));
+        %     commands(i) = getMF(initAngle*2);
+        %     angles(i) = getAngle([0, commands(i)]);
+        %     dists(i) = ((model.baseline / 2)/ (tand(angles(i) / 2)));
+        % end
+        % figure; histogram(commands); title('commands');
+        % figure; histogram(angles); title('angles');
+        % figure; histogram(dists); title('distances');
 
-%         angleNew = getAngle(command) * 2;
+        % angleNew = getAngle(command) * 2;
         % angleNew = getAngle2(command);
 
         for iter2 = 1 : model.interval
             t = t + 1;
 
             % update stimuli
-            % refreshImages(currentTexture, angleNew / 2, objDist);
-            refreshImages(currentTexture, angleNew / 2, objDist, 3);
+            % refreshImages(currentTexture, angleNew / 2, objDist, 3);  % stable renderer
+            refreshImagesNew(currentTexture, angleNew / 2, objDist, 3); % experimental renderer
 
             % Generate & save the anaglyph picture
             % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
@@ -384,7 +422,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             anglerr = angleDes - angleNew;                          % vergence error [deg]
             disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
 
-            % save state            
+            % save state
             model.Z(t) = objDist;
             model.fixZ(t) = fixDepth;
             model.disp_hist(t) = disparity;
@@ -412,18 +450,22 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         if (mod(t, 100) == 0)
             % infos = {t, objDist, model.vergerr_hist(t - model.interval + 1), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
             % generateAnaglyphs(t, 1, infos);
-            imwrite(stereoAnaglyph(imgGrayLeft, imgGrayRight), strcat(model.savePath, '/anaglyph.png')) % offers an insight into the models view while it learns
+            % imwrite(stereoAnaglyph(imgGrayLeft, imgGrayRight), strcat(model.savePath, '/anaglyph.png')) % offers an insight into the models view while it learns
 
             sprintf('Training Iteration: %d\nObjectDistance:\t%6.2fm\tStart Error:\t%6.3f°\nEnd Fixation:\t%6.2fm\tEnd Error:\t%6.3f°\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
                     t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), ...
                     mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
         end
 
+        elapsedTime = elapsedTime + toc;
+
         % testing during training!
         if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
             close all;
         end
+
+        tic; % skip testing measure
 
         % Display per cent completed of training and save model
         if (~mod(t, saveInterval))
@@ -438,7 +480,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             end
         end
     end
-    elapsedTime = toc;
+    elapsedTime = elapsedTime + toc;
 
     % Total simulation time
     model.simulatedTime = model.simulatedTime + elapsedTime / 60;
@@ -546,7 +588,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         %% infos = {iteration, tmpObjRange, vseRange(vseIndex), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
         xPos = [10, 220, 10, 10, 260, 10, 10, 240]; %display in headful modus: [10, 200, 10, 10, 260, 10, 10]
         yPos = [10, 10, 230, 220, 230, 190, 200, 220];
-        imName = strsplit(currentTexture, '/');
+        % imName = strsplit(currentTexture, '/');           % stable renderer
+        imName = strsplit(texture{currentTexture}, '/');    % experimental renderer
         imName = imName{end};
         insert = {sprintf('Image: \t%s', imName), ...
                     sprintf('Object distance: \t%.2f', infos{2}), ...
