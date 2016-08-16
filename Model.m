@@ -457,11 +457,11 @@ classdef Model < handle
                 plot(this.Z, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
                 plot(this.fixZ, 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
             end
-            
+
             xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
             % ylabel('Angle [deg]', 'FontSize', 12);
             ylabel('Object Distance [m]', 'FontSize', 12);
-            ylim([this.objDistMin - 1, this.objDistMax + 1]) 
+            ylim([this.objDistMin - 1, this.objDistMax + 1])
             legend('desired', 'actual');
             title(sprintf('Vergence at last %d steps of training', obsWin + 1));
             % plotpath = sprintf('%s/vergenceAngle', this.savePath);
@@ -471,73 +471,165 @@ classdef Model < handle
             %% Muscel graphs
             if (this.rlModel.continuous == 1)
                 %% Simple Moving Average Vergence Error
-                windowSize = 1000;
+                % windowSize = 1000;
+                windowSize = this.trainTime * 0.002;
+                windowSize2 = this.trainTime * 0.02;
+                windowSize3 = this.trainTime * 0.01;
                 if (this.trainTime < windowSize * this.interval)
                     windowSize = round(this.trainTime / this.interval / 5);
                 end
                 cmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind, 1));
                 cmd_hist_sma = [cmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind, 2))];
-                relCmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.relCmd_hist(ind, 1));
-                metCost_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.metCost_hist(ind));
+                relCmd_hist_sma = filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(ind, 1));
+                metCost_hist_sma = filter(ones(1, windowSize3) / windowSize3, 1, this.metCost_hist(ind));
 
-                % Lateral Rectus
+                % Both muscles
                 if (this.rlModel.CActor.output_dim == 2)
-                    relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.relCmd_hist(ind, 2))];
+                    % Temporal Rectus
+                    % Total muscle commands
+                    xVal = [1 : length(ind)];
+                    relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(ind, 2))];
+                    figure('OuterPosition', [100, 100, 768, 1024])
+                    hold on;
+                    grid on;
+                    subplot(3, 2, 1);
+                    % plot(this.cmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(cmd_hist_sma(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    tmpSTD = movingstd(cmd_hist_sma(:, 1), windowSize, 'backward');
+                    [hl1, hp1] = boundedline(xVal, ...
+                                             cmd_hist_sma(:, 1), ...
+                                             tmpSTD, ...
+                                             'alpha');
+
+                    hl1.Color = [rand, rand, rand];
+                    hp1.FaceColor = hl1.Color;
+                    axis([windowSize * 2, length(cmd_hist_sma(:, 1)), ...
+                          min(cmd_hist_sma(windowSize * 2 : end, 1) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
+                          max(cmd_hist_sma(windowSize * 2 : end, 1) + tmpSTD(windowSize * 2 : end)) * 1.1]);
+
+                    % ylabel(sprintf('Total Muscle Commands\nValue'), 'FontSize', 12);
+                    ylabel(sprintf('Total Muscle\nCommands [%%]'), 'FontSize', 12);
+                    % title('Total Muscle Commands (lateral rectus) SMA');
+                    title('Lateral Rectus', 'fontweight','normal');
+
+                    subplot(3, 2, 3);
+                    % plot(this.relCmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(relCmd_hist_sma(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(movingstd(relCmd_hist_sma(:, 1), windowSize, 'backward'), 'color', [rand, rand, rand], 'LineWidth', 0.8);
+                    tmpSTD = movingstd(relCmd_hist_sma(:, 1), windowSize2, 'backward');
+                    [hl2, hp2] = boundedline(xVal, ...
+                                            relCmd_hist_sma(:, 1), ...
+                                            tmpSTD, ...
+                                            'alpha');
+
+                    hl2.Color = [rand, rand, rand];
+                    hp2.FaceColor = hl2.Color;
+                    axis([windowSize2 * 2, length(relCmd_hist_sma(:, 1)), ...
+                          min(relCmd_hist_sma(windowSize2 * 2 : end, 1) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
+                          max(relCmd_hist_sma(windowSize2 * 2 : end, 1) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
+
+                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 8);
+                    % ylabel(strcat('\Delta', sprintf('Muscle Commands\nValue')), 'FontSize', 12);
+                    ylabel(strcat('\Delta', sprintf('Muscle\nCommands [%%]')), 'FontSize', 12);
+                    % title('\Delta Muscle Commands (lateral rectus) SMA');
+
+                    % Medial Rectus
+                    subplot(3, 2, 2);
+                    % plot(this.cmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(cmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    tmpSTD = movingstd(cmd_hist_sma(:, 2), windowSize, 'backward');
+                    [hl4, hp4] = boundedline(xVal, ...
+                                            cmd_hist_sma(:, 2), ...
+                                            tmpSTD, ...
+                                            'alpha');
+
+                    hl4.Color = [rand, rand, rand];
+                    hp4.FaceColor = hl4.Color;
+                    axis([windowSize * 2, length(cmd_hist_sma(:, 2)), ...
+                          min(cmd_hist_sma(windowSize * 2 : end, 2) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
+                          max(cmd_hist_sma(windowSize * 2 : end, 2) + tmpSTD(windowSize * 2 : end)) * 1.1]);
+
+                    % ylabel('Value', 'FontSize', 12);
+                    % set(gca,'yaxislocation','right');
+                    % title('Total Muscle Commands (medial rectus) SMA');
+                    title('Medial rectus', 'fontweight','normal');
+
+                    subplot(3, 2, 4);
+                    % plot(this.relCmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(relCmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    tmpSTD = movingstd(relCmd_hist_sma(:, 2), windowSize2, 'backward');
+                    [hl5, hp5] = boundedline(xVal, ...
+                                            relCmd_hist_sma(:, 2), ...
+                                            tmpSTD, ...
+                                            'alpha');
+
+                    hl5.Color = [rand, rand, rand];
+                    hp5.FaceColor = hl5.Color;
+                    axis([windowSize2 * 2, length(relCmd_hist_sma(:, 2)), ...
+                          min(relCmd_hist_sma(windowSize2 * 2 : end, 2) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
+                          max(relCmd_hist_sma(windowSize2 * 2 : end, 2) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
+                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 8);
+                    % ylabel('Value', 'FontSize', 12);
+                    % set(gca,'yaxislocation','right');
+                    % title('\Delta Muscle Commands (medial rectus) SMA');
+
+                    % Metabolic costs
+                    subplot(3, 2, 5 : 6);
+                    % plot(metCost_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(movingstd(metCost_hist_sma, windowSize, 'backward'), 'color', [rand, rand, rand], 'LineWidth', 0.8);
+                    tmpSTD = movingstd(metCost_hist_sma, windowSize3, 'backward');
+                    [hl3, hp3] = boundedline(xVal, ...
+                                            metCost_hist_sma, ...
+                                            tmpSTD, ...
+                                            'alpha');
+
+                    hl3.Color = [rand, rand, rand];
+                    hp3.FaceColor = hl3.Color;
+                    axis([windowSize3 * 2, length(metCost_hist_sma), ...
+                          min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.9, ...
+                          max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.1]);
+
+                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                    ylabel('Value', 'FontSize', 12);
+                    title('Metabolic Costs', 'fontweight','bold');
+
+                    % Subplot title
+                    suptitle(sprintf('\nMuscle Activities'));
+
+                    plotpath = sprintf('%s/muscleGraphs', this.savePath);
+                    saveas(gcf, plotpath, 'png');
+                else
+                    % Medial Rectus
                     figure;
                     hold on;
                     grid on;
                     subplot(3, 1, 1);
-                    % plot(this.cmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                    plot(cmd_hist_sma(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    % plot(this.cmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    plot(cmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     ylabel('Value', 'FontSize', 12);
-                    title('Total Muscle Commands (lateral rectus) SMA');
+                    title('Total Muscle Commands (medial rectus) SMA');
 
                     subplot(3, 1, 2);
-                    % plot(this.relCmd_hist(ind, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                    plot(relCmd_hist_sma(:, 1), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    if (this.rlModel.CActor.output_dim == 2)
+                        % plot(this.relCmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                        plot(relCmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    else
+                        % plot(this.relCmd_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                        plot(relCmd_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
+                    end
                     ylabel('Value', 'FontSize', 12);
-                    title('\Delta Muscle Commands (lateral rectus) SMA');
+                    title('\Delta Muscle Commands (medial rectus) SMA');
 
                     subplot(3, 1, 3);
+                    % plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     plot(metCost_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
                     xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                     ylabel('Value', 'FontSize', 12);
                     title('Metabolic Costs SMA');
 
-                    plotpath = sprintf('%s/muscleGraphsLateralRectus', this.savePath);
+                    plotpath = sprintf('%s/muscleGraphsMedialRectus', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 end
-
-                % Medial Rectus
-                figure;
-                hold on;
-                grid on;
-                subplot(3, 1, 1);
-                % plot(this.cmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                plot(cmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                ylabel('Value', 'FontSize', 12);
-                title('Total Muscle Commands (medial rectus) SMA');
-
-                subplot(3, 1, 2);
-                if (this.rlModel.CActor.output_dim == 2)
-                    % plot(this.relCmd_hist(ind, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                    plot(relCmd_hist_sma(:, 2), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                else
-                    % plot(this.relCmd_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                    plot(relCmd_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                end
-                ylabel('Value', 'FontSize', 12);
-                title('\Delta Muscle Commands (medial rectus) SMA');
-
-                subplot(3, 1, 3);
-                % plot(this.metCost_hist(ind), 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                plot(metCost_hist_sma, 'color', [rand, rand, rand], 'LineWidth', 1.3);
-                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-                ylabel('Value', 'FontSize', 12);
-                title('Metabolic Costs SMA');
-
-                plotpath = sprintf('%s/muscleGraphsMedialRectus', this.savePath);
-                saveas(gcf, plotpath, 'png');
 
                 if (this.rlModel.CActor.output_dim == 2)
                     % Muscle correlation check

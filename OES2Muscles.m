@@ -167,7 +167,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % load all stimuli into memory for experimental renderer
     for i = 1 : nTextures % 140
         simulator.add_texture(i, texture{i});
-        i
     end
 
     imgRawLeft = uint8(zeros(240, 320, 3));
