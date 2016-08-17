@@ -342,7 +342,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
         % command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
         % command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
-        fixationDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
         [command, angleNew] = getMF2(fixationDist, 0);
 
         % testing input distribution
@@ -472,7 +472,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         if (mod(t, 100) == 0)
             % infos = {t, objDist, model.vergerr_hist(t - model.interval + 1), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
             % generateAnaglyphs(t, 1, infos);
-            % imwrite(stereoAnaglyph(imgGrayLeft, imgGrayRight), strcat(model.savePath, '/anaglyph.png')) % offers an insight into the models view while it learns
+            imwrite(stereoAnaglyph(imgGrayLeft, imgGrayRight), strcat(model.savePath, '/anaglyph.png')) % offers an insight into the models view while it learns
 
             sprintf('Training Iteration: %d\nObjectDistance:\t%6.2fm\tStart Error:\t%6.3f°\nEnd Fixation:\t%6.2fm\tEnd Error:\t%6.3f°\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
                     t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), ...

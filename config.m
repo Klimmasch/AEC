@@ -33,13 +33,13 @@ focalLength = 257.34;       % focal length [px]
 baseline = 0.056;           % interocular distance [m]
 
 % Object distance to eyes [m]
-objDistMin = 1.5; % origin 0.5
+objDistMin = 0.5; % origin 0.5
 objDistMax = 6;   % origin 2
 
 % Fixation distance [m]
 % used for eye fixation initialization
 fixDistMin = 0.3379;
-fixDistMax = 3.2219;
+fixDistMax = 10; %3.2219 for objDistMax = 2m
 
 % Muscle initialization [%]: correspond now to the minimum and maximum distance
 % the eyes should be looking at. [lateral rectus, medial rectus]
@@ -109,7 +109,7 @@ PARAMModel = {textureFile, trainTime, sparseCodingType, focalLength, baseline, .
 
 %%% Sparce Coding parameters
 % Scales := [coarse, less_coarse, ..., fine], i.e. [peripheral vision, ..., central vision]
-nBasis = [288, 288];                                        % total number of basis | origin [288, 288]
+nBasis = [400, 400];                                        % total number of basis | origin [288, 288]
 nBasisUsed = [10, 10];                                      % number of basis used to encode in sparse mode | origin [10, 10]
 basisSize = [(patchSize ^ 2) * 2, (patchSize ^ 2) * 2];     % size of each (binocular) base vector: patchSize * patchSize * 2 (left + right eye) | origin [128, 128]
 eta = [0.2, 0.2];                                           % learning rate [origin 0.01 | Lukas 0.1 | Alex P 0.5, origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2]
