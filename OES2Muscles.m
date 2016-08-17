@@ -59,7 +59,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 100; %can be adjusted, but it take just very long otherwise
+    nStimTest = 100; 
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -177,15 +177,18 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         if i == 1
             nTestTextures = nTextures;      % save number of test textures for proper indexing later
         end
+        textureInd = 1;
         for j = tmpTexInd : nTextures % 140
-            simulator.add_texture(j, texture{i});
-            sprintf('texture added: %d', j)
+            simulator.add_texture(j, texture{textureInd});
+            textureInd = textureInd + 1;
         end
         tmpTexInd = tmpTexInd + nTextures;
     end
+    sprintf('%d textures were added to the buffer from the training and testing files', nTextures)
 
     if nStimTest > nTestTextures
         nStimTest = nTestTextures;
+        nStimTrain = nTextures - nStimTest;
         sprintf('The file for testing textures only contains %d images, but I will use them all!', nStimTest)
     end
 
@@ -322,7 +325,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     for iter1 = 1 : (timeToTrain / model.interval)
         % pick random texture every #interval times
         % currentTexture = texture{(randi(nTextures, 1))};  % stable renderer
-        currentTexture = nTestTextures + randi(nTextures, 1);               % experimental renderer
+        currentTexture = nTestTextures + randi(nStimTrain, 1);               % experimental renderer
 
         % random depth
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
@@ -517,7 +520,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     %%% Testing procedure
     if (testIt && isempty(testAt))
         % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-        testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, '.');
+        testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
     end
 
     if (closeFigures == 1)

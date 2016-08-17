@@ -80,7 +80,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
-    textureFile = 'Textures_mcgillManMadeTest(jpg).mat';
+    % textureFile = 'Textures_mcgillManMadeTest(jpg).mat';
+    textureFile = 'Textures_mcgillManMadeTest40.mat';
     % textureFile = 'Textures_mcgillFruitsAll(jpg).mat';        % McGill fruits database
     % textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';     % McGill foliage database
     % textureFile = 'Textures_mcgillFoliageTest(jpg).mat';
@@ -117,12 +118,17 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % for debugging purposes
             simulator.reinitRenderer();
         end
+        
+        % load all stimuli into memory for experimental renderer, if no
+        % renderer is provided by the training procedure
+        texture = load(sprintf('config/%s', textureFile));
+        texture = texture.texture;
+        for i = 1 : nStim
+            simulator.add_texture(i, texture{i});
+        end
     end
 
-    % load all stimuli into memory for experimental renderer
-%     for i = 1 : nStim
-%         simulator.add_texture(i, texture{i});
-%     end
+
 
     %%% creating a new directory if (folder ~= '/.')
     if (folder(1) ~= '/')
