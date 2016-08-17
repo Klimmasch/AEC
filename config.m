@@ -94,8 +94,9 @@ end
 % sum(sum(model.recerr_hist))/size(model.recerr_hist, 1) = 0.1693 @ dsRatio = [8, 2]
 % mean(model.metCost_hist) = 1.0380
 %
-% 1% = 0.0029 | 2% = 0.0058 | 3% =  0.0087 | 4% = 0.0114 | 5% = 0.0144 | 6% = 0.0173
-% 10% = 0.0289 | 25% = 0.0722 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
+% 1% = 0.0029 | 2% = 0.0058 | 3% = 0.0087 | 4% = 0.0114 | 5% = 0.0144
+% 6% = 0.0173 | 7% = 0.0203 | 8% = 0.0232 | 9% = 0.0261 | 10% = 0.0289
+% 15% = 0.0435 | 25% = 0.0722 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
 lambdaMet = 0;
 
 % due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
