@@ -340,11 +340,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % command(1) = 0; % single muscle
         % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
         % command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
-        % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
         % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
         % command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
         % command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
+        % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+        % [command, angleNew] = getMF2(initDist, 0);
         fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
         [command, angleNew] = getMF2(fixationDist, 0);
 
