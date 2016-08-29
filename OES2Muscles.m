@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/klimmasch/projects/results/model_05-Jul-2016_21:41:46_1000000_nonhomeo_1_sparseLearning001_finerLS_OD15-6_increasedInit_noMet/model.mat';
+%     learnedFile = '/home/klimmasch/projects/results/model_25-Aug-2016_18:17:19_5000000_1_bmsf_increasedInit_newImages_Od05-6_400BF_10MC/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';       % McGill man made database
@@ -29,6 +29,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
+%     textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
@@ -129,8 +130,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     model.notes = [model.notes, fileDescription];
 
     % Save model every #saveInterval training iterations
-    % saveInterval = ceil(model.trainTime / 10);
-    saveInterval = trainTime;
+    saveInterval = ceil(model.trainTime / 100);
+%     saveInterval = trainTime;
 
     % Track the evolution of all basis functions of the respective sparse coders
     trackSCBasisHistory = uint8(0);
@@ -530,6 +531,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         close all;
     end
 
+    quit % close the job after completion
 
     % Generates anaglyphs of the large and small scale fovea and
     % one of the two unpreprocessed gray scale images
