@@ -5,16 +5,20 @@
 % @param objDist                the object distance
 % @param startVergErr           the vergence error to muscles start with
 % @param initMethod             either 'simple' or 'random'
-% @paramnumIters                number of iterations that are executed
+% @param numIters               number of iterations that are executed
 % @param stimuli                an array of indizes from the texture files
 % @param simulator              either a simulator object or [] for a new one
-% @param reinit                 1 for reinit renderer, 0 for new initialization (for testing purposes)
-% @param savePlot               
+% @param titleStr               string identifier that is used for the title and the saved image
+% @param savePlot               true or false if the resulting plots should be saved
 %%%
-function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stimuli, simulator, reinit, titleStr)
+%%TODO: 
+% enable multiple fixation dists in one plot with same init values
+function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stimuli, simulator, titleStr, savePlot)
 
     rng(1);
     angleDes = atand(model.baseline / (2 * objDist)); % only for one eye this time
+    cmdInit = [[0.003; 0.012], [0.003; 0.004], [0.01; 0.004]]; % hand-picked inits for muscles, used in initMethod 'random'
+
     plotAnaglyphs = true;
 %     plotAnaglyphs = false;
     
@@ -25,21 +29,22 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     nTextures = length(texture);
     nStimuli = length(stimuli);
     
-    cmdInit = [[0.003; 0.012], [0.003; 0.004], [0.01; 0.004]];
     if length(stimuli) > nTextures
         sprintf('Texture file does not contain that many images, but I will continue anyways.')
         stimuli = stimuli(1:length(texture));
     end
     
-    if (isempty(simulator))
+    if (isempty(simulator)) 
+        sprintf('Please execute prepareSimulator.m to create a new simulator!')
+        return;
 %         simulator = OpenEyeSimV4('create');
-        simulator = OpenEyeSim('create');
-        if (reinit == 0)
-            simulator.initRenderer();
-        else
-            % for debugging purposes
-            simulator.reinitRenderer();
-        end
+%         simulator = OpenEyeSim('create');
+%         if (reinit == 0)
+%             simulator.initRenderer();
+%         else
+%             % for debugging purposes
+%             simulator.reinitRenderer();
+%         end
     end
     
     imgRawLeft = uint8(zeros(240, 320, 3));
@@ -49,8 +54,8 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     currentView = cell(1, length(model.scModel));
     
     function refreshImages(texture, eyeAngle, objDist, scalingFactor)
-        simulator.add_texture(1, texture);
-        simulator.set_params(1, eyeAngle, objDist, 0, scalingFactor);
+%         simulator.add_texture(1, texture);
+        simulator.set_params(texture, eyeAngle, objDist, 0, scalingFactor);
 
         result1 = simulator.generate_left();
         result2 = simulator.generate_right();
@@ -136,7 +141,8 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
 %     title(sprintf('Trajectory of Oject Fixation at %1.1fm\n%s', objDist, titleStr));
     figIter = 1;
     for stim = 1:nStimuli
-        currentTexture = texture{stimuli(stim)};
+%         currentTexture = texture{stimuli(stim)};
+        currentTexture = stimuli(stim);
         
         if strcmp(initMethod, 'simple')
             [command, angleNew] = getMF2(objDist, startVergErr);
@@ -185,7 +191,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     
     %% plotting results
 %     figure('size', [500, 500]);
-    figure();
+    h = figure();
     hold on;
     title(sprintf('Oject Fixation at %1.1fm (%.3f°)\n%s', objDist, angleDes, titleStr));
     resolutionFactor = 6;
@@ -202,7 +208,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     degSize = size(degreesX);                                       % corresp. to ((rangeIndizes-1)*2^resolutionFactor)+1
     
     % now we cut out an even smaller part of this tabular.
-    factor = 8      % 1/factor * axisLim is the part that will be displayed
+    factor = 1      % 1/factor * axisLim is the part that will be displayed
     maxIndexX = ceil(degSize(1)/factor);
     maxIndexY = ceil(degSize(2)/factor);
     
@@ -249,6 +255,10 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
 % %     yt_label = sprintf('%.2e|',xt);
 %     yt_label = sprintf('%.4f|',yt);
 %     set(fun,'yticklabel',yt_label);
-        
+    if savePlot
+        timestamp = datestr(now, 'dd-mm-yyyy_HH:MM:SS_');
+        savePath = strcat(model.savePath, '/', timestamp, titelStr);
+        saveas(h, savePath, 'png'); % could be saved as 'fig' as well ...
+    end
     
 end

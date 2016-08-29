@@ -154,7 +154,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
     testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
 
-    realyBadImages = zeros(2, length(objRange), nStim); % here, the images are safed that start at the maximal vergence errors (pos & neg) and that end up worse than they started
+    realyBadImages = zeros(2, length(objRange), nStim); % here, the images are safed that start at the maximal vergence errors (neg & pos) and that end up worse than they started
     %this tabular is going to be safed inside the models folder and
     %histograms will be generated
 
