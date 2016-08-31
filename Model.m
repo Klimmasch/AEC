@@ -471,9 +471,6 @@ classdef Model < handle
                     mfLR = yi(i) * scaleFac;
                 end
             end
-
-
-
         end
 
         % mapping muscle activity to angle (one eye)
