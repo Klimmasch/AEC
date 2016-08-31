@@ -1,16 +1,16 @@
 classdef Model < handle
     properties
-        scModel;            %SparseCoding cell array containing respective classes
-        rlModel;            %ReinforcementLearning class
+        scModel;            % SparseCoding cell array containing respective classes
+        rlModel;            % ReinforcementLearning class
 
-        focalLength;        %focal length [px]
-        baseline;           %interocular distance
-        objDistMin;         %object distance to eyes [m]
+        focalLength;        % focal length [px]
+        baseline;           % interocular distance
+        objDistMin;         % object distance to eyes [m]
         objDistMax;
-        muscleInitMin;      %minimal initial muscle innervation
-        muscleInitMax;      %maximal --"--
-        interval;           %period of eye stimulus change
-        desiredAngleMin;    %min/max desired vergence angle
+        muscleInitMin;      % minimal initial muscle innervation
+        muscleInitMax;      % maximal --"--
+        interval;           % period of eye stimulus change
+        desiredAngleMin;    % min/max desired vergence angle
         desiredAngleMax;
         fixDistMin;
         fixDistMax;
@@ -19,36 +19,36 @@ classdef Model < handle
         vergAngleFixMin;
         vergAngleFixMax;
 
-        textureFile;        %config file containing texture stimulus list
-        trainTime;          %number of training (intended) iterations
-        trainedUntil;       %how long did the training actually proceed?
-        simulatedTime;      %how long did the model take to be learned (min)
+        textureFile;        % config file containing texture stimulus list
+        trainTime;          % number of training (intended) iterations
+        trainedUntil;       % how long did the training actually proceed?
+        simulatedTime;      % how long did the model take to be learned (min)
 
-        sparseCodingType;   %type of sparse coding
+        sparseCodingType;   % type of sparse coding
 
-        lambdaMuscleFB;     %factor of muscle activity feedback to RL feature vector
-        lambdaRec;          %reconstruction error factor
-        lambdaMet;          %factor of metCosts for reward function
+        lambdaMuscleFB;     % factor of muscle activity feedback to RL feature vector
+        lambdaRec;          % reconstruction error factor
+        lambdaMet;          % factor of metCosts for reward function
 
         % Model data history
-        recerr_hist;        %reconstruction error [coarse scale, fine scale]
-        disp_hist;          %disparity
-        vergerr_hist;       %vergence error
-        verge_actual;       %actual vergence angle
-        verge_desired;      %desired vergence angle
-        Z;                  %object depth
-        fixZ;               %fixation depth
-        g_hist;             %natural gradient change
-        td_hist;            %temporal difference (td) error
-        feature_hist;       %feature vector
-        cmd_hist;           %vergence commands
-        relCmd_hist;        %relativ changes in motor commands
-        weight_hist;        %L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
-        reward_hist;        %reward function
-        metCost_hist;       %metabolic costs
-        variance_hist;      %exploratory variance of actor
-        savePath;           %where all the data are stored
-        notes;              %is there any special things about this model to note?
+        recerr_hist;        % reconstruction error [coarse scale, fine scale]
+        disp_hist;          % disparity
+        vergerr_hist;       % vergence error
+        verge_actual;       % actual vergence angle
+        verge_desired;      % desired vergence angle
+        Z;                  % object depth
+        fixZ;               % fixation depth
+        g_hist;             % natural gradient change
+        td_hist;            % temporal difference (td) error
+        feature_hist;       % feature vector
+        cmd_hist;           % vergence commands
+        relCmd_hist;        % relativ changes in motor commands
+        weight_hist;        % L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
+        reward_hist;        % reward function
+        metCost_hist;       % metabolic costs
+        variance_hist;      % exploratory variance of actor
+        savePath;           % where all the data are stored
+        notes;              % is there any special things about this model to note?
 
         % Model results at testing procedure
         disZtest;
@@ -71,6 +71,23 @@ classdef Model < handle
         patchesRight;
         overlap;
         cutout;
+        
+        % Providing relevant methods
+        degrees;        % contains a tabular that maps muscle activity to angles
+        metCosts;       % contains a tabular that maps muscle activity to metabolic costs
+        mfunctionMR;    % contains a function approx. of the mapping from activity to angle 
+                        % for the medial rectus with activation of lateral rectus equals 0
+        mfunctionLR;    % analogous for the lateral rectus
+        dmf;            % delta in muscle force (for mfunctions) dmf2
+        dAngleMR;       % delta in angle (for mfunctions) dmf
+        dAngleLR;       % delta in muscle force (for mfunctionLR) dmf3
+        angleMin;       % minimal and maximal angle that can be reached by one-dimensional muscle commands
+        angleMax;
+        
+        imgRawLeft;     % images that are updated by refreshImages
+        imgRawRight;
+        imgGrayLeft;
+        imgGrayRight;
     end
 
     methods
@@ -180,6 +197,44 @@ classdef Model < handle
                 obj.patchesLeft{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
                 obj.patchesRight{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
             end
+            
+            %%% Preparing Functions
+            % getMF functions
+            obj.degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
+            obj.metCosts = load('MetabolicCosts.mat');
+            
+            % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
+            resolution = 100001;
+            approx = spline(1 : 11, obj.degrees.results_deg(:, 1));
+
+            xValPos = ppval(approx, 1 : 0.0001 : 11)';
+            yValPos = linspace(0, 1, resolution)';
+
+            % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
+            % yValNeg = linspace(-1, 0, resolution)';
+
+            % mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+            obj.mfunctionMR = [xValPos, yValPos];
+            obj.mfunctionMR(:, 1) = obj.mfunctionMR(:, 1) * 2;  % angle for two eyes
+            obj.dAngleMR = abs(diff(obj.mfunctionMR(1 : 2, 1)));   % delta in angle
+            obj.dmf = diff(obj.mfunctionMR(1 : 2, 2));       % delta in muscle force
+
+            approx = spline(1 : 11, obj.degrees.results_deg(1, :));
+            xValPos = ppval(approx, 1 : 0.0001 : 11)';
+            yValPos = linspace(0, 1, resolution)';
+
+            obj.mfunctionLR = [xValPos, yValPos];
+            obj.mfunctionLR(:, 1) = obj.mfunctionLR(:, 1) * 2;    % angle for two eyes
+            obj.dAngleLR = abs(diff(obj.mfunctionLR(1 : 2, 1)));     % delta in angle
+            
+            obj.angleMin = min(obj.mfunctionLR(obj.mfunctionLR(:, 1) > 0));
+            obj.angleMax = obj.mfunctionMR(end, 1);
+            
+            % refreshImages
+            obj.imgRawLeft = uint8(zeros(240, 320, 3));
+            obj.imgRawRight = uint8(zeros(240, 320, 3));
+            obj.imgGrayLeft = uint8(zeros(240, 320, 3));
+            obj.imgGrayRight = uint8(zeros(240, 320, 3));
         end
 
         %%% Copy constructor
@@ -269,7 +324,14 @@ classdef Model < handle
         % img:      image to be processed
         % scScale:  SC scale index elem {coarse, ..., fine}
         % eyePos:   eye position index elem {1 := left, 2 := right}
-        function preprocessImage(this, img, scScale, eyePos)
+        function preprocessImage(this, leftBool, scScale, eyePos)
+            
+            if leftBool
+                img = this.imgGrayLeft;
+            else 
+                img = this.imgGrayRight;
+            end
+            
             % down scale image
             for k = 1 : log2(this.dsRatio(scScale))
                 img = impyramid(img, 'reduce');
@@ -335,6 +397,126 @@ classdef Model < handle
             totalFeature = vertcat(featureArray{:});    % join feature vectors
         end
 
+        %% calculating muscle inits and angles
+        
+        % maps {vergenceAngle} -> {muscleForce} for one muscle
+        function mf = getMF(this, vergAngle)
+            % look up index of vergAngle
+            if (vergAngle >= this.degrees.results_deg(1, 1) * 2)
+                indVergAngle = find(this.mfunctionMR(:, 1) <= vergAngle + this.dAngleMR & this.mfunctionMR(:, 1) >= vergAngle - this.dAngleMR);
+                mf = this.mfunction(indVergAngle, 2);
+                mf = mf(ceil(length(mf) / 2));
+            else
+                mf = 0;
+            end
+        end
+    
+        % Calculates muscle force for two muscles
+        function [mf, angleInit] = getMF2(this, objDist, desVergErr)
+            % correct vergence angle for given object distance
+            angleCorrect = 2 * atand(this.baseline / (2 * objDist));
+            % desired init angle for given vergence error [deg]
+            angleInit = angleCorrect - desVergErr;
+            % look up index of angleInit
+            % if objDist not fixateable with medial rectus, use lateral rectus
+            if (angleInit >= this.mfunctionMR(1, 1))
+                indAngleInit = find(this.mfunctionMR(:, 1) <= angleInit + this.dAngleMR & this.mfunctionMR(:, 1) >= angleInit - this.dAngleMR);
+                mf = this.mfunctionMR(indAngleInit, 2);
+                mf = [0; mf(ceil(length(mf) / 2))];
+            else
+                indAngleInit = find(this.mfunctionLR(:, 1) <= angleInit + this.dAngleLR & this.mfunctionLR(:, 1) >= angleInit - this.dAngleLR);
+                mf = this.mfunctionLR(indAngleInit, 2);
+                mf = [mf(ceil(length(mf) / 2)); 0];
+            end
+        end
+        
+        % mapping muscle activity to angle (one eye)
+        function angle = getAngle(this, command)
+            cmd = (command * 10) + 1;                                       % scale commands to table entries
+            angle = interp2(this.degrees.results_deg, cmd(1), cmd(2), 'spline'); % interpolate in table by cubic splines
+        end
+        
+        % depricated method: slightly faster variant, also a bit less precise, 
+        % only works for the medial rectus
+        function angle = getAngle2(this, command)
+            angleIndex = find(this.mfunctionMR(:, 2) <= command(2) + this.dmf & this.mfunctionMR(:, 2) >= command(2) - this.dmf);
+            angle = this.mfunctionMR(angleIndex, 1);
+            angle = angle(ceil(length(angle) / 2));
+        end
+
+        % calculation of metabolic costs
+        function tmpMetCost = getMetCost(this, command)
+            cmd = (command * 10) + 1;                                           % scale commands to table entries
+            tmpMetCost = interp2(this.metCosts.results, cmd(1), cmd(2), 'spline');   % interpolate in table by cubic splines
+        end
+    
+        %%% Helper function for calculating {objDist} -> {maxVergErr}
+        function vergErrMax = getVergErrMax(this, objDist)
+            % correct vergence angle for given object distance
+            angleCorrect = 2 * atand(this.baseline / (2 * objDist));
+            vergErrMax = angleCorrect - this.angleMin;
+        end
+        
+        %% Updating images during simulation
+        %%% Generates two new images for both eyes
+        % simulator:    a renderer instance
+        % texture:      file path of texture input
+        % eyeAngle:     angle of single eye (rotation from offspring)
+        % objDist:      distance of stimulus
+        % scaleImSize:  scaling factor of stimulus plane [m]
+        function refreshImages(this, simulator, texture, eyeAngle, objDist, scaleImSize)
+            simulator.add_texture(1, texture);
+            simulator.set_params(1, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
+
+            result1 = simulator.generate_left();
+            result2 = simulator.generate_right();
+
+            this.imgRawLeft = permute(reshape(result1, ...
+                                         [size(this.imgRawLeft, 3), ...
+                                          size(this.imgRawLeft, 2), ...
+                                          size(this.imgRawLeft, 1)]), ...
+                                         [3, 2, 1]);
+
+            this.imgRawRight = permute(reshape(result2, ...
+                                          [size(this.imgRawRight, 3), ...
+                                           size(this.imgRawRight, 2), ...
+                                           size(this.imgRawRight, 1)]), ...
+                                          [3, 2, 1]);
+
+            % convert images to gray scale
+            this.imgGrayLeft = 0.2989 * this.imgRawLeft(:, :, 1) + 0.5870 * this.imgRawLeft(:, :, 2) + 0.1140 * this.imgRawLeft(:, :, 3);
+            this.imgGrayRight = 0.2989 * this.imgRawRight(:, :, 1) + 0.5870 * this.imgRawRight(:, :, 2) + 0.1140 * this.imgRawRight(:, :, 3);
+        end
+        
+        %%% Generates two new images for both eyes for experimental renderer
+        % simulator:    a renderer instance
+        % textureNumber:    index of stimulus in memory buffer
+        % eyeAngle:         angle of single eye (rotation from offspring)
+        % objDist:          distance of stimulus
+        % scaleImSize:  scaling factor of stimulus plane [m]
+        function refreshImagesNew(this, simulator, textureNumber, eyeAngle, objDist, scaleImSize)
+            simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
+
+            result1 = simulator.generate_left();
+            result2 = simulator.generate_right();
+
+            this.imgRawLeft = permute(reshape(result1, ...
+                                         [size(this.imgRawLeft, 3), ...
+                                          size(this.imgRawLeft, 2), ...
+                                          size(this.imgRawLeft, 1)]), ...
+                                         [3, 2, 1]);
+
+            this.imgRawRight = permute(reshape(result2, ...
+                                          [size(this.imgRawRight, 3), ...
+                                           size(this.imgRawRight, 2), ...
+                                           size(this.imgRawRight, 1)]), ...
+                                          [3, 2, 1]);
+
+            % convert images to gray scale
+            this.imgGrayLeft = 0.2989 * this.imgRawLeft(:, :, 1) + 0.5870 * this.imgRawLeft(:, :, 2) + 0.1140 * this.imgRawLeft(:, :, 3);
+            this.imgGrayRight = 0.2989 * this.imgRawRight(:, :, 1) + 0.5870 * this.imgRawRight(:, :, 2) + 0.1140 * this.imgRawRight(:, :, 3);
+        end
+        
         %% Plotting everything and save graphs
         function allPlotSave(this)
             % windowSize = 125;
@@ -471,9 +653,9 @@ classdef Model < handle
             %% Muscel graphs
             if (this.rlModel.continuous == 1)
                 % windowSize = 1000;
-                windowSize = this.trainTime * 0.002;
-                windowSize2 = this.trainTime * 0.02;
-                windowSize3 = this.trainTime * 0.01;
+                windowSize = ceil(this.trainTime * 0.002);
+                windowSize2 = ceil(this.trainTime * 0.02);
+                windowSize3 = ceil(this.trainTime * 0.01);
                 if (this.trainTime < windowSize * this.interval)
                     windowSize = round(this.trainTime / this.interval / 5);
                 end
@@ -893,6 +1075,7 @@ classdef Model < handle
         %% plot & save delta_MF(Vergence_error)
         % observation Window = obsWin, i.e. plot statistics over last #obsWin iterations
         % see delta_MF(Vergence_error) @ allPlotSave() for remarks regarding calculations
+        % TODO: update this method according to the new class-own variables
         function deltaMFplotObsWin(this, obsWin)
             actualResponse = [this.vergerr_hist, this.relCmd_hist];
 
@@ -1087,5 +1270,126 @@ classdef Model < handle
             plotpath = sprintf('%s/deltaMFasFktVerErrStartEnd', this.savePath);
             saveas(gcf, plotpath, 'png');
         end
+        
+        % Generates anaglyphs of the large and small scale fovea and
+        % one of the two unpreprocessed gray scale images
+        function generateAnaglyphs(this, identifier, markScales, infos, imgNumber)
+
+            numberScales = length(this.scModel);
+
+            % defining colors in the image: (from larges to smallest scale)
+            scalingColors = {'blue', 'red', 'green'};
+            textColor = 'yellow';
+
+            scaleImages = cell(numberScales);
+
+            for scale = 1 : numberScales
+                % Downsampling Large
+                imgLeft = this.imgGrayLeft(:);
+                imgLeft = reshape(imgLeft, size(this.imgGrayLeft));
+                imgRight = this.imgGrayRight(:);
+                imgRight = reshape(imgRight, size(this.imgGrayRight));
+
+                for ds = 1 : log2(model.dsRatio(scale))
+                    imgLeft = impyramid(imgLeft, 'reduce');
+                    imgRight = impyramid(imgRight, 'reduce');
+                end
+
+                % cut fovea in the center
+                [h, w, ~] = size(imgLeft);
+                cutOutVertical = [fix(h / 2 + 1 - this.pxFieldOfView(scale) / 2), fix(h / 2 + this.pxFieldOfView(scale) / 2)];
+                cutOutHorizontal = [fix(w / 2 + 1 - this.pxFieldOfView(scale) / 2), fix(w / 2 + this.pxFieldOfView(scale) / 2)];
+
+
+                imgLeft = imgLeft(cutOutVertical(1) : cutOutVertical(2) , cutOutHorizontal(1) : cutOutHorizontal(2));
+                imgRight = imgRight(cutOutVertical(1) : cutOutVertical(2) , cutOutHorizontal(1) : cutOutHorizontal(2));
+
+                % create an anaglyph of the two pictures, scale it up and save it
+                anaglyph = imfuse(imgLeft, imgRight, 'falsecolor');
+
+                % [hAna, vAna, ~] = size(anaglyph);
+                if (markScales)
+                    anaglyph = insertShape(anaglyph, 'rectangle', [model.pxFieldOfView(scale) + 1 - model.patchSize, 1, model.patchSize, model.patchSize], 'color', scalingColors(scale));
+                end
+
+                scaleImages{scale} = anaglyph;
+            end
+
+            % imwrite(anaglyph, [savePath '/anaglyph.png']);
+            anaglyph = imfuse(this.imgGrayLeft, this.imgGrayRight, 'falsecolor');
+            [h, w, ~] = size(anaglyph);
+
+            if (markScales)
+                for scale = 1:numberScales
+                    % this creates a rectangle inside the image for each scale and
+                    % an examplary patch
+                    scaleSizeOrigImg = model.pxFieldOfView(scale) * model.dsRatio(scale);
+                    patchSizeOrigImg = model.patchSize * model.dsRatio(scale);
+                    windowStart = [fix(w / 2 + 1 - scaleSizeOrigImg / 2), fix(h / 2 + 1 - scaleSizeOrigImg / 2)];
+
+                    % indexMatrix = [x, y, scaleWindow, scaleWindow; x, y, patchSize, patchSize]
+                    indexMatrix = [windowStart(1), windowStart(2), scaleSizeOrigImg, scaleSizeOrigImg; windowStart(1), windowStart(2), patchSizeOrigImg, patchSizeOrigImg];
+                    anaglyph = insertShape(anaglyph, 'rectangle', indexMatrix, 'Color', scalingColors(scale)); % whole region of scale
+                end
+            end
+            % anaglyph = imfuse(leftGray, rightGray, 'falsecolor');
+
+            % imwrite(anaglyph, sprintf('%s/anaglyph%.3d.png', savePath, identifier));
+
+            % imwrite(imresize(anaglyphL, 20), [savePath '/anaglyphLargeScale.png']);
+            % imwrite(anaglyphL, sprintf('%s/anaglyphLargeScale%.3d.png', savePath, identifier));
+            % largeScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+            % imwrite(imresize(largeScaleView, 20), sprintf('%s/LargeScaleMontage%.3d.png', savePath, identifier));
+
+            % imwrite(imresize(anaglyphS, 8), [savePath '/anaglyphSmallScale.png']);
+
+            % imwrite(anaglyphS, sprintf('%s/anaglyphSmallScale%.3d.png', savePath, identifier));
+            % smallScaleView = imfuse(imgLeftL, imgRightL, 'montage');
+            % imwrite(imresize(smallScaleView, 8), sprintf('%s/smallScaleMontage%.3d.png', savePath, identifier));
+
+            % xRange = [0, 320]; yRange = [0, 240];
+            %% infos = {iteration, tmpObjRange, vseRange(vseIndex), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
+            xPos = [10, 220, 10, 10, 260, 10, 10, 240]; %display in headful modus: [10, 200, 10, 10, 260, 10, 10]
+            yPos = [10, 10, 230, 220, 230, 190, 200, 220];
+            % imName = strsplit(currentTexture, '/');           % stable renderer
+            % imName = strsplit(texture{currentTexture}, '/');  % experimental renderer
+            imName = strsplit(imgNumber, '/');                  % still necessary / functional?
+            imName = imName{end};
+            insert = {sprintf('Image: \t%s', imName), ...
+                        sprintf('Object distance: \t%.2f', infos{2}), ...
+                        sprintf('Vergence Error:          \t%.3f', infos{4}), ...
+                        sprintf('Start Vergence Error: \t%.3f', infos{3}), ...
+                        sprintf('Iteration: \t%d', infos{1}), ...
+                        sprintf('Muscle Activation:    \t%.3f,  \t%.3f', infos{5}(1), infos{5}(2)), ...
+                        sprintf('Relative Command: \t%.3f,  \t%.3f', infos{6}(1), infos{6}(2)), ...
+                        sprintf('Reward: \t%.3f', infos{7})};
+
+            fig = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
+            % subplot(2,3,[1,2,4,5]);
+            % title(sprintf('Object distance: %d,\titeration: %d,\tvergence error: %d', infos(1), infos(2), infos(3)));
+            subplot('Position', [0.05, 0.12, 0.6, 0.8]);
+            imshow(anaglyph);
+            text(xPos, yPos, insert, 'color', textColor); % these numbers resemble white, but white will appear black after saving ;P
+            % text(10, 20, num2str(size(anaglyph)), 'color', 'yellow'); %[1-eps, 1-eps, 1-eps]
+            % title('Anaglyph');
+            % subplot(2,3,3);
+            % positionVector = [left, bottom, width, height], all between 0 and 1
+            sizeScaleImg = 0.6/numberScales;
+            for sp = 1:numberScales
+                if (sp == 1)
+                    subplot('Position', [0.7, 0.9 - sizeScaleImg, sizeScaleImg, sizeScaleImg])
+                else
+                    subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg])
+                end
+                imshow(scaleImages{sp});
+                descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{8}(sp))};
+                % todo: the fist two values in text have to be adapted, especially
+                % for more than 2 scales, also the size of the letters,
+                text(0.03, 0.1, descr, 'color', textColor, 'Units', 'normalized')
+            end
+            saveas(fig, sprintf('%s/anaglyph.png', model.savePath), 'png');
+            fig.delete();
+        end
+
     end
 end
