@@ -532,7 +532,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         close all;
     end
 
-    quit % close the job after completion
+    quit % close the job after completion and release the matlab licence u.u
 
 %     % Generates anaglyphs of the large and small scale fovea and
 %     % one of the two unpreprocessed gray scale images

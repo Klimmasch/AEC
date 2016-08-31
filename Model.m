@@ -74,6 +74,8 @@ classdef Model < handle
         
         % Providing relevant methods
         degrees;        % contains a tabular that maps muscle activity to angles
+        degreesIncRes;  % contains a part of degrees with increased resolution
+        degDiff;        % difference between entries in degreesIncRes
         metCosts;       % contains a tabular that maps muscle activity to metabolic costs
         mfunctionMR;    % contains a function approx. of the mapping from activity to angle 
                         % for the medial rectus with activation of lateral rectus equals 0
@@ -202,6 +204,13 @@ classdef Model < handle
             % getMF functions
             obj.degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
             obj.metCosts = load('MetabolicCosts.mat');
+            
+            resFactor = 10; % factor by which the resolution of the tabular should be increased
+            % resFactor = 13; % results in comparable amount of entries as the mfunctions
+            %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
+            % between 0 and 0.1 mus. act. the resulution is increased
+            obj.degreesIncRes = interp2(obj.degrees.results_deg(1:2, 1:2), resFactor);
+            obj.degDiff = max(max(diff(obj.degreesIncRes)));    % distance between the entries
             
             % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
             resolution = 100001;
@@ -411,7 +420,8 @@ classdef Model < handle
             end
         end
     
-        % Calculates muscle force for two muscles
+        % Calculates muscle force for two muscles, whereas the activation
+        % of on muscle is always 0.
         function [mf, angleInit] = getMF2(this, objDist, desVergErr)
             % correct vergence angle for given object distance
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
@@ -428,6 +438,42 @@ classdef Model < handle
                 mf = this.mfunctionLR(indAngleInit, 2);
                 mf = [mf(ceil(length(mf) / 2)); 0];
             end
+        end
+        
+        % same as above, but now the returned muscle activations are
+        % greater 0.
+        % == get muscle force equally distributed over object distance.
+        function [mfLR, mfMR, angleInit] = getMFedood(this, objDist, desVergErr, ignoreBounds)
+            angleCorrect = 2 * atand(this.baseline / (2 * objDist));
+            angleInit = angleCorrect - desVergErr;
+            % angleInit is the angle for both eyes, but degreesIncRes only
+            % contains angles for one eye
+            [xi, yi] = find(this.degreesIncRes <= (angleInit/2) + this.degDiff & this.degreesIncRes >= (angleInit/2) - this.degDiff);
+            
+            if ignoreBounds
+                i = randi(length(xi));
+
+                % now transform indizes to muscle activities
+                numInds = length(this.degreesIncRes);
+                scaleFac = 0.1 / numInds;
+                mfMR = xi(i) * scaleFac;
+                mfLR = yi(i) * scaleFac;
+            else
+                mfMR = 1;
+                mfLR = 1;
+                while mfMR > 0.1 || mfLR > 0.015
+                    i = randi(length(xi));
+
+                    % now transform indizes to muscle activities
+                    numInds = length(this.degreesIncRes);
+                    scaleFac = 0.1 / numInds;
+                    mfMR = xi(i) * scaleFac;
+                    mfLR = yi(i) * scaleFac;
+                end
+            end
+            
+            
+            
         end
         
         % mapping muscle activity to angle (one eye)
@@ -1381,13 +1427,13 @@ classdef Model < handle
                 else
                     subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg])
                 end
-                imshow(scaleImages{sp});
+                imshow(scaleImages{sp});    
                 descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{8}(sp))};
                 % todo: the fist two values in text have to be adapted, especially
                 % for more than 2 scales, also the size of the letters,
                 text(0.03, 0.1, descr, 'color', textColor, 'Units', 'normalized')
             end
-            saveas(fig, sprintf('%s/anaglyph.png', model.savePath), 'png');
+            saveas(fig, sprintf('%s/anaglyph.png', this.savePath), 'png');
             fig.delete();
         end
 
