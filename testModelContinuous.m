@@ -566,8 +566,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         %% Object distance vs. Fixation distance
         tmpcnt = 1;
-        for i = 1 : length(testResult6) / model.testInterval
-            sprintf('Level 3/3 Test iteration = %d/%d', i, length(testResult6) / model.testInterval)
+        for i = 1 : length(testResult6) / testInterval
+            sprintf('Level 3/3 Test iteration = %d/%d', i, length(testResult6) / testInterval)
 
             objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
             angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
@@ -584,7 +584,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
             currentTexture = randi(length(nStim));
 
-            for j = 1 : model.testInterval
+            for j = 1 : testInterval
                 model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3);
 
                 % Image patch generation
