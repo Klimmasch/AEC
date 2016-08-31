@@ -71,13 +71,13 @@ classdef Model < handle
         patchesRight;
         overlap;
         cutout;
-        
+
         % Providing relevant methods
         degrees;        % contains a tabular that maps muscle activity to angles
         degreesIncRes;  % contains a part of degrees with increased resolution
         degDiff;        % difference between entries in degreesIncRes
         metCosts;       % contains a tabular that maps muscle activity to metabolic costs
-        mfunctionMR;    % contains a function approx. of the mapping from activity to angle 
+        mfunctionMR;    % contains a function approx. of the mapping from activity to angle
                         % for the medial rectus with activation of lateral rectus equals 0
         mfunctionLR;    % analogous for the lateral rectus
         dmf;            % delta in muscle force (for mfunctions) dmf2
@@ -85,7 +85,7 @@ classdef Model < handle
         dAngleLR;       % delta in muscle force (for mfunctionLR) dmf3
         angleMin;       % minimal and maximal angle that can be reached by one-dimensional muscle commands
         angleMax;
-        
+
         imgRawLeft;     % images that are updated by refreshImages
         imgRawRight;
         imgGrayLeft;
@@ -199,19 +199,19 @@ classdef Model < handle
                 obj.patchesLeft{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
                 obj.patchesRight{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
             end
-            
+
             %%% Preparing Functions
             % getMF functions
             obj.degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
             obj.metCosts = load('MetabolicCosts.mat');
-            
+
             resFactor = 10; % factor by which the resolution of the tabular should be increased
             % resFactor = 13; % results in comparable amount of entries as the mfunctions
             %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
             % between 0 and 0.1 mus. act. the resulution is increased
             obj.degreesIncRes = interp2(obj.degrees.results_deg(1:2, 1:2), resFactor);
             obj.degDiff = max(max(diff(obj.degreesIncRes)));    % distance between the entries
-            
+
             % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
             resolution = 100001;
             approx = spline(1 : 11, obj.degrees.results_deg(:, 1));
@@ -235,10 +235,10 @@ classdef Model < handle
             obj.mfunctionLR = [xValPos, yValPos];
             obj.mfunctionLR(:, 1) = obj.mfunctionLR(:, 1) * 2;    % angle for two eyes
             obj.dAngleLR = abs(diff(obj.mfunctionLR(1 : 2, 1)));     % delta in angle
-            
+
             obj.angleMin = min(obj.mfunctionLR(obj.mfunctionLR(:, 1) > 0));
             obj.angleMax = obj.mfunctionMR(end, 1);
-            
+
             % refreshImages
             obj.imgRawLeft = uint8(zeros(240, 320, 3));
             obj.imgRawRight = uint8(zeros(240, 320, 3));
@@ -334,13 +334,13 @@ classdef Model < handle
         % scScale:  SC scale index elem {coarse, ..., fine}
         % eyePos:   eye position index elem {1 := left, 2 := right}
         function preprocessImage(this, leftBool, scScale, eyePos)
-            
+
             if leftBool
                 img = this.imgGrayLeft;
-            else 
+            else
                 img = this.imgGrayRight;
             end
-            
+
             % down scale image
             for k = 1 : log2(this.dsRatio(scScale))
                 img = impyramid(img, 'reduce');
@@ -407,7 +407,7 @@ classdef Model < handle
         end
 
         %% calculating muscle inits and angles
-        
+
         % maps {vergenceAngle} -> {muscleForce} for one muscle
         function mf = getMF(this, vergAngle)
             % look up index of vergAngle
@@ -419,7 +419,7 @@ classdef Model < handle
                 mf = 0;
             end
         end
-    
+
         % Calculates muscle force for two muscles, whereas the activation
         % of on muscle is always 0.
         function [mf, angleInit] = getMF2(this, objDist, desVergErr)
@@ -439,7 +439,7 @@ classdef Model < handle
                 mf = [mf(ceil(length(mf) / 2)); 0];
             end
         end
-        
+
         % same as above, but now the returned muscle activations are
         % greater 0.
         % == get muscle force equally distributed over object distance.
@@ -449,7 +449,7 @@ classdef Model < handle
             % angleInit is the angle for both eyes, but degreesIncRes only
             % contains angles for one eye
             [xi, yi] = find(this.degreesIncRes <= (angleInit/2) + this.degDiff & this.degreesIncRes >= (angleInit/2) - this.degDiff);
-            
+
             if ignoreBounds
                 i = randi(length(xi));
 
@@ -471,18 +471,18 @@ classdef Model < handle
                     mfLR = yi(i) * scaleFac;
                 end
             end
-            
-            
-            
+
+
+
         end
-        
+
         % mapping muscle activity to angle (one eye)
         function angle = getAngle(this, command)
             cmd = (command * 10) + 1;                                       % scale commands to table entries
             angle = interp2(this.degrees.results_deg, cmd(1), cmd(2), 'spline'); % interpolate in table by cubic splines
         end
-        
-        % depricated method: slightly faster variant, also a bit less precise, 
+
+        % depricated method: slightly faster variant, also a bit less precise,
         % only works for the medial rectus
         function angle = getAngle2(this, command)
             angleIndex = find(this.mfunctionMR(:, 2) <= command(2) + this.dmf & this.mfunctionMR(:, 2) >= command(2) - this.dmf);
@@ -495,14 +495,14 @@ classdef Model < handle
             cmd = (command * 10) + 1;                                           % scale commands to table entries
             tmpMetCost = interp2(this.metCosts.results, cmd(1), cmd(2), 'spline');   % interpolate in table by cubic splines
         end
-    
+
         %%% Helper function for calculating {objDist} -> {maxVergErr}
         function vergErrMax = getVergErrMax(this, objDist)
             % correct vergence angle for given object distance
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             vergErrMax = angleCorrect - this.angleMin;
         end
-        
+
         %% Updating images during simulation
         %%% Generates two new images for both eyes
         % simulator:    a renderer instance
@@ -533,7 +533,7 @@ classdef Model < handle
             this.imgGrayLeft = 0.2989 * this.imgRawLeft(:, :, 1) + 0.5870 * this.imgRawLeft(:, :, 2) + 0.1140 * this.imgRawLeft(:, :, 3);
             this.imgGrayRight = 0.2989 * this.imgRawRight(:, :, 1) + 0.5870 * this.imgRawRight(:, :, 2) + 0.1140 * this.imgRawRight(:, :, 3);
         end
-        
+
         %%% Generates two new images for both eyes for experimental renderer
         % simulator:    a renderer instance
         % textureNumber:    index of stimulus in memory buffer
@@ -562,7 +562,7 @@ classdef Model < handle
             this.imgGrayLeft = 0.2989 * this.imgRawLeft(:, :, 1) + 0.5870 * this.imgRawLeft(:, :, 2) + 0.1140 * this.imgRawLeft(:, :, 3);
             this.imgGrayRight = 0.2989 * this.imgRawRight(:, :, 1) + 0.5870 * this.imgRawRight(:, :, 2) + 0.1140 * this.imgRawRight(:, :, 3);
         end
-        
+
         %% Plotting everything and save graphs
         function allPlotSave(this)
             % windowSize = 125;
@@ -607,7 +607,7 @@ classdef Model < handle
             plotpath = sprintf('%s/mvngAvgVergErr', this.savePath);
             saveas(gcf, plotpath, 'png');
 
-            %% Root Mean Squared Error
+            %% Root Mean Squared Vergence Error
             % windowSize = 125;
             % windowSize = 250;
             windowSize = 1000;
@@ -693,7 +693,7 @@ classdef Model < handle
             legend('desired', 'actual');
             title(sprintf('Vergence at last %d steps of training', obsWin + 1));
             % plotpath = sprintf('%s/vergenceAngle', this.savePath);
-            plotpath = sprintf('%s/fixationDist', this.savePath);
+            plotpath = sprintf('%s/fixationDistTraining', this.savePath);
             saveas(gcf, plotpath, 'png');
 
             %% Muscel graphs
@@ -1010,313 +1010,8 @@ classdef Model < handle
                 plotpath = sprintf('%s/rewardHistory', this.savePath);
                 saveas(gcf, plotpath, 'png');
             end
-
-            %% delta_MF(Vergence_error)
-            %
-            % desired_angle_min @ 2m = 2 * atand(baseline / (2 * 2)) = 1.6042
-            % desired_angle_max @ 0.5m = 2 * atand(baseline / (2 * 0.5)) = 6.4104
-            % actual_distance_min = (baseline / 2) / tand(results_deg(11,1)*2 / 2) = 0.0389 [m]
-            % actual_distance_max = (baseline / 2) / tand(results_deg(1,1)*2 / 2) = 3.2219 [m]
-            % angle_min @ actual_distance_max = results_deg(1,1) * 2 = 0.9958 deg
-            % angle_max @ actual_distance_min = results_deg(11,1) * 2 = 71.5164 deg
-            % verg_err_min = desired_angle_min - angle_max = 1.6042 - 71.5164 = -69.9122
-            % Verg_err_max = desired_angle_max - angle_min = 6.4104 - 0.9958 = 5.4146
-
-            % actualResponse = [this.vergerr_hist, this.relCmd_hist];
-
-            % % observation Window, i.e. plot statistics over last #obsWin iterations
-            % obsWin = 1000;
-            % if (size(actualResponse, 1) <= obsWin)
-            %     obsWin = size(actualResponse, 1) - 1;
-            % end
-            % nVal = 20; % #bins of statistics
-
-            % actualResponse = sortrows(actualResponse(end - obsWin + 1 : end, :));
-            % if (all(actualResponse == 0)) % skip plot if empty or still training
-            %     return;
-            % end
-            % deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
-            % % actualResponseStat = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
-            % actualResponseStat = zeros(nVal, 3);
-
-            % for i = 1:nVal
-            %     actualResponseStat(i, 1) = (actualResponse(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
-            %     actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
-            %                                     & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
-            %     actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
-            %                                    & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
-            % end
-            % actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
-
-            % degrees = load('Degrees.mat');
-            % resolution = 10001;
-            % approx = spline(1:11, degrees.results_deg(:, 1));
-
-            % xValPos = ppval(approx, 1:0.001:11)';
-            % yValPos = linspace(0, 1, resolution)';
-
-            % xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
-            % yValNeg = linspace(-1, 0, resolution)';
-
-            % % calculate muscle function :=  mf(vergence_angle) = muscle force [single muuscle]
-            % mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
-            % dmf = diff(mf(1:2, 1)); % delta in angle
-            % indZero = find(mf(:, 2) == 0); % MF == 0_index
-            % indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-            % indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
-
-            % % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
-            % % x = vergenceError, y = deltaMuscelForce
-            % perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
-            %                          (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
-            %                          (mf(indMaxFix, 1) - flipud(mf(indZero : indMaxFix - 1, 1))) * 2, ...
-            %                          (mf(indMaxFix, 2) - flipud(mf(indZero : indMaxFix - 1, 2)))];
-
-            % perfectResponseMinFix = [(mf(indMinFix, 1) - flipud(mf(indMinFix : end, 1))) * 2, ...
-            %                          (mf(indMinFix, 2) - flipud(mf(indMinFix : end, 2))); ...
-            %                          (mf(indMinFix, 1) - flipud(mf(indZero : indMinFix - 1, 1))) * 2, ...
-            %                          (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
-
-            % perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-
-            % figure;
-            % hold on;
-            % grid on;
-            % % perfect response to vergence error
-            % plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            % plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            % % error bars of actual response of the model
-            % errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
-            % % actual response of the model
-            % plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-            % l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-            % if(version('-release') == '2015b')
-            %     l.FontSize = 7;
-            %     l.Orientation = 'horizontal';
-            %     l.Location = 'southoutside';
-            % end
-            % % adjust axis to actual response ranges + std deviation
-            % xmin = min(actualResponseStat(:, 1)) * 1.1;
-            % xmax = max(actualResponseStat(:, 1)) * 1.1;
-            % if (xmin >= xmax)
-            %     xmin = -5.5;
-            %     xmax = 5.5;
-            % end
-            % ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.1]);
-            % ymax = max([max(perfectResponse(:, 4)) * 1.1, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.1]);
-            % if (ymin >= ymax)
-            %     ymin = -0.1;
-            %     ymax = 0.1;
-            % end
-            % plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
-            % plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-            % axis([xmin, xmax, ymin, ymax]);
-            % xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
-            % ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            % title(strcat('\Delta MF(verg_{err}) response after ', sprintf(' %d iterations', size(this.vergerr_hist, 1) - obsWin)));
-            % plotpath = sprintf('%s/deltaMFasFktVerErr', this.savePath);
-            % saveas(gcf, plotpath, 'png');
         end
 
-        %% plot & save delta_MF(Vergence_error)
-        % observation Window = obsWin, i.e. plot statistics over last #obsWin iterations
-        % see delta_MF(Vergence_error) @ allPlotSave() for remarks regarding calculations
-        % TODO: update this method according to the new class-own variables
-        function deltaMFplotObsWin(this, obsWin)
-            actualResponse = [this.vergerr_hist, this.relCmd_hist];
-
-            if (size(actualResponse, 1) <= obsWin)
-                obsWin = size(actualResponse, 1) - 1;
-            end
-            nVal = 20; % #bins of statistics
-
-            actualResponse = sortrows(actualResponse(end - obsWin + 1 : end, :));
-            if (all(actualResponse == 0)) % skip plot if empty or still training
-                sprintf('No model response within observation window.')
-                return;
-            end
-            deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
-            % actualResponseStat = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
-            actualResponseStat = zeros(nVal, 3);
-
-            for i = 1:nVal
-                actualResponseStat(i, 1) = (actualResponse(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
-                actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
-                                                & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
-                actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
-                                               & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
-            end
-            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
-
-            degrees = load('Degrees.mat');
-            resolution = 10001;
-            approx = spline(1:11, degrees.results_deg(:, 1));
-
-            xValPos = ppval(approx, 1:0.001:11)';
-            yValPos = linspace(0, 1, resolution)';
-
-            xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
-            yValNeg = linspace(-1, 0, resolution)';
-
-            % calculate muscle function :=  mf(vergence_angle) = muscle force [single muuscle]
-            mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
-            dmf = diff(mf(1:2, 1)); % delta in angle
-            indZero = find(mf(:, 2) == 0); % MF == 0_index
-            indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-            indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
-
-            % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
-            % x = vergenceError, y = deltaMuscelForce
-            perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
-                                     (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
-                                     (mf(indMaxFix, 1) - flipud(mf(indZero : indMaxFix - 1, 1))) * 2, ...
-                                     (mf(indMaxFix, 2) - flipud(mf(indZero : indMaxFix - 1, 2)))];
-
-            perfectResponseMinFix = [(mf(indMinFix, 1) - flipud(mf(indMinFix : end, 1))) * 2, ...
-                                     (mf(indMinFix, 2) - flipud(mf(indMinFix : end, 2))); ...
-                                     (mf(indMinFix, 1) - flipud(mf(indZero : indMinFix - 1, 1))) * 2, ...
-                                     (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
-
-            perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-
-            figure;
-            hold on;
-            grid on;
-            % perfect response to vergence error
-            plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            % error bars of actual response of the model
-            errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
-            % actual response of the model
-            plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-            l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-            if(version('-release') == '2015b')
-                l.FontSize = 7;
-                l.Orientation = 'horizontal';
-                l.Location = 'southoutside';
-            end
-            % adjust axis to actual response ranges + std deviation
-            xmin = min(actualResponseStat(:, 1)) * 1.1;
-            xmax = max(actualResponseStat(:, 1)) * 1.1;
-            if (xmin >= xmax)
-                xmin = -5.5;
-                xmax = 5.5;
-            end
-            ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.1]);
-            ymax = max([max(perfectResponse(:, 4)) * 1.1, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.1]);
-            if (ymin >= ymax)
-                ymin = -0.1;
-                ymax = 0.1;
-            end
-            plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
-            plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-            axis([xmin, xmax, ymin, ymax]);
-            xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
-            ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            title(strcat('\Delta MF(verg_{err}) response after ', sprintf(' %d iterations', size(this.vergerr_hist, 1) - obsWin)));
-            plotpath = sprintf('%s/deltaMFasFktVerErrObsWin', this.savePath);
-            saveas(gcf, plotpath, 'png');
-        end
-
-        %% plot & save delta_MF(Vergence_error)
-        % startIter, endIter = plot statistics over #startIter : endIter iterations
-        % see delta_MF(Vergence_error) @ allPlotSave() for remarks regarding calculations
-        function deltaMFplotStartEnd(this, startIter, endIter)
-            actualResponse = [this.vergerr_hist, this.relCmd_hist];
-
-            if (endIter > size(actualResponse, 1))
-                endIter = size(actualResponse, 1);
-            end
-            nVal = 20; % #bins of statistics
-
-            actualResponse = sortrows(actualResponse(startIter : endIter, :));
-            if (all(actualResponse == 0)) % skip plot if empty or still training
-                sprintf('No model response within observation window.')
-                return;
-            end
-            deltaVergErr = (abs(actualResponse(1, 1)) + abs(actualResponse(end, 1))) / nVal;
-            % actualResponseStat = nVal x 3 = [index_x = vergence_error angle, mean_muscle_force, std_muscle_force]
-            actualResponseStat = zeros(nVal, 3);
-
-            for i = 1:nVal
-                actualResponseStat(i, 1) = (actualResponse(1, 1) - deltaVergErr / 2) + i * deltaVergErr;
-                actualResponseStat(i, 2) = mean(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
-                                                & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
-                actualResponseStat(i, 3) = std(actualResponse(find(actualResponse(:, 1) >= actualResponse(1, 1) + (i - 1) * deltaVergErr ...
-                                               & actualResponse(:, 1) <= actualResponse(1, 1) + i * deltaVergErr), 2));
-            end
-            actualResponseStat(isnan(actualResponseStat(:, 2)), :) = []; % drop NaN elements
-
-            degrees = load('Degrees.mat');
-            resolution = 10001;
-            approx = spline(1:11, degrees.results_deg(:, 1));
-
-            xValPos = ppval(approx, 1:0.001:11)';
-            yValPos = linspace(0, 1, resolution)';
-
-            xValNeg = flipud(ppval(approx, 1:0.001:11)' * -1);
-            yValNeg = linspace(-1, 0, resolution)';
-
-            % calculate muscle function :=  mf(vergence_angle) = muscle force [single muuscle]
-            mf = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
-            dmf = diff(mf(1:2, 1)); % delta in angle
-            indZero = find(mf(:, 2) == 0); % MF == 0_index
-            indMaxFix = find(mf(:, 1) <= this.desiredAngleMin + dmf & mf(:, 1) >= this.desiredAngleMin - dmf); % MF(desiredAngleMin)_index
-            indMinFix = find(mf(:, 1) <= this.desiredAngleMax + dmf & mf(:, 1) >= this.desiredAngleMax - dmf); % MF(desiredAngleMax)_index
-
-            % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
-            % x = vergenceError, y = deltaMuscelForce
-            perfectResponseMaxFix = [(mf(indMaxFix, 1) - flipud(mf(indMaxFix : end, 1))) * 2, ...
-                                     (mf(indMaxFix, 2) - flipud(mf(indMaxFix : end, 2))); ...
-                                     (mf(indMaxFix, 1) - flipud(mf(indZero : indMaxFix - 1, 1))) * 2, ...
-                                     (mf(indMaxFix, 2) - flipud(mf(indZero : indMaxFix - 1, 2)))];
-
-            perfectResponseMinFix = [(mf(indMinFix, 1) - flipud(mf(indMinFix : end, 1))) * 2, ...
-                                     (mf(indMinFix, 2) - flipud(mf(indMinFix : end, 2))); ...
-                                     (mf(indMinFix, 1) - flipud(mf(indZero : indMinFix - 1, 1))) * 2, ...
-                                     (mf(indMinFix, 2) - flipud(mf(indZero : indMinFix - 1, 2)))];
-
-            perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-
-            figure;
-            hold on;
-            grid on;
-            % perfect response to vergence error
-            plot(perfectResponse(:, 1), perfectResponse(:, 2), 'color', [0.5882, 0.9608, 0], 'LineWidth', 1.3);
-            plot(perfectResponse(:, 3), perfectResponse(:, 4), 'color', [0, 0.5882, 0.9608], 'LineWidth', 1.3);
-            % error bars of actual response of the model
-            errorbar(actualResponseStat(:, 1), actualResponseStat(:, 2), actualResponseStat(:, 3),'color', [1, 0.5098, 0.1961], 'LineWidth', 0.9);
-            % actual response of the model
-            plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
-            l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-            if(version('-release') == '2015b')
-                l.FontSize = 7;
-                l.Orientation = 'horizontal';
-                l.Location = 'southoutside';
-            end
-            % adjust axis to actual response ranges + std deviation
-            xmin = min(actualResponseStat(:, 1)) * 1.1;
-            xmax = max(actualResponseStat(:, 1)) * 1.1;
-            if (xmin >= xmax)
-                xmin = -5.5;
-                xmax = 5.5;
-            end
-            ymin = min([-0.1, (min(actualResponseStat(:, 2)) - max(actualResponseStat(:, 3))) * 1.1]);
-            ymax = max([max(perfectResponse(:, 4)) * 1.1, (max(actualResponseStat(:, 2)) + max(actualResponseStat(:, 3))) * 1.1]);
-            if (ymin >= ymax)
-                ymin = -0.1;
-                ymax = 0.1;
-            end
-            plot([xmin, xmax], [0, 0], 'k', 'LineWidth', 0.1);
-            plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.1);
-            axis([xmin, xmax, ymin, ymax]);
-            xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
-            ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-            title(strcat('\Delta MF(verg_{err}) at iteration ', sprintf(' %d through %d', startIter, endIter)));
-            plotpath = sprintf('%s/deltaMFasFktVerErrStartEnd', this.savePath);
-            saveas(gcf, plotpath, 'png');
-        end
-        
         % Generates anaglyphs of the large and small scale fovea and
         % one of the two unpreprocessed gray scale images
         function generateAnaglyphs(this, identifier, markScales, infos, imgNumber)
@@ -1427,7 +1122,7 @@ classdef Model < handle
                 else
                     subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg])
                 end
-                imshow(scaleImages{sp});    
+                imshow(scaleImages{sp});
                 descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{8}(sp))};
                 % todo: the fist two values in text have to be adapted, especially
                 % for more than 2 scales, also the size of the letters,

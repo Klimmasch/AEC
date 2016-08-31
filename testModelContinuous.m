@@ -31,6 +31,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     formatSpec = '%s, %s,';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
+    resultsOverview = {model.scModel{1}.nBasis, model.scModel{2}.nBasis};
+    formatSpec = '%d, %d,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
     resultsOverview = {model.lambdaRec, model.lambdaMuscleFB, model.lambdaMet};
     formatSpec = '%.0f, %.4f, %.4f,';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
@@ -118,7 +122,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % for debugging purposes
             simulator.reinitRenderer();
         end
-        
+
         % load all stimuli into memory for experimental renderer, if no
         % renderer is provided by the training procedure
         texture = load(sprintf('config/%s', textureFile));
@@ -127,8 +131,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             simulator.add_texture(i, texture{i});
         end
     end
-
-
 
     %%% creating a new directory if (folder ~= '/.')
     if (folder(1) ~= '/')
@@ -153,6 +155,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     testResult3 = zeros(length(objRange) * 7 * nStim, testInterval); % ALL single values
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
     testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
+    testResult6 = zeros(100, 2);
 
     realyBadImages = zeros(2, length(objRange), nStim); % here, the images are safed that start at the maximal vergence errors (neg & pos) and that end up worse than they started
     %this tabular is going to be safed inside the models folder and
@@ -296,22 +299,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 %     function refreshImages(texture, eyeAngle, objDist, scalingFactor)
 %         simulator.add_texture(1, texture);
 %         simulator.set_params(1, eyeAngle, objDist, 0, scalingFactor);
-% 
+%
 %         result1 = simulator.generate_left();
 %         result2 = simulator.generate_right();
-% 
+%
 %         imgRawLeft = permute(reshape(result1, ...
 %                                      [size(imgRawLeft, 3), ...
 %                                       size(imgRawLeft, 2), ...
 %                                       size(imgRawLeft, 1)]), ...
 %                                      [3, 2, 1]);
-% 
+%
 %         imgRawRight = permute(reshape(result2, ...
 %                                       [size(imgRawRight, 3), ...
 %                                        size(imgRawRight, 2), ...
 %                                        size(imgRawRight, 1)]), ...
 %                                       [3, 2, 1]);
-% 
+%
 %         % convert images to gray scale
 %         imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
 %         imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
@@ -324,22 +327,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % scaleImSize:  scaling factor of stimulus plane [m]
 %     function refreshImagesNew(textureNumber, eyeAngle, objDist, scaleImSize)
 %         simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
-% 
+%
 %         result1 = simulator.generate_left();
 %         result2 = simulator.generate_right();
-% 
+%
 %         imgRawLeft = permute(reshape(result1, ...
 %                                      [size(imgRawLeft, 3), ...
 %                                       size(imgRawLeft, 2), ...
 %                                       size(imgRawLeft, 1)]), ...
 %                                      [3, 2, 1]);
-% 
+%
 %         imgRawRight = permute(reshape(result2, ...
 %                                       [size(imgRawRight, 3), ...
 %                                        size(imgRawRight, 2), ...
 %                                        size(imgRawRight, 1)]), ...
 %                                       [3, 2, 1]);
-% 
+%
 %         % convert images to gray scale
 %         imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
 %         imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
@@ -363,7 +366,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
         for odIndex = 1 : length(objRange)
-            sprintf('Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
+            sprintf('Level 1/3 Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
 
             % vergence start error
             vergMax = model.getVergErrMax(objRange(odIndex));
@@ -509,7 +512,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         vseRange = linspace(-1, 1, test2Resolution);
 
         for odIndex = 1 : length(objRange)
-            sprintf('Test iteration = %d/%d', odIndex + size(objRange, 2), size(objRange, 2) * 2)
+            sprintf('Level 2/3 Test iteration = %d/%d', odIndex + size(objRange, 2), size(objRange, 2) * 2)
 
             for vseIndex = 1 : length(vseRange)
                 if (model.getVergErrMax(objRange(odIndex)) < vseRange(vseIndex))
@@ -561,6 +564,73 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
         testResult4(testResult4 == 0) = NaN;
 
+        %% Object distance vs. Fixation distance
+        tmpcnt = 1;
+        for i = 1 : length(testResult6) / model.testInterval
+            sprintf('Level 3/3 Test iteration = %d/%d', i, length(testResult6) / model.testInterval)
+
+            objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
+            angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
+
+            % vergence start error
+            vergMax = model.getVergErrMax(objDist);
+            if vergMax > 2
+                vergMax = 2;
+            end
+            vseRange = [linspace(-2, 0, 4), linspace(0, vergMax, 4)];
+            vseRange = [vseRange(1 : 3), vseRange(5 : end)];
+
+            [mfLR, mfMR, angleNew] = model.getMFedood(objDist, vseRange(randi(length(vseRange))), false);
+
+            currentTexture = randi(length(nStim));
+
+            for j = 1 : model.testInterval
+                model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3);
+
+                % Image patch generation
+                for i = 1 : length(model.scModel)
+                    model.preprocessImage(true, i, 1);
+                    model.preprocessImage(false, i, 2);
+                    currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
+                end
+
+                % Generate input feature vector from current images
+                [bfFeature, ~, ~] = model.generateFR(currentView);
+
+                % Absolute command feedback # concatination
+                if (model.rlModel.continuous == 1)
+                    if (model.rlModel.CActor.output_dim == 1)
+                        feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                    else
+                        feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                    end
+                else
+                    feature = bfFeature;
+                end
+
+                %%% Action
+                relativeCommand = model.rlModel.act(feature);
+
+                % add the change in muscle activities to current ones
+                if (model.rlModel.continuous == 1)
+                    if (model.rlModel.CActor.output_dim == 1)
+                        command(2) = command(2) + relativeCommand;  % single muscle
+                    else
+                        command = command + relativeCommand;        % two muscles
+                    end
+                    command = checkCmd(command);                    % restrain motor commands to [0,1]
+                    angleNew = model.getAngle(command) * 2;               % resulting angle is used for both eyes
+                else
+                    angleNew = angleNew + relativeCommand;
+                    if (angleNew > angleMax || angleNew < angleMin)
+                        angleNew = model.vergAngleFixMin + (model.vergAngleFixMax - model.vergAngleFixMin) * rand(1, 1);
+                    end
+                end
+                testResult6(tmpcnt) = [objDist, (model.baseline / 2) / tand(angleNew / 2)]
+                tmpcnt = tmpcnt + 1;
+            end
+        end
+
         if (measureTime == true)
             elapsedTime = toc;
             sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
@@ -575,6 +645,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             model.testResult3 = testResult3;
             model.testResult4 = testResult4;
             model.testResult5 = testResult5;
+            model.testResult6 = testResult6;
             if (saveTestResults == 1)
                 save(strcat(imageSavePath, '/model'), 'model');
             end
@@ -590,6 +661,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 model.testResult3 = testResult3;
                 model.testResult4 = testResult4;
                 model.testResult5 = testResult5;
+                model.testResult6 = testResult6;
                 if (saveTestResults == 1)
                     save(strcat(imageSavePath, '/model'), 'model');
                 end
@@ -1043,6 +1115,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             plotpath = sprintf('%s/muscleGraphsScatterDeltaTesting', imageSavePath);
             saveas(gcf, plotpath, 'png');
         end
+
+        %% Vergence angle / fixation distance
+        figure;
+        hold on;
+        grid on;
+        plot(model.testResult6(:, 1), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+        plot(model.testResult6(:, 2), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+
+        xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+        % ylabel('Angle [deg]', 'FontSize', 12);
+        ylabel('Distance [m]', 'FontSize', 12);
+        ylim([this.objDistMin - 1, this.objDistMax + 1]);
+        legend('desired (ObjDist)', 'actual (FixDist)');
+        title('Vergence movements at testing');
+        plotpath = sprintf('%s/fixationDistTesting', imageSavePath);
+        saveas(gcf, plotpath, 'png');
 
         % save remaining results table
         resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(imageSavePath)};
