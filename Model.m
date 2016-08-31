@@ -443,14 +443,14 @@ classdef Model < handle
         % same as above, but now the returned muscle activations are
         % greater 0.
         % == get muscle force equally distributed over object distance.
-        function [mfLR, mfMR, angleInit] = getMFedood(this, objDist, desVergErr, ignoreBounds)
+        function [mfLR, mfMR, angleInit] = getMFedood(this, objDist, desVergErr, useBounds)
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             angleInit = angleCorrect - desVergErr;
             % angleInit is the angle for both eyes, but degreesIncRes only
             % contains angles for one eye
             [xi, yi] = find(this.degreesIncRes <= (angleInit/2) + this.degDiff & this.degreesIncRes >= (angleInit/2) - this.degDiff);
 
-            if ignoreBounds
+            if ~useBounds
                 i = randi(length(xi));
 
                 % now transform indizes to muscle activities
@@ -461,7 +461,7 @@ classdef Model < handle
             else
                 mfMR = 1;
                 mfLR = 1;
-                while mfMR > 0.1 || mfLR > 0.015
+                while mfMR > 0.1 || mfLR > 0.015 %fist part should be unnecessary
                     i = randi(length(xi));
 
                     % now transform indizes to muscle activities

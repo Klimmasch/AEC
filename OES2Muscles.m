@@ -29,8 +29,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-    textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
-%     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
+    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
@@ -167,8 +167,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % simulator = OpenEyeSim('create'); % stable renderer
     simulator = OpenEyeSimV5('create'); % experimental version
 
-%     simulator.initRenderer();
-    simulator.reinitRenderer(); % for debugging
+    simulator.initRenderer();
+%     simulator.reinitRenderer(); % for debugging
 
     % Prepare Textures
     % load all stimuli into memory for experimental renderer
@@ -348,8 +348,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % [command, angleNew] = getMF2(initDist, 0);
         fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
-        [command, angleNew] = model.getMF2(fixationDist, 0);
-
+%         [command, angleNew] = model.getMF2(fixationDist, 0);
+        [command(1), command(2), angleNew] = model.getMFedood(fixationDist, 0, true);
+        
         % testing input distribution
         % nSamples = 10000;
         % commands = zeros(nSamples,2);
