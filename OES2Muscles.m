@@ -60,7 +60,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 100;
+    nStimTest = 2;
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -177,10 +177,15 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     for i = 1:length(textureFiles)
         texture = load(sprintf('config/%s', textureFiles{i}));
         texture = texture.texture;
-        nTextures = nTextures + length(texture);
+        textureCnt = length(texture);
+
         if i == 1
-            nTestTextures = nTextures;      % save number of test textures for proper indexing later
+            nTestTextures = textureCnt;      % save number of test textures for proper indexing later
+        elseif i == 2
+            nStimTrain = textureCnt;
         end
+
+        nTextures = nTextures + textureCnt;
         textureInd = 1;
         for j = tmpTexInd : nTextures % 140
             simulator.add_texture(j, texture{textureInd});
@@ -192,7 +197,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     if nStimTest > nTestTextures
         nStimTest = nTestTextures;
-        nStimTrain = nTextures - nStimTest;
         sprintf('The file for testing textures only contains %d images, but I will use them all!', nStimTest)
     end
 
@@ -325,11 +329,13 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     command = [0; 0];
     % rewardFunction_prev = 0;
     elapsedTime = 0;
-    tic; % start time count
     for iter1 = 1 : (timeToTrain / model.interval)
+        tic; % start time count
+
         % pick random texture every #interval times
         % currentTexture = texture{(randi(nTextures, 1))};  % stable renderer
         currentTexture = nTestTextures + randi(nStimTrain, 1);               % experimental renderer
+        % currentTexture = nStimTest + randi(nStimTrain, 1);
 
         % random depth
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
@@ -348,8 +354,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % [command, angleNew] = getMF2(initDist, 0);
         fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
-%         [command, angleNew] = model.getMF2(fixationDist, 0);
-        [command(1), command(2), angleNew] = model.getMFedood(fixationDist, 0, false);
+        [command, angleNew] = model.getMF2(fixationDist, 0);
+        % [command, angleNew] = model.getMFedood(fixationDist, 0, false);
 
         % testing input distribution
         % nSamples = 10000;
@@ -387,8 +393,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             % Image patch generation
             for i = 1 : length(model.scModel)
-                model.preprocessImage(true, i, 1);
-                model.preprocessImage(false, i, 2);
+                model.preprocessImage(i, 1);
+                model.preprocessImage(i, 2);
                 currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
             end
 
@@ -485,16 +491,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                     mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
         end
 
-        elapsedTime = elapsedTime + toc;
-
-        % testing during training!
-        if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
-            testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
-            close all;
-        end
-
-        tic; % skip testing measure
-
         % Display per cent completed of training and save model
         if (~mod(t, saveInterval))
             sprintf('%g%% is finished', (t / timeToTrain * 100))
@@ -506,6 +502,14 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                     model.scModel{i}.saveBasis();
                 end
             end
+        end
+
+        elapsedTime = elapsedTime + toc;
+
+        % testing during training!
+        if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
+            testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
+            close all;
         end
     end
     elapsedTime = elapsedTime + toc;

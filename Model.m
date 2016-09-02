@@ -60,6 +60,7 @@ classdef Model < handle
         testResult3;
         testResult4;
         testResult5;
+        testResult6;
 
         % Image processing
         patchSize;
@@ -157,6 +158,7 @@ classdef Model < handle
             obj.testResult3 = [];
             obj.testResult4 = [];
             obj.testResult5 = [];
+            obj.testResult6 = [];
             obj.simulatedTime = 0;
             obj.trainedUntil = 0;
             obj.notes = '';
@@ -330,12 +332,10 @@ classdef Model < handle
         end
 
         %%% Patch generation
-        % img:      image to be processed
-        % scScale:  SC scale index elem {coarse, ..., fine}
+        % scScale:  SC scale index elem {coarse := 1, 2, ..., fine = #}
         % eyePos:   eye position index elem {1 := left, 2 := right}
-        function preprocessImage(this, leftBool, scScale, eyePos)
-
-            if leftBool
+        function preprocessImage(this, scScale, eyePos)
+            if (eyePos == 1)
                 img = this.imgGrayLeft;
             else
                 img = this.imgGrayRight;
@@ -406,8 +406,7 @@ classdef Model < handle
             totalFeature = vertcat(featureArray{:});    % join feature vectors
         end
 
-        %% calculating muscle inits and angles
-
+        % Calculates muscle force for medial rectus
         % maps {vergenceAngle} -> {muscleForce} for one muscle
         function mf = getMF(this, vergAngle)
             % look up index of vergAngle
@@ -420,8 +419,8 @@ classdef Model < handle
             end
         end
 
-        % Calculates muscle force for two muscles, whereas the activation
-        % of on muscle is always 0.
+        % Calculates muscle force for two muscles
+        % the activation of on muscle is always 0.
         function [mf, angleInit] = getMF2(this, objDist, desVergErr)
             % correct vergence angle for given object distance
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
@@ -440,12 +439,13 @@ classdef Model < handle
             end
         end
 
-        % same as above, but now the returned muscle activations are
-        % greater 0.
+        % Calculates muscle force for two muscles
+        % drawn from all permitted mf(l, m) ^= f(objDist, desVergErr), where l, m >= 0
         % == get muscle force equally distributed over object distance.
-        function [mfLR, mfMR, angleInit] = getMFedood(this, objDist, desVergErr, useBounds)
+        function [command, angleInit] = getMFedood(this, objDist, desVergErr, useBounds)
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             angleInit = angleCorrect - desVergErr;
+
             % angleInit is the angle for both eyes, but degreesIncRes only
             % contains angles for one eye
             [xi, yi] = find(this.degreesIncRes <= (angleInit/2) + this.degDiff & this.degreesIncRes >= (angleInit/2) - this.degDiff);
@@ -471,6 +471,8 @@ classdef Model < handle
                     mfLR = yi(i) * scaleFac;
                 end
             end
+            
+            command = [mfLR, mfMR];
         end
 
         % mapping muscle activity to angle (one eye)
@@ -698,19 +700,19 @@ classdef Model < handle
                 % windowSize = 1000;
                 windowSize = ceil(this.trainTime * 0.002);
                 windowSize2 = ceil(this.trainTime * 0.02);
-                windowSize3 = ceil(this.trainTime * 0.01);
+                windowSize3 = ceil(this.trainTime * 0.05);
                 if (this.trainTime < windowSize * this.interval)
                     windowSize = round(this.trainTime / this.interval / 5);
                 end
-                cmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind, 1));
-                relCmd_hist_sma = filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(ind, 1));
-                metCost_hist_sma = filter(ones(1, windowSize3) / windowSize3, 1, this.metCost_hist(ind));
+                cmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(:, 1));
+                relCmd_hist_sma = filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(:, 1));
+                metCost_hist_sma = filter(ones(1, windowSize3) / windowSize3, 1, this.metCost_hist(:));
 
                 % Two eye muscles
                 if (this.rlModel.CActor.output_dim == 2)
-                    xVal = [1 : length(ind)];
-                    cmd_hist_sma = [cmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind, 2))];
-                    relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(ind, 2))];
+                    xVal = [1 : length(cmd_hist_sma)];
+                    cmd_hist_sma = [cmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(:, 2))];
+                    relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(:, 2))];
                     figHandle = figure('OuterPosition', [100, 100, 768, 1024]);
 
                     % Temporal Rectus
@@ -730,7 +732,7 @@ classdef Model < handle
                           min(cmd_hist_sma(windowSize * 2 : end, 1) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
                           max(cmd_hist_sma(windowSize * 2 : end, 1) + tmpSTD(windowSize * 2 : end)) * 1.1]);
 
-                    xlabel('Iteration * interval^{-1}', 'FontSize', 8);
+                    xlabel('Iteration #', 'FontSize', 8);
                     ylabel(sprintf('Total Muscle\nCommands [%%]'), 'FontSize', 12);
                     title('Lateral Rectus', 'fontweight','normal');
 
@@ -750,7 +752,7 @@ classdef Model < handle
                           min(relCmd_hist_sma(windowSize2 * 2 : end, 1) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
                           max(relCmd_hist_sma(windowSize2 * 2 : end, 1) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
 
-                    xlabel('Iteration * interval^{-1}', 'FontSize', 8);
+                    xlabel('Iteration #', 'FontSize', 8);
                     ylabel(strcat('\Delta', sprintf('Muscle\nCommands [%%]')), 'FontSize', 12);
 
                     % Medial Rectus
@@ -770,7 +772,7 @@ classdef Model < handle
                           min(cmd_hist_sma(windowSize * 2 : end, 2) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
                           max(cmd_hist_sma(windowSize * 2 : end, 2) + tmpSTD(windowSize * 2 : end)) * 1.1]);
 
-                    xlabel('Iteration * interval^{-1}', 'FontSize', 8);
+                    xlabel('Iteration #', 'FontSize', 8);
                     % ylabel('Value', 'FontSize', 12);
                     % set(gca,'yaxislocation','right');
                     title('Medial rectus', 'fontweight','normal');
@@ -791,7 +793,7 @@ classdef Model < handle
                           min(relCmd_hist_sma(windowSize2 * 2 : end, 2) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
                           max(relCmd_hist_sma(windowSize2 * 2 : end, 2) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
 
-                    xlabel('Iteration * interval^{-1}', 'FontSize', 8);
+                    xlabel('Iteration #', 'FontSize', 8);
                     % ylabel('Value', 'FontSize', 12);
                     % set(gca,'yaxislocation','right');
 
@@ -811,7 +813,7 @@ classdef Model < handle
                           min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.9, ...
                           max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.1]);
 
-                    xlabel(sprintf('Iteration * interval^{-1} # (interval=%d)', this.interval), 'FontSize', 8);
+                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 8);
                     ylabel('Value', 'FontSize', 12);
                     title('Metabolic Costs', 'FontSize', 14, 'FontWeight','normal');
 

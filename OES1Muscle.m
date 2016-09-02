@@ -310,8 +310,8 @@ function OES1Muscle(trainTime, randomizationSeed, fileDescription)
 
             % Image patch generation
             for i = 1 : length(model.scModel)
-                model.preprocessImageFilled(imgGrayLeft, i, 1);
-                model.preprocessImageFilled(imgGrayRight, i, 2);
+                model.preprocessImage(i, 1);
+                model.preprocessImage(i, 2);
                 currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
             end
 

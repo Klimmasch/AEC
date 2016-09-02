@@ -85,7 +85,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
     % textureFile = 'Textures_mcgillManMadeTest(jpg).mat';
-    textureFile = 'Textures_mcgillManMadeTest40.mat';
+    textureFile = 'Textures_mcgillManMade40.mat';
     % textureFile = 'Textures_mcgillFruitsAll(jpg).mat';        % McGill fruits database
     % textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';     % McGill foliage database
     % textureFile = 'Textures_mcgillFoliageTest(jpg).mat';
@@ -399,8 +399,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                         % Image patch generation
                         for i = 1 : length(model.scModel)
-                            model.preprocessImage(true, i, 1);
-                            model.preprocessImage(false, i, 2);
+                            model.preprocessImage(i, 1);
+                            model.preprocessImage(i, 2);
                             currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
                         end
 
@@ -533,8 +533,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                     % Image patch generation
                     for i = 1 : length(model.scModel)
-                        model.preprocessImage(true, i, 1);
-                        model.preprocessImage(false, i, 2);
+                        model.preprocessImage(i, 1);
+                        model.preprocessImage(i, 2);
                         currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
                     end
 
@@ -580,7 +580,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             vseRange = [linspace(-2, 0, 4), linspace(0, vergMax, 4)];
             vseRange = [vseRange(1 : 3), vseRange(5 : end)];
 
-            [mfLR, mfMR, angleNew] = model.getMFedood(objDist, vseRange(randi(length(vseRange))), false);
+            [command, angleNew] = model.getMF2(objDist, vseRange(randi(length(vseRange))));
+            % [command, angleNew] = model.getMFedood(objDist, vseRange(randi(length(vseRange))), false);
 
             currentTexture = randi(length(nStim));
 
@@ -589,8 +590,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                 % Image patch generation
                 for i = 1 : length(model.scModel)
-                    model.preprocessImage(true, i, 1);
-                    model.preprocessImage(false, i, 2);
+                    model.preprocessImage(i, 1);
+                    model.preprocessImage(i, 2);
                     currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
                 end
 
@@ -626,7 +627,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                         angleNew = model.vergAngleFixMin + (model.vergAngleFixMax - model.vergAngleFixMin) * rand(1, 1);
                     end
                 end
-                testResult6(tmpcnt) = [objDist, (model.baseline / 2) / tand(angleNew / 2)]
+                testResult6(tmpcnt, :) = [objDist, (model.baseline / 2) / tand(angleNew / 2)];
                 tmpcnt = tmpcnt + 1;
             end
         end
@@ -1123,10 +1124,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         plot(model.testResult6(:, 1), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
         plot(model.testResult6(:, 2), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
 
-        xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+        xlabel(sprintf('Iteration # (interval=%d)', model.interval), 'FontSize', 12);
         % ylabel('Angle [deg]', 'FontSize', 12);
         ylabel('Distance [m]', 'FontSize', 12);
-        ylim([this.objDistMin - 1, this.objDistMax + 1]);
+        ylim([model.objDistMin - 1, model.objDistMax + 1]);
         legend('desired (ObjDist)', 'actual (FixDist)');
         title('Vergence movements at testing');
         plotpath = sprintf('%s/fixationDistTesting', imageSavePath);
