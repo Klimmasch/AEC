@@ -60,7 +60,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 2;
+    nStimTest = 40;
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -354,8 +354,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % [command, angleNew] = getMF2(initDist, 0);
         fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
-        [command, angleNew] = model.getMF2(fixationDist, 0);
-        % [command, angleNew] = model.getMFedood(fixationDist, 0, false);
+        % [command, angleNew] = model.getMF2(fixationDist, 0);
+        [command, angleNew] = model.getMFedood(fixationDist, 0, false);
 
         % testing input distribution
         % nSamples = 10000;
