@@ -31,8 +31,17 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     formatSpec = '%s, %s,';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
-    resultsOverview = {model.scModel{1}.nBasis, model.scModel{2}.nBasis};
-    formatSpec = '%d, %d,';
+    resultsOverview = cell(1);
+    formatSpec = 'd';
+    for i = 1 : length(model.scModel)
+        resultsOverview{i} = model.scModel{i}.nBasis;
+        if i > 1
+            formatSpec = strcat(formatSpec, ', d');
+        end
+    end
+    % resultsOverview = {model.scModel{1}.nBasis, model.scModel{2}.nBasis};
+    % formatSpec = '%d, %d,';
+
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
     resultsOverview = {model.lambdaRec, model.lambdaMuscleFB, model.lambdaMet};
