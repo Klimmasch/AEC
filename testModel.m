@@ -275,10 +275,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
         xlabel('Iteration #', 'FontSize', 12);
         ylabel('Fixation [m]', 'FontSize', 12);
         l = legend('desired', 'actual');
-        if(version('-release') == '2015b')
-            l.Orientation = 'horizontal';
-            l.Location = 'southoutside';
-        end
+        l.Orientation = 'horizontal';
+        l.Location = 'southoutside';
         title('Fixation Distance at Testing Procedure');
         plotpath = sprintf('%s/vergenceAngleTesting', model.savePath);
         saveas(gcf, plotpath, 'png');
@@ -515,11 +513,9 @@ function deltaMFplotGenDist(model, responseResults)
     % actual response of the model
     plot(actualResponseStat(:, 1), actualResponseStat(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
     l = legend('perfect (fixDist_{max})', 'perfect (fixDist_{min})', 'actual');
-    if(version('-release') == '2015b')
-        l.FontSize = 7;
-        l.Orientation = 'horizontal';
-        l.Location = 'southoutside';
-    end
+    l.FontSize = 7;
+    l.Orientation = 'horizontal';
+    l.Location = 'southoutside';
     % adjust axis to actual response ranges + std deviation
     xmin = min(actualResponseStat(:, 1)) * 1.1;
     xmax = max(actualResponseStat(:, 1)) * 1.1;
@@ -613,11 +609,9 @@ function recErrPlotGenDist(model, responseResults)
     % reconstruction of the model
     % plot(recErrs(:, 1), recErrs(:, 2),'color', [1, 0.0784, 0], 'LineWidth', 1.3);
     l = legend('reconstruction Error', 'small scale recErr', 'large scale recErr');
-    if(version('-release') == '2015b')
-        l.FontSize = 7;
-        l.Orientation = 'horizontal';
-        l.Location = 'southoutside';
-    end
+    l.FontSize = 7;
+    l.Orientation = 'horizontal';
+    l.Location = 'southoutside';
     xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
     ylabel('resonstruction Error', 'FontSize', 12);
     title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(responseResults.objRange)));

@@ -38,7 +38,7 @@ objDistMax = 6;   % origin 2
 
 % Fixation distance [m]
 % used for eye fixation initialization
-fixDistMin = 0.5; %0.3379;
+fixDistMin = 0.3379;
 fixDistMax = 6; %3.2219 for objDistMax = 2m
 
 % Muscle initialization [%]: correspond now to the minimum and maximum distance
@@ -97,7 +97,7 @@ end
 % 1% = 0.0029 | 2% = 0.0058 | 3% = 0.0087 | 4% = 0.0114 | 5% = 0.0144
 % 6% = 0.0173 | 7% = 0.0203 | 8% = 0.0232 | 9% = 0.0261 | 10% = 0.0289
 % 15% = 0.0435 | 25% = 0.0722 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
-lambdaMet = 0;
+lambdaMet = 0.0087;
 
 % due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
 % lambdaMet needs to be scaled accordingly
@@ -119,7 +119,6 @@ temperature = [0.01, 0.01];                                 % temperature in sof
 % consistency check
 if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
  || (length(stride) ~= length(dsRatio)) ...
- || (length(overlap) ~= length(dsRatio) - 1) ...
  || (length(nBasis) ~= length(dsRatio)) ...
  || (length(nBasisUsed) ~= length(dsRatio)) ...
  || (length(basisSize) ~= length(dsRatio)) ...
@@ -127,6 +126,11 @@ if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
  || (length(temperature) ~= length(dsRatio)))
     sprintf('Error: For usage of #%d scales all respective SC and model parameters needs to have length %d.', ...
             length(dsRatio), length(dsRatio))
+    return;
+end
+
+if (length(dsRatio) > 1 && (length(overlap) ~= length(dsRatio) - 1))
+    sprintf('Error: For usage of #%d scales overlap needs to have length %d.', length(dsRatio) - 1)
     return;
 end
 
