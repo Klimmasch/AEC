@@ -102,14 +102,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % textureFile = 'Textures_vanHaterenTest.mat';
     % textureFile = 'Textures_celine.mat';                      % Celine's images
 
-    % Prepare Textures
-%     texture = load(sprintf('config/%s', textureFile));
-%     texture = texture.texture;
-%     nTextures = length(texture);
-%     if (nTextures < nStim)
-%         sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
-%         nStim = nTextures;
-%     end
 
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
@@ -153,6 +145,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
+    if model.objDistMin == 0.5 && model.objDistMax == 6
+        objRange = [0.5 1 : 6]
+    end
 
     tmpResult1 = zeros(nStim, testInterval + 1);
     tmpResult2 = zeros(nStim, testInterval + 1);
@@ -227,135 +222,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 %     angleMin = min(mfunction2(mfunction2(:, 1) > 0));
 %     angleMax = mfunction(end, 1);
 
-    % Color images for left & right eye
-%     imgRawLeft = uint8(zeros(240, 320, 3));
-%     imgRawRight = uint8(zeros(240, 320, 3));
-%     imgGrayLeft = uint8(zeros(240, 320, 3));
-%     imgGrayRight = uint8(zeros(240, 320, 3));
+
 
     % Image patches cell array (input to model)
     currentView = cell(1, length(model.scModel));
 
-    %%% Helper function that maps {objDist, desiredVergErr} -> {muscleForce, angleInit}
-%     function [mf, angleInit] = getMF(objDist, desVergErr)
-%         % correct vergence angle for given object distance
-%         angleCorrect = 2 * atand(model.baseline / (2 * objDist));
-%         % desired init angle for given vergence error [deg]
-%         angleInit = angleCorrect - desVergErr;
-%         % look up index of angleInit
-%         indAngleInit = find(mfunction(:, 1) <= angleInit + dmf & mfunction(:, 1) >= angleInit - dmf);
-%         mf = mfunction(indAngleInit, 2);
-%         mf = mf(ceil(length(mf) / 2));
-%     end
-
-    % Calculates muscle force for two muscles
-%     function [mf, angleInit] = getMF2(objDist, desVergErr)
-%         % correct vergence angle for given object distance
-%         angleCorrect = 2 * atand(model.baseline / (2 * objDist));
-%         % desired init angle for given vergence error [deg]
-%         angleInit = angleCorrect - desVergErr;
-%         % look up index of angleInit
-%         % if objDist not fixateable with medial rectus, use lateral rectus
-%         if (angleInit >= mfunction(1, 1))
-%             indAngleInit = find(mfunction(:, 1) <= angleInit + dmf & mfunction(:, 1) >= angleInit - dmf);
-%             mf = mfunction(indAngleInit, 2);
-%             mf = [0; mf(ceil(length(mf) / 2))];
-%         else
-%             indAngleInit = find(mfunction2(:, 1) <= angleInit + dmf3 & mfunction2(:, 1) >= angleInit - dmf3);
-%             mf = mfunction2(indAngleInit, 2);
-%             mf = [mf(ceil(length(mf) / 2)); 0];
-%         end
-%     end
-
-    % %%% Helper function for calculating {objDist} -> {minVergErr, maxVergErr}
-    % function [vergErrMin, vergErrMax] = getVergErrMinMax(objDist)
-    %     % correct vergence angle for given object distance
-    %     angleCorrect = 2 * atand(model.baseline / (2 * objDist));
-    %     vergErrMin = angleCorrect - angleMax;
-    %     vergErrMax = angleCorrect - angleMin;
-    % end
-
-    %%% Helper function for calculating {objDist} -> {maxVergErr}
-%     function vergErrMax = getVergErrMax(objDist)
-%         % correct vergence angle for given object distance
-%         angleCorrect = 2 * atand(model.baseline / (2 * objDist));
-%         vergErrMax = angleCorrect - angleMin;
-%     end
-
-    %%% Helper function that maps muscle activities to resulting angle
-%     function angle = getAngle(command)
-%         cmd = (command * 10) + 1;                                       % scale commands to table entries
-%         angle = interp2(degrees.results_deg, cmd(1), cmd(2), 'spline'); % interpolate in table by cubic splines
-%     end
-
-%     function angle = getAngle2(command)
-%         angleIndex = find(mfunction(:, 2) <= command(2) + dmf2 & mfunction(:, 2) >= command(2) - dmf2);
-%         angle = mfunction(angleIndex, 1);
-%         angle = angle(ceil(length(angle) / 2));
-%     end
-
-    %%% Helper function that maps muscle activities to resulting metabolic costs
-    % function tmpMetCost = getMetCost(command)
-    %     cmd = (command * 10) + 1;                                           % scale commands to table entries
-    %     tmpMetCost = interp2(metCosts.results, cmd(1), cmd(2), 'spline');   % interpolate in table by cubic splines
-    % end
-
-    %%% Generates two new images for both eyes
-    % texture:      file path of texture input
-    % eyeAngle:     angle of single eye (rotation from offspring)
-    % objDist:      distance of stimulus
-    % scaleImSize:  scaling factor of stimulus plane [m]
-%     function refreshImages(texture, eyeAngle, objDist, scalingFactor)
-%         simulator.add_texture(1, texture);
-%         simulator.set_params(1, eyeAngle, objDist, 0, scalingFactor);
-%
-%         result1 = simulator.generate_left();
-%         result2 = simulator.generate_right();
-%
-%         imgRawLeft = permute(reshape(result1, ...
-%                                      [size(imgRawLeft, 3), ...
-%                                       size(imgRawLeft, 2), ...
-%                                       size(imgRawLeft, 1)]), ...
-%                                      [3, 2, 1]);
-%
-%         imgRawRight = permute(reshape(result2, ...
-%                                       [size(imgRawRight, 3), ...
-%                                        size(imgRawRight, 2), ...
-%                                        size(imgRawRight, 1)]), ...
-%                                       [3, 2, 1]);
-%
-%         % convert images to gray scale
-%         imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
-%         imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
-%     end
-
-    %%% Generates two new images for both eyes for experimental renderer
-    % textureNumber:    index of stimulus in memory buffer
-    % eyeAngle:         angle of single eye (rotation from offspring)
-    % objDist:          distance of stimulus
-    % scaleImSize:  scaling factor of stimulus plane [m]
-%     function refreshImagesNew(textureNumber, eyeAngle, objDist, scaleImSize)
-%         simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
-%
-%         result1 = simulator.generate_left();
-%         result2 = simulator.generate_right();
-%
-%         imgRawLeft = permute(reshape(result1, ...
-%                                      [size(imgRawLeft, 3), ...
-%                                       size(imgRawLeft, 2), ...
-%                                       size(imgRawLeft, 1)]), ...
-%                                      [3, 2, 1]);
-%
-%         imgRawRight = permute(reshape(result2, ...
-%                                       [size(imgRawRight, 3), ...
-%                                        size(imgRawRight, 2), ...
-%                                        size(imgRawRight, 1)]), ...
-%                                       [3, 2, 1]);
-%
-%         % convert images to gray scale
-%         imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
-%         imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
-%     end
 
     %%% Saturation function that keeps motor commands in [0, 1]
     %   corresponding to the muscelActivity/metabolicCost tables
