@@ -29,8 +29,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
-    textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
+    textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    % textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
@@ -133,8 +133,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     model.notes = [model.notes, fileDescription];
 
     % Save model every #saveInterval training iterations
-    % saveInterval = ceil(model.trainTime / 100);
-    saveInterval = trainTime;
+    saveInterval = ceil(model.trainTime / 100);
+    % saveInterval = trainTime;
 
     % Track the evolution of all basis functions of the respective sparse coders
     trackSCBasisHistory = uint8(0);

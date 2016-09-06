@@ -29,14 +29,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % textureFile = 'Textures_vanHaterenTest.mat';
     % textureFile = 'Textures_celine.mat';                      % Celine's images
 
-    % Prepare Textures
-%     texture = load(sprintf('config/%s', textureFile));
-%     texture = texture.texture;
-%     nTextures = length(texture);
-%     if (nTextures < nStim)
-%         sprintf('The texture file only contains %d images, but I will use them all!', nTextures)
-%         nStim = nTextures;
-%     end
 
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
@@ -80,6 +72,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
+    if model.objDistMin == 0.5 && model.objDistMax == 6
+        objRange = [0.5 1 : 6]
+    end
 
     tmpResult1 = zeros(nStim, testInterval + 1);
     tmpResult2 = zeros(nStim, testInterval + 1);
@@ -900,9 +895,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
     % nBasis
-    resultsOverview = {[model.scModel{1}.nBasis, model.scModel{2}.nBasis]};
+    resultsOverview = {};
     formatSpec = {''};
     for k = 1 : length(model.dsRatio)
+        resultsOverview{k} = model.scModel{k}.nBasis;
         formatSpec = strcat(formatSpec, {'%.0f '});
     end
     formatSpec = strcat(formatSpec, ',');

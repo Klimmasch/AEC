@@ -1187,3 +1187,41 @@ classdef Model < handle
 
     end
 end
+
+%% Not overlapping Patch generation
+% function patchesNoOv = preprocessImageNoOv(img, fovea, downSampling, patchSize)
+%     img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
+%     for i = 1:log2(downSampling)
+%         img = impyramid(img, 'reduce');
+%     end
+
+%     % convert to double
+%     img = double(img);
+
+%     % cut fovea in the center
+%     [h, w, ~] = size(img);
+%     img = img(fix(h / 2 + 1 - fovea / 2) : fix(h / 2 + fovea / 2), ...
+%               fix(w / 2 + 1 - fovea / 2) : fix(w / 2 + fovea / 2));
+
+%     % cut patches and store them as col vectors
+%     % no overlapping patches (for display)
+%     patchesNoOv = im2col(img, [patchSize patchSize], 'distinct');
+% end
+
+%% Generation of random vergence angles according to truncated Laplace distribution
+% function l = truncLaplacian(diversity, range)
+%     % see wikipedia for the generation of random numbers according to the
+%     % LaPlace distribution via the inversion method
+%     r = rand;
+
+%     switch r < 0.5
+%         case 1
+%             l = 1 / diversity * log(2 * r);
+%         case 0
+%             l = -1 / diversity * log(2 * (1 - r));
+%     end
+
+%     if (abs(l) > range)
+%         l = 0;
+%     end
+% end
