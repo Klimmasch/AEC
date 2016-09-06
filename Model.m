@@ -575,7 +575,6 @@ classdef Model < handle
 
             %% Vergence error
             if (~isempty(find(level == 1)))
-                tic
                 % windowSize = 125;
                 % windowSize = 1000;
                 if (this.trainTime < windowSize * this.interval)
@@ -652,12 +651,10 @@ classdef Model < handle
                     % if windowsize > values in vergerr
                     sprintf('Warning: windowSize >= vergerr')
                 end
-                toc
             end
 
             %% Reconstruction Error
             if (~isempty(find(level == 2)))
-                tic
                 try
                     figure;
                     hold on;
@@ -681,12 +678,10 @@ classdef Model < handle
                     % if windowsize > values in recerr_hist
                     sprintf('Warning: windowSize >= recerr_hist')
                 end
-                toc
             end
 
             %% Vergence angle / fixation distance
             if (~isempty(find(level == 3)))
-                tic
                 obsWin = 99; %249; % #last iterations to plot
                 figure;
                 hold on;
@@ -712,12 +707,10 @@ classdef Model < handle
                 % plotpath = sprintf('%s/vergenceAngle', this.savePath);
                 plotpath = sprintf('%s/fixationDistTraining', this.savePath);
                 saveas(gcf, plotpath, 'png');
-                toc
             end
 
             %% Muscel graphs
             if (~isempty(find(level == 4)))
-                tic
                 if (this.rlModel.continuous == 1)
                     ind2 = 1 : 25 : this.trainTime;
                     % windowSize = 1000;
@@ -953,12 +946,10 @@ classdef Model < handle
                         saveas(gcf, plotpath, 'png');
                     end
                 end
-                toc
             end
 
             %% Weights
             if (~isempty(find(level == 5)))
-                tic
                 if (this.rlModel.continuous == 1)
                     % L1 norm
                     figure;
@@ -996,12 +987,10 @@ classdef Model < handle
                     plotpath = sprintf('%s/weightsDevelopment', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 end
-                toc
             end
 
             %% Reward composition
             if (~isempty(find(level == 6)))
-                tic
                 if (this.rlModel.continuous == 1)
                     % figure;
                     % hold on;
@@ -1061,7 +1050,6 @@ classdef Model < handle
                     plotpath = sprintf('%s/rewardHistory', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 end
-                toc
             end
         end
 
