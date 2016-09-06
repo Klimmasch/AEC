@@ -401,8 +401,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                     for iter = 2 : testInterval + 1
                         % update stimuli
-                        % refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);    % stable renderer
-                        model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3);   % experimental renderer
+                        % refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);                    % stable renderer
+                        model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3);  % experimental renderer
 
                         % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
 
@@ -445,7 +445,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                                 command = command + relativeCommand;        % two muscles
                             end
                             command = checkCmd(command);                    % restrain motor commands to [0,1]
-                            angleNew = model.getAngle(command) * 2;               % resulting angle is used for both eyes
+                            angleNew = model.getAngle(command) * 2;         % resulting angle is used for both eyes
                         else
                             angleNew = angleNew + relativeCommand;
                             if (angleNew > angleMax || angleNew < angleMin)
@@ -486,11 +486,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     %             sprintf('%s/anaglyph%d_vergerr_%.2f_img%d.png', imageSavePath, tr3Ind, tmpResult1(stimulusIndex, 11), stimulusIndex));
                     % end
 
-                    if vseIndex == 1 %first vergence error to be tested
+                    if vseIndex == 1        % first vergence error to be tested
                         if (angleDes - angleNew) < vseRange(vseIndex)
                             realyBadImages(1, odIndex, stimulusIndex) = 1;
                         end
-                    elseif vseIndex == 7 %last vergence error to be tested
+                    elseif vseIndex == 7    % last vergence error to be tested
                         if (angleDes - angleNew) > vseRange(vseIndex)
                             realyBadImages(2, odIndex, stimulusIndex) = 1;
                         end
@@ -498,7 +498,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 end
 
                 % final results
-
                 testResult(odIndex, vseIndex, 1 : testInterval + 1) = mean(tmpResult1);                         % vergErr
                 testResult(odIndex, vseIndex, testInterval + 2 : 2 * testInterval + 2) = std(tmpResult1);
                 testResult(odIndex, vseIndex, 2 * testInterval + 3 : 3 * testInterval + 3) = mean(tmpResult2);  % deltaMF

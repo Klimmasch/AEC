@@ -15,9 +15,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % i.e. trained at first 100k iterations with useLearnedFile = [0, 0], then decided to continue training for 100k more
     % iterations, then the overall train time for the model is 200k and you set useLearnedFile = [1, 1] and execute with
     % OES2Muscles(200000, randomizationSeed, fileDescription)
-    useLearnedFile = [0, 0];
-    learnedFile = '';
-%     learnedFile = '/home/klimmasch/projects/results/model_25-Aug-2016_18:17:19_5000000_1_bmsf_increasedInit_newImages_Od05-6_400BF_10MC/model.mat';
+    useLearnedFile = [1, 1];
+%     learnedFile = '';
+    learnedFile = '/home/lelais/Documents/MATLAB/results/model_02-Sep-2016_14:59:16_5000000_1_redo_bf400_metcost_0.0087_fixinit_0.3_6_oldinit/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';       % McGill man made database
@@ -354,8 +354,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         % [command, angleNew] = getMF2(initDist, 0);
         fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
-        % [command, angleNew] = model.getMF2(fixationDist, 0);
-        [command, angleNew] = model.getMFedood(fixationDist, 0, false);
+        [command, angleNew] = model.getMF2(fixationDist, 0);
+%         [command, angleNew] = model.getMFedood(fixationDist, 0, false);
 
         % testing input distribution
         % nSamples = 10000;
@@ -524,7 +524,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     % plot results
     if (plotIt(1) == 1)
-        model.allPlotSave();
+        model.allPlotSave([1 : 6]);
     end
 
     %%% Testing procedure
