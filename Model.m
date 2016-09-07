@@ -729,7 +729,7 @@ classdef Model < handle
                         relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(ind2, 2))];
                         figHandle = figure('OuterPosition', [100, 100, 768, 1024]); % static figure resolution/size
 
-                        % Temporal Rectus
+                        % Lateral Rectus
                         % Total muscle commands
                         subplot(3, 2, 1);
                         hold on;
@@ -828,8 +828,8 @@ classdef Model < handle
                         hl5.Color = [rand, rand, rand];
                         hp5.FaceColor = hl5.Color;
                         axis([windowSize3 * 2, length(metCost_hist_sma), ...
-                              min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.9, ...
-                              max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.1]);
+                              min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.95, ...
+                              max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.05]);
 
                         xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 8);
                         ylabel('Value', 'FontSize', 12);
@@ -923,25 +923,56 @@ classdef Model < handle
                         if tmpOffset > tmpEnd
                             tmpOffset = tmpEnd;
                         end
+
                         % Total
                         figure;
                         hold on;
-                        scatter(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                        % scatter(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                        histHandle = hist3(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, :), [40, 40]);
+
                         corrl = corr(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2));
+                        xb = linspace(min(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1)), max(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1)), size(histHandle, 1));
+                        yb = linspace(min(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2)), max(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2)), size(histHandle, 1));
+
                         xlabel('Lateral rectus [%]', 'FontSize', 12);
                         ylabel('Medial rectus [%]', 'FontSize', 12);
                         title(strcat('Total Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
+
+                        pcHandle = pcolor(xb, yb, histHandle);
+                        axis([0, xb(end), 0, yb(end)]);
+                        shading interp;
+                        set(pcHandle, 'EdgeColor', 'none');
+
+                        colormap(createCM());
+                        cb = colorbar();
+                        cb.Label.String = '# Occurences';
+
                         plotpath = sprintf('%s/muscleGraphsScatterTotalTraining', this.savePath);
                         saveas(gcf, plotpath, 'png');
 
                         % Delta
                         figure;
                         hold on;
-                        scatter(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                        % scatter(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                        histHandle = hist3(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, :), [40, 40]);
+
                         corrl = corr(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2));
+                        xb = linspace(min(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1)), max(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1)), size(histHandle, 1));
+                        yb = linspace(min(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2)), max(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2)), size(histHandle, 1));
+
                         xlabel('Lateral rectus [%]', 'FontSize', 12);
                         ylabel('Medial rectus [%]', 'FontSize', 12);
                         title(strcat('\Delta Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
+
+                        pcHandle = pcolor(xb, yb, histHandle);
+                        axis([xb(1), xb(end), yb(1), yb(end)]);
+                        shading interp;
+                        set(pcHandle, 'EdgeColor', 'none');
+
+                        colormap(createCM());
+                        cb = colorbar();
+                        cb.Label.String = '# Occurences';
+
                         plotpath = sprintf('%s/muscleGraphsScatterDeltaTraining', this.savePath);
                         saveas(gcf, plotpath, 'png');
                     end

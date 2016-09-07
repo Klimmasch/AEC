@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_02-Sep-2016_14:59:16_5000000_1_redo_bf400_metcost_0.0087_fixinit_0.3_6_oldinit/model.mat';
+    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_02-Sep-2016_14:25:49_5000000_1_bmsf_bf400_metcost_0_fixinit_0.5_6_newMuscleinit_no_boundaries/modelAt4500000/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -29,8 +29,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-    textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
-    % textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
+    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
@@ -60,7 +60,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 2;
+    nStimTest = 40;
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)

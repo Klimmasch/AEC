@@ -73,7 +73,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
     if model.objDistMin == 0.5 && model.objDistMax == 6
-        objRange = [0.5 1 : 6]
+        objRange = [0.5 1 : 6];
     end
 
     tmpResult1 = zeros(nStim, testInterval + 1);
@@ -86,7 +86,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     testResult3 = zeros(length(objRange) * 7 * nStim, testInterval); % ALL single values
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
     testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
-    testResult6 = zeros(100, 2);
+    testResult6 = zeros(testInterval * 10, 2);
 
     % here, the images are safed that start at the maximal vergence errors (neg & pos) and that end up worse than they started
     % this tabular is going to be safed inside the models folder and
@@ -319,15 +319,16 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         testResult4(testResult4 == 0) = NaN;
 
         %% Object distance vs. Fixation distance
-        objRange = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, length(testResult6) / testInterval);
-        objRange(1) = model.objDistMin;
-        objRange(end) = model.objDistMax;
+        objRange2 = [model.objDistMin, ...
+                     model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, (length(testResult6) / testInterval) - 2), ...
+                     model.objDistMax];
+
         tmpcnt = 1;
         for odIndex = 1 : length(testResult6) / testInterval
             sprintf('Level 3/3 Test iteration = %d/%d', odIndex, length(testResult6) / testInterval)
 
             % vergence start error
-            vergMax = model.getVergErrMax(objRange(odIndex));
+            vergMax = model.getVergErrMax(objRange2(odIndex));
             if vergMax > 2
                 vergMax = 2;
             end
@@ -335,15 +336,15 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             vseRange = [vseRange(1 : 3), vseRange(5 : end)];
 
             % Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
-            % [command, angleNew] = model.getMF2(objRange(i), vseRange(randi(length(vseRange))));
+            % [command, angleNew] = model.getMF2(objRange2(i), vseRange(randi(length(vseRange))));
 
             % Uniform muscle activation distribution for two muscles
-            [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(randi(length(vseRange))), false);
+            [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))), false);
 
             currentTexture = randi(length(nStim));
 
             for iter = 1 : testInterval
-                model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3);
+                model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange2(odIndex), 3);
 
                 % Image patch generation
                 for i = 1 : length(model.scModel)
@@ -384,7 +385,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                         angleNew = model.vergAngleFixMin + (model.vergAngleFixMax - model.vergAngleFixMin) * rand(1, 1);
                     end
                 end
-                testResult6(tmpcnt, :) = [objRange(odIndex), (model.baseline / 2) / tand(angleNew / 2)];
+                testResult6(tmpcnt, :) = [objRange2(odIndex), (model.baseline / 2) / tand(angleNew / 2)];
                 tmpcnt = tmpcnt + 1;
             end
         end
@@ -839,8 +840,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         if (model.rlModel.CActor.output_dim >= 2)
             figure;
             hold on;
-            scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            % scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            histHandle = hist3(model.testResult5(:, 1 : 2), [40, 40]);
+
             corrl = corr(model.testResult5(:, 1), model.testResult5(:, 2));
+            xb = linspace(min(model.testResult5(:, 1)), max(model.testResult5(:, 1)), size(histHandle, 1));
+            yb = linspace(min(model.testResult5(:, 2)), max(model.testResult5(:, 2)), size(histHandle, 1));
+
+            pcHandle = pcolor(xb, yb, histHandle);
+            axis([0, xb(end), 0, yb(end)]);
+            shading interp;
+            set(pcHandle, 'EdgeColor', 'none');
+
+            colormap(createCM());
+            cb = colorbar();
+            cb.Label.String = '# Occurences';
+
             xlabel('Lateral rectus [%]', 'FontSize', 12);
             ylabel('Medial rectus [%]', 'FontSize', 12);
             title(strcat('Total Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
@@ -850,8 +865,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % Delta
             figure;
             hold on;
-            scatter(model.testResult5(:, 3), model.testResult5(:, 4), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            % scatter(model.testResult5(:, 3), model.testResult5(:, 4), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            histHandle = hist3(model.testResult5(:, 3 : 4), [40, 40]);
+
             corrl = corr(model.testResult5(:, 3), model.testResult5(:, 4));
+            xb = linspace(min(model.testResult5(:, 3)), max(model.testResult5(:, 3)), size(histHandle, 1));
+            yb = linspace(min(model.testResult5(:, 4)), max(model.testResult5(:, 4)), size(histHandle, 1));
+
+            pcHandle = pcolor(xb, yb, histHandle);
+            axis([xb(1), xb(end), yb(1), yb(end)]);
+            shading interp;
+            set(pcHandle, 'EdgeColor', 'none');
+
+            colormap(createCM());
+            cb = colorbar();
+            cb.Label.String = '# Occurences';
+
             xlabel('Lateral rectus [%]', 'FontSize', 12);
             ylabel('Medial rectus [%]', 'FontSize', 12);
             title(strcat('\Delta Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
@@ -859,7 +888,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             saveas(gcf, plotpath, 'png');
         end
 
-        %% Vergence angle / fixation distance
+        %% Object distance vs. fixation distance
         figure;
         hold on;
         grid on;
@@ -867,9 +896,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         plot(model.testResult6(:, 2), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
 
         xlabel(sprintf('Iteration # (interval=%d)', testInterval), 'FontSize', 12);
-        % ylabel('Angle [deg]', 'FontSize', 12);
         ylabel('Distance [m]', 'FontSize', 12);
-        ylim([model.objDistMin - 1, model.objDistMax + 1]);
+        ylim([0, model.objDistMax + 1]);
         legend('desired (ObjDist)', 'actual (FixDist)');
         title('Vergence movements at testing');
         plotpath = sprintf('%s/fixationDistTesting', imageSavePath);
