@@ -947,7 +947,7 @@ classdef Model < handle
                         cb = colorbar();
                         cb.Label.String = '# Occurences';
 
-                        plotpath = sprintf('%s/muscleGraphsScatterTotalTraining', this.savePath);
+                        plotpath = sprintf('%s/muscleTotalCmdTraining', this.savePath);
                         saveas(gcf, plotpath, 'png');
 
                         % Delta
@@ -973,7 +973,7 @@ classdef Model < handle
                         cb = colorbar();
                         cb.Label.String = '# Occurences';
 
-                        plotpath = sprintf('%s/muscleGraphsScatterDeltaTraining', this.savePath);
+                        plotpath = sprintf('%s/muscleDeltaCmdTraining', this.savePath);
                         saveas(gcf, plotpath, 'png');
                     end
                 end
