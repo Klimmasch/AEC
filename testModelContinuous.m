@@ -14,79 +14,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     measureTime = false;
 
-    % Results overview table generation
-    resultsFN = strcat(model.savePath, '/results.ods'); % file name
-    resultsFID = fopen(resultsFN, 'a');                 % file descriptor
-
-    resultsOverview = cell(1);                          % results value vector
-    resultsOverview{end} = '';
-
-    if (model.trainTime >= 1e6)
-        resultsOverview{end + 1} = strcat(num2str(model.trainedUntil / 1e6), 'mio');
-    elseif (model.trainTime >= 1e3)
-        resultsOverview{end + 1} = strcat(num2str(model.trainedUntil / 1e3), 'k');
-    else
-        resultsOverview{end + 1} = num2str(model.trainedUntil);
-    end
-    formatSpec = '%s, %s,';
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
-    resultsOverview = cell(1);
-    formatSpec = 'd';
-    for i = 1 : length(model.scModel)
-        resultsOverview{i} = model.scModel{i}.nBasis;
-        if i > 1
-            formatSpec = strcat(formatSpec, ', d');
-        end
-    end
-    % resultsOverview = {model.scModel{1}.nBasis, model.scModel{2}.nBasis};
-    % formatSpec = '%d, %d,';
-
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
-    resultsOverview = {model.lambdaRec, model.lambdaMuscleFB, model.lambdaMet};
-    formatSpec = '%.0f, %.4f, %.4f,';
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
-    resultsOverview = {model.pxFieldOfView .* model.dsRatio};
-    formatSpec = {''};
-    for k = 1 : length(model.dsRatio)
-        formatSpec = strcat(formatSpec, {'%.0f '});
-    end
-    formatSpec = strcat(formatSpec, ',');
-    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
-
-    resultsOverview = {model.dsRatio};
-    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
-
-    resultsOverview = {model.stride / model.patchSize};
-    formatSpec = strrep(formatSpec, '0', '1');
-    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
-
-    resultsOverview = {model.rlModel.CCritic.alpha_v, model.rlModel.CActor.beta_p, model.scModel{1}.eta};
-    formatSpec = '%.2f, %.2f, %.2f,';
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
-    resultsOverview = {model.rlModel.weight_range .* ...
-                       [model.rlModel.CCritic.input_dim, ...
-                       (model.rlModel.CActor.input_dim * model.rlModel.CActor.hidden_dim), ...
-                       (model.rlModel.CActor.hidden_dim * model.rlModel.CActor.output_dim)]};
-    formatSpec = '%.0f %.0f %.0f,';
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
-    resultsOverview = {model.rlModel.CActor.regularizer};
-    formatSpec = '%.4f,';
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
-    resultsOverview = {model.muscleInitMax};
-    formatSpec = '%.4f %.4f,';
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
-    % column fill
-    resultsOverview = {'', '', '', ''};
-    formatSpec = '%s, %s, %s, %s,';
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
     % Vergence error resolution for 2nd testing procedure
     % Needs to be odd number to include vergErr = 0
     test2Resolution = 101;
@@ -159,74 +86,15 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     testResult3 = zeros(length(objRange) * 7 * nStim, testInterval); % ALL single values
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
     testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
-    testResult6 = zeros(100, 2);
+    testResult6 = zeros(testInterval * 10, 2);
 
-    realyBadImages = zeros(2, length(objRange), nStim); % here, the images are safed that start at the maximal vergence errors (neg & pos) and that end up worse than they started
-    %this tabular is going to be safed inside the models folder and
-    %histograms will be generated
-
-%     degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
-    % metCosts = load('MetabolicCosts.mat');      %loads tabular for metabolic costs as 'results'
-
-    % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
-%     resolution = 100001;
-%     approx = spline(1 : 11, degrees.results_deg(:, 1));
-
-%     xValPos = ppval(approx, 1 : 0.0001 : 11)';
-%     yValPos = linspace(0, 1, resolution)';
-
-    % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
-    % yValNeg = linspace(-1, 0, resolution)';
-
-    % mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
-%     mfunction = [xValPos, yValPos];
-%     mfunction(:, 1) = mfunction(:, 1) * 2;  % angle for two eyes
-%     dmf = abs(diff(mfunction(1 : 2, 1)));   % delta in angle
-%     dmf2 = diff(mfunction(1 : 2, 2));       % delta in mf
-%     indZero = find(mfunction(:, 2) == 0);   % MF == 0_index
-
-%     approx = spline(1 : 11, degrees.results_deg(1, :));
-%     xValPos = ppval(approx, 1 : 0.0001 : 11)';
-%     yValPos = linspace(0, 1, resolution)';
-
-    % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
-    % yValNeg = linspace(-1, 0, resolution)';
-
-%     mfunction2 = [xValPos, yValPos];
-%     mfunction2(:, 1) = mfunction2(:, 1) * 2;    % angle for two eyes
-%     dmf3 = abs(diff(mfunction2(1 : 2, 1)));     % delta in angle
-%     dmf4 = diff(mfunction2(1 : 2, 2));          % delta in mf
-%     indZero = find(mfunction2(:, 2) == 0);      % MF == 0_index
-
-    %%% Perfect Response function
-    % indMaxFix = find(mfunction(:, 1) <= model.vergAngleFixMin + dmf & mfunction(:, 1) >= model.vergAngleFixMin - dmf); % MF(vergAngleFixMin)_index
-    % indMaxFix = indMaxFix(1);
-    % indMinFix = find(mfunction(:, 1) <= model.vergAngleFixMax + dmf & mfunction(:, 1) >= model.vergAngleFixMax - dmf); % MF(vergAngleFixMax)_index
-    % indMinFix = indMinFix(1);
-
-    % perfect_response := [max_fixation_x, max_fixation_y, min_fixation_x, min_fixation_y]
-    % x = vergenceError, y = deltaMuscelForce
-    % perfectResponseMaxFix = [(mfunction(indMaxFix, 1) - flipud(mfunction(indMaxFix : end, 1))), ...
-    %                          (mfunction(indMaxFix, 2) - flipud(mfunction(indMaxFix : end, 2))); ...
-    %                          (mfunction(indMaxFix, 1) - flipud(mfunction(indZero : indMaxFix - 1, 1))), ...
-    %                          (mfunction(indMaxFix, 2) - flipud(mfunction(indZero : indMaxFix - 1, 2)))];
-
-    % perfectResponseMinFix = [(mfunction(indMinFix, 1) - flipud(mfunction(indMinFix : end, 1))), ...
-    %                          (mfunction(indMinFix, 2) - flipud(mfunction(indMinFix : end, 2))); ...
-    %                          (mfunction(indMinFix, 1) - flipud(mfunction(indZero : indMinFix - 1, 1))), ...
-    %                          (mfunction(indMinFix, 2) - flipud(mfunction(indZero : indMinFix - 1, 2)))];
-
-    % perfectResponse = [perfectResponseMaxFix, perfectResponseMinFix];
-
-    % minimal and maximal angle that can be reached by one-dimensional muscle commands
-%     angleMin = min(mfunction2(mfunction2(:, 1) > 0));
-%     angleMax = mfunction(end, 1);
-
-
+    % here, the images are safed that start at the maximal vergence errors (neg & pos) and that end up worse than they started
+    % this tabular is going to be safed inside the models folder and
+    % histograms will be generated
+    realyBadImages = zeros(2, length(objRange), nStim);
 
     % Image patches cell array (input to model)
     currentView = cell(1, length(model.scModel));
-
 
     %%% Saturation function that keeps motor commands in [0, 1]
     %   corresponding to the muscelActivity/metabolicCost tables
@@ -243,6 +111,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     if (measureTime == true)
         tic;
     end
+
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
         for odIndex = 1 : length(objRange)
@@ -266,9 +135,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     % currentTexture = texture{stimulusIndex};  % stable renderer
                     currentTexture = stimulusIndex;             % experimental renderer
 
-                    % command(1) = 0;
-                    % [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
-                    [command, angleNew] = model.getMF2(objRange(odIndex), vseRange(vseIndex));
+                    % Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
+                    % [command, angleNew] = model.getMF2(objRange(odIndex), vseRange(vseIndex));
+
+                    % Uniform muscle activation distribution for two muscles
+                    [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex), false);
 
                     for iter = 2 : testInterval + 1
                         % update stimuli
@@ -397,9 +268,13 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 if (model.getVergErrMax(objRange(odIndex)) < vseRange(vseIndex))
                     continue
                 end
-                % command(1) = 0;
-                % [command(2), angleNew] = getMF(objRange(odIndex), vseRange(vseIndex));
-                [command, angleNew] = model.getMF2(objRange(odIndex), vseRange(vseIndex));
+
+                % Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
+                % [command, angleNew] = model.getMF2(objRange(odIndex), vseRange(vseIndex));
+
+                % Uniform muscle activation distribution for two muscles
+                [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex), false);
+
                 for stimulusIndex = 1 : nStim
                     % update stimuli
                     % currentTexture = texture{stimulusIndex};                              % stable renderer
@@ -444,28 +319,32 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         testResult4(testResult4 == 0) = NaN;
 
         %% Object distance vs. Fixation distance
-        tmpcnt = 1;
-        for i = 1 : length(testResult6) / testInterval
-            sprintf('Level 3/3 Test iteration = %d/%d', i, length(testResult6) / testInterval)
+        objRange2 = [model.objDistMin, ...
+                     model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, (length(testResult6) / testInterval) - 2), ...
+                     model.objDistMax];
 
-            objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
-            angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
+        tmpcnt = 1;
+        for odIndex = 1 : length(testResult6) / testInterval
+            sprintf('Level 3/3 Test iteration = %d/%d', odIndex, length(testResult6) / testInterval)
 
             % vergence start error
-            vergMax = model.getVergErrMax(objDist);
+            vergMax = model.getVergErrMax(objRange2(odIndex));
             if vergMax > 2
                 vergMax = 2;
             end
             vseRange = [linspace(-2, 0, 4), linspace(0, vergMax, 4)];
             vseRange = [vseRange(1 : 3), vseRange(5 : end)];
 
-            [command, angleNew] = model.getMF2(objDist, vseRange(randi(length(vseRange))));
-            % [command, angleNew] = model.getMFedood(objDist, vseRange(randi(length(vseRange))), false);
+            % Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
+            % [command, angleNew] = model.getMF2(objRange2(i), vseRange(randi(length(vseRange))));
+
+            % Uniform muscle activation distribution for two muscles
+            [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))), false);
 
             currentTexture = randi(length(nStim));
 
-            for j = 1 : testInterval
-                model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3);
+            for iter = 1 : testInterval
+                model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange2(odIndex), 3);
 
                 % Image patch generation
                 for i = 1 : length(model.scModel)
@@ -506,7 +385,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                         angleNew = model.vergAngleFixMin + (model.vergAngleFixMax - model.vergAngleFixMin) * rand(1, 1);
                     end
                 end
-                testResult6(tmpcnt, :) = [objDist, (model.baseline / 2) / tand(angleNew / 2)];
+                testResult6(tmpcnt, :) = [objRange2(odIndex), (model.baseline / 2) / tand(angleNew / 2)];
                 tmpcnt = tmpcnt + 1;
             end
         end
@@ -609,58 +488,58 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         lineHandles = zeros(1, length(objRange));
 
         % actual response
-        xmin = 0;
-        xmax = 0;
-        for odIndex = 1 : length(objRange)
-            % delta_mf_t+1(vergAngle_t)
-            % hl3 = errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
-            %                reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
-            %                reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
-            %                'DisplayName', sprintf('%.2fm objDist', objRange(odIndex)), 'Marker', '*', 'MarkerSize', 2.5, ...
-            %                'color', [rand, rand, rand], 'LineWidth', 0.7, 'LineStyle', 'none');
+        % xmin = 0;
+        % xmax = 0;
+        % for odIndex = 1 : length(objRange)
+        %     % delta_mf_t+1(vergAngle_t)
+        %     % hl3 = errorbar(reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
+        %     %                reshape(reshape(model.testResult(odIndex, :, 24 : 33), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
+        %     %                reshape(reshape(model.testResult(odIndex, :, 35 : 44), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval]), ...
+        %     %                'DisplayName', sprintf('%.2fm objDist', objRange(odIndex)), 'Marker', '*', 'MarkerSize', 2.5, ...
+        %     %                'color', [rand, rand, rand], 'LineWidth', 0.7, 'LineStyle', 'none');
 
-            tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 2 * testInterval + 4 : 3 * testInterval + 3), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
-                               reshape(reshape(model.testResult(odIndex, :, 3 * testInterval + 5 : 4 * testInterval + 4), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])']);
+        %     tmpMat = sortrows([reshape(reshape(model.testResult(odIndex, :, 1 : testInterval), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
+        %                        reshape(reshape(model.testResult(odIndex, :, 2 * testInterval + 4 : 3 * testInterval + 3), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])', ...
+        %                        reshape(reshape(model.testResult(odIndex, :, 3 * testInterval + 5 : 4 * testInterval + 4), [size(model.testResult, 2), testInterval])', [1, size(model.testResult, 2) * testInterval])']);
 
-            [hl3, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
+        %     [hl3, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
 
-            hl3.DisplayName = sprintf('%.2fm objDist', objRange(odIndex));
-            hl3.Marker = '*';
-            hl3.MarkerSize = 2.5;
-            hl3.Color = [rand, rand, rand];
-            hp.FaceColor = hl3.Color;
-            hl3.LineStyle = 'none';
-            % outlinebounds(hl3, hp);
-            % lineHandles(odIndex + 2) = hl3;
-            lineHandles(odIndex) = hl3;
+        %     hl3.DisplayName = sprintf('%.2fm objDist', objRange(odIndex));
+        %     hl3.Marker = '*';
+        %     hl3.MarkerSize = 2.5;
+        %     hl3.Color = [rand, rand, rand];
+        %     hp.FaceColor = hl3.Color;
+        %     hl3.LineStyle = 'none';
+        %     % outlinebounds(hl3, hp);
+        %     % lineHandles(odIndex + 2) = hl3;
+        %     lineHandles(odIndex) = hl3;
 
-            % for axis adjustment
-            tmp = [min(tmpMat(:, 1)), max(tmpMat(:, 1))];
-            if (xmin > tmp(1))
-                xmin = tmp(1);
-            end
-            if (xmax < tmp(2))
-                xmax = tmp(2);
-            end
-        end
-        l = legend(lineHandles);
-        l.Location = 'southeast';
-        l.Box = 'off';
-
-        % adjust axis to actual response ranges + offset
-        ymin = -0.1;
-        ymax = 0.1;
-        plot([xmin * 1.1, xmax * 1.1], [0, 0], 'k', 'LineWidth', 0.2);
-        plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.2);
-        axis([xmin * 1.1, xmax * 1.1, ymin, ymax]);
-        xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
-        ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
-        title('\Delta MF(verg_{err}) response at Testing procedure');
-        % if (~isempty(model.savePath))
-            plotpath = sprintf('%s/deltaMFasFktVerErr', imageSavePath);
-            saveas(gcf, plotpath, 'png');
+        %     % for axis adjustment
+        %     tmp = [min(tmpMat(:, 1)), max(tmpMat(:, 1))];
+        %     if (xmin > tmp(1))
+        %         xmin = tmp(1);
+        %     end
+        %     if (xmax < tmp(2))
+        %         xmax = tmp(2);
+        %     end
         % end
+        % l = legend(lineHandles);
+        % l.Location = 'southeast';
+        % l.Box = 'off';
+
+        % % adjust axis to actual response ranges + offset
+        % ymin = -0.1;
+        % ymax = 0.1;
+        % plot([xmin * 1.1, xmax * 1.1], [0, 0], 'k', 'LineWidth', 0.2);
+        % plot([0, 0], [ymin, ymax], 'k', 'LineWidth', 0.2);
+        % axis([xmin * 1.1, xmax * 1.1, ymin, ymax]);
+        % xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
+        % ylabel('\Delta MF \in [-1, 1]', 'FontSize', 12);
+        % title('\Delta MF(verg_{err}) response at Testing procedure');
+        % % if (~isempty(model.savePath))
+        %     plotpath = sprintf('%s/deltaMFasFktVerErr', imageSavePath);
+        %     saveas(gcf, plotpath, 'png');
+        % % end
 
         % critic's response
         figure;
@@ -822,19 +701,15 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         % end
         % l = legend(handleArray, captions);
 
-        % if(version('-release') == '2015b')
-        %     l.FontSize = 7;
-        %     l.Orientation = 'horizontal';
-        %     l.Location = 'southoutside';
-        % end
+        % l.FontSize = 7;
+        % l.Orientation = 'horizontal';
+        % l.Location = 'southoutside';
         % xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
         % ylabel('Resonstruction Error', 'FontSize', 12);
         % title(sprintf('Reconstruction Error over different disparities\nobject distances: [%s]', num2str(objRange)));
 
-        % if (~ isempty(model.savePath))
-        %     plotpath = sprintf('%s/recErrVsVergErr[%.2fm,%.2fm].png', imageSavePath, objRange(1), objRange(end));
-        %     saveas(gcf, plotpath, 'png');
-        % end
+        % plotpath = sprintf('%s/recErrVsVergErr[%.2fm,%.2fm].png', imageSavePath, objRange(1), objRange(end));
+        % saveas(gcf, plotpath, 'png');
 
         % reconstruction error fine
         vseRange = linspace(-1, 1, test2Resolution);
@@ -863,21 +738,17 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             tmpMin = vseRange(tmpMean == min(tmpMean));
 
             l = legend(handleArray, captions);
-            if(version('-release') == '2015b')
-                l.FontSize = 7;
-                l.Orientation = 'horizontal';
-                l.Location = 'southoutside';
-            end
+            l.FontSize = 7;
+            l.Orientation = 'horizontal';
+            l.Location = 'southoutside';
             xlim([vseRange(1) * 1.1, vseRange(end) * 1.1]);
             % xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
             xlabel('Vergence Error [deg]', 'FontSize', 12);
             ylabel('Resonstruction Error', 'FontSize', 12);
             title(sprintf('Reconstruction Error vs. Vergence Error\nobjDist = %.2fm, TotalMin@vergErr = %.4f°', objRange(odIndex), tmpMin));
 
-            % if (~ isempty(model.savePath))
-                plotpath = sprintf('%s/recErrVsVergErrFine[%.2fm].png', imageSavePath, objRange(odIndex));
-                saveas(gcf, plotpath, 'png');
-            % end
+            plotpath = sprintf('%s/recErrVsVergErrFine[%.2fm].png', imageSavePath, objRange(odIndex));
+            saveas(gcf, plotpath, 'png');
         end
 
         % Total error
@@ -909,11 +780,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         plotpath = sprintf('%s/totalError', imageSavePath);
         saveas(gcf, plotpath, 'png');
         % end
-
-        % results vector
-        resultsOverview = {sqrt(mean(model.testResult3(:, testInterval) .^ 2)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4};
-        formatSpec = '%.4f, %.4f, %.4f,';
-        fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
         %% Check for bias at 0° vergence start error
         if (nStim == 0)
@@ -964,20 +830,32 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         % else
         %     xlabel('Iteration step', 'FontSize', 12);
         % end
-        suptitle(sprintf('Model bias with 0° vergence start error and total\nafter %d iterations for %d stimuli', ...
+        suptitle(sprintf('Model bias at testing\n 0° vergence start error & total performance\nafter %d iterations for %d stimuli', ...
                          testInterval, nStim));
-        % if (~isempty(model.savePath))
-            plotpath = sprintf('%s/ModelBiasAt0VergErr', imageSavePath);
-            saveas(gcf, plotpath, 'png');
-        % end
+        plotpath = sprintf('%s/ModelBiasAt0VergErr', imageSavePath);
+        saveas(gcf, plotpath, 'png');
 
         %%% Muscle correlation check
         % Total
         if (model.rlModel.CActor.output_dim >= 2)
             figure;
             hold on;
-            scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            % scatter(model.testResult5(:, 1), model.testResult5(:, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            histHandle = hist3(model.testResult5(:, 1 : 2), [40, 40]);
+
             corrl = corr(model.testResult5(:, 1), model.testResult5(:, 2));
+            xb = linspace(min(model.testResult5(:, 1)), max(model.testResult5(:, 1)), size(histHandle, 1));
+            yb = linspace(min(model.testResult5(:, 2)), max(model.testResult5(:, 2)), size(histHandle, 1));
+
+            pcHandle = pcolor(xb, yb, histHandle);
+            axis([0, xb(end), 0, yb(end)]);
+            shading interp;
+            set(pcHandle, 'EdgeColor', 'none');
+
+            colormap(createCM());
+            cb = colorbar();
+            cb.Label.String = '# Occurences';
+
             xlabel('Lateral rectus [%]', 'FontSize', 12);
             ylabel('Medial rectus [%]', 'FontSize', 12);
             title(strcat('Total Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
@@ -987,8 +865,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % Delta
             figure;
             hold on;
-            scatter(model.testResult5(:, 3), model.testResult5(:, 4), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            % scatter(model.testResult5(:, 3), model.testResult5(:, 4), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+            histHandle = hist3(model.testResult5(:, 3 : 4), [40, 40]);
+
             corrl = corr(model.testResult5(:, 3), model.testResult5(:, 4));
+            xb = linspace(min(model.testResult5(:, 3)), max(model.testResult5(:, 3)), size(histHandle, 1));
+            yb = linspace(min(model.testResult5(:, 4)), max(model.testResult5(:, 4)), size(histHandle, 1));
+
+            pcHandle = pcolor(xb, yb, histHandle);
+            axis([xb(1), xb(end), yb(1), yb(end)]);
+            shading interp;
+            set(pcHandle, 'EdgeColor', 'none');
+
+            colormap(createCM());
+            cb = colorbar();
+            cb.Label.String = '# Occurences';
+
             xlabel('Lateral rectus [%]', 'FontSize', 12);
             ylabel('Medial rectus [%]', 'FontSize', 12);
             title(strcat('\Delta Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
@@ -996,30 +888,113 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             saveas(gcf, plotpath, 'png');
         end
 
-        %% Vergence angle / fixation distance
+        %% Object distance vs. fixation distance
         figure;
         hold on;
         grid on;
         plot(model.testResult6(:, 1), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
         plot(model.testResult6(:, 2), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
 
-        xlabel(sprintf('Iteration # (interval=%d)', model.interval), 'FontSize', 12);
-        % ylabel('Angle [deg]', 'FontSize', 12);
+        xlabel(sprintf('Iteration # (interval=%d)', testInterval), 'FontSize', 12);
         ylabel('Distance [m]', 'FontSize', 12);
-        ylim([model.objDistMin - 1, model.objDistMax + 1]);
+        ylim([0, model.objDistMax + 1]);
         legend('desired (ObjDist)', 'actual (FixDist)');
         title('Vergence movements at testing');
         plotpath = sprintf('%s/fixationDistTesting', imageSavePath);
         saveas(gcf, plotpath, 'png');
-
-        % save remaining results table
-        resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(imageSavePath)};
-        formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n';
-        fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
-        % close file
-        fclose(resultsFID);
     end
+
+    % Results overview table generation
+    resultsFN = strcat(model.savePath, '/results.ods'); % file name
+    resultsFID = fopen(resultsFN, 'a');                 % file descriptor
+
+    resultsOverview = cell(1);                          % results value vector
+    resultsOverview{end} = '';
+
+    % traintime
+    if (model.trainTime >= 1e6)
+        resultsOverview{end + 1} = strcat(num2str(model.trainedUntil / 1e6), 'mio');
+    elseif (model.trainTime >= 1e3)
+        resultsOverview{end + 1} = strcat(num2str(model.trainedUntil / 1e3), 'k');
+    else
+        resultsOverview{end + 1} = num2str(model.trainedUntil);
+    end
+    formatSpec = '%s, %s,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % nBasis
+    resultsOverview = {};
+    formatSpec = {''};
+    for k = 1 : length(model.dsRatio)
+        resultsOverview{k} = model.scModel{k}.nBasis;
+        formatSpec = strcat(formatSpec, {'%.0f '});
+    end
+    formatSpec = strcat(formatSpec, ',');
+    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
+
+    % lambdas
+    resultsOverview = {model.lambdaRec, model.lambdaMuscleFB, model.lambdaMet};
+    formatSpec = '%.0f, %.4f, %.4f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % field of view
+    resultsOverview = {model.pxFieldOfView .* model.dsRatio};
+    formatSpec = {''};
+    for k = 1 : length(model.dsRatio)
+        formatSpec = strcat(formatSpec, {'%.0f '});
+    end
+    formatSpec = strcat(formatSpec, ',');
+    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
+
+    % dsRatio
+    resultsOverview = {model.dsRatio};
+    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
+
+    % stride
+    resultsOverview = {model.stride / model.patchSize};
+    formatSpec = strrep(formatSpec, '0', '1');
+    fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
+
+    % learning rates
+    resultsOverview = {model.rlModel.CCritic.alpha_v, model.rlModel.CActor.beta_p, model.scModel{1}.eta};
+    formatSpec = '%.2f, %.2f, %.2f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % weight init
+    resultsOverview = {model.rlModel.weight_range .* ...
+                       [model.rlModel.CCritic.input_dim, ...
+                       (model.rlModel.CActor.input_dim * model.rlModel.CActor.hidden_dim), ...
+                       (model.rlModel.CActor.hidden_dim * model.rlModel.CActor.output_dim)]};
+    formatSpec = '%.0f %.0f %.0f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % regularizer
+    resultsOverview = {model.rlModel.CActor.regularizer};
+    formatSpec = '%.4f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % muscle init
+    resultsOverview = {model.muscleInitMax};
+    formatSpec = '%.4f %.4f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % column fill
+    resultsOverview = {'', '', '', ''};
+    formatSpec = '%s, %s, %s, %s,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % results
+    resultsOverview = {sqrt(mean(model.testResult3(:, testInterval) .^ 2)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4};
+    formatSpec = '%.4f, %.4f, %.4f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % directory
+    resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(imageSavePath)};
+    formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % close file
+    fclose(resultsFID);
 end
 
 %this function generates anaglyphs of the large and small scale fovea and

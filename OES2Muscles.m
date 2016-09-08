@@ -17,10 +17,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_02-Sep-2016_14:59:16_5000000_1_redo_bf400_metcost_0.0087_fixinit_0.3_6_oldinit/model.mat';
+    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_02-Sep-2016_14:25:49_5000000_1_bmsf_bf400_metcost_0_fixinit_0.5_6_newMuscleinit_no_boundaries/modelAt4500000/model.mat';
 
     %%% Stimulus declaration
-    % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';       % McGill man made database
+    % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
     % textureFile = 'Textures_mcgillFruitsAll.mat';             % McGill fruits database
     % textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';     % McGill foliage database
     % textureFile = 'Textures_vanHaterenTrain.mat';             % vanHateren database
@@ -29,8 +29,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-    textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
-    % textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
+    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
@@ -64,7 +64,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
-        if isempty(learnedFile)
+        if (isempty(learnedFile))
             sprintf('could not open the learned file! %s', learnedFile)
             return;
         else
@@ -96,17 +96,20 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     if ((useLearnedFile(1) == 1) && (useLearnedFile(2) == 1))
         timeToTrain = model.trainTime - model.trainedUntil;
     else
-        % modelName = sprintf('model_%s_%i_%s_%i_%s', ...
-        %                     datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
-        %                     trainTime, ...
-        %                     sparseCodingTypeName{sparseCodingType + 1}, ...
-        %                     randomizationSeed, ...
-        %                     fileDescription);
-        modelName = sprintf('model_%s_%i_%i_%s', ...
-                            datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
-                            trainTime, ...
-                            randomizationSeed, ...
-                            fileDescription);
+        if (sparseCodingType > 0)
+            modelName = sprintf('model_%s_%i_%s_%i_%s', ...
+                                datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
+                                trainTime, ...
+                                sparseCodingTypeName{sparseCodingType + 1}, ...
+                                randomizationSeed, ...
+                                fileDescription);
+        else
+            modelName = sprintf('model_%s_%i_%i_%s', ...
+                                datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
+                                trainTime, ...
+                                randomizationSeed, ...
+                                fileDescription);
+        end
         folder = '../results/';
         mkdir(folder, modelName);
         model.savePath = strcat(folder, modelName);
@@ -136,7 +139,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Track the evolution of all basis functions of the respective sparse coders
     trackSCBasisHistory = uint8(0);
 
-
     %%% New renderer
     % simulator = OpenEyeSim('create'); % stable renderer
     simulator = OpenEyeSimV5('create'); % experimental version
@@ -148,14 +150,14 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % load all stimuli into memory for experimental renderer
     nTextures = 0;
     tmpTexInd = 1;
-    for i = 1:length(textureFiles)
+    for i = 1 : length(textureFiles)
         texture = load(sprintf('config/%s', textureFiles{i}));
         texture = texture.texture;
         textureCnt = length(texture);
 
-        if i == 1
+        if (i == 1)
             nTestTextures = textureCnt;      % save number of test textures for proper indexing later
-        elseif i == 2
+        elseif (i == 2)
             nStimTrain = textureCnt;
         end
 
@@ -194,30 +196,24 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     for iter1 = 1 : (timeToTrain / model.interval)
         tic; % start time count
 
-        % pick random texture every #interval times
-        % currentTexture = texture{(randi(nTextures, 1))};  % stable renderer
-        currentTexture = nTestTextures + randi(nStimTrain, 1);               % experimental renderer
+        %% Draw new stimulus
+        % currentTexture = texture{(randi(nTextures, 1))};          % stable renderer
+        currentTexture = nTestTextures + randi(nStimTrain, 1);      % experimental renderer
         % currentTexture = nStimTest + randi(nStimTrain, 1);
 
-        % random depth
+        %% Draw new object depth
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
 
-        % reset muscle activities to random values
-        % initialization for muscle in between borders of desired actvity
-        % i.e. min and max stimulus distance
-        % command(1) = 0; % single muscle
-        % command(1) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1); % two muscles
-        % command(2) = model.muscleInitMin + (model.muscleInitMax - model.muscleInitMin) * rand(1, 1);
-        % command(2) = getMF(2 * atand(model.baseline / (2 * initDist)));
-        % command(2) = getMF(model.vergAngleMin + (model.vergAngleMax - model.vergAngleMin) * rand(1, 1));
-        % command(1) = model.muscleInitMin(1) + (model.muscleInitMax(1) - model.muscleInitMin(1)) * rand(1, 1);
-        % command(2) = model.muscleInitMin(2) + (model.muscleInitMax(2) - model.muscleInitMin(2)) * rand(1, 1);
-        % initDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
-        % [command, angleNew] = getMF2(initDist, 0);
+        %% Initialize muscle activities
+        % Uniform object fixation distribution
         fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
-        [command, angleNew] = model.getMF2(fixationDist, 0);
-%         [command, angleNew] = model.getMFedood(fixationDist, 0, false);
+
+        % Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
+        % [command, angleNew] = model.getMF2(fixationDist, 0);
+
+        % Uniform muscle activation distribution for two muscles
+        [command, angleNew] = model.getMFedood(fixationDist, 0, false);
 
         % testing input distribution
         % nSamples = 10000;
@@ -237,30 +233,27 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % figure; histogram(angles); title('angles');
         % figure; histogram(dists); title('distances');
 
-        % angleNew = getAngle(command) * 2;
-        % angleNew = getAngle2(command);
-
         for iter2 = 1 : model.interval
             t = t + 1;
 
-            % update stimuli
+            %% Update retinal images
             % refreshImages(currentTexture, angleNew / 2, objDist, 3);  % stable renderer
             model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3); % experimental renderer
 
-            % Generate & save the anaglyph picture
+            %% Generate & save the anaglyph picture
             % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
             % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
             % more advanced functions that generated the anaglyphs of the foveal views
             % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
 
-            % Image patch generation
+            %% Image patch generation
             for i = 1 : length(model.scModel)
                 model.preprocessImage(i, 1);
                 model.preprocessImage(i, 2);
                 currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
             end
 
-            % Generate basis function feature vector from current images
+            %% Generate basis function feature vector from current images
             [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
 
             %%% Feedback
@@ -311,8 +304,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             angleNew = model.getAngle(command) * 2;
             % angleNew = getAngle2(command);
 
-            %%%%%%%%%%%%%%%% TRACK ALL PARAMETERS %%%%%%%%%%%%%%%%%%
-
+            %%% Save statistics
             % compute desired vergence command, disparity and vergence error
             fixDepth = (model.baseline / 2) / tand(angleNew / 2);   % fixation depth [m]
             anglerr = angleDes - angleNew;                          % vergence error [deg]
@@ -344,9 +336,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
 
         if (mod(t, 100) == 0)
-            % infos = {t, objDist, model.vergerr_hist(t - model.interval + 1), angleDes - angleNew, command', relativeCommand', reward, recErrorArray};
-            % generateAnaglyphs(t, 1, infos);
-            imwrite(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png')) % offers an insight into the models view while it learns
+            % offers an insight into the models view while it learns
+            imwrite(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png'))
 
             sprintf('Training Iteration: %d\nObjectDistance:\t%6.2fm\tStart Error:\t%6.3f°\nEnd Fixation:\t%6.2fm\tEnd Error:\t%6.3f°\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
                     t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), ...
@@ -358,7 +349,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             sprintf('%g%% is finished', (t / timeToTrain * 100))
             save(strcat(model.savePath, '/model'), 'model');
 
-            % track basis history
+            % track basis function history
             if (trackSCBasisHistory == 1)
                 for i = 1 : length(model.scModel)
                     model.scModel{i}.saveBasis();
@@ -368,16 +359,15 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         elapsedTime = elapsedTime + toc;
 
-        % testing during training!
+        % testing during training
         if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
             close all;
         end
     end
-    elapsedTime = elapsedTime + toc;
 
     % Total simulation time
-    model.simulatedTime = model.simulatedTime + elapsedTime / 60;
+    model.simulatedTime = model.simulatedTime + elapsedTime / 60; % [min]
     sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
             elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
 
@@ -400,5 +390,4 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     end
 
     quit % close the job after completion and release the matlab licence u.u
-
 end

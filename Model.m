@@ -210,8 +210,9 @@ classdef Model < handle
             resFactor = 10; % factor by which the resolution of the tabular should be increased
             % resFactor = 13; % results in comparable amount of entries as the mfunctions
             %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
-            % between 0 and 0.1 mus. act. (lr) and 0 and 0.2 (mr) the resulution is increased
-            obj.degreesIncRes = interp2(obj.degrees.results_deg(1:2, 1:2), resFactor);
+
+            % between 0 and 0.1 mus. act. the resulution is increased
+            obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : 3, 1 : 2), resFactor);
             obj.degDiff = max(max(diff(obj.degreesIncRes)));    % distance between the entries
 
             % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
@@ -566,15 +567,20 @@ classdef Model < handle
         %  @param level:    # of plot elem range [1, 6]
         function allPlotSave(this, level)
 
+            % only take the last value before the image/texture is changed
+            ind = this.interval : this.interval : this.trainTime;
+            windowSize3 = ceil(this.trainTime * 0.01);
+            metCost_hist_sma = filter(ones(1, windowSize3) / windowSize3, 1, this.metCost_hist(ind));
+
+            windowSize = 1000;
+
             %% Vergence error
             if (~isempty(find(level == 1)))
                 % windowSize = 125;
-                windowSize = 1000;
+                % windowSize = 1000;
                 if (this.trainTime < windowSize * this.interval)
                     windowSize = round(this.trainTime / this.interval / 5);
                 end
-                % only take the last value before the image/texture is changed
-                ind = this.interval : this.interval : this.trainTime;
 
                 %% Simple Moving Average Vergence Error
                 vergerr = filter(ones(1, windowSize) / windowSize, 1, abs(this.vergerr_hist(ind)));
@@ -613,7 +619,7 @@ classdef Model < handle
                 %% Root Mean Squared Vergence Error
                 % windowSize = 125;
                 % windowSize = 250;
-                windowSize = 1000;
+                % windowSize = 1000;
                 if (this.trainTime < windowSize * this.interval)
                     windowSize = round(this.trainTime / this.interval / 5);
                 end
@@ -707,25 +713,24 @@ classdef Model < handle
             %% Muscel graphs
             if (~isempty(find(level == 4)))
                 if (this.rlModel.continuous == 1)
+                    ind2 = 1 : 25 : this.trainTime;
                     % windowSize = 1000;
-                    windowSize = ceil(this.trainTime * 0.002);
-                    windowSize2 = ceil(this.trainTime * 0.02);
-                    windowSize3 = ceil(this.trainTime * 0.05);
+                    windowSize = ceil(this.trainTime * 0.005);
+                    windowSize2 = ceil(this.trainTime * 0.01);
                     if (this.trainTime < windowSize * this.interval)
                         windowSize = round(this.trainTime / this.interval / 5);
                     end
-                    cmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(:, 1));
-                    relCmd_hist_sma = filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(:, 1));
-                    metCost_hist_sma = filter(ones(1, windowSize3) / windowSize3, 1, this.metCost_hist(:));
+                    cmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind2, 1));
+                    relCmd_hist_sma = filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(ind2, 1));
 
                     % Two eye muscles
                     if (this.rlModel.CActor.output_dim == 2)
                         xVal = [1 : length(cmd_hist_sma)];
-                        cmd_hist_sma = [cmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(:, 2))];
-                        relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(:, 2))];
-                        figHandle = figure('OuterPosition', [100, 100, 768, 1024]);
+                        cmd_hist_sma = [cmd_hist_sma, filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind2, 2))];
+                        relCmd_hist_sma = [relCmd_hist_sma, filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(ind2, 2))];
+                        figHandle = figure('OuterPosition', [100, 100, 768, 1024]); % static figure resolution/size
 
-                        % Temporal Rectus
+                        % Lateral Rectus
                         % Total muscle commands
                         subplot(3, 2, 1);
                         hold on;
@@ -747,6 +752,7 @@ classdef Model < handle
                         title('Lateral Rectus', 'fontweight','normal');
 
                         % Delta muscle commands
+                        xVal = [1 : length(relCmd_hist_sma)];
                         subplot(3, 2, 3);
                         hold on;
                         grid on;
@@ -767,6 +773,7 @@ classdef Model < handle
 
                         % Medial Rectus
                         % Total muscle commands
+                        xVal = [1 : length(cmd_hist_sma)];
                         subplot(3, 2, 2);
                         hold on;
                         grid on;
@@ -788,6 +795,7 @@ classdef Model < handle
                         title('Medial rectus', 'fontweight','normal');
 
                         % Delta muscle commands
+                        xVal = [1 : length(relCmd_hist_sma)];
                         subplot(3, 2, 4);
                         hold on;
                         grid on;
@@ -808,6 +816,7 @@ classdef Model < handle
                         % set(gca,'yaxislocation','right');
 
                         % Metabolic costs
+                        xVal = [1 : length(metCost_hist_sma)];
                         subplot(3, 2, 5 : 6);
                         hold on;
                         grid on;
@@ -820,8 +829,8 @@ classdef Model < handle
                         hl5.Color = [rand, rand, rand];
                         hp5.FaceColor = hl5.Color;
                         axis([windowSize3 * 2, length(metCost_hist_sma), ...
-                              min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.9, ...
-                              max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.1]);
+                              min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.95, ...
+                              max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.05]);
 
                         xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 8);
                         ylabel('Value', 'FontSize', 12);
@@ -838,40 +847,42 @@ classdef Model < handle
                         figure;
 
                         % Total muscle commands
+                        xVal = [1 : length(cmd_hist_sma)];
                         subplot(3, 1, 1);
                         hold on;
                         grid on;
-                        tmpSTD = movingstd(cmd_hist_sma(:, 2), windowSize, 'backward');
+                        tmpSTD = movingstd(cmd_hist_sma, windowSize, 'backward');
                         [hl3, hp3] = boundedline(xVal, ...
-                                                cmd_hist_sma(:, 2), ...
+                                                cmd_hist_sma, ...
                                                 tmpSTD, ...
                                                 'alpha');
 
                         hl3.Color = [rand, rand, rand];
                         hp3.FaceColor = hl3.Color;
-                        axis([windowSize * 2, length(cmd_hist_sma(:, 2)), ...
-                              min(cmd_hist_sma(windowSize * 2 : end, 2) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
-                              max(cmd_hist_sma(windowSize * 2 : end, 2) + tmpSTD(windowSize * 2 : end)) * 1.1]);
+                        axis([windowSize * 2, length(cmd_hist_sma), ...
+                              min(cmd_hist_sma(windowSize * 2 : end) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
+                              max(cmd_hist_sma(windowSize * 2 : end) + tmpSTD(windowSize * 2 : end)) * 1.1]);
 
                         xlabel('Iteration * interval^{-1}', 'FontSize', 8);
                         ylabel('Value', 'FontSize', 12);
                         title('Total Muscle Commands', 'fontweight','normal');
 
                         % Delta muscle commands
+                        xVal = [1 : length(relCmd_hist_sma)];
                         subplot(3, 1, 2);
                         hold on;
                         grid on;
-                        tmpSTD = movingstd(relCmd_hist_sma(:, 2), windowSize2, 'backward');
+                        tmpSTD = movingstd(relCmd_hist_sma, windowSize2, 'backward');
                         [hl4, hp4] = boundedline(xVal, ...
-                                                relCmd_hist_sma(:, 2), ...
+                                                relCmd_hist_sma, ...
                                                 tmpSTD, ...
                                                 'alpha');
 
                         hl4.Color = [rand, rand, rand];
                         hp4.FaceColor = hl4.Color;
-                        axis([windowSize2 * 2, length(relCmd_hist_sma(:, 2)), ...
-                              min(relCmd_hist_sma(windowSize2 * 2 : end, 2) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
-                              max(relCmd_hist_sma(windowSize2 * 2 : end, 2) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
+                        axis([windowSize2 * 2, length(relCmd_hist_sma), ...
+                              min(relCmd_hist_sma(windowSize2 * 2 : end) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
+                              max(relCmd_hist_sma(windowSize2 * 2 : end) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
 
                         xlabel('Iteration * interval^{-1}', 'FontSize', 8);
                         ylabel('Value', 'FontSize', 12);
@@ -913,25 +924,56 @@ classdef Model < handle
                         if tmpOffset > tmpEnd
                             tmpOffset = tmpEnd;
                         end
+
                         % Total
                         figure;
                         hold on;
-                        scatter(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                        % scatter(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                        histHandle = hist3(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, :), [40, 40]);
+
                         corrl = corr(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2));
+                        xb = linspace(min(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1)), max(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 1)), size(histHandle, 1));
+                        yb = linspace(min(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2)), max(this.cmd_hist(tmpEnd - tmpOffset : tmpEnd, 2)), size(histHandle, 1));
+
                         xlabel('Lateral rectus [%]', 'FontSize', 12);
                         ylabel('Medial rectus [%]', 'FontSize', 12);
                         title(strcat('Total Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
+
+                        pcHandle = pcolor(xb, yb, histHandle);
+                        axis([0, xb(end), 0, yb(end)]);
+                        shading interp;
+                        set(pcHandle, 'EdgeColor', 'none');
+
+                        colormap(createCM());
+                        cb = colorbar();
+                        cb.Label.String = '# Occurences';
+
                         plotpath = sprintf('%s/muscleGraphsScatterTotalTraining', this.savePath);
                         saveas(gcf, plotpath, 'png');
 
                         % Delta
                         figure;
                         hold on;
-                        scatter(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                        % scatter(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2), 5,'MarkerFaceColor',[0, 0.7, 0.7]);
+                        histHandle = hist3(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, :), [40, 40]);
+
                         corrl = corr(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1), this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2));
+                        xb = linspace(min(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1)), max(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 1)), size(histHandle, 1));
+                        yb = linspace(min(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2)), max(this.relCmd_hist(tmpEnd - tmpOffset : tmpEnd, 2)), size(histHandle, 1));
+
                         xlabel('Lateral rectus [%]', 'FontSize', 12);
                         ylabel('Medial rectus [%]', 'FontSize', 12);
                         title(strcat('\Delta Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
+
+                        pcHandle = pcolor(xb, yb, histHandle);
+                        axis([xb(1), xb(end), yb(1), yb(end)]);
+                        shading interp;
+                        set(pcHandle, 'EdgeColor', 'none');
+
+                        colormap(createCM());
+                        cb = colorbar();
+                        cb.Label.String = '# Occurences';
+
                         plotpath = sprintf('%s/muscleGraphsScatterDeltaTraining', this.savePath);
                         saveas(gcf, plotpath, 'png');
                     end
@@ -982,25 +1024,21 @@ classdef Model < handle
             %% Reward composition
             if (~isempty(find(level == 6)))
                 if (this.rlModel.continuous == 1)
-                    figure;
-                    hold on;
-                    grid on;
-                    r = [- this.lambdaMet * this.metCost_hist, ...
-                         - this.lambdaRec * sum(this.recerr_hist, 2)];
-                    handle = area(r, 'LineStyle','none');
-                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-                    ylabel('Value', 'FontSize', 12);
-                    % % l = legend('\lambdametCost', '\lambdaL1(w_{Pkj})', '\lambdaL1(w_{Pji})', '\lambdaL1(w_{Vji})', '\lambdaRecErr');
-                    l = legend('\lambdametCost', '\lambdaRecErr');
-                    if(version('-release') == '2015b')
-                        handle(1).FaceColor = [1, 0.25, 0];
-                        handle(2).FaceColor = [1, 0.549, 0];
-                        l.Location = 'southwest';
-                    end
-                    % % title('Reward composition (L1)');
-                    title('Reward composition');
-                    plotpath = sprintf('%s/rewardComp', this.savePath);
-                    saveas(gcf, plotpath, 'png');
+                    % figure;
+                    % hold on;
+                    % grid on;
+                    % r = [- this.lambdaMet * this.metCost_hist, ...
+                    %      - this.lambdaRec * sum(this.recerr_hist, 2)];
+                    % handle = area(r, 'LineStyle','none');
+                    % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                    % ylabel('Value', 'FontSize', 12);
+                    % l = legend('\lambdametCost', '\lambdaRecErr');
+                    % handle(1).FaceColor = [1, 0.25, 0];
+                    % handle(2).FaceColor = [1, 0.549, 0];
+                    % l.Location = 'southwest';
+                    % title('Reward composition');
+                    % plotpath = sprintf('%s/rewardComp', this.savePath);
+                    % saveas(gcf, plotpath, 'png');
 
                     %% Total reward
                     % figure;
@@ -1012,6 +1050,27 @@ classdef Model < handle
                     % title('Reward');
                     % plotpath = sprintf('%s/rewardTotal', this.savePath);
                     % saveas(gcf, plotpath, 'png');
+
+                    windowSize = ceil(this.trainTime * 0.01);
+                    recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind), 1)');
+
+                    figure;
+                    hold on;
+                    grid on;
+                    r = [- this.lambdaMet * metCost_hist_sma, ...
+                         - this.lambdaRec * recerr_hist_sma];
+                    handle = area(r, 'LineStyle','none');
+                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                    ylabel('Value', 'FontSize', 12);
+                    l = legend('\lambdaMetabolic_{cost}', '\lambdaReconstruction_{error}');
+                    handle(1).FaceColor = [1, 0.25, 0];
+                    handle(2).FaceColor = [1, 0.549, 0];
+                    axis([windowSize, inf, -inf, 0]);
+                    % l.Location = 'southwest';
+                    l.Location = 'best';
+                    title('Reward composition (SMA)');
+                    plotpath = sprintf('%s/rewardComp', this.savePath);
+                    saveas(gcf, plotpath, 'png');
                 else
                     figure;
                     hold on;
