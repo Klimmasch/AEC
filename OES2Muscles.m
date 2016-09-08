@@ -280,6 +280,14 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             %     rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
             % end
 
+            %% Normalized reward [-1, 1]
+            rewardFunction = rewardFunction / 100;
+            alpha = model.rlModel.CCritic.gamma; %weighting range (equal to reinforcement running average constant)
+            delta = rewardFunction - model.reward_mean;
+            model.reward_mean = (1 - alpha) * model.reward_mean + (alpha * delta);
+            model.reward_variance = (1 - alpha) * model.reward_variance + (alpha * delta^2);
+            rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
+
             % rewardFunction_prev = rewardFunctionReal;
 
             %%% Learning
@@ -337,7 +345,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         if (mod(t, 100) == 0)
             % offers an insight into the models view while it learns
-            imwrite(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png'))
+            % imwrite(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png'))
 
             sprintf('Training Iteration: %d\nObjectDistance:\t%6.2fm\tStart Error:\t%6.3f°\nEnd Fixation:\t%6.2fm\tEnd Error:\t%6.3f°\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
                     t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), ...

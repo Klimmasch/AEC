@@ -29,6 +29,8 @@ classdef Model < handle
         lambdaMuscleFB;     % factor of muscle activity feedback to RL feature vector
         lambdaRec;          % reconstruction error factor
         lambdaMet;          % factor of metCosts for reward function
+        reward_mean;        % tracks the exponentially weighted average of rewards
+        reward_variance;    % and the variance for normalizing the reward (if desired)
 
         % Model data history
         recerr_hist;        % reconstruction error [coarse scale, fine scale]
@@ -162,6 +164,9 @@ classdef Model < handle
             obj.simulatedTime = 0;
             obj.trainedUntil = 0;
             obj.notes = '';
+            
+            obj.reward_mean = 0;
+            obj.reward_variance = 1;
 
             %%% Generate image processing constants
             obj.patchSize = PARAM{1}{14};
