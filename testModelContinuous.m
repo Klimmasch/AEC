@@ -146,7 +146,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
     if model.objDistMin == 0.5 && model.objDistMax == 6
-        objRange = [0.5 1 : 6]
+        objRange = [0.5 1 : 6];
     end
 
     tmpResult1 = zeros(nStim, testInterval + 1);

@@ -38,7 +38,7 @@ objDistMax = 6;   % origin 2
 
 % Fixation distance [m]
 % used for eye fixation initialization
-fixDistMin = 0.5; %0.3379;
+fixDistMin = 0.3379;
 fixDistMax = 6; %3.2219 for objDistMax = 2m
 
 % Muscle initialization [%]: correspond now to the minimum and maximum distance
