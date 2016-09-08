@@ -210,6 +210,7 @@ classdef Model < handle
             resFactor = 10; % factor by which the resolution of the tabular should be increased
             % resFactor = 13; % results in comparable amount of entries as the mfunctions
             %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
+
             % between 0 and 0.1 mus. act. the resulution is increased
             obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : 3, 1 : 2), resFactor);
             obj.degDiff = max(max(diff(obj.degreesIncRes)));    % distance between the entries
