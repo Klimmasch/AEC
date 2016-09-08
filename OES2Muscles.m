@@ -280,6 +280,14 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             %     rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
             % end
 
+            %% Normalized reward [-1, 1]
+            rewardFunction = rewardFunction / 100;
+            alpha = model.rlModel.CCritic.gamma; %weighting range (equal to reinforcement running average constant)
+            delta = rewardFunction - this.reward_mean;
+            model.reward_mean = (1 - alpha) * model.reward_mean + alpha * delta;
+            model.reward_variance = (1 - alpha) * model.reward_variance + alpha * delta^2;
+            rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
+
             % rewardFunction_prev = rewardFunctionReal;
 
             %%% Learning
