@@ -476,6 +476,21 @@ classdef Model < handle
             command = [mfLR; mfMR];
         end
 
+        % maybe the values have to be exchanged!
+        function [mfMR, mfLR] = getAnglePoints(this, objDist, desVergErr)
+            angleCorrect = 2 * atand(this.baseline / (2 * objDist));
+            angleInit = angleCorrect - desVergErr;
+
+            % angleInit is the angle for both eyes, but degreesIncRes only
+            % contains angles for one eye
+            [xi, yi] = find(this.degreesIncRes <= (angleInit/2) + this.degDiff & this.degreesIncRes >= (angleInit/2) - this.degDiff);
+
+            numInds = length(this.degreesIncRes);
+            scaleFac = 0.1 / numInds;
+            mfLR = xi .* scaleFac;
+            mfMR = yi .* scaleFac;
+        end
+
         % mapping muscle activity to angle (one eye)
         function angle = getAngle(this, command)
             cmd = (command * 10) + 1;                                       % scale commands to table entries
