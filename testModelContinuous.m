@@ -139,7 +139,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     % [command, angleNew] = model.getMF2(objRange(odIndex), vseRange(vseIndex));
 
                     % Uniform muscle activation distribution for two muscles
-                    [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex), false);
+                    [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex), true);
 
                     for iter = 2 : testInterval + 1
                         % update stimuli
@@ -273,7 +273,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 % [command, angleNew] = model.getMF2(objRange(odIndex), vseRange(vseIndex));
 
                 % Uniform muscle activation distribution for two muscles
-                [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex), false);
+                [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex), true);
 
                 for stimulusIndex = 1 : nStim
                     % update stimuli
@@ -339,7 +339,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % [command, angleNew] = model.getMF2(objRange2(i), vseRange(randi(length(vseRange))));
 
             % Uniform muscle activation distribution for two muscles
-            [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))), false);
+            [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))), true);
 
             currentTexture = randi(length(nStim));
 
@@ -859,7 +859,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             xlabel('Lateral rectus [%]', 'FontSize', 12);
             ylabel('Medial rectus [%]', 'FontSize', 12);
             title(strcat('Total Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
-            plotpath = sprintf('%s/muscleGraphsScatterTotalTesting', imageSavePath);
+            plotpath = sprintf('%s/muscleTotalCmdTesting', imageSavePath);
             saveas(gcf, plotpath, 'png');
 
             % Delta
@@ -884,7 +884,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             xlabel('Lateral rectus [%]', 'FontSize', 12);
             ylabel('Medial rectus [%]', 'FontSize', 12);
             title(strcat('\Delta Muscle Commands (testing)', sprintf('\nCorrelation = %1.2e', corrl)));
-            plotpath = sprintf('%s/muscleGraphsScatterDeltaTesting', imageSavePath);
+            plotpath = sprintf('%s/muscleDeltaCmdTesting', imageSavePath);
             saveas(gcf, plotpath, 'png');
         end
 
