@@ -88,6 +88,8 @@ classdef Model < handle
         dAngleLR;       % delta in muscle force (for mfunctionLR) dmf3
         angleMin;       % minimal and maximal angle that can be reached by one-dimensional muscle commands
         angleMax;
+        scaleFacMR;
+        scaleFacLR;
 
         imgRawLeft;     % images that are updated by refreshImages
         imgRawRight;
@@ -164,7 +166,7 @@ classdef Model < handle
             obj.simulatedTime = 0;
             obj.trainedUntil = 0;
             obj.notes = '';
-            
+
             obj.reward_mean = 0;
             obj.reward_variance = 1;
 
@@ -218,7 +220,9 @@ classdef Model < handle
 
             % between 0 and 0.1 mus. act. the resulution is increased
             obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : 3, 1 : 2), resFactor);
-            obj.degDiff = max(max(diff(obj.degreesIncRes)));    % distance between the entries
+            obj.degDiff = max(max(diff(obj.degreesIncRes)));                                % distance between the entries
+            obj.scaleFacMR = 1 / (resFactor * size(obj.degreesIncRes, 1));                  % table scaling factors for backwards
+            obj.scaleFacLR = 1 / (resFactor * size(obj.degreesIncRes, 2));                  % calculation of table_index -> muscle inervation
 
             % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
             resolution = 100001;
@@ -454,46 +458,42 @@ classdef Model < handle
 
             % angleInit is the angle for both eyes, but degreesIncRes only
             % contains angles for one eye
-            [xi, yi] = find(this.degreesIncRes <= (angleInit/2) + this.degDiff & this.degreesIncRes >= (angleInit/2) - this.degDiff);
+            [xi, yi] = find(this.degreesIncRes <= (angleInit / 2) + this.degDiff & this.degreesIncRes >= (angleInit / 2) - this.degDiff);
 
-            if ~useBounds
+            if (~useBounds)
                 i = randi(length(xi));
 
-                % now transform indizes to muscle activities
-                numInds = length(this.degreesIncRes);
-                scaleFac = 0.1 / numInds;
-                mfMR = xi(i) * scaleFac;
-                mfLR = yi(i) * scaleFac;
+                % transform indizes to muscle activities
+                mfMR = xi(i) * this.scaleFacMR;
+                mfLR = yi(i) * this.scaleFacLR;
             else
                 mfMR = 1;
                 mfLR = 1;
-                while mfMR > 0.1 || mfLR > 0.015 %fist part should be unnecessary
+                while (mfLR > 0.015)
                     i = randi(length(xi));
 
-                    % now transform indizes to muscle activities
-                    numInds = length(this.degreesIncRes);
-                    scaleFac = 0.1 / numInds;
-                    mfMR = xi(i) * scaleFac;
-                    mfLR = yi(i) * scaleFac;
+                    % transform indizes to muscle activities
+                    mfMR = xi(i) * this.scaleFacMR;
+                    mfLR = yi(i) * this.scaleFacLR;
                 end
             end
 
             command = [mfLR; mfMR];
         end
 
-        % maybe the values have to be exchanged!
+        % Maps {objDist, desVergErr} -> {medialRectusActivations, lateralRectusActivations},
+        % i.e. calculates all muscle activity cominations corresponding to specified {objDist, desVergErr}
         function [mfMR, mfLR] = getAnglePoints(this, objDist, desVergErr)
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             angleInit = angleCorrect - desVergErr;
 
             % angleInit is the angle for both eyes, but degreesIncRes only
             % contains angles for one eye
-            [xi, yi] = find(this.degreesIncRes <= (angleInit/2) + this.degDiff & this.degreesIncRes >= (angleInit/2) - this.degDiff);
+            [xi, yi] = find(this.degreesIncRes <= (angleInit / 2) + this.degDiff & this.degreesIncRes >= (angleInit / 2) - this.degDiff);
 
-            numInds = length(this.degreesIncRes);
-            scaleFac = 0.1 / numInds;
-            mfLR = xi .* scaleFac;
-            mfMR = yi .* scaleFac;
+            % transform indizes to muscle activities
+            mfMR = xi .* this.scaleFacMR;
+            mfLR = yi .* this.scaleFacLR;
         end
 
         % mapping muscle activity to angle (one eye)
@@ -1124,7 +1124,7 @@ classdef Model < handle
                 imgRight = this.imgGrayRight(:);
                 imgRight = reshape(imgRight, size(this.imgGrayRight));
 
-                for ds = 1 : log2(model.dsRatio(scale))
+                for ds = 1 : log2(this.dsRatio(scale))
                     imgLeft = impyramid(imgLeft, 'reduce');
                     imgRight = impyramid(imgRight, 'reduce');
                 end
@@ -1143,7 +1143,7 @@ classdef Model < handle
 
                 % [hAna, vAna, ~] = size(anaglyph);
                 if (markScales)
-                    anaglyph = insertShape(anaglyph, 'rectangle', [model.pxFieldOfView(scale) + 1 - model.patchSize, 1, model.patchSize, model.patchSize], 'color', scalingColors(scale));
+                    anaglyph = insertShape(anaglyph, 'rectangle', [this.pxFieldOfView(scale) + 1 - this.patchSize, 1, this.patchSize, this.patchSize], 'color', scalingColors(scale));
                 end
 
                 scaleImages{scale} = anaglyph;
@@ -1157,8 +1157,8 @@ classdef Model < handle
                 for scale = 1:numberScales
                     % this creates a rectangle inside the image for each scale and
                     % an examplary patch
-                    scaleSizeOrigImg = model.pxFieldOfView(scale) * model.dsRatio(scale);
-                    patchSizeOrigImg = model.patchSize * model.dsRatio(scale);
+                    scaleSizeOrigImg = this.pxFieldOfView(scale) * this.dsRatio(scale);
+                    patchSizeOrigImg = this.patchSize * this.dsRatio(scale);
                     windowStart = [fix(w / 2 + 1 - scaleSizeOrigImg / 2), fix(h / 2 + 1 - scaleSizeOrigImg / 2)];
 
                     % indexMatrix = [x, y, scaleWindow, scaleWindow; x, y, patchSize, patchSize]
