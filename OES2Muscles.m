@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_07-Sep-2016_16:38:51_6000000_1_metcost_0_sc_eta_0.05_edood_with_bounderies/modelAt5000000/model.mat';
+%     learnedFile = '/home/lelais/Documents/MATLAB/results/model_12-Sep-2016_17:52:01_5000000_1_edood_nobounds_metC_0.0014435_redo/modelAt2000000/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -46,7 +46,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
-    plotIt = [uint8(0), uint8(0)];
+    plotIt = [uint8(1), uint8(1)];
 
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
@@ -57,7 +57,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(0);
+    testIt = uint8(1);
 
     %%% Amount of test stimuli
     nStimTest = 40;
