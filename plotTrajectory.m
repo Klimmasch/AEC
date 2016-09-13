@@ -13,8 +13,7 @@
 %%%
 %%TODO:
 % enable multiple fixation dists in one plot with same init values
-% idea: instead of contourf, just plot single lines that correspond to
-% spec. obj. dists
+% instead of colorcoding the object distances, we colorcode the metabolic costs and just make lines where the object is
 function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stimuli, simulator, titleStr, savePlot)
 
     %%% Saturation function that keeps motor commands in [0, 1]
