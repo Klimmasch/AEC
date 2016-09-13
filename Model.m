@@ -452,7 +452,7 @@ classdef Model < handle
         % Calculates muscle force for two muscles
         % drawn from all permitted mf(l, m) ^= f(objDist, desVergErr), where l, m >= 0
         % == get muscle force equally distributed over object distance.
-        function [command, angleInit] = getMFedood(this, objDist, desVergErr, useBounds)
+        function [command, angleInit] = getMFedood(this, objDist, desVergErr)
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             angleInit = angleCorrect - desVergErr;
 
@@ -460,23 +460,11 @@ classdef Model < handle
             % contains angles for one eye
             [xi, yi] = find(this.degreesIncRes <= (angleInit / 2) + this.degDiff & this.degreesIncRes >= (angleInit / 2) - this.degDiff);
 
-            if (~useBounds)
-                i = randi(length(xi));
+            i = randi(length(xi));
 
-                % transform indizes to muscle activities
-                mfMR = xi(i) * this.scaleFacMR;
-                mfLR = yi(i) * this.scaleFacLR;
-            else
-                mfMR = 1;
-                mfLR = 1;
-                while (mfLR > 0.015)
-                    i = randi(length(xi));
-
-                    % transform indizes to muscle activities
-                    mfMR = xi(i) * this.scaleFacMR;
-                    mfLR = yi(i) * this.scaleFacLR;
-                end
-            end
+            % transform indizes to muscle activities
+            mfMR = xi(i) * this.scaleFacMR;
+            mfLR = yi(i) * this.scaleFacLR;
 
             command = [mfLR; mfMR];
         end

@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_02-Sep-2016_14:25:49_5000000_1_bmsf_bf400_metcost_0_fixinit_0.5_6_newMuscleinit_no_boundaries/modelAt4500000/model.mat';
+    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_07-Sep-2016_16:38:51_6000000_1_metcost_0_sc_eta_0.05_edood_with_bounderies/modelAt5000000/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -46,7 +46,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
-    plotIt = [uint8(1), uint8(1)];
+    plotIt = [uint8(0), uint8(0)];
 
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
@@ -57,7 +57,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(1);
+    testIt = uint8(0);
 
     %%% Amount of test stimuli
     nStimTest = 40;
@@ -213,7 +213,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         % [command, angleNew] = model.getMF2(fixationDist, 0);
 
         % Uniform muscle activation distribution for two muscles
-        [command, angleNew] = model.getMFedood(fixationDist, 0, false);
+        [command, angleNew] = model.getMFedood(fixationDist, 0);
 
         % testing input distribution
         % nSamples = 10000;
@@ -281,12 +281,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             % end
 
             %% Normalized reward [-1, 1]
-            rewardFunction = rewardFunction / 100;
-            alpha = model.rlModel.CCritic.gamma; %weighting range (equal to reinforcement running average constant)
-            delta = rewardFunction - model.reward_mean;
-            model.reward_mean = (1 - alpha) * model.reward_mean + (alpha * delta);
-            model.reward_variance = (1 - alpha) * model.reward_variance + (alpha * delta^2);
-            rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
+%             rewardFunction = rewardFunction / 100;
+%             alpha = model.rlModel.CCritic.gamma; %weighting range (equal to reinforcement running average constant)
+%             delta = rewardFunction - model.reward_mean;
+%             model.reward_mean = (1 - alpha) * model.reward_mean + (alpha * delta);
+%             model.reward_variance = (1 - alpha) * model.reward_variance + (alpha * delta^2);
+%             rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
 
             % rewardFunction_prev = rewardFunctionReal;
 
