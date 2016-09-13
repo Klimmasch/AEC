@@ -78,6 +78,7 @@ classdef Model < handle
         % Providing relevant methods
         degrees;        % contains a tabular that maps muscle activity to angles
         degreesIncRes;  % contains a part of degrees with increased resolution
+        metCostsIncRes; % contains a part of metCosts with increased resolution
         degDiff;        % difference between entries in degreesIncRes
         metCosts;       % contains a tabular that maps muscle activity to metabolic costs
         mfunctionMR;    % contains a function approx. of the mapping from activity to angle
@@ -218,11 +219,16 @@ classdef Model < handle
             % resFactor = 13; % results in comparable amount of entries as the mfunctions
             %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
 
-            % between 0 and 0.1 mus. act. the resulution is increased
-            obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : 3, 1 : 2), resFactor);
-            obj.degDiff = max(max(diff(obj.degreesIncRes)));                                % distance between the entries
-            obj.scaleFacMR = 1 / (resFactor * size(obj.degreesIncRes, 1));                  % table scaling factors for backwards
-            obj.scaleFacLR = 1 / (resFactor * size(obj.degreesIncRes, 2));                  % calculation of table_index -> muscle inervation
+            % between 0 and 0.2/0.1 mus. act. the resulution is increased
+            usedRows = 3;
+            usedCols = 2;
+            obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : usedRows, 1 : usedCols), resFactor);
+            obj.degDiff = max(max(diff(obj.degreesIncRes)));                                                % distance between the entries
+            obj.scaleFacMR = ((usedRows - 1) / 10) / size(obj.degreesIncRes, 1);                            % table scaling factors for backwards
+            obj.scaleFacLR = ((usedCols - 1) / 10) / size(obj.degreesIncRes, 2);                            % calculation of table_index -> muscle inervation
+
+            % increased resolution of metCosts table
+            obj.metCostsIncRes = interp2(obj.metCosts.results(1 : usedRows, 1 : usedCols), resFactor);
 
             % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
             resolution = 100001;
@@ -471,7 +477,7 @@ classdef Model < handle
 
         % Maps {objDist, desVergErr} -> {medialRectusActivations, lateralRectusActivations},
         % i.e. calculates all muscle activity cominations corresponding to specified {objDist, desVergErr}
-        function [mfMR, mfLR] = getAnglePoints(this, objDist, desVergErr)
+        function [mfLR, mfMR] = getAnglePoints(this, objDist, desVergErr)
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             angleInit = angleCorrect - desVergErr;
 
@@ -1211,6 +1217,180 @@ classdef Model < handle
             end
             saveas(fig, sprintf('%s/anaglyph.png', this.savePath), 'png');
             fig.delete();
+        end
+
+        %%% This method creates a trajectory from the given paramters and plots it
+        %%% on the plane of object depth.
+        %%% Note that this script is intended solely for continuous models.
+        % @param objDist                the object distance
+        % @param startVergErr           the vergence error to muscles start with
+        % @param initMethod             either 'simple' or 'random'
+        % @param numIters               number of iterations that are executed
+        % @param stimuliIndices         an array of indizes from the texture files
+        % @param simulator              either a simulator object or [] for a new one
+        % @param titleStr               string identifier that is used for the title and the saved image
+        % @param savePlot               true or false if the resulting plots should be saved
+        %%%
+        %%TODO:
+        % enable multiple fixation dists in one plot with same init values
+        % idea: instead of contourf, just plot single lines that correspond to
+        % spec. obj. dists
+        function plotTrajectory(this, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, titleStr, savePlot)
+            % simulator check
+            if (isempty(simulator))
+                sprintf('An initialized simulator is necessary to continue.\nPlease execute simulator = prepareSimulator();')
+                return;
+            end
+
+            %%% Saturation function that keeps motor commands in [0, 1]
+            %   corresponding to the muscelActivity/metabolicCost tables
+            function [cmd] = checkCmd(cmd)
+                i0 = cmd < 0;
+                cmd(i0) = 0;
+                i1 = cmd > 1;
+                cmd(i1) = 1;
+            end
+
+            % preperation
+            rng(1);
+
+            if strcmp(initMethod, 'advanced')
+                initMethod = uint8(0);
+
+            elseif strcmp(initMethod, 'fixed')
+                initMethod = uint8(1);
+                cmdInit = [[0.003; 0.012], [0.003; 0.004], [0.01; 0.004]]; % hand-picked inits for muscles, used in initMethod 'random'
+
+            elseif strcmp(initMethod, 'simple')
+                initMethod = uint8(2);
+
+            else
+                sprintf('Muscle initialization method %s not supported.', initMethod)
+                return;
+            end
+
+            plotAnaglyphs = true;
+            nStimuli = length(stimuliIndices);
+            trajectory = zeros(nStimuli, numIters + 1, 2);
+
+            %% main loop:
+            angleDes = 2 * atand(this.baseline / (2 * objDist));
+            figure;
+            figIter = 1;
+            for stimIter = 1 : nStimuli
+                currentTexture = stimuliIndices(stimIter);
+
+                % muscle init
+                if (initMethod == 0)
+                    try
+                        [command, angleNew] = this.getMFedood(objDist, startVergErr);
+                    catch
+                        % catch non-existing variables error, occuring in non-up-to-date models
+                        try
+                            clone = this.copy();
+                            delete(this);
+                            clear this;
+                            this = clone;
+                            [command, angleNew] = this.getMFedood(objDist, startVergErr);
+                            delete(clone);
+                            clear clone;
+                        catch
+                            % catch when new model property isn't present in Model class yet
+                            sprintf('Error: One or more new model properties (variables) are not present in Model.m class yet!')
+                            return;
+                        end
+                    end
+                elseif (initMethod == 1)
+                    command = cmdInit(:, stimIter);
+                    angleNew = this.getAngle(command);
+                elseif (initMethod == 2)
+                    [command, angleNew] = this.getMF2(objDist, startVergErr);
+                end
+                trajectory(stimIter, 1, :) = command;
+
+                for iter = 1 : numIters
+                    this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3);
+
+                    % show anaglyphs for quit performance check
+                    if (plotAnaglyphs && ((iter == 1) || (iter == numIters)))
+                        subplot(nStimuli, 2, figIter);
+                        imshow(stereoAnaglyph(this.imgGrayLeft, this.imgGrayRight))
+                        if (iter == 1)
+                            title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (this.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
+                        end
+                        figIter = figIter + 1;
+                    end
+
+                    for i = 1 : length(this.scModel)
+                        this.preprocessImage(i, 1);
+                        this.preprocessImage(i, 2);
+                        currentView{i} = vertcat(this.patchesLeft{i}, this.patchesRight{i});
+                    end
+
+                    [bfFeature, ~, ~] = this.generateFR(currentView);              % encode image patches
+                    feature = [bfFeature; command * this.lambdaMuscleFB];          % append muscle activities to feature vector
+                    relativeCommand = this.rlModel.act(feature);                   % generate change in muscle activity
+                    command = checkCmd(command + relativeCommand);                 % calculate new muscle activities
+                    angleNew = this.getAngle(command) * 2;                         % transform into angle
+
+                    trajectory(stimIter, iter + 1, :) = command;
+
+                    if (iter == numIters)
+                        title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (this.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
+                    end
+                end
+            end
+
+            %% Plotting results
+            h = figure();
+            hold on;
+            title(sprintf('Oject Fixation Trajectories at %1.1fm (%.3f°)\n%s', objDist, angleDes, titleStr));
+
+            % pcHandle = pcolor(this.degreesIncRes); % use vergence degree as color dimension (background)
+            pcHandle = pcolor(this.metCostsIncRes);  % use metabolic costs as color dimension (background)
+            % shading interp;
+            set(pcHandle, 'EdgeColor', 'none');
+
+            cb = colorbar();
+            % cb.Label.String = 'vergence degree'; % use vergence degree as color dimension (background)
+            cb.Label.String = 'metabolic costs';   % use metabolic costs as color dimension (background)
+
+            ax = gca;
+            ax.XTick = linspace(1, size(this.degreesIncRes, 2), 8);
+            ax.YTick = linspace(1, size(this.degreesIncRes, 1), 8);
+
+            ax.XTickLabel = strsplit(num2str(linspace(1, size(this.degreesIncRes, 2), 8) * this.scaleFacLR, '%4.2f '));
+            ax.YTickLabel = strsplit(num2str(linspace(1, size(this.degreesIncRes, 1), 8) * this.scaleFacMR, '%4.2f '));
+
+            ax.XTickLabelRotation = 45;
+            ax.YTickLabelRotation = 45;
+
+            axis([1, size(this.degreesIncRes, 2), 1, size(this.degreesIncRes, 1)]);
+
+            % draw a line of points into the plane that represent the desired vergence
+            [lateralDes, medialDes] = this.getAnglePoints(objDist, 0);
+            plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, 'g', 'LineWidth', 1.8);
+
+            % add corresponding distance value to desired vergence graph
+            text(lateralDes(end - ceil(length(lateralDes) / 10)) / this.scaleFacLR, ...
+                 medialDes(end - ceil(length(medialDes) / 10)) / this.scaleFacMR, ...
+                 sprintf('%3.1fm', (this.baseline / 2) / tand(angleDes / 2)));
+
+            % draw trajectories
+            for stim = 1 : length(stimuliIndices)
+                plot(trajectory(stim, 1, 1) ./ this.scaleFacLR, trajectory(stim, 1, 2)./ this.scaleFacMR, 'r.', 'MarkerSize', 40);
+                plot(trajectory(stim, :, 1)' ./ this.scaleFacLR, trajectory(stim, :, 2)'./ this.scaleFacMR, '.-', 'LineWidth', 2, 'MarkerSize', 20);
+                plot(trajectory(stim, end, 1) ./ this.scaleFacLR, trajectory(stim, end, 2)./ this.scaleFacMR, 'g.', 'MarkerSize', 40);
+            end
+
+            xlabel('lateral rectus activation [%]');
+            ylabel('medial rectus activation [%]');
+
+            if savePlot
+                timestamp = datestr(now, 'dd-mm-yyyy_HH:MM:SS_');
+                savePath = strcat(this.savePath, '/', timestamp, titelStr);
+                saveas(h, savePath, 'png');
+            end
         end
 
     end

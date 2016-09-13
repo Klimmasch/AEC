@@ -6,7 +6,7 @@
 % @param startVergErr           the vergence error to muscles start with
 % @param initMethod             either 'simple' or 'random'
 % @param numIters               number of iterations that are executed
-% @param stimuli                an array of indizes from the texture files
+% @param stimuliIndices         an array of indizes from the texture files
 % @param simulator              either a simulator object or [] for a new one
 % @param titleStr               string identifier that is used for the title and the saved image
 % @param savePlot               true or false if the resulting plots should be saved
@@ -15,7 +15,13 @@
 % enable multiple fixation dists in one plot with same init values
 % idea: instead of contourf, just plot single lines that correspond to
 % spec. obj. dists
-function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stimuli, simulator, titleStr, savePlot)
+function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, titleStr, savePlot)
+
+    % simulator check
+    if (isempty(simulator))
+        sprintf('An initialized simulator is necessary to continue.\nPlease execute simulator = prepareSimulator();')
+        return;
+    end
 
     %%% Saturation function that keeps motor commands in [0, 1]
     %   corresponding to the muscelActivity/metabolicCost tables
@@ -26,36 +32,39 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
         cmd(i1) = 1;
     end
 
+    % preperation
     rng(1);
-    angleDes = 2 * atand(model.baseline / (2 * objDist)); % only for one eye this time
-    cmdInit = [[0.003; 0.012], [0.003; 0.004], [0.01; 0.004]]; % hand-picked inits for muscles, used in initMethod 'random'
 
-    plotAnaglyphs = true;
-%     plotAnaglyphs = false;
+    if strcmp(initMethod, 'advanced')
+        initMethod = uint8(0);
 
-    % simulator = prepareSimulator();
-    if (isempty(simulator))
-        sprintf('Please execute simulator = prepareSimulator();')
+    elseif strcmp(initMethod, 'fixed')
+        initMethod = uint8(1);
+        cmdInit = [[0.003; 0.012], [0.003; 0.004], [0.01; 0.004]]; % hand-picked inits for muscles, used in initMethod 'random'
+
+    elseif strcmp(initMethod, 'simple')
+        initMethod = uint8(2);
+
+    else
+        sprintf('Muscle initialization method %s not supported.', initMethod)
         return;
     end
 
-    nStimuli = length(stimuli);
+    plotAnaglyphs = true;
+    nStimuli = length(stimuliIndices);
+    trajectory = zeros(nStimuli, numIters + 1, 2);
 
     %% main loop:
-    trajectory = zeros(length(stimuli), numIters + 1, 2);
+    angleDes = 2 * atand(model.baseline / (2 * objDist));
     figure;
     figIter = 1;
-    for stim = 1 : nStimuli
-        currentTexture = stimuli(stim);
+    for stimIter = 1 : nStimuli
+        currentTexture = stimuliIndices(stimIter);
 
-        if strcmp(initMethod, 'simple')
-            [command, angleNew] = model.getMF2(objDist, startVergErr);
-        elseif strcmp(initMethod, 'random')
-            command = cmdInit(:, stim);
-            angleNew = model.getAngle(command);
-        elseif strcmp(initMethod, 'advanced')
+        % muscle init
+        if (initMethod == 0)
             try
-                [command, angleNew] = model.getMFedood(objDist, startVergErr, false);
+                [command, angleNew] = model.getMFedood(objDist, startVergErr);
             catch
                 % catch non-existing variables error, occuring in non-up-to-date models
                 try
@@ -63,7 +72,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
                     delete(model);
                     clear model;
                     model = clone;
-                    [command, angleNew] = model.getMFedood(objDist, startVergErr, false);
+                    [command, angleNew] = model.getMFedood(objDist, startVergErr);
                     delete(clone);
                     clear clone;
                 catch
@@ -72,26 +81,26 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
                     return;
                 end
             end
+        elseif (initMethod == 1)
+            command = cmdInit(:, stimIter);
+            angleNew = model.getAngle(command);
+        elseif (initMethod == 2)
+            [command, angleNew] = model.getMF2(objDist, startVergErr);
         end
-        trajectory(stim, 1, :) = command;
-
-        model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3);
-
-        subplot(nStimuli, 2, figIter);
-        imshow(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight))
-        title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (model.baseline / 2) / (tand(angleNew / 2)), angleNew, angleDes - angleNew));
-        figIter = figIter + 1;
+        trajectory(stimIter, 1, :) = command;
 
         for iter = 1 : numIters
             model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3);
 
             % show anaglyphs for quit performance check
-            % if (plotAnaglyphs) && ((iter == 1) || (iter == numIters))
-            %     subplot(nStimuli, 2, figIter);
-            %     imshow(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight))
-            %     title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (model.baseline / 2) / (tand(angleNew / 2)), angleNew, angleDes - angleNew));
-            %     figIter = figIter + 1;
-            % end
+            if (plotAnaglyphs && ((iter == 1) || (iter == numIters)))
+                subplot(nStimuli, 2, figIter);
+                imshow(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight))
+                if (iter == 1)
+                    title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (model.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
+                end
+                figIter = figIter + 1;
+            end
 
             for i = 1 : length(model.scModel)
                 model.preprocessImage(i, 1);
@@ -103,77 +112,57 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
             feature = [bfFeature; command * model.lambdaMuscleFB];          % append muscle activities to feature vector
             relativeCommand = model.rlModel.act(feature);                   % generate change in muscle activity
             command = checkCmd(command + relativeCommand);                  % calculate new muscle activities
-            angleNew = model.getAngle(command) * 2;                                   % transform into angle
+            angleNew = model.getAngle(command) * 2;                         % transform into angle
 
-            trajectory(stim, iter + 1, :) = command;
+            trajectory(stimIter, iter + 1, :) = command;
+
+            if (iter == numIters)
+                title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (model.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
+            end
         end
-
-        subplot(nStimuli, 2, figIter);
-        imshow(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight))
-        title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (model.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
-        figIter = figIter + 1;
     end
 
-    %% plotting results
-    resolutionFactor = 6;
-    tableSize = size(model.degrees.results_deg)-1;
-
-    % set maximum x and y values of the tabular that should be plotted
-    xlim = 0.1;             % unfortunately, these are the smallest values since the tabular only has 11 entries
-    ylim = 0.1;
-    plotRange = [xlim, ylim];
-
-    % only this part of the tabular in increased in resolution
-    rangeIndizes = ceil(plotRange .* tableSize)+1;
-    degreesX = interp2(model.degrees.results_deg(1:rangeIndizes(1), 1:rangeIndizes(2)), resolutionFactor);
-    degSize = size(degreesX);                                       % corresp. to ((rangeIndizes-1)*2^resolutionFactor)+1
-
-    % now we cut out an even smaller part of this tabular.
-    factor = 1;      % 1/factor * axisLim is the part that will be displayed
-    maxIndexX = ceil(degSize(1)/factor);
-    maxIndexY = ceil(degSize(2)/factor);
-
-    scaleSize = ((tableSize(1)-1)*2^resolutionFactor)+1;            % corresp. to the size of the whole tabular with increased resolution
-%     fun = surf(degreesX);                                           % TODO: change axis labels
-%     fun = contourf(linspace(0, xlim / factor, maxIndexX), linspace(0, ylim / factor, maxIndexY), degreesX(1:maxIndexX, 1:maxIndexY), 'LineWidth', 0.001);  % temporary solution to enable plotRange = [0.025, 0.025]
-%     fun = contourf(degreesX(1:maxIndexX, 1:maxIndexY), 20, 'LineWidth', 0.001);  % temporary solution to enable plotRange = [0.025, 0.025]
-%     colBar = colorbar();
-% %     colorbar('Ticks',[-5,-2,1,4,7],...
-% %          'TickLabels',{'Cold','Cool','Neutral','Warm','Hot'}) %% todo:
-% %          replace vergence degrees with fixation distance
-%     colBar.Label.String = 'vergence degree';
-
+    %% Plotting results
     h = figure();
     hold on;
-    title(sprintf('Oject Fixation at %1.1fm (%.3f°)\n%s', objDist, angleDes, titleStr));
+    title(sprintf('Oject Fixation Trajectories at %1.1fm (%.3f°)\n%s', objDist, angleDes, titleStr));
 
-    pcHandle = pcolor(1 : maxIndexX, 1 : maxIndexY, degreesX);
-    % axis([xb(1), xb(end), yb(1), yb(end)]);
+    % pcHandle = pcolor(model.degreesIncRes); % use vergence degree as color dimension (background)
+    pcHandle = pcolor(model.metCostsIncRes);  % use metabolic costs as color dimension (background)
     % shading interp;
     set(pcHandle, 'EdgeColor', 'none');
 
-    % colormap(createCM());
     cb = colorbar();
-    cb.Label.String = 'vergence degree';
+    % cb.Label.String = 'vergence degree'; % use vergence degree as color dimension (background)
+    cb.Label.String = 'metabolic costs';   % use metabolic costs as color dimension (background)
 
-    scalingFactor = degSize ./ plotRange;
+    ax = gca;
+    ax.XTick = linspace(1, size(model.degreesIncRes, 2), 8);
+    ax.YTick = linspace(1, size(model.degreesIncRes, 1), 8);
+
+    ax.XTickLabel = strsplit(num2str(linspace(1, size(model.degreesIncRes, 2), 8) * model.scaleFacLR, '%4.2f '));
+    ax.YTickLabel = strsplit(num2str(linspace(1, size(model.degreesIncRes, 1), 8) * model.scaleFacMR, '%4.2f '));
+
+    ax.XTickLabelRotation = 45;
+    ax.YTickLabelRotation = 45;
+
+    axis([1, size(model.degreesIncRes, 2), 1, size(model.degreesIncRes, 1)]);
 
     % draw a line of points into the plane that represent the desired vergence
     [lateralDes, medialDes] = model.getAnglePoints(objDist, 0);
-    plot(lateralDes * scalingFactor + 1, medialDes * scalingFactor + 1, 'g', 'LineWidth', 1.8); %[0, 0.7255, 0.1765]
+    plot(lateralDes ./ model.scaleFacLR, medialDes ./ model.scaleFacMR, 'g', 'LineWidth', 1.8);
+
+    % add corresponding distance value to desired vergence graph
+    text(lateralDes(end - ceil(length(lateralDes) / 10)) / model.scaleFacLR, ...
+         medialDes(end - ceil(length(medialDes) / 10)) / model.scaleFacMR, ...
+         sprintf('%3.1fm', (model.baseline / 2) / tand(angleDes / 2)));
 
     % draw trajectories
-    for stim = 1:length(stimuli)
-        plot(trajectory(stim,1,1) * scalingFactor + 1, trajectory(stim,1,2) * scalingFactor + 1, 'r.', 'MarkerSize', 40); % first value gets a bigger dot
-        plot(trajectory(stim,:,1)' * scalingFactor + 1, trajectory(stim,:,2)' * scalingFactor + 1, '.-', 'LineWidth', 2, 'MarkerSize', 20);
-        plot(trajectory(stim,end,1) * scalingFactor + 1, trajectory(stim,end,2) * scalingFactor + 1, 'g.', 'MarkerSize', 40); % , 'MarkerSize', 100
+    for stim = 1 : length(stimuliIndices)
+        plot(trajectory(stim, 1, 1) ./ model.scaleFacLR, trajectory(stim, 1, 2)./ model.scaleFacMR, 'r.', 'MarkerSize', 40);
+        plot(trajectory(stim, :, 1)' ./ model.scaleFacLR, trajectory(stim, :, 2)'./ model.scaleFacMR, '.-', 'LineWidth', 2, 'MarkerSize', 20);
+        plot(trajectory(stim, end, 1) ./ model.scaleFacLR, trajectory(stim, end, 2)./ model.scaleFacMR, 'g.', 'MarkerSize', 40);
     end
-
-    fun = gca();
-    fun.XAxis.TickLabels = linspace(0, xlim/factor, maxIndexX); %TODO: get auf jeden Fall noch schoener --> weniger ticks!
-    fun.YAxis.TickLabels = linspace(0, ylim/factor, maxIndexY);
-
-    fun.XTickLabelRotation = -20;
 
     xlabel('lateral rectus activation [%]');
     ylabel('medial rectus activation [%]');
@@ -181,7 +170,6 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
     if savePlot
         timestamp = datestr(now, 'dd-mm-yyyy_HH:MM:SS_');
         savePath = strcat(model.savePath, '/', timestamp, titelStr);
-        saveas(h, savePath, 'png'); % could be saved as 'fig' as well ...
+        saveas(h, savePath, 'png');
     end
-
 end
