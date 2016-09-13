@@ -53,12 +53,29 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
             command = cmdInit(:, stim);
             angleNew = model.getAngle(command);
         elseif strcmp(initMethod, 'advanced')
-            [command, angleNew] = model.getMFedood(objDist, startVergErr, false);
+            try
+                [command, angleNew] = model.getMFedood(objDist, startVergErr, false);
+            catch
+                % catch non-existing variables error, occuring in non-up-to-date models
+                try
+                    clone = model.copy();
+                    delete(model);
+                    clear model;
+                    model = clone;
+                    [command, angleNew] = model.getMFedood(objDist, startVergErr, false);
+                    delete(clone);
+                    clear clone;
+                catch
+                    % catch when new model property isn't present in Model class yet
+                    sprintf('Error: One or more new model properties (variables) are not present in Model.m class yet!')
+                    return;
+                end
+            end
         end
         trajectory(stim, 1, :) = command;
 
         model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3);
-        
+
         subplot(nStimuli, 2, figIter);
         imshow(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight))
         title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (model.baseline / 2) / (tand(angleNew / 2)), angleNew, angleDes - angleNew));

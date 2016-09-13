@@ -139,7 +139,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     % [command, angleNew] = model.getMF2(objRange(odIndex), vseRange(vseIndex));
 
                     % Uniform muscle activation distribution for two muscles
-                    [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex), true);
+                    [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex));
 
                     for iter = 2 : testInterval + 1
                         % update stimuli
@@ -273,7 +273,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 % [command, angleNew] = model.getMF2(objRange(odIndex), vseRange(vseIndex));
 
                 % Uniform muscle activation distribution for two muscles
-                [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex), true);
+                [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex));
 
                 for stimulusIndex = 1 : nStim
                     % update stimuli
@@ -339,7 +339,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % [command, angleNew] = model.getMF2(objRange2(i), vseRange(randi(length(vseRange))));
 
             % Uniform muscle activation distribution for two muscles
-            [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))), true);
+            [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))));
 
             currentTexture = randi(length(nStim));
 
