@@ -13,8 +13,6 @@
 %%%
 %%TODO:
 % enable multiple fixation dists in one plot with same init values
-% idea: instead of contourf, just plot single lines that correspond to
-% spec. obj. dists
 function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, titleStr, savePlot)
 
     % simulator check
