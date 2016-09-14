@@ -958,7 +958,7 @@ classdef Model < handle
                         shading interp;
                         set(pcHandle, 'EdgeColor', 'none');
 
-                        colormap(createCM());
+                        colormap(createCM(1));
                         cb = colorbar();
                         cb.Label.String = '# Occurences';
 
@@ -984,7 +984,7 @@ classdef Model < handle
                         shading interp;
                         set(pcHandle, 'EdgeColor', 'none');
 
-                        colormap(createCM());
+                        colormap(createCM(1));
                         cb = colorbar();
                         cb.Label.String = '# Occurences';
 
@@ -1252,14 +1252,15 @@ classdef Model < handle
             end
 
             % preperation
-            rng(1);
+            rng(100);
 
             if strcmp(initMethod, 'advanced')
                 initMethod = uint8(0);
 
             elseif strcmp(initMethod, 'fixed')
                 initMethod = uint8(1);
-                cmdInit = [[0.003; 0.012], [0.003; 0.004], [0.01; 0.004]]; % hand-picked inits for muscles, used in initMethod 'random'
+                % hand-picked inits for muscles, used in initMethod 'random'
+                cmdInit = [[0.003; 0.012], [0.003; 0.004], [0.01; 0.004]];
 
             elseif strcmp(initMethod, 'simple')
                 initMethod = uint8(2);
@@ -1271,72 +1272,80 @@ classdef Model < handle
 
             plotAnaglyphs = true;
             nStimuli = length(stimuliIndices);
-            trajectory = zeros(nStimuli, numIters + 1, 2);
+            trajectory = zeros(length(objDist), length(startVergErr), nStimuli, numIters + 1, 2);
 
             %% main loop:
-            angleDes = 2 * atand(this.baseline / (2 * objDist));
             figure;
             figIter = 1;
-            for stimIter = 1 : nStimuli
-                currentTexture = stimuliIndices(stimIter);
 
-                % muscle init
-                if (initMethod == 0)
-                    try
-                        [command, angleNew] = this.getMFedood(objDist, startVergErr);
-                    catch
-                        % catch non-existing variables error, occuring in non-up-to-date models
-                        try
-                            clone = this.copy();
-                            delete(this);
-                            clear this;
-                            this = clone;
-                            [command, angleNew] = this.getMFedood(objDist, startVergErr);
-                            delete(clone);
-                            clear clone;
-                        catch
-                            % catch when new model property isn't present in Model class yet
-                            sprintf('Error: One or more new model properties (variables) are not present in Model.m class yet!')
-                            return;
+            for odIndex = 1 : length(objDist)
+                angleDes = 2 * atand(this.baseline / (2 * objDist(odIndex)));
+
+                for stimIter = 1 : nStimuli
+                    currentTexture = stimuliIndices(stimIter);
+
+                    for vergErrIndex = 1 : length(startVergErr)
+                        % muscle init
+                        if (initMethod == 0)
+                            try
+                                [command, angleNew] = this.getMFedood(objDist(odIndex), startVergErr(vergErrIndex));
+                            catch
+                                % catch non-existing variables error, occuring in non-up-to-date models
+                                try
+                                    clone = this.copy();
+                                    delete(this);
+                                    clear this;
+                                    this = clone;
+                                    [command, angleNew] = this.getMFedood(objDist(odIndex), startVergErr(vergErrIndex));
+                                    delete(clone);
+                                    clear clone;
+                                catch
+                                    % catch when new model property isn't present in Model class yet
+                                    sprintf('Error: One or more new model properties (variables) are not present in Model.m class yet!')
+                                    return;
+                                end
+                            end
+                        elseif (initMethod == 1)
+                            command = cmdInit(:, stimIter);
+                            angleNew = this.getAngle(command);
+                        elseif (initMethod == 2)
+                            [command, angleNew] = this.getMF2(objDist(odIndex), startVergErr(vergErrIndex));
                         end
-                    end
-                elseif (initMethod == 1)
-                    command = cmdInit(:, stimIter);
-                    angleNew = this.getAngle(command);
-                elseif (initMethod == 2)
-                    [command, angleNew] = this.getMF2(objDist, startVergErr);
-                end
-                trajectory(stimIter, 1, :) = command;
+                        trajectory(odIndex, vergErrIndex, stimIter, 1, :) = command;
 
-                for iter = 1 : numIters
-                    this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3);
+                        for iter = 1 : numIters
+                            this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3);
 
-                    % show anaglyphs for quit performance check
-                    if (plotAnaglyphs && ((iter == 1) || (iter == numIters)))
-                        subplot(nStimuli, 2, figIter);
-                        imshow(stereoAnaglyph(this.imgGrayLeft, this.imgGrayRight))
-                        if (iter == 1)
-                            title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (this.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
+                            % show anaglyphs for quit performance check
+                            if (plotAnaglyphs && ((iter == 1) || (iter == numIters)))
+                                subplot(length(objDist) * length(startVergErr) * nStimuli, 2, figIter);
+                                imshow(stereoAnaglyph(this.imgGrayLeft, this.imgGrayRight))
+                                if (iter == 1)
+                                    title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', ...
+                                          (this.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
+                                end
+                                figIter = figIter + 1;
+                            end
+
+                            for i = 1 : length(this.scModel)
+                                this.preprocessImage(i, 1);
+                                this.preprocessImage(i, 2);
+                                currentView{i} = vertcat(this.patchesLeft{i}, this.patchesRight{i});
+                            end
+
+                            [bfFeature, ~, ~] = this.generateFR(currentView);              % encode image patches
+                            feature = [bfFeature; command * this.lambdaMuscleFB];          % append muscle activities to feature vector
+                            relativeCommand = this.rlModel.act(feature);                   % generate change in muscle activity
+                            command = checkCmd(command + relativeCommand);                 % calculate new muscle activities
+                            angleNew = this.getAngle(command) * 2;                         % transform into angle
+
+                            trajectory(odIndex, vergErrIndex, stimIter, iter + 1, :) = command;
+
+                            if (iter == numIters)
+                                title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', ...
+                                              (this.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
+                            end
                         end
-                        figIter = figIter + 1;
-                    end
-
-                    for i = 1 : length(this.scModel)
-                        this.preprocessImage(i, 1);
-                        this.preprocessImage(i, 2);
-                        currentView{i} = vertcat(this.patchesLeft{i}, this.patchesRight{i});
-                    end
-
-                    [bfFeature, ~, ~] = this.generateFR(currentView);              % encode image patches
-                    feature = [bfFeature; command * this.lambdaMuscleFB];          % append muscle activities to feature vector
-                    relativeCommand = this.rlModel.act(feature);                   % generate change in muscle activity
-                    command = checkCmd(command + relativeCommand);                 % calculate new muscle activities
-                    angleNew = this.getAngle(command) * 2;                         % transform into angle
-
-                    trajectory(stimIter, iter + 1, :) = command;
-
-                    if (iter == numIters)
-                        title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', (this.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
                     end
                 end
             end
@@ -1344,13 +1353,15 @@ classdef Model < handle
             %% Plotting results
             h = figure();
             hold on;
-            title(sprintf('Oject Fixation Trajectories at %1.1fm (%.3f°)\n%s', objDist, angleDes, titleStr));
+            % title(sprintf('Oject Fixation Trajectories at %1.1fm (%.3f°)\n%s', objDist, angleDes, titleStr));
+            title(sprintf('Oject Fixation Trajectories\n%s', titleStr));
 
             % pcHandle = pcolor(this.degreesIncRes); % use vergence degree as color dimension (background)
             pcHandle = pcolor(this.metCostsIncRes);  % use metabolic costs as color dimension (background)
             % shading interp;
             set(pcHandle, 'EdgeColor', 'none');
 
+            % colormap(createCM(1));
             cb = colorbar();
             % cb.Label.String = 'vergence degree'; % use vergence degree as color dimension (background)
             cb.Label.String = 'metabolic costs';   % use metabolic costs as color dimension (background)
@@ -1367,20 +1378,46 @@ classdef Model < handle
 
             axis([1, size(this.degreesIncRes, 2), 1, size(this.degreesIncRes, 1)]);
 
-            % draw a line of points into the plane that represent the desired vergence
-            [lateralDes, medialDes] = this.getAnglePoints(objDist, 0);
-            plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, 'g', 'LineWidth', 1.8);
+            objRange = [0.5, 6];
+            for odIndex = 1 : length(objRange)
+                % draw +1 pixel offset in respect to desired vergence distance
+                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), 0.24);
+                plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, ...
+                     'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1.8);
 
-            % add corresponding distance value to desired vergence graph
-            text(lateralDes(end - ceil(length(lateralDes) / 10)) / this.scaleFacLR, ...
-                 medialDes(end - ceil(length(medialDes) / 10)) / this.scaleFacMR, ...
-                 sprintf('%3.1fm', (this.baseline / 2) / tand(angleDes / 2)));
+                % draw -1 pixel offset in respect to desired vergence distance
+                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), -0.24);
+                plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, ...
+                     'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1.8);
+
+                % draw a line of points into the plane that represent the desired vergence
+                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), 0);
+                plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, ...
+                     'color', [0.6510, 1.0000, 0.6588], 'LineWidth', 1.8);
+
+                % add corresponding distance value to desired vergence graph
+                text(lateralDes(end - ceil(length(lateralDes) / 10)) / this.scaleFacLR, ...
+                     medialDes(end - ceil(length(medialDes) / 10)) / this.scaleFacMR, ...
+                     sprintf('%3.1fm', objRange(odIndex)));
+            end
 
             % draw trajectories
-            for stim = 1 : length(stimuliIndices)
-                plot(trajectory(stim, 1, 1) ./ this.scaleFacLR, trajectory(stim, 1, 2)./ this.scaleFacMR, 'r.', 'MarkerSize', 40);
-                plot(trajectory(stim, :, 1)' ./ this.scaleFacLR, trajectory(stim, :, 2)'./ this.scaleFacMR, '.-', 'LineWidth', 2, 'MarkerSize', 20);
-                plot(trajectory(stim, end, 1) ./ this.scaleFacLR, trajectory(stim, end, 2)./ this.scaleFacMR, 'g.', 'MarkerSize', 40);
+            for odIndex = 1 : length(objDist)
+                for stim = 1 : length(stimuliIndices)
+                    for vergErrIndex = 1 : length(startVergErr)
+                        plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) ./ this.scaleFacLR, ...
+                        trajectory(odIndex, vergErrIndex, stim, 1, 2)./ this.scaleFacMR, ...
+                        'r.', 'MarkerSize', 30);
+
+                        plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1,1])' ./ this.scaleFacLR, ...
+                        reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1,1])'./ this.scaleFacMR, ...
+                        '.-', 'LineWidth', 2, 'MarkerSize', 20);
+
+                        plot(trajectory(odIndex, vergErrIndex, stim, end, 1) ./ this.scaleFacLR, ...
+                        trajectory(odIndex, vergErrIndex, stim, end, 2)./ this.scaleFacMR, ...
+                        'g.', 'MarkerSize', 30);
+                    end
+                end
             end
 
             xlabel('lateral rectus activation [%]');
