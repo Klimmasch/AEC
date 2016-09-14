@@ -115,7 +115,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
         for odIndex = 1 : length(objRange)
-            sprintf('Level 1/3 Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
+            sprintf('Level 1/4 Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
 
             % vergence start error
             vergMax = model.getVergErrMax(objRange(odIndex));
@@ -262,7 +262,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         vseRange = linspace(-1, 1, test2Resolution);
 
         for odIndex = 1 : length(objRange)
-            sprintf('Level 2/3 Test iteration = %d/%d', odIndex + size(objRange, 2), size(objRange, 2) * 2)
+            sprintf('Level 2/4 Test iteration = %d/%d', odIndex + size(objRange, 2), size(objRange, 2) * 2)
 
             for vseIndex = 1 : length(vseRange)
                 if (model.getVergErrMax(objRange(odIndex)) < vseRange(vseIndex))
@@ -325,7 +325,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         tmpcnt = 1;
         for odIndex = 1 : length(testResult6) / testInterval
-            sprintf('Level 3/3 Test iteration = %d/%d', odIndex, length(testResult6) / testInterval)
+            sprintf('Level 3/4 Test iteration = %d/%d', odIndex, length(testResult6) / testInterval)
 
             % vergence start error
             vergMax = model.getVergErrMax(objRange2(odIndex));
@@ -389,6 +389,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 tmpcnt = tmpcnt + 1;
             end
         end
+
+        %% Generate muscle activation trajectories
+        sprintf('Level 4/4')
+        model.plotTrajectory([0.5, 6], [-2, 2], 'advanced', testInterval, randi(length(nStim)), simulator, '', plotIt);
 
         if (measureTime == true)
             elapsedTime = toc;
@@ -852,7 +856,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             shading interp;
             set(pcHandle, 'EdgeColor', 'none');
 
-            colormap(createCM());
+            colormap(createCM(1));
             cb = colorbar();
             cb.Label.String = '# Occurences';
 
@@ -877,7 +881,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             shading interp;
             set(pcHandle, 'EdgeColor', 'none');
 
-            colormap(createCM());
+            colormap(createCM(1));
             cb = colorbar();
             cb.Label.String = '# Occurences';
 
