@@ -29,7 +29,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+%     textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
