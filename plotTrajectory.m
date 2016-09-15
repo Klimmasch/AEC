@@ -14,7 +14,6 @@
 %%TODO:
 % enable multiple fixation dists in one plot with same init values
 function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, titleStr, savePlot)
-
     % simulator check
     if (isempty(simulator))
         sprintf('An initialized simulator is necessary to continue.\nPlease execute simulator = prepareSimulator();')
@@ -109,7 +108,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
             [bfFeature, ~, ~] = model.generateFR(currentView);              % encode image patches
             feature = [bfFeature; command * model.lambdaMuscleFB];          % append muscle activities to feature vector
             relativeCommand = model.rlModel.act(feature);                   % generate change in muscle activity
-            command = checkCmd(command + relativeCommand);                  % calculate new muscle activities
+            command = checkCmd(command + relativeCommand);                 % calculate new muscle activities
             angleNew = model.getAngle(command) * 2;                         % transform into angle
 
             trajectory(stimIter, iter + 1, :) = command;
@@ -146,9 +145,17 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
 
     axis([1, size(model.degreesIncRes, 2), 1, size(model.degreesIncRes, 1)]);
 
+    % draw +1 pixel offset in respect to desired vergence distance
+    [lateralDes, medialDes] = model.getAnglePoints(objDist, 0.24);
+    plot(lateralDes ./ model.scaleFacLR, medialDes ./ model.scaleFacMR, 'color', [0, 0.5882, 0], 'LineStyle', '--', 'LineWidth', 1.8);
+
+    % draw -1 pixel offset in respect to desired vergence distance
+    [lateralDes, medialDes] = model.getAnglePoints(objDist, -0.24);
+    plot(lateralDes ./ model.scaleFacLR, medialDes ./ model.scaleFacMR, 'color', [0, 0.5882, 0], 'LineStyle', '--', 'LineWidth', 1.8);
+
     % draw a line of points into the plane that represent the desired vergence
     [lateralDes, medialDes] = model.getAnglePoints(objDist, 0);
-    plot(lateralDes ./ model.scaleFacLR, medialDes ./ model.scaleFacMR, 'g', 'LineWidth', 1.8);
+    plot(lateralDes ./ model.scaleFacLR, medialDes ./ model.scaleFacMR, 'color', [0.6510, 1.0000, 0.6588], 'LineWidth', 1.8);
 
     % add corresponding distance value to desired vergence graph
     text(lateralDes(end - ceil(length(lateralDes) / 10)) / model.scaleFacLR, ...

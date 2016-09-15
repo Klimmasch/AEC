@@ -1425,7 +1425,7 @@ classdef Model < handle
 
             if savePlot
                 timestamp = datestr(now, 'dd-mm-yyyy_HH:MM:SS_');
-                savePath = strcat(this.savePath, '/', timestamp, titelStr);
+                savePath = strcat(this.savePath, '/', timestamp, titleStr);
                 saveas(h, savePath, 'png');
             end
         end
