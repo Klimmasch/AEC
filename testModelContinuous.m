@@ -392,7 +392,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         %% Generate muscle activation trajectories
         sprintf('Level 4/4')
-        model.plotTrajectory([0.5, 6], [-2, 2], 'advanced', testInterval, randi(length(nStim)), simulator, '', plotIt);
+        model.plotTrajectory([0.5, 6], [-2, 2], 'advanced', testInterval, randi(length(nStim)), simulator, folder, plotIt);
 
         if (measureTime == true)
             elapsedTime = toc;
@@ -908,7 +908,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         saveas(gcf, plotpath, 'png');
     end
 
-    % Results overview table generation
+    %%% Results overview table generation
     resultsFN = strcat(model.savePath, '/results.ods'); % file name
     resultsFID = fopen(resultsFN, 'a');                 % file descriptor
 

@@ -1407,15 +1407,15 @@ classdef Model < handle
                     for vergErrIndex = 1 : length(startVergErr)
                         plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) ./ this.scaleFacLR, ...
                         trajectory(odIndex, vergErrIndex, stim, 1, 2)./ this.scaleFacMR, ...
-                        'r.', 'MarkerSize', 30);
+                        'r.', 'MarkerSize', 20);
 
                         plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1,1])' ./ this.scaleFacLR, ...
                         reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1,1])'./ this.scaleFacMR, ...
-                        '.-', 'LineWidth', 2, 'MarkerSize', 20);
+                        '.-', 'LineWidth', 2, 'MarkerSize', 10);
 
                         plot(trajectory(odIndex, vergErrIndex, stim, end, 1) ./ this.scaleFacLR, ...
                         trajectory(odIndex, vergErrIndex, stim, end, 2)./ this.scaleFacMR, ...
-                        'g.', 'MarkerSize', 30);
+                        'g.', 'MarkerSize', 20);
                     end
                 end
             end
@@ -1424,23 +1424,24 @@ classdef Model < handle
             ylabel('medial rectus activation [%]');
 
             if savePlot
-                timestamp = datestr(now, 'dd-mm-yyyy_HH:MM:SS_');
-                savePath = strcat(this.savePath, '/', timestamp, titleStr);
+                % timestamp = datestr(now, 'dd-mm-yyyy_HH:MM:SS_');
+                % savePath = strcat(this.savePath, '/', timestamp, titleStr);
+                savePath = strcat(this.savePath, '/muscleActivityTrajectory_', titleStr);
                 saveas(h, savePath, 'png');
             end
         end
 
-        %%% This methods displays the current binocular basis functions of the model. 
+        %%% This methods displays the current binocular basis functions of the model.
         %%% If the history of basis functions was saved, their development is displayed.
         function displayBasis(this, savePlot)
             % r = 16; c = 18; %how to arrange the basis in rows and cols
             r = 20;
-            
+
             numScales = length(this.scModel);
             len = size(this.scModel{1}.basisHist, 3);  %# of trials saved
             basisTrack = cell(numScales, len);          %variable to store all the saved basis
 
-            
+
             for scale = 1:numScales
                 if len == 1
                     basisTrack{scale, 1} = this.scModel{scale}.basis;
