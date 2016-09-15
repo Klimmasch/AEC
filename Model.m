@@ -1430,6 +1430,62 @@ classdef Model < handle
             end
         end
 
+        %%% This methods displays the current binocular basis functions of the model. 
+        %%% If the history of basis functions was saved, their development is displayed.
+        function displayBasis(this, savePlot)
+            % r = 16; c = 18; %how to arrange the basis in rows and cols
+            r = 20;
+            
+            numScales = length(this.scModel);
+            len = size(this.scModel{1}.basisHist, 3);  %# of trials saved
+            basisTrack = cell(numScales, len);          %variable to store all the saved basis
+
+            
+            for scale = 1:numScales
+                if len == 1
+                    basisTrack{scale, 1} = this.scModel{scale}.basis;
+                else
+                    for j = 1:len
+                        basisTrack{scale, j} = this.scModel{scale}.basisHist(:, :, j);
+                    end
+                end
+            end
+
+            h = figure(1);
+            scrsz = get(0,'ScreenSize');
+            set(h,'Position',[scrsz(1) scrsz(2) scrsz(3) scrsz(4)]);
+
+            % loop over scales
+            for s = 1:numScales
+                % sort basis according to left energy norm
+                endBasis = basisTrack{s,end}(1:end/2,:);
+                leftEnergy = abs(sum(endBasis.^2)-0.5);
+                [~,I] = sort(leftEnergy);
+
+                subplot(1,numScales,s);
+                [di,num] = size(basisTrack{s,1});
+
+                fun1 = @(blc_struct) padarray(padarray(reshape(permute(padarray(reshape(blc_struct.data, sqrt(di / 2), ...
+                         sqrt(di / 2), 2), [1, 1], 'pre'), [1, 3, 2]), (sqrt(di / 2) + 1) * 2, sqrt(di / 2) + 1), [1, 1], ...
+                         'post') - 1, [1 1], 'pre') + 1;
+
+                for j = 1:len
+                    A = basisTrack{s,j}(:,I);
+                    % B = reshape(A,di*r,c);
+                    B = reshape(A,di * r,num / r); %hotfix!
+                    B = B/max(max(abs(B))) + 0.5;
+                    C = padarray(padarray(blockproc(B,[di,1],fun1)-1,[1 1],'post')+1,[2,2]);
+                    imshow(C);
+                    title(sprintf('Basis functions at\n%d%% of training\n(scale %d)', ceil((j / len) * 100), s))
+                    % title(num2str(this.trainTime*0.1*(j-1)));
+                    drawnow; pause(.001);
+                end
+            end
+
+            if savePlot
+                saveas(h, sprintf('%s/basisFunctions.png', this.savePath), 'png');
+            end
+        end
     end
 end
 

@@ -14,8 +14,12 @@ basisTrack = cell(numScales, len);           %variable to store all the saved ba
 %     basisTrack{2,j} = model.scModel_Small.basisHist(:,:,j);
 % end
 for scale = 1:numScales
-    for j = 1:len
-        basisTrack{scale, j} = model.scModel{scale}.basisHist(:, :, j);
+    if len == 1
+        basisTrack{scale, 1} = model.scModel{scale}.basis;
+    else
+        for j = 1:len
+            basisTrack{scale, j} = model.scModel{scale}.basisHist(:, :, j);
+        end
     end
 end
 
@@ -47,7 +51,8 @@ for s = 1:numScales
 
     for j = 1:len
         A = basisTrack{s,j}(:,I);
-        B = reshape(A,di*r,c);
+%         B = reshape(A,di*r,c);
+        B = reshape(A,di * r,num / r); %hotfix!
         B = B/max(max(abs(B))) + 0.5;
         C = padarray(padarray(blockproc(B,[di,1],fun1)-1,[1 1],'post')+1,[2,2]);
         imshow(C);

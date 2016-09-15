@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-%     learnedFile = '/home/lelais/Documents/MATLAB/results/model_12-Sep-2016_17:52:01_5000000_1_edood_nobounds_metC_0.0014435_redo/modelAt2000000/model.mat';
+    % learnedFile = '/home/klimmasch/projects/results/model_13-Sep-2016_17:43:39_6000000_1_bmsf_advancedInit_metCost1/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -29,7 +29,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+%     textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
