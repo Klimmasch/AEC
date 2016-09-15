@@ -94,10 +94,11 @@ end
 % sum(sum(model.recerr_hist))/size(model.recerr_hist, 1) = 0.1693 @ dsRatio = [8, 2]
 % mean(model.metCost_hist) = 1.0380
 %
+% 0.5% = 0.0014435 | 0.25% = 0.00072175 | 0.1% = 0.0002887
 % 1% = 0.0029 | 2% = 0.0058 | 3% = 0.0087 | 4% = 0.0114 | 5% = 0.0144
 % 6% = 0.0173 | 7% = 0.0203 | 8% = 0.0232 | 9% = 0.0261 | 10% = 0.0289
 % 15% = 0.0435 | 25% = 0.0722 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
-lambdaMet = 0.0087;
+lambdaMet = 0;
 
 % due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
 % lambdaMet needs to be scaled accordingly
@@ -163,8 +164,11 @@ regularizer = 1 - 1e-3;                              % actor weight regularizati
 
 varianceRange = [1e-5, 1e-5];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
                                                      % corresponds to softMax temperature in discrete RL models
-if (size(varianceRange, 2) == 1 || varianceRange(1) <= varianceRange(2))
+if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     varDec = 0; % no variance decay
+elseif (varianceRange(1) < varianceRange(2))
+    sprintf('Error: It must hold varianceRange(1) >= varianceRange(2)')
+    return;
 else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
 end

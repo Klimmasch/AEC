@@ -29,11 +29,27 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-%     textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
     testAt = [500000 : 500000 : trainTime];
+
+    %%% Testing flag
+    % Whether the testing procedure shall be executed after training
+    % testIt:   0 = don't do it
+    %           1 = do it
+    testIt = uint8(1);
+
+    %%% Amount of test stimuli
+    nStimTest = 40;
+
+    % Save model every #saveInterval training iterations
+    saveInterval = ceil(trainTime / 100);
+    % saveInterval = trainTime;
+
+    % Track the evolution of all basis functions of the respective sparse coders
+    trackSCBasisHistory = uint8(0);
 
     %%% Sparse coding approach
     % sparseCodingType: 0 = non-homeostatic
@@ -52,15 +68,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % closeFigures: 0 = don't do it
     %               1 = do it
     closeFigures = uint8(1);
-
-    %%% Testing flag
-    % Whether the testing procedure shall be executed after training
-    % testIt:   0 = don't do it
-    %           1 = do it
-    testIt = uint8(1);
-
-    %%% Amount of test stimuli
-    nStimTest = 40;
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -132,13 +139,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % additional notes/information to this model/approach
     model.notes = [model.notes, fileDescription];
 
-    % Save model every #saveInterval training iterations
-    saveInterval = ceil(model.trainTime / 100);
-    % saveInterval = trainTime;
-
-    % Track the evolution of all basis functions of the respective sparse coders
-    trackSCBasisHistory = uint8(0);
-
     %%% New renderer
     % simulator = OpenEyeSim('create'); % stable renderer
     simulator = OpenEyeSimV5('create'); % experimental version
@@ -156,7 +156,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         textureCnt = length(texture);
 
         if (i == 1)
-            nTestTextures = textureCnt;      % save number of test textures for proper indexing later
+            nTestTextures = textureCnt; % save number of test textures for proper indexing later
         elseif (i == 2)
             nStimTrain = textureCnt;
         end
@@ -281,12 +281,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             % end
 
             %% Normalized reward [-1, 1]
-%             rewardFunction = rewardFunction / 100;
-%             alpha = model.rlModel.CCritic.gamma; %weighting range (equal to reinforcement running average constant)
-%             delta = rewardFunction - model.reward_mean;
-%             model.reward_mean = (1 - alpha) * model.reward_mean + (alpha * delta);
-%             model.reward_variance = (1 - alpha) * model.reward_variance + (alpha * delta^2);
-%             rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
+            % rewardFunction = rewardFunction / 100;
+            % alpha = model.rlModel.CCritic.gamma; %weighting range (equal to reinforcement running average constant)
+            % delta = rewardFunction - model.reward_mean;
+            % model.reward_mean = (1 - alpha) * model.reward_mean + (alpha * delta);
+            % model.reward_variance = (1 - alpha) * model.reward_variance + (alpha * delta^2);
+            % rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
 
             % rewardFunction_prev = rewardFunctionReal;
 
