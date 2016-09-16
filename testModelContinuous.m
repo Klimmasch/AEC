@@ -378,7 +378,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                         command = command + relativeCommand;        % two muscles
                     end
                     command = checkCmd(command);                    % restrain motor commands to [0,1]
-                    angleNew = model.getAngle(command) * 2;               % resulting angle is used for both eyes
+                    angleNew = model.getAngle(command) * 2;         % resulting angle is used for both eyes
                 else
                     angleNew = angleNew + relativeCommand;
                     if (angleNew > angleMax || angleNew < angleMin)
@@ -392,7 +392,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         %% Generate muscle activation trajectories
         sprintf('Level 4/4')
-        model.plotTrajectory([0.5, 6], [-2, 2], 'advanced', testInterval, randi(length(nStim)), simulator, folder, plotIt);
+        model.plotTrajectory([0.5, 6], [-2, 2], 'advanced', testInterval, randi(length(nStim)), simulator, folder(2:end), plotIt);
 
         if (measureTime == true)
             elapsedTime = toc;

@@ -87,18 +87,19 @@ if (dsRatio(end) > 1)
 end
 
 %%% Metabolic costs factor
-% per_cent = mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec
+% per_cent = mean(model.metCost_hist) * model.lambdaMet * model.lambdaRec / mean(model.recErr_hist) * model.lambdaRec
 % privious 12.75% =  0.204 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.8% = 0.0128 | 0.75% = 0.012 | 0.6% = 0.0096 | 0.5% = 0.008
 %%% NEW
 % sum(sum(model.recerr_hist))/size(model.recerr_hist, 1) = 0.2997 @ dsRatio = [8, 1]
 % sum(sum(model.recerr_hist))/size(model.recerr_hist, 1) = 0.1693 @ dsRatio = [8, 2]
 % mean(model.metCost_hist) = 1.0380
-%
+% meanR=mean(sum(model.recerr_hist,2)) = 0.1038
+% mean(model.metCost_hist) = 0.5727
 % 0.5% = 0.0014435 | 0.25% = 0.00072175 | 0.1% = 0.0002887
 % 1% = 0.0029 | 2% = 0.0058 | 3% = 0.0087 | 4% = 0.0114 | 5% = 0.0144
 % 6% = 0.0173 | 7% = 0.0203 | 8% = 0.0232 | 9% = 0.0261 | 10% = 0.0289
 % 15% = 0.0435 | 25% = 0.0722 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
-lambdaMet = 0;
+lambdaMet = 0.0029;
 
 % due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
 % lambdaMet needs to be scaled accordingly
@@ -162,7 +163,7 @@ xi = 0.3;                                            % discount factor | origin 
 gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
 regularizer = 1 - 1e-3;                              % actor weight regularization via factorial downscaling
 
-varianceRange = [1e-5, 1e-5];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
+varianceRange = [1e-4, 1e-4];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
                                                      % corresponds to softMax temperature in discrete RL models
 if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     varDec = 0; % no variance decay
