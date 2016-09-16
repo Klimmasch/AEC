@@ -298,9 +298,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             %% RL model
             % Variance decay, i.e. reduction of actor's output perturbation
-            % if (model.rlModel.CActor.varDec > 0)
-            %     model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
-            % end
+            if (model.rlModel.CActor.varDec > 0)
+                model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
+            end
 
             relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
