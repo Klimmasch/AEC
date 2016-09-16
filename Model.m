@@ -1235,7 +1235,7 @@ classdef Model < handle
         % enable multiple fixation dists in one plot with same init values
         % idea: instead of contourf, just plot single lines that correspond to
         % spec. obj. dists
-        function plotTrajectory(this, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, titleStr, savePlot)
+        function plotTrajectory(this, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, directory, titleStr, savePlot)
             % simulator check
             if (isempty(simulator))
                 sprintf('An initialized simulator is necessary to continue.\nPlease execute simulator = prepareSimulator();')
@@ -1341,7 +1341,7 @@ classdef Model < handle
 
                             trajectory(odIndex, vergErrIndex, stimIter, iter + 1, :) = command;
 
-                            if (iter == numIters)
+                            if (plotAnaglyphs && (iter == numIters))
                                 title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', ...
                                               (this.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
                             end
@@ -1353,8 +1353,11 @@ classdef Model < handle
             %% Plotting results
             h = figure();
             hold on;
-            % title(sprintf('Oject Fixation Trajectories at %1.1fm (%.3f°)\n%s', objDist, angleDes, titleStr));
-            title(sprintf('Oject Fixation Trajectories\n%s', titleStr));
+            if (isempty(titleStr))
+                title('Object Fixation Trajectories');
+            else
+                title(sprintf('Object Fixation Trajectories\nmodel trained for #%s iterations', titleStr));
+            end
 
             % pcHandle = pcolor(this.degreesIncRes); % use vergence degree as color dimension (background)
             pcHandle = pcolor(this.metCostsIncRes);  % use metabolic costs as color dimension (background)
@@ -1423,13 +1426,13 @@ classdef Model < handle
             xlabel('lateral rectus activation [%]');
             ylabel('medial rectus activation [%]');
 
-            if savePlot
-                % timestamp = datestr(now, 'dd-mm-yyyy_HH:MM:SS_');
-                % savePath = strcat(this.savePath, '/', timestamp, titleStr);
-                folder = strcat(this.savePath, '/muscleActivityTrajectory_');
-                mkdir(folder);
-                savePath = strcat(folder, titleStr);
-                saveas(h, savePath, 'png');
+            if (savePlot == 1)
+                if (~isempty(directory))
+                    plotpath = sprintf('%s/muscleActivityTrajectory.png', directory);
+                else
+                    plotpath = 'muscleActivityTrajectory.png';
+                end
+                saveas(h, plotpath, 'png');
             end
         end
 

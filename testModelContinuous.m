@@ -7,7 +7,7 @@
 %@param reinitRenderer      1 if renderer was already initialized
 %                           0 if renderer wasn't initialized yet
 %%%
-function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer, folder)
+function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer, folderName)
 
     % should the simulation time be measured?
     % not recommended for use during training
@@ -60,11 +60,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
     end
 
-    %%% creating a new directory if (folder ~= '/.')
-    if (folder(1) ~= '/')
-        folder = ['/' folder];
+    %%% creating a new directory if (folderName ~= '/.')
+    if (folderName(1) ~= '/')
+        folderName = ['/' folderName];
     end
-    imageSavePath = [model.savePath folder];
+    imageSavePath = [model.savePath folderName];
     mkdir(imageSavePath);
 
     % fixation interval at testing procedure
@@ -392,7 +392,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         %% Generate muscle activation trajectories
         sprintf('Level 4/4')
-        model.plotTrajectory([0.5, 6], [-2, 2], 'advanced', testInterval, randi(length(nStim)), simulator, folder(2:end), plotIt);
+        model.plotTrajectory([0.5, 6], [-2, 2], 'advanced', testInterval, randi(length(nStim)), simulator, imageSavePath, folderName(9 : end), plotIt);
 
         if (measureTime == true)
             elapsedTime = toc;
