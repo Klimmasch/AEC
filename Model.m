@@ -1426,7 +1426,9 @@ classdef Model < handle
             if savePlot
                 % timestamp = datestr(now, 'dd-mm-yyyy_HH:MM:SS_');
                 % savePath = strcat(this.savePath, '/', timestamp, titleStr);
-                savePath = strcat(this.savePath, '/muscleActivityTrajectory_', titleStr);
+                folder = strcat(this.savePath, '/muscleActivityTrajectory_');
+                mkdir(folder);
+                savePath = strcat(folder, titleStr);
                 saveas(h, savePath, 'png');
             end
         end
