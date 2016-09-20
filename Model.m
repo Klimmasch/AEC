@@ -1274,7 +1274,7 @@ classdef Model < handle
             nStimuli = length(stimuliIndices);
             trajectory = zeros(length(objDist), length(startVergErr), nStimuli, numIters + 1, 2);
 
-            %% main loop:
+            %% main loop
             figure;
             figIter = 1;
 
@@ -1350,7 +1350,7 @@ classdef Model < handle
                 end
             end
 
-            %% Plotting results
+            %% Plot results
             h = figure();
             hold on;
             if (isempty(titleStr))
@@ -1370,26 +1370,32 @@ classdef Model < handle
             cb.Label.String = 'metabolic costs';   % use metabolic costs as color dimension (background)
 
             ax = gca;
-            ax.XTick = linspace(1, size(this.degreesIncRes, 2), 8);
-            ax.YTick = linspace(1, size(this.degreesIncRes, 1), 8);
+            set(ax, 'Layer','top'); % bring axis to the front
 
-            ax.XTickLabel = strsplit(num2str(linspace(1, size(this.degreesIncRes, 2), 8) * this.scaleFacLR, '%4.2f '));
-            ax.YTickLabel = strsplit(num2str(linspace(1, size(this.degreesIncRes, 1), 8) * this.scaleFacMR, '%4.2f '));
+            % ax.XTick = linspace(1, size(this.degreesIncRes, 2), 10);
+            % ax.YTick = linspace(1, size(this.degreesIncRes, 1), 10);
+            ax.XTick = linspace(1, size(this.degreesIncRes, 2), 11);
+            ax.YTick = linspace(1, size(this.degreesIncRes, 1), 11);
 
-            ax.XTickLabelRotation = 45;
-            ax.YTickLabelRotation = 45;
+            % ax.XTickLabel = strsplit(num2str(linspace(1, size(this.degreesIncRes, 2), 10) * this.scaleFacLR, '%4.2f '));
+            % ax.YTickLabel = strsplit(num2str(linspace(1, size(this.degreesIncRes, 1), 10) * this.scaleFacMR, '%4.2f '));
+            ax.XTickLabel = strsplit(num2str(linspace(0, 10, 11)));
+            ax.YTickLabel = strsplit(num2str(linspace(0, 20, 11)));
+
+            % ax.XTickLabelRotation = 45;
+            % ax.YTickLabelRotation = 45;
 
             axis([1, size(this.degreesIncRes, 2), 1, size(this.degreesIncRes, 1)]);
 
             objRange = [0.5, 6];
             for odIndex = 1 : length(objRange)
                 % draw +1 pixel offset in respect to desired vergence distance
-                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), 0.24);
+                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), 0.22);
                 plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, ...
                      'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1.8);
 
                 % draw -1 pixel offset in respect to desired vergence distance
-                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), -0.24);
+                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), -0.22);
                 plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, ...
                      'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1.8);
 
@@ -1408,17 +1414,17 @@ classdef Model < handle
             for odIndex = 1 : length(objDist)
                 for stim = 1 : length(stimuliIndices)
                     for vergErrIndex = 1 : length(startVergErr)
-                        plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) ./ this.scaleFacLR, ...
-                        trajectory(odIndex, vergErrIndex, stim, 1, 2)./ this.scaleFacMR, ...
-                        'r.', 'MarkerSize', 20);
+                        plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / this.scaleFacLR + 1, ...
+                             trajectory(odIndex, vergErrIndex, stim, 1, 2) / this.scaleFacMR + 1, ...
+                             'r.', 'MarkerSize', 20);
 
-                        plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1,1])' ./ this.scaleFacLR, ...
-                        reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1,1])'./ this.scaleFacMR, ...
-                        '.-', 'LineWidth', 2, 'MarkerSize', 10);
+                        plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ this.scaleFacLR + 1, ...
+                             reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ this.scaleFacMR + 1, ...
+                             '.-', 'LineWidth', 2, 'MarkerSize', 10);
 
-                        plot(trajectory(odIndex, vergErrIndex, stim, end, 1) ./ this.scaleFacLR, ...
-                        trajectory(odIndex, vergErrIndex, stim, end, 2)./ this.scaleFacMR, ...
-                        'g.', 'MarkerSize', 20);
+                        plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / this.scaleFacLR + 1, ...
+                             trajectory(odIndex, vergErrIndex, stim, end, 2) / this.scaleFacMR + 1, ...
+                             'g.', 'MarkerSize', 20);
                     end
                 end
             end
