@@ -33,7 +33,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% executing the test procedure during training?
-    testAt = [500000 : 500000 : trainTime];
+    testAt = [1000000 : 1000000 : trainTime];
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
