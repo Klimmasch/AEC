@@ -1319,7 +1319,8 @@ classdef Model < handle
                             % show anaglyphs for quit performance check
                             if (plotAnaglyphs && ((iter == 1) || (iter == numIters)))
                                 subplot(length(objDist) * length(startVergErr) * nStimuli, 2, figIter);
-                                imshow(stereoAnaglyph(this.imgGrayLeft, this.imgGrayRight))
+                                % imshow(stereoAnaglyph(this.imgGrayLeft, this.imgGrayRight))
+                                imshow(imfuse(this.imgGrayLeft, this.imgGrayRight, 'falsecolor'))
                                 if (iter == 1)
                                     title(sprintf('fix. depth = %1.1fm (%.3f°)\nverg. error = %.3f', ...
                                           (this.baseline / 2) / tand(angleNew / 2), angleNew, angleDes - angleNew));
