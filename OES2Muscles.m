@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/klimmasch/projects/results/model_13-Sep-2016_17:43:39_6000000_1_bmsf_advancedInit_metCost1/model.mat';
+    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_20-Sep-2016_19:14:14_5000000_1_metCost_0.0435/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -32,7 +32,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
-    %%% executing the test procedure during training?
+    %%% Execute intermediate test procedure during training
     testAt = [1000000 : 1000000 : trainTime];
 
     %%% Testing flag
@@ -55,7 +55,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % sparseCodingType: 0 = non-homeostatic
     %                   1 = homeostatic
     sparseCodingType = uint8(0);
-    % sparseCodingTypeName = cellstr(['nonhomeo'; 'homeo___']);
+    sparseCodingTypeName = cellstr(['nonhomeo'; 'homeosSC']);
 
     %%% Plotting flag
     % Whether figures should be generated and saved
@@ -171,7 +171,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     end
     sprintf('%d textures were added to the buffer from the training and testing files', nTextures)
 
-    if nStimTest > nTestTextures
+    if (nStimTest > nTestTextures)
         nStimTest = nTestTextures;
         sprintf('The file for testing textures only contains %d images, but I will use them all!', nStimTest)
     end
@@ -302,9 +302,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                 model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
             end
 
+            % generate delta of muscle activations
             relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
-            % add the change in muscle Activities to current ones
+            % apply the change in muscle activations
             command = command + relativeCommand;    % two muscles
             command = checkCmd(command);            % restrain motor commands to [0, 1]
 
@@ -367,7 +368,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         elapsedTime = elapsedTime + toc;
 
-        % testing during training
+        % intermediate testing during training
         if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
             close all;
