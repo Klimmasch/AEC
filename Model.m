@@ -1252,7 +1252,7 @@ classdef Model < handle
             end
 
             % preperation
-            rng(100);
+            rng(17);
 
             if strcmp(initMethod, 'advanced')
                 initMethod = uint8(0);
@@ -1260,7 +1260,7 @@ classdef Model < handle
             elseif strcmp(initMethod, 'fixed')
                 initMethod = uint8(1);
                 % hand-picked inits for muscles, used in initMethod 'random'
-                cmdInit = [[0.003; 0.012], [0.003; 0.004], [0.01; 0.004]];
+                cmdInit = [[0.03; 0.16], [0.05; 0.12], [0.07; 0.12], [0.04; 0.08], [0.06; 0.06], [0.08; 0.06]];
 
             elseif strcmp(initMethod, 'simple')
                 initMethod = uint8(2);
