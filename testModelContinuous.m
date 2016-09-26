@@ -323,6 +323,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                      model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, (length(testResult6) / testInterval) - 2), ...
                      model.objDistMax];
 
+        % let's try this part without muscle-reset between trials!
+        [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))));
+
         tmpcnt = 1;
         for odIndex = 1 : length(testResult6) / testInterval
             sprintf('Level 3/4 Test iteration = %d/%d', odIndex, length(testResult6) / testInterval)
@@ -339,7 +342,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % [command, angleNew] = model.getMF2(objRange2(i), vseRange(randi(length(vseRange))));
 
             % Uniform muscle activation distribution for two muscles
-            [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))));
+            % [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))));
 
             currentTexture = randi(length(nStim));
 
