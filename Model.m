@@ -1066,7 +1066,8 @@ classdef Model < handle
                     % saveas(gcf, plotpath, 'png');
 
                     windowSize = ceil(this.trainTime * 0.01);
-                    recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind), 1)');
+                    % recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind), 1)');
+                    recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind, :), 2));
 
                     figure;
                     hold on;
@@ -1082,7 +1083,8 @@ classdef Model < handle
                     axis([windowSize, inf, -inf, 0]);
                     % l.Location = 'southwest';
                     l.Location = 'best';
-                    title('Reward composition (SMA)');
+                    tmpstr = '\lambda = ';
+                    title(strcat(sprintf('Reward composition (SMA)\n%s %6.4f, ~%4.1f%% Metabolic Costs',tmpstr, this.lambdaMet, (this.lambdaMet / 0.1622) * 100)));
                     plotpath = sprintf('%s/rewardComp', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 else
@@ -1415,7 +1417,7 @@ classdef Model < handle
             for odIndex = 1 : length(objDist)
                 for stim = 1 : length(stimuliIndices)
                     for vergErrIndex = 1 : length(startVergErr)
-                        
+
                         plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ this.scaleFacLR + 1, ...
                              reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ this.scaleFacMR + 1, ...
                              '.-', 'LineWidth', 2, 'MarkerSize', 10);

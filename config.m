@@ -87,11 +87,8 @@ if (dsRatio(end) > 1)
 end
 
 %%% Metabolic costs factor
-% per_cent = mean(model.metCost_hist) * model.lambdaMet * model.lambdaRec / mean(model.recErr_hist) * model.lambdaRec
-% privious 12.75% =  0.204 | 10% = 0.161 | 5% = 0.081 | 1% = 0.016 | 0.8% = 0.0128 | 0.75% = 0.012 | 0.6% = 0.0096 | 0.5% = 0.008
-%%% NEW
-% sum(sum(model.recerr_hist))/size(model.recerr_hist, 1) = 0.2997 @ dsRatio = [8, 1]
-% sum(sum(model.recerr_hist))/size(model.recerr_hist, 1) = 0.1693 @ dsRatio = [8, 2]
+% per_cent = mean(model.metCost_hist) * model.lambdaMet / model.lambdaRec
+%
 % mean(model.metCost_hist) = 1.0380
 % meanR=mean(sum(model.recerr_hist,2)) = 0.1038
 % mean(model.metCost_hist) = 0.5727
@@ -99,6 +96,13 @@ end
 % 1% = 0.0029 | 2% = 0.0058 | 3% = 0.0087 | 4% = 0.0114 | 5% = 0.0144
 % 6% = 0.0173 | 7% = 0.0203 | 8% = 0.0232 | 9% = 0.0261 | 10% = 0.0289 | 12.5% = 0.0360875
 % 15% = 0.0435 | 17.5% = 0.0505225 | 20% = 0.05774 | 25% = 0.0722 | 30% = 0.0866 | 50% = 0.1443 | 100% = 0.2887
+%%%%%
+%
+% 0% = 0, 5.2632% = 0.0085, 10.5263% = 0.0171, 15.7895% = 0.0256, 21.0526% = 0.0341, 26.3158% = 0.0427,
+% 31.5789% = 0.0512, 36.8421% = 0.0598, 42.1053% = 0.0683, 47.3684% = 0.0768, 52.6316% = 0.0854,
+% 57.8947% = 0.0939, 63.1579% = 0.1024, 68.4211% = 0.1110, 73.6842% = 0.1195, 78.9474% = 0.1281,
+% 84.2105% = 0.1366, 89.4737% = 0.1451, 94.7368% = 0.1537, 100.0000% = 0.1622
+%
 lambdaMet = 0;
 
 % due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
