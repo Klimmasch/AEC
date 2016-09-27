@@ -1076,7 +1076,7 @@ classdef Model < handle
                     handle = area(r, 'LineStyle','none');
                     xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                     ylabel('Value', 'FontSize', 12);
-                    l = legend('\lambdaMetabolic_{cost}', '\lambdaReconstruction_{error}');
+                    l = legend('\lambdaMetabolic_{cost}', 'Reconstruction_{error}');
                     handle(1).FaceColor = [1, 0.25, 0];
                     handle(2).FaceColor = [1, 0.549, 0];
                     axis([windowSize, inf, -inf, 0]);
@@ -1270,7 +1270,7 @@ classdef Model < handle
                 return;
             end
 
-            plotAnaglyphs = true;
+            plotAnaglyphs = false;
             nStimuli = length(stimuliIndices);
             trajectory = zeros(length(objDist), length(startVergErr), nStimuli, numIters + 1, 2);
 

@@ -392,7 +392,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         %% Generate muscle activation trajectories
         sprintf('Level 4/4')
-        model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', testInterval, randi(length(nStim)), simulator, imageSavePath, folderName(9 : end), plotIt);
+        model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(length(nStim)), simulator, imageSavePath, folderName(9 : end), plotIt);
 
         if (measureTime == true)
             elapsedTime = toc;

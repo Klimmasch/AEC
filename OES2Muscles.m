@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_20-Sep-2016_19:14:14_5000000_1_metCost_0.0435/model.mat';
+    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_22-Sep-2016_13:22:27_5000000_1_metCost_0.0505225/modelAt2000000/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -320,16 +320,16 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
 
             % save state
-            model.Z(t) = objDist;
-            model.fixZ(t) = fixDepth;
-            model.disp_hist(t) = disparity;
-            model.vergerr_hist(t) = anglerr;
+            model.Z(t) = objDist; % remove?
+            model.fixZ(t) = fixDepth; % remove?
+            model.disp_hist(t) = disparity; % remove!
+            model.vergerr_hist(t) = anglerr; % every 10th
             model.recerr_hist(t, :) = recErrorArray;
-            model.verge_actual(t) = angleNew;
-            model.verge_desired(t) = angleDes;
+            model.verge_actual(t) = angleNew; % remove!
+            model.verge_desired(t) = angleDes; % remove!
             model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
-            model.reward_hist(t) = rewardFunction;
+            model.reward_hist(t) = rewardFunction; % remove!
             % model.feature_hist(t) = mean(bfFeature);
             model.metCost_hist(t) = metCost;
             model.td_hist(t) = model.rlModel.CCritic.delta;
