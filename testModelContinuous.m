@@ -87,6 +87,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     testResult4 = zeros(length(objRange), test2Resolution, nStim * (2 + length(model.scModel)));
     testResult5 = zeros(length(objRange) * 7 * nStim * testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
     testResult6 = zeros(testInterval * 10, 2);
+    testResult7 = zeros(length(objRange) * 7 * nStim, testInterval); % ALL single values for metCost
 
     % here, the images are safed that start at the maximal vergence errors (neg & pos) and that end up worse than they started
     % this tabular is going to be safed inside the models folder and
@@ -108,6 +109,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     tr2Ind = 1;
     tr3Ind = 1;
     tr5Ind = 1;
+    tr7Ind = 1;
     if (measureTime == true)
         tic;
     end
@@ -126,7 +128,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             vseRange = [vseRange(1 : 3), vseRange(5 : end)];
             % vseRange = [-3:3];
             % vseRange = linspace(-1, 1, 7);
-            angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
+            % angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
+            [cmdDesired, angleDes] = model.getMF2(objRange(odIndex), 0);
+            metCostDesired = model.getMetCost(cmdDesired) * 2;
 
             for vseIndex = 1 : length(vseRange)
                 tmpResult1(:, 1) = vseRange(vseIndex);
@@ -196,9 +200,12 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                         end
 
                         % track commands for correlation plot
+                        % and metabolic costs
                         if (model.rlModel.CActor.output_dim >= 2)
                             testResult5(tr5Ind, :) = [command; relativeCommand];
                             tr5Ind = tr5Ind + 1;
+
+                            testResult7(tr7Ind, iter - 1) = metCostDesired - model.getMetCost(command) * 2;
                         end
 
                         % track bad or redundant stimuli
@@ -221,6 +228,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                         testResult3(tr3Ind, iter - 1) = angleDes - angleNew;
                     end
                     tr3Ind = tr3Ind + 1;
+                    tr7Ind = tr7Ind + 1;
 
                     % anaglyph
                     % if (abs(tmpResult1(stimulusIndex, 11)) > 3)
@@ -395,7 +403,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         %% Generate muscle activation trajectories
         sprintf('Level 4/4')
-        model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(length(nStim)), simulator, imageSavePath, folderName(9 : end), plotIt);
+        trajPlotHandle = model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(length(nStim)), simulator, imageSavePath, folderName(9 : end), plotIt);
 
         if (measureTime == true)
             elapsedTime = toc;
@@ -412,6 +420,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             model.testResult4 = testResult4;
             model.testResult5 = testResult5;
             model.testResult6 = testResult6;
+            model.testResult7 = testResult7;
             if (saveTestResults == 1)
                 save(strcat(imageSavePath, '/model'), 'model');
             end
@@ -428,6 +437,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 model.testResult4 = testResult4;
                 model.testResult5 = testResult5;
                 model.testResult6 = testResult6;
+                model.testResult7 = testResult7;
                 if (saveTestResults == 1)
                     save(strcat(imageSavePath, '/model'), 'model');
                 end
@@ -759,7 +769,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
 
         % Total error
-        figure;
+        totelErrorHandle = figure();
         hold on;
         grid on;
         b = boxplot(model.testResult3);
@@ -782,11 +792,15 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
         ylabel('Vergence Error [deg]', 'FontSize', 12);
         title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f°,\n4*IQR = %.4f, RMSE = %.4f° at %dth step', ...
-                      mean(model.testResult3(:, testInterval)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4, sqrt(mean(model.testResult3(:, testInterval) .^ 2)), testInterval));
-        % if (~isempty(model.savePath))
+                      mean(model.testResult3(:, testInterval)), median(model.testResult3(:, testInterval)), ...
+                      iqr(model.testResult3(:, testInterval)) * 4, sqrt(mean(model.testResult3(:, testInterval) .^ 2)), testInterval));
+
         plotpath = sprintf('%s/totalError', imageSavePath);
         saveas(gcf, plotpath, 'png');
-        % end
+
+        % remove outliers for later
+        outl = findobj(b,'tag','Outliers');
+        set(outl, 'Visible', 'off');
 
         %% Check for bias at 0° vergence start error
         if (nStim == 0)
@@ -840,6 +854,36 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         suptitle(sprintf('Model bias at testing\n 0° vergence start error & total performance\nafter %d iterations for %d stimuli', ...
                          testInterval, nStim));
         plotpath = sprintf('%s/ModelBiasAt0VergErr', imageSavePath);
+        saveas(gcf, plotpath, 'png');
+
+        %%% Metabolic costs box plot
+        mcDeltaHandle = figure();
+        hold on;
+        grid on;
+        b2 = boxplot(model.testResult7);
+
+        % remove outliers
+        outl = findobj(b2,'tag','Outliers');
+        set(outl, 'Visible', 'off');
+
+        % rescale axis to whiskers + offset
+        upWi = findobj(b2, 'tag', 'Upper Whisker');
+        lowWi = findobj(b2, 'tag', 'Lower Whisker');
+        axis([0, testInterval + 1, ...
+              min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+              max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+        if (nStim > 0)
+            xlabel(sprintf('Iteration step (#stimuli=%d)', nStim), 'FontSize', 12);
+        else
+            xlabel('Iteration step', 'FontSize', 12);
+        end
+        ylabel('\Deltametabolic costs', 'FontSize', 12);
+        title(sprintf('Metabolic Costs over Trial at Testing\nMean = %.4f°, Median = %.4f°,\n4*IQR = %.4f, RMSE = %.4f° at %dth step', ...
+                      mean(model.testResult7(:, testInterval)), median(model.testResult7(:, testInterval)), ...
+                      iqr(model.testResult7(:, testInterval)) * 4, sqrt(mean(model.testResult7(:, testInterval) .^ 2)), testInterval));
+
+        plotpath = sprintf('%s/totalMetCosts', imageSavePath);
         saveas(gcf, plotpath, 'png');
 
         %%% Muscle correlation check
@@ -909,6 +953,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         title('Vergence movements at testing');
         plotpath = sprintf('%s/fixationDistTesting', imageSavePath);
         saveas(gcf, plotpath, 'png');
+
+        %%% Final Figure
+        % subplot(2, 2, 1)
+
     end
 
     %%% Results overview table generation

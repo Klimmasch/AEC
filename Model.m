@@ -63,6 +63,7 @@ classdef Model < handle
         testResult4;
         testResult5;
         testResult6;
+        testResult7;
 
         % Image processing
         patchSize;
@@ -164,6 +165,7 @@ classdef Model < handle
             obj.testResult4 = [];
             obj.testResult5 = [];
             obj.testResult6 = [];
+            obj.testResult7 = [];
             obj.simulatedTime = 0;
             obj.trainedUntil = 0;
             obj.notes = '';
@@ -677,7 +679,8 @@ classdef Model < handle
                     handleArray = zeros(1, length(this.scModel));
                     for i = 1 : length(this.scModel)
                         tmpError = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(ind, i));
-                        handleArray(i) = plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist, 1), tmpError(windowSize + 1 : end), ...
+                        handleArray(i) = plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist, 1), ...
+                                              tmpError(windowSize + 1 : end), ...
                                               'color', [rand, rand, rand], 'LineWidth', 1.3);
                     end
                     xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
@@ -1038,35 +1041,7 @@ classdef Model < handle
             %% Reward composition
             if (~isempty(find(level == 6)))
                 if (this.rlModel.continuous == 1)
-                    % figure;
-                    % hold on;
-                    % grid on;
-                    % r = [- this.lambdaMet * this.metCost_hist, ...
-                    %      - this.lambdaRec * sum(this.recerr_hist, 2)];
-                    % handle = area(r, 'LineStyle','none');
-                    % xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-                    % ylabel('Value', 'FontSize', 12);
-                    % l = legend('\lambdametCost', '\lambdaRecErr');
-                    % handle(1).FaceColor = [1, 0.25, 0];
-                    % handle(2).FaceColor = [1, 0.549, 0];
-                    % l.Location = 'southwest';
-                    % title('Reward composition');
-                    % plotpath = sprintf('%s/rewardComp', this.savePath);
-                    % saveas(gcf, plotpath, 'png');
-
-                    %% Total reward
-                    % figure;
-                    % hold on;
-                    % grid on;
-                    % plot(this.reward_hist, 'color', [1, 0.25, 0]);
-                    % xlabel('Iteration #', 'FontSize', 12);
-                    % ylabel('Value', 'FontSize', 12);
-                    % title('Reward');
-                    % plotpath = sprintf('%s/rewardTotal', this.savePath);
-                    % saveas(gcf, plotpath, 'png');
-
                     windowSize = ceil(this.trainTime * 0.01);
-                    % recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind), 1)');
                     recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind, :), 2));
 
                     figure;
@@ -1237,7 +1212,7 @@ classdef Model < handle
         % enable multiple fixation dists in one plot with same init values
         % idea: instead of contourf, just plot single lines that correspond to
         % spec. obj. dists
-        function plotTrajectory(this, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, directory, titleStr, savePlot)
+        function h = plotTrajectory(this, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, directory, titleStr, savePlot)
             % simulator check
             if (isempty(simulator))
                 sprintf('An initialized simulator is necessary to continue.\nPlease execute simulator = prepareSimulator();')
@@ -1277,8 +1252,10 @@ classdef Model < handle
             trajectory = zeros(length(objDist), length(startVergErr), nStimuli, numIters + 1, 2);
 
             %% main loop
-            figure;
-            figIter = 1;
+            if (plotAnaglyphs == true)
+                figure;
+                figIter = 1;
+            end
 
             for odIndex = 1 : length(objDist)
                 angleDes = 2 * atand(this.baseline / (2 * objDist(odIndex)));
@@ -1375,18 +1352,11 @@ classdef Model < handle
             ax = gca;
             set(ax, 'Layer','top'); % bring axis to the front
 
-            % ax.XTick = linspace(1, size(this.degreesIncRes, 2), 10);
-            % ax.YTick = linspace(1, size(this.degreesIncRes, 1), 10);
             ax.XTick = linspace(1, size(this.degreesIncRes, 2), 11);
             ax.YTick = linspace(1, size(this.degreesIncRes, 1), 11);
 
-            % ax.XTickLabel = strsplit(num2str(linspace(1, size(this.degreesIncRes, 2), 10) * this.scaleFacLR, '%4.2f '));
-            % ax.YTickLabel = strsplit(num2str(linspace(1, size(this.degreesIncRes, 1), 10) * this.scaleFacMR, '%4.2f '));
             ax.XTickLabel = strsplit(num2str(linspace(0, 10, 11)));
             ax.YTickLabel = strsplit(num2str(linspace(0, 20, 11)));
-
-            % ax.XTickLabelRotation = 45;
-            % ax.YTickLabelRotation = 45;
 
             axis([1, size(this.degreesIncRes, 2), 1, size(this.degreesIncRes, 1)]);
 
