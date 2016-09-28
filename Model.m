@@ -1339,45 +1339,53 @@ classdef Model < handle
 
             axis([1, size(this.degreesIncRes, 2), 1, size(this.degreesIncRes, 1)]);
 
-            objRange = [0.5, 6];
-            for odIndex = 1 : length(objRange)
+            for odIndex = 1 : length(objDist)
                 % draw +1 pixel offset in respect to desired vergence distance
-                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), 0.22);
+                [lateralDes, medialDes] = this.getAnglePoints(objDist(odIndex), 0.22);
                 plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, ...
                      'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1.8);
 
                 % draw -1 pixel offset in respect to desired vergence distance
-                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), -0.22);
+                [lateralDes, medialDes] = this.getAnglePoints(objDist(odIndex), -0.22);
                 plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, ...
                      'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1.8);
 
                 % draw a line of points into the plane that represent the desired vergence
-                [lateralDes, medialDes] = this.getAnglePoints(objRange(odIndex), 0);
+                [lateralDes, medialDes] = this.getAnglePoints(objDist(odIndex), 0);
                 plot(lateralDes ./ this.scaleFacLR, medialDes ./ this.scaleFacMR, ...
                      'color', [0.6510, 1.0000, 0.6588], 'LineWidth', 1.8);
 
                 % add corresponding distance value to desired vergence graph
                 text(lateralDes(end - ceil(length(lateralDes) / 10)) / this.scaleFacLR, ...
                      medialDes(end - ceil(length(medialDes) / 10)) / this.scaleFacMR, ...
-                     sprintf('%3.1fm', objRange(odIndex)));
+                     sprintf('%3.1fm', objDist(odIndex)));
             end
 
             % draw trajectories
             for odIndex = 1 : length(objDist)
+                % tmpRed = [rand, 0, 0];
                 for stim = 1 : length(stimuliIndices)
                     for vergErrIndex = 1 : length(startVergErr)
 
                         plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ this.scaleFacLR + 1, ...
                              reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ this.scaleFacMR + 1, ...
-                             '.-', 'LineWidth', 2, 'MarkerSize', 10);
+                             '.-', 'LineWidth', 1.5, 'MarkerSize', 7);
+
+                        % plot iter 1-interval in differen color if numIters >= model.interval
+                        if (numIters >= this.interval)
+                            plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 1), [this.interval, 1]) ./ this.scaleFacLR + 1, ...
+                                 reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 2), [this.interval, 1]) ./ this.scaleFacMR + 1, ...
+                                 '.-', 'LineWidth', 1.5, 'MarkerSize', 7);
+                        end
 
                         plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / this.scaleFacLR + 1, ...
                              trajectory(odIndex, vergErrIndex, stim, 1, 2) / this.scaleFacMR + 1, ...
-                             'r.', 'MarkerSize', 20);
+                            'r.', 'MarkerSize', 15);
+                            % 'color', tmpRed, 'MarkerSize', 15);
 
                         plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / this.scaleFacLR + 1, ...
                              trajectory(odIndex, vergErrIndex, stim, end, 2) / this.scaleFacMR + 1, ...
-                             'g.', 'MarkerSize', 20);
+                             'g.', 'MarkerSize', 15);
                     end
                 end
             end
