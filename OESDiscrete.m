@@ -252,16 +252,17 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
             disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
 
             % save state
-            model.Z(t) = objDist;
-            model.fixZ(t) = fixDepth;
-            model.disp_hist(t) = disparity;
+            % model.Z(t) = objDist;
+            % model.fixZ(t) = fixDepth;
+            % model.disp_hist(t) = disparity;
+
             model.vergerr_hist(t) = anglerr;
             model.recerr_hist(t, :) = recErrorArray;
-            model.verge_actual(t) = angleNew;
-            model.verge_desired(t) = angleDes;
+            % model.verge_actual(t) = angleNew;
+            % model.verge_desired(t) = angleDes;
             model.relCmd_hist(t, :) = relativeCommand;
             % model.cmd_hist(t, :) = command;
-            model.reward_hist(t) = reward;
+            % model.reward_hist(t) = reward;
             % model.feature_hist(t, :) = bfFeature;
             % model.td_hist(t) = model.rlModel.td;
             model.weight_hist(t, 1) = sum(sum(abs(model.rlModel.weightArray{2, 1})));

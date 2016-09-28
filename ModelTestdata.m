@@ -1,3 +1,4 @@
+%%% Model class DEPRICATED!
 classdef ModelTestdata < handle
     properties
         %model data

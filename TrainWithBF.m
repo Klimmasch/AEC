@@ -237,15 +237,16 @@ function TrainWithBF(trainTime,randomizationSeed,description,pathToBFModel)
             disparity = 2 * f * tan((angledes - angleNew * pi / 180) / 2);  %current disp [px]
 
             %save them
-            model.Z(t) = objDist;
-            model.fixZ(t) = fixDepth;
-            model.disp_hist(t) = disparity;
+            % model.Z(t) = objDist;
+            % model.fixZ(t) = fixDepth;
+            % model.disp_hist(t) = disparity;
+
             model.vergerr_hist(t) = anglerr;
             model.recerr_hist(t, :) = [errorLarge; errorSmall];
             model.verge_actual(t) = angleNew;
             model.relCmd_hist(t) = relativeCommand;
             model.cmd_hist(t, :) = command;
-            model.reward_hist(t) = rewardFunction;
+            % model.reward_hist(t) = rewardFunction;
             % model.feature_hist(t, :) = feature;
             model.metCost_hist(t) = metCost;
             model.td_hist(t) = model.rlModel.CCritic.delta;

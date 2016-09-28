@@ -34,28 +34,24 @@ classdef Model < handle
 
         % Model data history
         recerr_hist;        % reconstruction error [coarse scale, fine scale]
-        disp_hist;          % disparity
+        % disp_hist;          % disparity
         vergerr_hist;       % vergence error
-        verge_actual;       % actual vergence angle
-        verge_desired;      % desired vergence angle
-        Z;                  % object depth
-        fixZ;               % fixation depth
-        g_hist;             % natural gradient change
+        % verge_actual;       % actual vergence angle
+        % verge_desired;      % desired vergence angle
+        % Z;                  % object depth
+        % fixZ;               % fixation depth
         td_hist;            % temporal difference (td) error
         feature_hist;       % feature vector
         cmd_hist;           % vergence commands
         relCmd_hist;        % relativ changes in motor commands
         weight_hist;        % L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
-        reward_hist;        % reward function
+        % reward_hist;        % reward function
         metCost_hist;       % metabolic costs
         variance_hist;      % exploratory variance of actor
         savePath;           % where all the data are stored
         notes;              % is there any special things about this model to note?
 
         % Model results at testing procedure
-        disZtest;
-        fixZtest;
-        vergErrTest;
         responseResults;
         testResult;
         testResult2;
@@ -136,28 +132,25 @@ classdef Model < handle
                 obj.rlModel = ReinforcementLearning(PARAM{3});
             end
 
-            obj.recerr_hist = zeros(obj.trainTime, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
-            obj.disp_hist = zeros(obj.trainTime, 1);
+            % obj.recerr_hist = zeros(obj.trainTime, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
+            obj.recerr_hist = zeros(obj.trainTime / obj.interval, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
+            % obj.disp_hist = zeros(obj.trainTime, 1);
             obj.vergerr_hist = zeros(obj.trainTime, 1);
-            obj.verge_actual = zeros(obj.trainTime, 1);
-            obj.verge_desired = zeros(obj.trainTime, 1);
-            obj.Z = zeros(obj.trainTime, 1);
-            obj.fixZ = zeros(obj.trainTime, 1);
+            % obj.verge_actual = zeros(obj.trainTime, 1);
+            % obj.verge_desired = zeros(obj.trainTime, 1);
+            % obj.Z = zeros(obj.trainTime, 1);
+            % obj.fixZ = zeros(obj.trainTime, 1);
 
-            obj.g_hist = zeros(obj.trainTime, 1);
             obj.td_hist = zeros(obj.trainTime, 1);
             % obj.feature_hist = zeros(obj.trainTime, 1);%zeros(obj.trainTime, PARAM{3}{9}(1));
             obj.cmd_hist = zeros(obj.trainTime, 2);
             obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
             % obj.weight_hist = zeros(obj.trainTime, 4);
             obj.weight_hist = zeros(obj.trainTime, 6); % for also traking change in weights
-            obj.reward_hist = zeros(obj.trainTime, 1);
+            % obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
             obj.variance_hist = zeros(obj.trainTime, 1);
 
-            obj.disZtest = [];
-            obj.fixZtest = [];
-            obj.vergErrTest = [];
             obj.responseResults = struct();
             obj.testResult = [];
             obj.testResult2 = [];
@@ -604,32 +597,13 @@ classdef Model < handle
                 figure;
                 hold on;
                 grid on;
-                % Raw vergance error values
-                plot(this.interval : this.interval : size(this.vergerr_hist), abs(this.vergerr_hist(ind)), ...
-                     'color', [1, 0.549, 0], 'LineWidth', 0.8);
-
-                % Simple Moving Average
-                plot((windowSize + 1) * this.interval : this.interval : size(this.vergerr_hist), vergerr(windowSize + 1 : end), ...
-                     'color', 'b', 'LineWidth', 1.3);
-
-                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-                ylabel('Vergence Error [deg]', 'FontSize', 12);
-                title('Moving Average of Vergence Error');
-                legend('|verg_{err}|', 'SMA(|verg_{err}|)');
-                plotpath = sprintf('%s/mvngAvgVergErrFull', this.savePath);
-                saveas(gcf, plotpath, 'png');
-
-                figure;
-                hold on;
-                grid on;
-                % Simple Moving Average
                 plot((windowSize + 1) * this.interval : this.interval : size(this.vergerr_hist), vergerr(windowSize + 1 : end), ...
                      'LineWidth', 1.3);
 
                 xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
                 ylabel('SMA(|verg_{err}|) [deg]', 'FontSize', 12);
                 title('Moving Average of Vergence Error');
-                plotpath = sprintf('%s/mvngAvgVergErr', this.savePath);
+                plotpath = sprintf('%s/vergErrSMA', this.savePath);
                 saveas(gcf, plotpath, 'png');
 
                 %% Root Mean Squared Vergence Error
@@ -662,7 +636,7 @@ classdef Model < handle
                     xlabel(sprintf('Iteration # (windowSize=%d)', windowSize * this.interval), 'FontSize', 12);
                     ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
                     title('RMSE of Vergence Error');
-                    plotpath = sprintf('%s/rmseVergErr', this.savePath);
+                    plotpath = sprintf('%s/vergErrRMSE', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 catch
                     % if windowsize > values in vergerr
@@ -678,12 +652,16 @@ classdef Model < handle
                     grid on;
                     handleArray = zeros(1, length(this.scModel));
                     for i = 1 : length(this.scModel)
-                        tmpError = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(ind, i));
-                        handleArray(i) = plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist, 1), ...
+                        % tmpError = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(ind, i));
+                        % handleArray(i) = plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist, 1), ...
+                        %                       tmpError(windowSize + 1 : end), ...
+                        %                       'color', [rand, rand, rand], 'LineWidth', 1.3);
+                        tmpError = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(:, i));
+                        handleArray(i) = plot((windowSize + 1) * this.interval : size(this.recerr_hist, 1), ...
                                               tmpError(windowSize + 1 : end), ...
                                               'color', [rand, rand, rand], 'LineWidth', 1.3);
                     end
-                    xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+                    xlabel(sprintf('Episode # (interval=%d)', this.interval), 'FontSize', 12);
                     ylabel('Reconstruction Error [AU]', 'FontSize', 12);
                     captions = cell(1, length(handleArray));
                     for i = 1 : length(handleArray)
@@ -698,34 +676,34 @@ classdef Model < handle
                 end
             end
 
-            %% Vergence angle / fixation distance
-            if (~isempty(find(level == 3)))
-                obsWin = 99; %249; % #last iterations to plot
-                figure;
-                hold on;
-                grid on;
-                if (length(this.verge_desired) >= obsWin)
-                    % plot(this.verge_desired(end - obsWin : end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
-                    % plot(this.verge_actual(end - obsWin : end), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
-                    plot(this.Z(this.trainedUntil - obsWin : this.trainedUntil), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
-                    plot(this.fixZ(this.trainedUntil - obsWin : this.trainedUntil), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
-                else
-                    % plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
-                    % plot(this.verge_actual, 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
-                    plot(this.Z, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
-                    plot(this.fixZ, 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
-                end
+            % %% Vergence angle / fixation distance
+            % if (~isempty(find(level == 3)))
+            %     obsWin = 99; %249; % #last iterations to plot
+            %     figure;
+            %     hold on;
+            %     grid on;
+            %     if (length(this.verge_desired) >= obsWin)
+            %         % plot(this.verge_desired(end - obsWin : end), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+            %         % plot(this.verge_actual(end - obsWin : end), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+            %         plot(this.Z(this.trainedUntil - obsWin : this.trainedUntil), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+            %         plot(this.fixZ(this.trainedUntil - obsWin : this.trainedUntil), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+            %     else
+            %         % plot(this.verge_desired, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+            %         % plot(this.verge_actual, 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+            %         plot(this.Z, 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8);
+            %         plot(this.fixZ, 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+            %     end
 
-                xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
-                % ylabel('Angle [deg]', 'FontSize', 12);
-                ylabel('Object Distance [m]', 'FontSize', 12);
-                ylim([this.objDistMin - 1, this.objDistMax + 1]);
-                legend('desired', 'actual');
-                title(sprintf('Vergence at last %d steps of training', obsWin + 1));
-                % plotpath = sprintf('%s/vergenceAngle', this.savePath);
-                plotpath = sprintf('%s/fixationDistTraining', this.savePath);
-                saveas(gcf, plotpath, 'png');
-            end
+            %     xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 12);
+            %     % ylabel('Angle [deg]', 'FontSize', 12);
+            %     ylabel('Object Distance [m]', 'FontSize', 12);
+            %     ylim([this.objDistMin - 1, this.objDistMax + 1]);
+            %     legend('desired', 'actual');
+            %     title(sprintf('Vergence at last %d steps of training', obsWin + 1));
+            %     % plotpath = sprintf('%s/vergenceAngle', this.savePath);
+            %     plotpath = sprintf('%s/fixationDistTraining', this.savePath);
+            %     saveas(gcf, plotpath, 'png');
+            % end
 
             %% Muscel graphs
             if (~isempty(find(level == 4)))
@@ -1042,7 +1020,8 @@ classdef Model < handle
             if (~isempty(find(level == 6)))
                 if (this.rlModel.continuous == 1)
                     windowSize = ceil(this.trainTime * 0.01);
-                    recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind, :), 2));
+                    % recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind, :), 2));
+                    recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist, 2));
 
                     figure;
                     hold on;

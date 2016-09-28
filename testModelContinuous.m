@@ -205,7 +205,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                             testResult5(tr5Ind, :) = [command; relativeCommand];
                             tr5Ind = tr5Ind + 1;
 
-                            testResult7(tr7Ind, iter - 1) = metCostDesired - model.getMetCost(command) * 2;
+                            testResult7(tr7Ind, iter - 1) = model.getMetCost(command) * 2 - metCostDesired;
                         end
 
                         % track bad or redundant stimuli
@@ -878,8 +878,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         else
             xlabel('Iteration step', 'FontSize', 12);
         end
-        ylabel('\Deltametabolic costs', 'FontSize', 12);
-        title(sprintf('Metabolic Costs over Trial at Testing\nMean = %.4f°, Median = %.4f°,\n4*IQR = %.4f, RMSE = %.4f° at %dth step', ...
+        ylabel('\Deltamc = mc_{actual} - mc_{desired}', 'FontSize', 12);
+        title(sprintf('Metabolic Costs over Trial at Testing\nMean = %.4f, Median = %.4f,\n4*IQR = %.4f, RMSE = %.4f at %dth step', ...
                       mean(model.testResult7(:, testInterval)), median(model.testResult7(:, testInterval)), ...
                       iqr(model.testResult7(:, testInterval)) * 4, sqrt(mean(model.testResult7(:, testInterval) .^ 2)), testInterval));
 

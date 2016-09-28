@@ -42,7 +42,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 40;
+    nStimTest = 2;
 
     % Save model every #saveInterval training iterations
     saveInterval = ceil(trainTime / 100);
@@ -317,22 +317,14 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             % compute desired vergence command, disparity and vergence error
             fixDepth = (model.baseline / 2) / tand(angleNew / 2);   % fixation depth [m]
             anglerr = angleDes - angleNew;                          % vergence error [deg]
-            disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
+            % disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
 
-            % save state
-            model.Z(t) = objDist; % remove?
-            model.fixZ(t) = fixDepth; % remove?
-            model.disp_hist(t) = disparity; % remove!
-            model.vergerr_hist(t) = anglerr; % every 10th
-            model.recerr_hist(t, :) = recErrorArray;
-            model.verge_actual(t) = angleNew; % remove!
-            model.verge_desired(t) = angleDes; % remove!
+            model.vergerr_hist(t) = anglerr; % every 10th => adjust displayBasisNEW.m and testModelContinuous.m
             model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
-            model.reward_hist(t) = rewardFunction; % remove!
-            % model.feature_hist(t) = mean(bfFeature);
             model.metCost_hist(t) = metCost;
             model.td_hist(t) = model.rlModel.CCritic.delta;
+
             model.weight_hist(t, 1) = model.rlModel.CCritic.params(1);
             model.weight_hist(t, 2) = model.rlModel.CActor.params(1);
             model.weight_hist(t, 3) = model.rlModel.CActor.params(2);
@@ -342,7 +334,19 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.variance_hist(t) = model.rlModel.CActor.variance;
 
             model.trainedUntil = t;
+
+            % Removed
+            % model.verge_actual(t) = angleNew;
+            % model.verge_desired(t) = angleDes;
+            % model.reward_hist(t) = rewardFunction;
+            % model.feature_hist(t) = mean(bfFeature);
+            % model.Z(t) = objDist;
+            % model.fixZ(t) = fixDepth;
+            % model.disp_hist(t) = disparity;
         end
+
+        % store every 10th iteration
+        model.recerr_hist(t / model.interval, :) = recErrorArray;
 
         if (mod(t, 100) == 0)
             % offers an insight into the models view while it learns

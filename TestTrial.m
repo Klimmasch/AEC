@@ -6,6 +6,7 @@
 %           and metabolic costs
 % No learning occures during this trial and the results are saved in a
 % specified folder (under ./results/) in the file modelTestData.mat.
+%%% Script is DEPRICATED!
 function TestTrial(model, randomizationSeed, fileDescription)
 
 % TODO: range of disparity ueberpruefen auf relCmd!!
