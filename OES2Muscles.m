@@ -39,7 +39,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(1);
+    testIt = uint8(0);
 
     %%% Amount of test stimuli
     nStimTest = 40;
@@ -62,12 +62,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
-    plotIt = [uint8(1), uint8(1)];
+    plotIt = [uint8(0), uint8(0)];
 
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
     %               1 = do it
-    closeFigures = uint8(1);
+    closeFigures = uint8(0);
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
