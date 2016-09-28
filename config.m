@@ -160,7 +160,7 @@ continuous = uint8(1);                               % indicates if the policy i
 %                 0.5, 1, 2, 4, 8];
 actionSpace = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... % vergence angles (discrete policy) enable half pixel resolution
                 0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
-alpha_v = 1;                                         % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
+alpha_v = 0.75;                                         % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
 alpha_n = 0.025;                                     % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
 alpha_p = 0.5;                                       % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
@@ -176,6 +176,7 @@ elseif (varianceRange(1) < varianceRange(2))
     return;
 else
     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
+    % varDec = varianceRange(2) - varianceRange(1);
 end
 
 outputDim = 2;                                      % number of neurons in the output layer and amount of eye muscles

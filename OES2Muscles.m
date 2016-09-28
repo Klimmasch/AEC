@@ -300,6 +300,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             % Variance decay, i.e. reduction of actor's output perturbation
             if (model.rlModel.CActor.varDec > 0)
                 model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
+                % model.rlModel.CActor.variance = model.rlModel.CActor.variance - (model.rlModel.CActor.varDec / model.trainTime);
             end
 
             % generate delta of muscle activations
