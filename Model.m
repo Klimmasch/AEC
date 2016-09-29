@@ -1026,9 +1026,6 @@ classdef Model < handle
                         tmp = this.recerr_hist(ind, :);
                         this.recerr_hist = zeros(this.trainTime / this.interval, size(this.recerr_hist, 2));
                         this.recerr_hist = tmp;
-                    elseif ~(length(this.recerr_hist) == length(metCost_hist_sma))
-                        sprintf('Error: size(model.recerr_hist) is not sopported!')
-                        return;
                     end
 
                     recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist, 2));
