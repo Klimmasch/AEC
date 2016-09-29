@@ -775,8 +775,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         b = boxplot(model.testResult3);
 
         % remove outliers
-        % outl = findobj(b,'tag','Outliers');
-        % set(outl, 'Visible', 'off');
+        outl = findobj(b,'tag','Outliers');
+        set(outl, 'Visible', 'off');
 
         % rescale axis to whiskers + offset
         upWi = findobj(b, 'tag', 'Upper Whisker');
@@ -799,8 +799,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         saveas(gcf, plotpath, 'png');
 
         % remove outliers for later
-        outl = findobj(b,'tag','Outliers');
-        set(outl, 'Visible', 'off');
+        % outl = findobj(b,'tag','Outliers');
+        % set(outl, 'Visible', 'off');
 
         %% Check for bias at 0° vergence start error
         if (nStim == 0)

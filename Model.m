@@ -1022,7 +1022,7 @@ classdef Model < handle
                     windowSize = ceil(this.trainTime * 0.01);
 
                     % backward compatibility
-                    if (length(this.recerr_hist) == length(metCost_hist_sma) / this.interval)
+                    if (length(this.recerr_hist) == length(this.trainTime))
                         tmp = this.recerr_hist(ind, :);
                         this.recerr_hist = zeros(this.trainTime / this.interval, size(this.recerr_hist, 2));
                         this.recerr_hist = tmp;
