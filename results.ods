@@ -1,4 +1,4 @@
-,Parameters,,,,,,,,,,,,,,special remarks,Results,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Formatting,
-,,,,,,,,,LR,,,,,,,Critic's value,,,VergErr,,,,,effect of metab. Costs,,Converged,,,,,,,,,,,,,,,,,,,,,,,,Min RMSE,0
-,,,,,,,,,,,,weights,,fixation,,function,,,,,,Bias,,Corr. Mus act.,Corr. Mus. Act.,,,Weigths,,,,,,,,,,,,,,,,,,,,,,Min Median,0
-#R,# Iter,#Basis,lRec,lMFB,lMet,FoV Size,dsRatio,stride,Cr,Ac,SC,init,regularizer,"Init (l, m)",,flat,bias,RecErr bias,RMSE at 20 (10*),median at 10 (*20),4*iqr (*20),ObjDist,Offset, (training),(testing),RecErr,VergErrRmse,V,Pji,Pkj,Hypothesis,Conclusion,,,,Folder,,,,,,,,,,,,,,Min 4*iqr,0
+,Parameters,,,,,,,,,,,,,,special remarks,Results,,,,,,,,,,
+,,,,,,,,,,LR,,,,,,VergErr @ 20iter,,,,Delta metCost @ 20iter,,,Critic's value,,,
+,,,,,MetCost,,,,,,,,weights,,,,,,Bias,,,,function,,,
+#R,# Iter,#Basis,lRec,lMFB,lMet,%,FoV Size,dsRatio,stride,Cr,Ac,SC,init,regul,,RMSE,Median,4*IQR,Offset,RMSE,Median,4*IQR,flat,bias,Conclusion,Folder

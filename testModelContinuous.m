@@ -988,8 +988,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     fprintf(resultsFID, formatSpec{1 : end}, resultsOverview{1 : end});
 
     % lambdas
-    resultsOverview = {model.lambdaRec, model.lambdaMuscleFB, model.lambdaMet};
-    formatSpec = '%.0f, %.4f, %.4f,';
+    resultsOverview = {model.lambdaRec, model.lambdaMuscleFB, model.lambdaMet, (model.lambdaMet / 0.1622) * 100};
+    formatSpec = '%.0f, %.4f, %.4f, %.1f';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
     % field of view
@@ -1028,24 +1028,29 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     formatSpec = '%.4f,';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
-    % muscle init
-    resultsOverview = {model.muscleInitMax};
-    formatSpec = '%.4f %.4f,';
-    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
-
     % column fill
-    resultsOverview = {'', '', '', ''};
-    formatSpec = '%s, %s, %s, %s,';
+    resultsOverview = {''};
+    formatSpec = '%s,';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
-    % results
+    % results vergErr
     resultsOverview = {sqrt(mean(model.testResult3(:, testInterval) .^ 2)), median(model.testResult3(:, testInterval)), iqr(model.testResult3(:, testInterval)) * 4};
     formatSpec = '%.4f, %.4f, %.4f,';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
+    % column fill
+    resultsOverview = {''};
+    formatSpec = '%s,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
+    % results delta metCost
+    resultsOverview = {sqrt(mean(model.testResult7(:, testInterval) .^ 2)), median(model.testResult7(:, testInterval)), iqr(model.testResult7(:, testInterval)) * 4};
+    formatSpec = '%.4f, %.4f, %.4f,';
+    fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
+
     % directory
-    resultsOverview = {'', '', '', '', '', '', '', '', '', '', '', '', '', '', GetFullPath(imageSavePath)};
-    formatSpec = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s\n';
+    resultsOverview = {'', '', '', GetFullPath(imageSavePath)};
+    formatSpec = '%s, %s, %s, %s\n';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
     % close file

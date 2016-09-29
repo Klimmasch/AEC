@@ -316,9 +316,9 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             %%% Save statistics
             % compute desired vergence command, disparity and vergence error
-            fixDepth = (model.baseline / 2) / tand(angleNew / 2);   % fixation depth [m]
-            anglerr = angleDes - angleNew;                          % vergence error [deg]
-            % disparity = 2 * model.focalLength * tand(anglerr / 2);  % current disp [px]
+            fixDepth = (model.baseline / 2) / tand(angleNew / 2);       % fixation depth [m]
+            anglerr = angleDes - angleNew;                              % vergence error [deg]
+            % disparity = 2 * model.focalLength * tand(anglerr / 2);    % current disp [px]
 
             model.vergerr_hist(t) = anglerr; % every 10th => adjust displayBasisNEW.m and testModelContinuous.m
             model.relCmd_hist(t, :) = relativeCommand;
@@ -336,7 +336,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
             model.trainedUntil = t;
 
-            % Removed
+            %% Removed
             % model.verge_actual(t) = angleNew;
             % model.verge_desired(t) = angleDes;
             % model.reward_hist(t) = rewardFunction;
