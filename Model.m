@@ -1020,7 +1020,17 @@ classdef Model < handle
             if (~isempty(find(level == 6)))
                 if (this.rlModel.continuous == 1)
                     windowSize = ceil(this.trainTime * 0.01);
-                    % recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist(ind, :), 2));
+
+                    % backward compatibility
+                    if (length(this.recerr_hist) == length(metCost_hist_sma) / this.interval)
+                        tmp = this.recerr_hist(ind, :);
+                        this.recerr_hist = zeros(this.trainTime / this.interval, size(this.recerr_hist, 2));
+                        this.recerr_hist = tmp;
+                    elseif ~(length(this.recerr_hist) == length(metCost_hist_sma))
+                        sprintf('Error: size(model.recerr_hist) is not sopported!')
+                        return;
+                    end
+
                     recerr_hist_sma = filter(ones(1, windowSize) / windowSize, 1, sum(this.recerr_hist, 2));
 
                     figure;
