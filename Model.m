@@ -1215,7 +1215,7 @@ classdef Model < handle
             end
 
             % preperation
-            rng(17);
+            rng(22);
 
             if strcmp(initMethod, 'advanced')
                 initMethod = uint8(0);
@@ -1382,7 +1382,7 @@ classdef Model < handle
                         if (numIters >= this.interval)
                             plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 1), [this.interval, 1]) ./ this.scaleFacLR + 1, ...
                                  reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 2), [this.interval, 1]) ./ this.scaleFacMR + 1, ...
-                                 '.-', 'LineWidth', 1.5, 'MarkerSize', 7);
+                                 '.-', 'color', 'orange', 'LineWidth', 1.5, 'MarkerSize', 7); % vielleicht ne andere Farbe ...
                         end
 
                         plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / this.scaleFacLR + 1, ...
