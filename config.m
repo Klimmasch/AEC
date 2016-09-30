@@ -175,8 +175,8 @@ elseif (varianceRange(1) < varianceRange(2))
     sprintf('Error: It must hold varianceRange(1) >= varianceRange(2)')
     return;
 else
-    varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
-    % varDec = varianceRange(2) - varianceRange(1);
+%     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
+    varDec = varianceRange(2) - varianceRange(1);
 end
 
 outputDim = 2;                                      % number of neurons in the output layer and amount of eye muscles

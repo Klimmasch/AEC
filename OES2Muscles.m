@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_22-Sep-2016_13:22:27_5000000_1_metCost_0.0505225/modelAt2000000/model.mat';
+    % learnedFile = '/home/klimmasch/projects/results/model_29-Sep-2016_18:52:04_5000000_1_newStandard?_linVarDec5e5-5e6/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -39,7 +39,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(0);
+    testIt = uint8(1);
 
     %%% Amount of test stimuli
     nStimTest = 2;
@@ -62,12 +62,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
-    plotIt = [uint8(0), uint8(0)];
+    plotIt = [uint8(1), uint8(1)];
 
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
     %               1 = do it
-    closeFigures = uint8(0);
+    closeFigures = uint8(1);
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -139,7 +139,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % additional notes/information to this model/approach
     model.notes = [model.notes, fileDescription];
 
-    %%% New renderer
+    %% initialize renderer    
     % simulator = OpenEyeSim('create'); % stable renderer
     simulator = OpenEyeSimV5('create'); % experimental version
 
@@ -299,8 +299,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             %% RL model
             % Variance decay, i.e. reduction of actor's output perturbation
             if (model.rlModel.CActor.varDec > 0)
-                model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
-                % model.rlModel.CActor.variance = model.rlModel.CActor.variance - (model.rlModel.CActor.varDec / model.trainTime);
+%                 model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
+                model.rlModel.CActor.variance = model.rlModel.CActor.variance - (model.rlModel.CActor.varDec / model.trainTime);
             end
 
             % generate delta of muscle activations
