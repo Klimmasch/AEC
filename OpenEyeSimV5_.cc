@@ -433,8 +433,8 @@ public:
     {
         glPushMatrix();
         //glRotatef(angle, 0.0, 1.0, 0.0);
-        glTranslated(0.0, 1.578, -5.0 );
-        glScaled(3, 3, 3);
+        glTranslated(0.0, 1.578, -7.1);  //horizontal, vertical, depth # position of the object, max value for z seems to be 8.
+        glScaled(3, 3, 3);  //scaling the above calues
         applyBackGroundTexture();
 
         for (i = 1; i < 6; i++)
@@ -544,17 +544,19 @@ public:
         glutCreateWindow("OpenEyeSim");
         glutHideWindow();
         /* Setup cube vertex data. */
+        // set scaling for the object plane
         v[0][0] = v[1][0] = v[2][0] = v[3][0] = -0.5;
         v[4][0] = v[5][0] = v[6][0] = v[7][0] = 0.5;
         v[0][1] = v[1][1] = v[4][1] = v[5][1] = -0.5;
         v[2][1] = v[3][1] = v[6][1] = v[7][1] = 0.5;
         v[0][2] = v[3][2] = v[4][2] = v[7][2] = 0;
         v[1][2] = v[2][2] = v[5][2] = v[6][2] = 0;
-
-        vBack[0][0] = vBack[1][0] = vBack[2][0] = vBack[3][0] = -6.5;
-        vBack[4][0] = vBack[5][0] = vBack[6][0] = vBack[7][0] = 6.5;
-        vBack[0][1] = vBack[1][1] = vBack[4][1] = vBack[5][1] = -0.5;
-        vBack[2][1] = vBack[3][1] = vBack[6][1] = vBack[7][1] = 3.5;
+        
+        // set scaling for background plane
+        vBack[0][0] = vBack[1][0] = vBack[2][0] = vBack[3][0] = -4.5;
+        vBack[4][0] = vBack[5][0] = vBack[6][0] = vBack[7][0] = 8.5;
+        vBack[0][1] = vBack[1][1] = vBack[4][1] = vBack[5][1] = -2.5;
+        vBack[2][1] = vBack[3][1] = vBack[6][1] = vBack[7][1] = 1.5;
         vBack[0][2] = vBack[3][2] = vBack[4][2] = vBack[7][2] = 0;
         vBack[1][2] = vBack[2][2] = vBack[5][2] = vBack[6][2] = 0;
 
