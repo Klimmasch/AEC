@@ -17,7 +17,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/klimmasch/projects/results/model_29-Sep-2016_18:52:04_5000000_1_newStandard?_linVarDec5e5-5e6/model.mat';
+%     useLearnedFile = [1, 1];
+%     learnedFile = '/home/klimmasch/projects/results/model_30-Sep-2016_17:12:39_5000000_1_critic075_mc00341_22/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
