@@ -17,8 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-%     useLearnedFile = [1, 1];
-%     learnedFile = '/home/klimmasch/projects/results/model_30-Sep-2016_17:12:39_5000000_1_critic075_mc00341_22/model.mat';
+    % learnedFile = '/home/klimmasch/projects/results/model_30-Sep-2016_17:12:39_5000000_1_critic075_mc00341_22/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -46,7 +45,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     nStimTest = 40;
 
     % Save model every #saveInterval training iterations
-    saveInterval = ceil(trainTime / 100);
+    saveInterval = ceil(trainTime / 20);
     % saveInterval = trainTime;
 
     % Track the evolution of all basis functions of the respective sparse coders
@@ -140,7 +139,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % additional notes/information to this model/approach
     model.notes = [model.notes, fileDescription];
 
-    %% initialize renderer    
+    %% initialize renderer
     % simulator = OpenEyeSim('create'); % stable renderer
     simulator = OpenEyeSimV5('create'); % experimental version
 
@@ -306,7 +305,10 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             %% RL model
             % Variance decay, i.e. reduction of actor's output perturbation
             if (model.rlModel.CActor.varDec > 0)
-%                 model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
+                %% exponential decay
+                % model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
+
+                %% linear decay
                 model.rlModel.CActor.variance = model.rlModel.CActor.variance - (model.rlModel.CActor.varDec / model.trainTime);
             end
 

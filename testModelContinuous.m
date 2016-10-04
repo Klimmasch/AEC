@@ -883,7 +883,61 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                       mean(model.testResult7(:, testInterval)), median(model.testResult7(:, testInterval)), ...
                       iqr(model.testResult7(:, testInterval)) * 4, sqrt(mean(model.testResult7(:, testInterval) .^ 2)), testInterval));
 
-        plotpath = sprintf('%s/totalMetCosts', imageSavePath);
+        plotpath = sprintf('%s/totalMetCostsBox', imageSavePath);
+        saveas(gcf, plotpath, 'png');
+
+        %%% Metabolic cost delta vs. objDist
+        close all;
+        figure;
+        hold on;
+        grid on;
+        grid minor;
+        ymin = 0;
+        ymax = 0;
+        lineHandles = zeros(1, length(objRange));
+        nEntry = length(model.testResult7) / length(objRange); % #entries per objDist
+        for odIndex = 1 : length(objRange)
+
+            tmpMat = [[1 : testInterval]', ...
+                      [mean(model.testResult7((odIndex - 1) * nEntry + 1 : odIndex * nEntry, :))]', ...
+                      [std(model.testResult7((odIndex - 1) * nEntry + 1 : odIndex * nEntry, :))]'];
+
+            [hl, hp] = boundedline(tmpMat(:, 1), tmpMat(:, 2), tmpMat(:, 3), 'alpha');
+
+            hl.DisplayName = sprintf('%.2fm objDist', objRange(odIndex));
+
+            hl.Marker = 'x';
+            hl.MarkerSize = 4;
+
+            hl.Color = [rand, rand, rand];
+            hp.FaceColor = hl.Color;
+            hl.LineWidth = 1.6;
+
+            lineHandles(odIndex) = hl;
+
+            % for axis adjustment
+            tmp = [min(tmpMat(:, 2) - tmpMat(:, 3)), max(tmpMat(:, 2) + tmpMat(:, 3))];
+            if (ymin > tmp(1))
+                ymin = tmp(1);
+            end
+            if (ymax < tmp(2))
+                ymax = tmp(2);
+            end
+        end
+        l = legend(lineHandles);
+        % l.Location = 'southeast';
+        l.Box = 'off';
+
+        % adjust axis to actual response ranges + std deviation
+        axis([0, testInterval + 1, ymin * 1.1, ymax * 1.1]);
+        if (nStim > 0)
+            xlabel(sprintf('Iteration step (#stimuli=%d)', nStim), 'FontSize', 12);
+        else
+            xlabel('Iteration step', 'FontSize', 12);
+        end
+        ylabel('\Deltamc = mc_{actual} - mc_{desired}', 'FontSize', 12);
+        title('\DeltaMC vs. iteration step at various objDist');
+        plotpath = sprintf('%s/totalMetCostsObjDist', imageSavePath);
         saveas(gcf, plotpath, 'png');
 
         %%% Muscle correlation check
