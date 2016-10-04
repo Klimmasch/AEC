@@ -1080,7 +1080,6 @@ classdef Model < handle
                     ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
 
                     % mean, std vergErr
-                    figure;
                     subplot(2, 2, 2);
                     hold on;
                     grid on;
@@ -1097,17 +1096,15 @@ classdef Model < handle
                     ylabel('|verg_{err}| [deg]', 'FontSize', 12);
 
                     % RMSE deltaMetCost
-                    figure;
                     subplot(2, 2, 3);
                     hold on;
                     grid on;
                     plot(this.testAt, this.testHist(:, 4), 'x-', 'LineWidth', 1.3);
 
                     xlabel('Traintime', 'FontSize', 12);
-                    ylabel('RMSE(\Deltamc) [deg]', 'FontSize', 12);
+                    ylabel('RMSE(|\Deltamc|)', 'FontSize', 12);
 
                     % mean, std deltaMetCost
-                    figure;
                     subplot(2, 2, 4);
                     hold on;
                     grid on;
@@ -1121,7 +1118,7 @@ classdef Model < handle
                     hl.LineWidth = 1.6;
 
                     xlabel('Traintime', 'FontSize', 12);
-                    ylabel('\Deltamc = mc_{actual} - mc_{desired}', 'FontSize', 12);
+                    ylabel('|\Deltamc| = |mc_{actual} - mc_{desired}|', 'FontSize', 12);
 
                     % Subplot overall title
                     suptitle('Performance vs. Traintime');
