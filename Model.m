@@ -23,6 +23,7 @@ classdef Model < handle
         trainTime;          % number of training (intended) iterations
         trainedUntil;       % how long did the training actually proceed?
         simulatedTime;      % how long did the model take to be learned (min)
+        testAt;             % at which iteration steps online testing is performed
 
         sparseCodingType;   % type of sparse coding
 
@@ -60,6 +61,7 @@ classdef Model < handle
         testResult5;
         testResult6;
         testResult7;
+        testHist;           % history of testing performance over traintime
 
         % Image processing
         patchSize;
@@ -99,19 +101,20 @@ classdef Model < handle
         function obj = Model(PARAM)
             obj.textureFile = PARAM{1}{1};
             obj.trainTime = PARAM{1}{2};
-            obj.sparseCodingType = PARAM{1}{3};
-            obj.focalLength = PARAM{1}{4};
-            obj.baseline = PARAM{1}{5};
-            obj.objDistMin = PARAM{1}{6};
-            obj.objDistMax = PARAM{1}{7};
-            obj.muscleInitMin = PARAM{1}{8};
-            obj.muscleInitMax = PARAM{1}{9};
-            obj.interval = PARAM{1}{10};
-            obj.lambdaMuscleFB = PARAM{1}{11};
-            obj.lambdaRec = PARAM{1}{12};
-            obj.lambdaMet = PARAM{1}{13};
-            obj.fixDistMin = PARAM{1}{18};
-            obj.fixDistMax = PARAM{1}{19};
+            obj.testAt = PARAM{1}{3};
+            obj.sparseCodingType = PARAM{1}{4};
+            obj.focalLength = PARAM{1}{5};
+            obj.baseline = PARAM{1}{6};
+            obj.objDistMin = PARAM{1}{7};
+            obj.objDistMax = PARAM{1}{8};
+            obj.muscleInitMin = PARAM{1}{9};
+            obj.muscleInitMax = PARAM{1}{10};
+            obj.interval = PARAM{1}{11};
+            obj.lambdaMuscleFB = PARAM{1}{12};
+            obj.lambdaRec = PARAM{1}{13};
+            obj.lambdaMet = PARAM{1}{14};
+            obj.fixDistMin = PARAM{1}{19};
+            obj.fixDistMax = PARAM{1}{20};
 
             % single eye
             obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
@@ -159,6 +162,8 @@ classdef Model < handle
             obj.testResult5 = [];
             obj.testResult6 = [];
             obj.testResult7 = [];
+            % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
+            obj.testHist = zeros(length(obj.testAt), 6);
             obj.simulatedTime = 0;
             obj.trainedUntil = 0;
             obj.notes = '';
@@ -167,12 +172,12 @@ classdef Model < handle
             obj.reward_variance = 1;
 
             %%% Generate image processing constants
-            obj.patchSize = PARAM{1}{14};
-            obj.pxFieldOfView = PARAM{1}{15};
-            obj.dsRatio = PARAM{1}{16};
-            obj.stride = PARAM{1}{17};
-            obj.overlap = PARAM{1}{20};
-            obj.cutout = PARAM{1}{21};
+            obj.patchSize = PARAM{1}{15};
+            obj.pxFieldOfView = PARAM{1}{16};
+            obj.dsRatio = PARAM{1}{17};
+            obj.stride = PARAM{1}{18};
+            obj.overlap = PARAM{1}{21};
+            obj.cutout = PARAM{1}{22};
 
             % Prepare index matrix for image patches
             obj.prepareColumnInd();
@@ -572,8 +577,8 @@ classdef Model < handle
             this.imgGrayRight = 0.2989 * this.imgRawRight(:, :, 1) + 0.5870 * this.imgRawRight(:, :, 2) + 0.1140 * this.imgRawRight(:, :, 3);
         end
 
-        %% Plotting everything and save graphs
-        %  @param level:    # of plot elem range [1, 6]
+        %% Plot all gathered performance data and save graphs
+        %  @param level:    # of plot elem range [1, 7]
         function allPlotSave(this, level)
 
             % only take the last value before the image/texture is changed
@@ -1058,6 +1063,75 @@ classdef Model < handle
                     title('Reward');
                     plotpath = sprintf('%s/rewardHistory', this.savePath);
                     saveas(gcf, plotpath, 'png');
+                end
+            end
+
+            %% Testing performance during training
+            if (~isempty(find(level == 7)))
+                try
+                    % RMSE vergErr
+                    figure;
+                    subplot(2, 2, 1);
+                    hold on;
+                    grid on;
+                    plot(this.testAt, this.testHist(:, 1), 'x-', 'LineWidth', 1.3);
+
+                    xlabel('Traintime', 'FontSize', 12);
+                    ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
+
+                    % mean, std vergErr
+                    figure;
+                    subplot(2, 2, 2);
+                    hold on;
+                    grid on;
+                    [hl, hp] = boundedline(this.testAt, this.testHist(:, 2), this.testHist(:, 3), 'alpha');
+
+                    hl.Marker = 'x';
+                    hl.MarkerSize = 4;
+
+                    hl.Color = [rand, rand, rand];
+                    hp.FaceColor = hl.Color;
+                    hl.LineWidth = 1.6;
+
+                    xlabel('Traintime', 'FontSize', 12);
+                    ylabel('|verg_{err}| [deg]', 'FontSize', 12);
+
+                    % RMSE deltaMetCost
+                    figure;
+                    subplot(2, 2, 3);
+                    hold on;
+                    grid on;
+                    plot(this.testAt, this.testHist(:, 4), 'x-', 'LineWidth', 1.3);
+
+                    xlabel('Traintime', 'FontSize', 12);
+                    ylabel('RMSE(\Deltamc) [deg]', 'FontSize', 12);
+
+                    % mean, std deltaMetCost
+                    figure;
+                    subplot(2, 2, 4);
+                    hold on;
+                    grid on;
+                    [hl, hp] = boundedline(this.testAt, this.testHist(:, 5), this.testHist(:, 6), 'alpha');
+
+                    hl.Marker = 'x';
+                    hl.MarkerSize = 4;
+
+                    hl.Color = [rand, rand, rand];
+                    hp.FaceColor = hl.Color;
+                    hl.LineWidth = 1.6;
+
+                    xlabel('Traintime', 'FontSize', 12);
+                    ylabel('\Deltamc = mc_{actual} - mc_{desired}', 'FontSize', 12);
+
+                    % Subplot overall title
+                    suptitle('Performance vs. Traintime');
+
+                    plotpath = sprintf('%s/performanceVsTraintime', this.savePath);
+                    saveas(gcf, plotpath, 'png');
+                catch
+                    % TODO: add backward compatibility support
+                    sprintf('Model is too old for allPlotSave(7), backward compatibility is not supported yet!')
+                    return;
                 end
             end
         end

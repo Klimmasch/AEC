@@ -1,4 +1,4 @@
-function model = config(textureFile, trainTime, sparseCodingType)
+function model = config(textureFile, trainTime, testAt, sparseCodingType)
 
 %%% Model parameters
 % Image processing constants
@@ -109,7 +109,7 @@ lambdaMet = 0;
 % lambdaMet needs to be scaled accordingly
 lambdaMet = lambdaMet * lambdaRec;
 
-PARAMModel = {textureFile, trainTime, sparseCodingType, focalLength, baseline, ...
+PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaRec, lambdaMet, patchSize, pxFieldOfView, ...
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout};

@@ -33,7 +33,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% Execute intermediate test procedure during training
-    testAt = [1000000 : 1000000 : trainTime];
+    testAt = [0 : 500 : trainTime];
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -42,7 +42,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 40;
+    nStimTest = 2;
 
     % Save model every #saveInterval training iterations
     saveInterval = ceil(trainTime / 20);
@@ -80,7 +80,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.trainTime = trainTime;
         end
     else
-        model = config(textureFiles(2), trainTime, sparseCodingType);
+        model = config(textureFiles(2), trainTime, testAt, sparseCodingType);
     end
 
     % check if main script and model are compatible
@@ -393,7 +393,11 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     % plot results
     if (plotIt(1) == 1)
-        model.allPlotSave([1 : 6]);
+        if (isempty(testAt))
+            model.allPlotSave([1 : 6]);
+        else
+            model.allPlotSave([1 : 7]);
+        end
     end
 
     %%% Testing procedure

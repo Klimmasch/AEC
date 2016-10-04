@@ -887,7 +887,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         saveas(gcf, plotpath, 'png');
 
         %%% Metabolic cost delta vs. objDist
-        close all;
+        % TODO: plot former and this graph into one subfigure
         figure;
         hold on;
         grid on;
@@ -1109,6 +1109,15 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     % close file
     fclose(resultsFID);
+
+    % save testing performance history over traintime
+    model.testHist(find(model.testAt == str2num(folderName(9 : end))), :) = ...
+                  [sqrt(mean(model.testResult3(:, testInterval) .^ 2)), ...
+                   mean(abs(model.testResult3(:, testInterval) .^ 2)), ...
+                   std(abs(model.testResult3(:, testInterval) .^ 2)), ...
+                   sqrt(mean(model.testResult7(:, testInterval) .^ 2)), ...
+                   mean(abs(model.testResult7(:, testInterval) .^ 2)), ...
+                   std(abs(model.testResult7(:, testInterval) .^ 2))];
 end
 
 %this function generates anaglyphs of the large and small scale fovea and
