@@ -1445,12 +1445,15 @@ classdef Model < handle
             % draw trajectories
             for odIndex = 1 : length(objDist)
                 % tmpRed = [rand, 0, 0];
+                % lightOrange = [1, 201 / 255, 41 / 255]
+                % orange = [1, 94 / 255, 41 / 255],
                 for stim = 1 : length(stimuliIndices)
                     for vergErrIndex = 1 : length(startVergErr)
 
+                        % first plot all
                         plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ this.scaleFacLR + 1, ...
                              reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ this.scaleFacMR + 1, ...
-                             '.-', 'LineWidth', 1.5, 'MarkerSize', 7);
+                             '.-', 'color', [1, 201 / 255, 41 / 255],  'LineWidth', 1.5, 'MarkerSize', 7);
 
                         % plot iter 1-interval in differen color if numIters >= model.interval
                         if (numIters >= this.interval)
@@ -1459,14 +1462,16 @@ classdef Model < handle
                                  '.-', 'color', 'r', 'LineWidth', 1.5, 'MarkerSize', 7); % vielleicht ne andere Farbe ...
                         end
 
+                        % plot init point
                         plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / this.scaleFacLR + 1, ...
                              trajectory(odIndex, vergErrIndex, stim, 1, 2) / this.scaleFacMR + 1, ...
                             'r.', 'MarkerSize', 15);
-                            % 'color', tmpRed, 'MarkerSize', 15);
+                            % 'color', tmpRed, 'MarkerSize', 15); 'color', [41 / 255, 1, 94 / 255],
 
+                        % plot destination point
                         plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / this.scaleFacLR + 1, ...
                              trajectory(odIndex, vergErrIndex, stim, end, 2) / this.scaleFacMR + 1, ...
-                             'g.', 'MarkerSize', 15);
+                             'g.',  'MarkerSize', 15);
                     end
                 end
             end
