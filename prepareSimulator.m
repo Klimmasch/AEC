@@ -3,13 +3,13 @@
 function simulator = prepareSimulator()
 
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
-%     textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     
     % simulator = OpenEyeSim('create');
     simulator = OpenEyeSimV5('create');
 
     simulator.initRenderer();
-%     simulator.reinitRenderer();
+    % simulator.reinitRenderer();
     
     % load Textures
     nTextures = 0;
