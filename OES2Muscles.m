@@ -34,7 +34,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% Execute intermediate test procedure during training
-    testAt = [1000000 : 1000000 : trainTime];
+    testAt = [0 : 1000000 : trainTime];
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -43,7 +43,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     testIt = uint8(1);
 
     %%% Amount of test stimuli
-    nStimTest = 2;
+    nStimTest = 40;
 
     % Save model every #saveInterval training iterations
     saveInterval = ceil(trainTime / 100);
@@ -195,6 +195,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % rewardFunction_prev = 0;
     elapsedTime = 0;
     for iter1 = 1 : (timeToTrain / model.interval)
+                % intermediate testing during training
+        if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
+            testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
+            close all;
+        end
+        
         tic; % start time count
 
         %% Draw new stimulus
@@ -374,11 +380,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         elapsedTime = elapsedTime + toc;
 
-        % intermediate testing during training
-        if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
-            testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
-            close all;
-        end
     end
 
     % Total simulation time
