@@ -73,7 +73,7 @@ classdef CACLAVarActorLu < handle
             tmpVector = ((this.command_prev - this.z_k_prev)' * this.wp_kj)';
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat(tmpVector, 1, this.input_dim);
 
-            this.prams(5) = mean(mean(abs((this.beta_p * dwp_kj) * this.updateCount)));
+            this.params(5) = mean(mean(abs((this.beta_p * dwp_kj) * this.updateCount)));
             % this.wp_kj = this.wp_kj + this.params(5);
 
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
