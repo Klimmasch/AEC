@@ -2,3 +2,4 @@
 ,,,,,,,,,,LR,,,,,,VergErr @ 20iter,,,,Delta metCost @ 20iter,,,Critic's value,,,
 ,,,,,MetCost,,,,,,,,weights,,,,,,Bias,,,,function,,,
 #R,# Iter,#Basis,lRec,lMFB,lMet,%,FoV Size,dsRatio,stride,Cr,Ac,SC,init,regul,,RMSE,Median,4*IQR,Offset,RMSE,Median,4*IQR,flat,bias,Conclusion,Folder
+, 0mio,400 400 ,1,0.1269,0,0,128 40 ,4 1 ,0.5 0.5 ,0.75,0.5,0.2,1 1 2,0.999,,1.1593,-0.074,7.4197,,1.0736,0.9747,3.3798,, , ,/home/aecgroup/aecdata/Results/modelAt0

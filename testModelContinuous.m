@@ -1044,7 +1044,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     % lambdas
     resultsOverview = {model.lambdaRec, model.lambdaMuscleFB, model.lambdaMet, (model.lambdaMet / 0.1622) * 100};
-    formatSpec = '%.0f, %.4f, %.4f, %.1f';
+    formatSpec = '%.0f, %.4f, %.4f, %.1f,';
     fprintf(resultsFID, formatSpec, resultsOverview{1 : end});
 
     % field of view
