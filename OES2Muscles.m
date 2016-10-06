@@ -17,7 +17,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/klimmasch/projects/results/model_30-Sep-2016_17:12:39_5000000_1_critic075_mc00341_22/model.mat';
+%     useLearnedFile = [1, 1];
+%     learnedFile = '/home/klimmasch/projects/results/model_05-Oct-2016_10:31:09_3000000_1_critic075_mc0_varDec5e5-0/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -33,7 +34,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% Execute intermediate test procedure during training
-    testAt = [0 : 1000000 : trainTime];
+    testAt = [1000000 : 1000000 : trainTime];
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
