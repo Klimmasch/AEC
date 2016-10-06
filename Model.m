@@ -1318,13 +1318,15 @@ classdef Model < handle
                 angleDes = 2 * atand(this.baseline / (2 * objDist(odIndex)));
 
                 for stimIter = 1 : nStimuli
-                    currentTexture = stimuliIndices(stimIter);
+                    % currentTexture = stimuliIndices(stimIter);
+                    currentTexture = randi(40); % hack
 
                     for vergErrIndex = 1 : length(startVergErr)
                         % muscle init
                         if (initMethod == 0)
                             try
-                                [command, angleNew] = this.getMFedood(objDist(odIndex), startVergErr(vergErrIndex));
+                                % catch negative/divergent vergence angle
+                                [command, angleNew] = this.getMFedood(objDist(odIndex), min(startVergErr(vergErrIndex), this.getVergErrMax(objDist(odIndex))));
                             catch
                                 % catch non-existing variables error, occuring in non-up-to-date models
                                 try
