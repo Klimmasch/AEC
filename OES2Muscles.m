@@ -17,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/klimmasch/projects/results/model_30-Sep-2016_17:12:39_5000000_1_critic075_mc00341_22/model.mat';
+    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_05-Oct-2016_20:13:33_2000000_1_vardec_5e-5_0/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -33,7 +33,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% Execute intermediate test procedure during training
-    testAt = [0 : 1000000 : trainTime];
+    testAt = [1000000 : 1000000 : trainTime];
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -117,7 +117,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                                 randomizationSeed, ...
                                 fileDescription);
         end
-        folder = '../results/';
+        folder = '../results/';                         % local destination
+        % folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
         mkdir(folder, modelName);
         model.savePath = strcat(folder, modelName);
 
@@ -194,13 +195,13 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % rewardFunction_prev = 0;
     elapsedTime = 0;
     for iter1 = 1 : (timeToTrain / model.interval)
-                % intermediate testing during training
+        % intermediate testing during training
         if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
             close all;
         end
 
-        tic; % start time count
+        tic; % start/continue time count
 
         %% Draw new stimulus
         % currentTexture = texture{(randi(nTextures, 1))};          % stable renderer
@@ -277,14 +278,17 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             %% Vergence error reward
             % rewardFunction = -abs(angleDes - angleNew);
 
-            %% Delta reward
+            %% Delta reward (part 1)
             % rewardFunctionReal = model.lambdaRec * reward - model.lambdaMet * metCost;
             % rewardFunction = rewardFunctionReal - rewardFunction_prev;
 
-            % Stasis punishment, i.e. punish non-movement of eyes
+            %% Stasis punishment, i.e. punish non-movement of eyes
             % if (abs(rewardFunctionReal - rewardFunction_prev) < 1e-5)
             %     rewardFunction = rewardFunctionReal - rewardFunction_prev - 1e-5;
             % end
+
+            %% Delta reward (part 2)
+            % rewardFunction_prev = rewardFunctionReal;
 
             %% Normalized reward [-1, 1]
             % rewardFunction = rewardFunction / 100;
@@ -294,8 +298,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             % model.reward_variance = (1 - alpha) * model.reward_variance + (alpha * delta^2);
             % rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
 
-            % rewardFunction_prev = rewardFunctionReal;
-
             %%% Learning
             %% Sparse coding models
             for i = 1 : length(model.scModel)
@@ -303,7 +305,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             end
 
             %% RL model
-            % Variance decay, i.e. reduction of actor's output perturbation
+            % Variance decay, i.e. reduction of actor's output perturbation => exploration decay
             if (model.rlModel.CActor.varDec > 0)
                 %% exponential decay
                 % model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
@@ -367,7 +369,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                     mean(model.relCmd_hist(t - model.interval + 1 : t, 1)), mean(model.relCmd_hist(t - model.interval + 1 : t, 2)))
         end
 
-        % Display per cent completed of training and save model
+        % display per cent completed of training and save model
         if (~mod(t, saveInterval))
             sprintf('%g%% is finished', (t / timeToTrain * 100))
             save(strcat(model.savePath, '/model'), 'model');
@@ -381,7 +383,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
 
         elapsedTime = elapsedTime + toc;
-
     end
 
     % Total simulation time
@@ -401,7 +402,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
     end
 
-    %%% Testing procedure
+    %%% Final testing procedure
     if (testIt)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer, tempResultsFolderName)
         testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
