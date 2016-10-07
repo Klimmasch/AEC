@@ -1127,7 +1127,7 @@ classdef Model < handle
                     plotpath = sprintf('%s/performanceVsTraintime', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 else
-                    % TODO: add backward compatibility support
+                    % TODO: check backward compatibility support
                     % sprintf('Model is too old for allPlotSave(7), backward compatibility is not supported yet!')
                     % return;
 
