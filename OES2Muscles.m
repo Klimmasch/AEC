@@ -393,6 +393,12 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % store simulated time
     save(strcat(model.savePath, '/model'), 'model');
 
+    %%% Final testing procedure
+    if (testIt)
+        % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer, tempResultsFolderName)
+        testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
+    end
+
     % plot results
     if (plotIt(1) == 1)
         if (isempty(testAt))
@@ -400,12 +406,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         else
             model.allPlotSave([1 : 7]);
         end
-    end
-
-    %%% Final testing procedure
-    if (testIt)
-        % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer, tempResultsFolderName)
-        testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
     end
 
     if (closeFigures == 1)

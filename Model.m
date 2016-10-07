@@ -164,6 +164,7 @@ classdef Model < handle
             obj.testResult7 = [];
             % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
             obj.testHist = zeros(length(obj.testAt), 6);
+            obj.testHist(1, :) = [1.1593, -0.074, 7.4197, 1.0736, 0.9747, 3.3798]; % insert modelAt0 entry
             obj.simulatedTime = 0;
             obj.trainedUntil = 0;
             obj.notes = '';
