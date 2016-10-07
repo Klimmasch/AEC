@@ -406,7 +406,7 @@ classdef Model < handle
                     %     reward_L = this.rlModel.J; %TODO: not supported for continuous rlModel
                     % catch
                     % end
-                    sprintf('All values in the extracted patches are zero. Check if the image rendering is all right!')
+                    sprintf('All values in the extracted patches are zero. Check if the image rendering is alright!')
                     return;
                 end
                 this.scModel{i}.sparseEncode(tmpImages);
@@ -1066,9 +1066,9 @@ classdef Model < handle
                 end
             end
 
-            %% Testing performance during training
+            %% Testing performance as a function of traintime
             if (~isempty(find(level == 7)))
-                try
+                if (isfield(this, 'testHist'))
                     % RMSE vergErr
                     figure;
                     subplot(2, 2, 1);
@@ -1125,10 +1125,64 @@ classdef Model < handle
 
                     plotpath = sprintf('%s/performanceVsTraintime', this.savePath);
                     saveas(gcf, plotpath, 'png');
-                catch
+                else
                     % TODO: add backward compatibility support
-                    sprintf('Model is too old for allPlotSave(7), backward compatibility is not supported yet!')
-                    return;
+                    % sprintf('Model is too old for allPlotSave(7), backward compatibility is not supported yet!')
+                    % return;
+
+                    % try to update the model
+                    try
+                        % generate new model attributes
+                        clone = this.copy();
+                        tmpStr = GetFullPath(clone.savePath)
+                        tmpIndex = strfind(tmpStr, 'model');
+                        if (length(tmpIndex) == 1)
+                            clone.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : end));
+                        else
+                            clone.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : tmpIndex(2) - 2));
+                        end
+
+                        % Get a list of all files and folders in this folder
+                        files = dir(clone.savePath);
+                        % Get a logical vector that tells which is a directory
+                        dirFlags = [files.isdir];
+                        % Extract only those that are directories.
+                        subFolders = files(dirFlags);
+
+                        % Extract all relevant data
+                        for k = 1 : length(subFolders)
+                            % load intermediate model objects
+                            tmpModel = load(strcat(clone.savePath, '/', subFolders(k).name));
+
+                            % get test iteration number
+                            clone.testAt(k + 1) = str2num(subFolders(k).name(9 : end));
+
+                            % generate test history
+                            % assumes testInterval = 20
+                            clone.testHist(k + 1, :) = [sqrt(mean(tmpModel.testResult3(:, 20) .^ 2)), ...
+                                                        mean(abs(tmpModel.testResult3(:, 20) .^ 2)), ...
+                                                        std(abs(tmpModel.testResult3(:, 20) .^ 2)), ...
+                                                        sqrt(mean(tmpModel.testResult7(:, 20) .^ 2)), ...
+                                                        mean(abs(tmpModel.testResult7(:, 20) .^ 2)), ...
+                                                        std(abs(tmpModel.testResult7(:, 20) .^ 2))];
+                        end
+
+                        % delete(model);
+                        % clear model;
+                        % model = clone;
+
+                        % overwrite old model
+                        save(strcat(clone.savePath, '/model'), 'model');
+
+                        % delete(clone);
+                        % clear clone;
+
+                        % try to plot again
+                        clone.allPlotSave(7);
+                    catch
+                        sprintf('Error: One or more file operations failed. Check path strings.')
+                        return;
+                    end
                 end
             end
         end
