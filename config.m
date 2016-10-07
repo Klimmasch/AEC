@@ -103,16 +103,26 @@ end
 % 57.8947% = 0.0939, 63.1579% = 0.1024, 68.4211% = 0.1110, 73.6842% = 0.1195, 78.9474% = 0.1281,
 % 84.2105% = 0.1366, 89.4737% = 0.1451, 94.7368% = 0.1537, 100.0000% = 0.1622
 %
-lambdaMet = 0;
+metCostRange = [0, 0];
 
-% due to the dependancy of mean(model.metCost_hist) * lambdaMet * lambdaRec / mean(recError) * lambdaRec = x%
-% lambdaMet needs to be scaled accordingly
-lambdaMet = lambdaMet * lambdaRec;
+% due to the dependancy of mean(model.metCost_hist) * metCostRange * lambdaRec / mean(recError) * lambdaRec = x%
+% metCostRange needs to be scaled accordingly
+metCostRange = metCostRange .* lambdaRec; % #hack
+
+if (length(metCostRange) == 1 || metCostRange(1) == metCostRange(2))
+    metCostDec = 0; % no decay
+elseif (metCostRange(1) < metCostRange(2))
+    sprintf('Error: It must hold metCostRange(1) >= metCostRange(2)')
+    return;
+else
+%     metCostDec = -(log(2) * trainTime) / log(metCostRange(2) / metCostRange(1)); % metCost decay factor
+    metCostDec = metCostRange(1) - metCostRange(2);
+end
 
 PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
-              lambdaMuscleFB, lambdaRec, lambdaMet, patchSize, pxFieldOfView, ...
-              dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout};
+              lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
+              dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec};
 
 %%% Sparce Coding parameters
 % Scales := [coarse, less_coarse, ..., fine], i.e. [peripheral vision, ..., central vision]

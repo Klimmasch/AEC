@@ -30,6 +30,8 @@ classdef Model < handle
         lambdaMuscleFB;     % factor of muscle activity feedback to RL feature vector
         lambdaRec;          % reconstruction error factor
         lambdaMet;          % factor of metCosts for reward function
+        metCostRange;       % in case of metabolic costs decay, this provides the range
+        metCostDec;         % auxiliary factor for the decay
         reward_mean;        % tracks the exponentially weighted average of rewards
         reward_variance;    % and the variance for normalizing the reward (if desired)
 
@@ -112,7 +114,9 @@ classdef Model < handle
             obj.interval = PARAM{1}{11};
             obj.lambdaMuscleFB = PARAM{1}{12};
             obj.lambdaRec = PARAM{1}{13};
-            obj.lambdaMet = PARAM{1}{14};
+            obj.metCostRange = PARAM{1}{14};
+            obj.lambdaMet = obj.metCostRange(1);            
+            obj.metCostDec = PARAM{1}{23};
             obj.fixDistMin = PARAM{1}{19};
             obj.fixDistMax = PARAM{1}{20};
 
