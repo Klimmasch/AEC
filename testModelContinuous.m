@@ -11,7 +11,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     % should the simulation time be measured?
     % not recommended for use during training
-
     measureTime = false;
 
     % Vergence error resolution for 2nd testing procedure
@@ -92,7 +91,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % here, the images are safed that start at the maximal vergence errors (neg & pos) and that end up worse than they started
     % this tabular is going to be safed inside the models folder and
     % histograms will be generated
-    realyBadImages = zeros(2, length(objRange), nStim);
+    reallyBadImages = zeros(2, length(objRange), nStim);
 
     % Image patches cell array (input to model)
     currentView = cell(1, length(model.scModel));
@@ -238,11 +237,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
                     if vseIndex == 1        % first vergence error to be tested
                         if (angleDes - angleNew) < vseRange(vseIndex)
-                            realyBadImages(1, odIndex, stimulusIndex) = 1;
+                            reallyBadImages(1, odIndex, stimulusIndex) = 1;
                         end
                     elseif vseIndex == 7    % last vergence error to be tested
                         if (angleDes - angleNew) > vseRange(vseIndex)
-                            realyBadImages(2, odIndex, stimulusIndex) = 1;
+                            reallyBadImages(2, odIndex, stimulusIndex) = 1;
                         end
                     end
                 end
@@ -262,7 +261,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 % testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
             end
         end
-        save(strcat(imageSavePath, '/realyBadImages'), 'realyBadImages');
+        save(strcat(imageSavePath, '/reallyBadImages'), 'reallyBadImages');
 
         %% Reconstruction error and critic's response additional testing procedure
         tmp = zeros(1, nStim * (2 + length(model.scModel)));
@@ -728,7 +727,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         % plotpath = sprintf('%s/recErrVsVergErr[%.2fm,%.2fm].png', imageSavePath, objRange(1), objRange(end));
         % saveas(gcf, plotpath, 'png');
 
-        % reconstruction error fine
+        % Reconstruction error fine
         vseRange = linspace(-1, 1, test2Resolution);
         handleArray = zeros(1, 1 + length(model.scModel));
         captions = cell(1, length(handleArray));
@@ -1121,7 +1120,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                        mean(abs(model.testResult7(:, testInterval) .^ 2)), ...
                        std(abs(model.testResult7(:, testInterval) .^ 2))];
     catch
-        sprintf('Warning: Current model has no field \"testHist\". Performance history will not be stored.')
+        sprintf('Warning: Current model has no \"testHist\" field. Performance history will not be stored.')
     end
 end
 

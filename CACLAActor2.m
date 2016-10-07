@@ -18,7 +18,6 @@ classdef CACLAActor2 < handle
         variance;       % variance of perturbation distribution
         varianceRange;
         varDec;
-        % covmat;         % action perturbation matrix
 
         % model state tracking of previous time step
         z_i_prev;       % input layer activation
@@ -27,7 +26,6 @@ classdef CACLAActor2 < handle
         command_prev;   % resulted action
 
         % model history tracking
-        param_num;
         params;
     end
 
@@ -37,18 +35,15 @@ classdef CACLAActor2 < handle
             obj.hidden_dim = PARAM{1}(2);
             obj.output_dim = PARAM{1}(3);
             obj.w_init_range = PARAM{2};
-            % obj.wp_ji = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1); % [0, 1] * w_init_range
-            obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1); % [-1, 1] * w_init_range
-            obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2); % [-1, 1] * w_init_range
+            obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1);    % [-1, 1] * w_init_range
+            obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2);   % [-1, 1] * w_init_range
 
             obj.beta_p = PARAM{3};
             obj.varianceRange = PARAM{4};
             obj.variance = obj.varianceRange(1);
             obj.varDec = PARAM{5};
-            % obj.covmat = eye(obj.output_dim) * obj.variance;
 
-            obj.param_num = 2;
-            obj.params = zeros(1, obj.param_num);
+            obj.params = zeros(1, 2);
 
             obj.z_i_prev = zeros(obj.input_dim, 1);
             obj.z_j_prev = zeros(obj.hidden_dim, 1);
@@ -72,8 +67,7 @@ classdef CACLAActor2 < handle
             z_j = tanh(this.wp_ji * z_i);           % activity of hidden layer
             z_k = tanh(this.wp_kj * z_j);           % activity of output layer
 
-            % command = mvnrnd(z_k, this.covmat)';  % perturbation of actor's output multivariate version
-            command = mvnrnd(z_k, this.variance);
+            command = mvnrnd(z_k, this.variance);   % perturbation of actor's output multivariate version
 
             % model state tracking
             this.z_i_prev = z_i;

@@ -4,7 +4,7 @@
 %%%
 classdef CACLAVarActorLu < handle
     properties
-        % network parameters
+        % Network parameters
         input_dim;
         hidden_dim;
         output_dim;
@@ -17,9 +17,8 @@ classdef CACLAVarActorLu < handle
         variance;       % variance of perturbation distribution
         varianceRange;
         varDec;
-        % covmat;         % action perturbation matrix
 
-        % model state tracking of previous time step
+        % Model state tracking of previous time step
         z_i_prev;       % input layer activation
         z_j_prev;       % hidden layer activation
         z_k_prev;       % output layer activation
@@ -29,8 +28,7 @@ classdef CACLAVarActorLu < handle
         updateCount;
         regularizer;    % percentage of the weights the vector is scaled to
 
-        % model history tracking
-        param_num;
+        % Model history tracking
         params;
     end
 
@@ -40,9 +38,8 @@ classdef CACLAVarActorLu < handle
             obj.hidden_dim = PARAM{1}(2);
             obj.output_dim = PARAM{1}(3);
             obj.w_init_range = PARAM{2};
-            % obj.wp_ji = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1); % [0, 1] * w_init_range
-            obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1); % [-1, 1] * w_init_range
-            obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2); % [-1, 1] * w_init_range
+            obj.wp_ji = (2 * rand(obj.hidden_dim, obj.input_dim) - 1) * obj.w_init_range(1);    % [-1, 1] * w_init_range
+            obj.wp_kj = (2 * rand(obj.output_dim, obj.hidden_dim) - 1) * obj.w_init_range(2);   % [-1, 1] * w_init_range
 
             obj.beta_p = PARAM{3};
             obj.varianceRange = PARAM{4};
@@ -50,10 +47,8 @@ classdef CACLAVarActorLu < handle
             obj.deltaVar = PARAM{5};
             obj.eta = PARAM{6};
             obj.varDec = PARAM{7};
-            % obj.covmat = eye(obj.output_dim) * obj.variance;
 
-            obj.param_num = 5;
-            obj.params = zeros(1, obj.param_num);
+            obj.params = zeros(1, 5);
 
             obj.z_i_prev = zeros(obj.input_dim, 1);
             obj.z_j_prev = zeros(obj.hidden_dim, 1);
@@ -79,19 +74,18 @@ classdef CACLAVarActorLu < handle
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
             % this.wp_kj = (this.regularizer * this.wp_kj) + (this.beta_p * dwp_kj) * this.updateCount; % with weight regularization
 
-            this.params(4) = mean(mean(abs((this.beta_p * dwp_ji) * this.updateCount)));    % tracks the change in weight because of updates
-            % this.params(5) = mean(mean(abs((this.regularizer * this.wp_ji) - this.wp_ji))); % tracks changes due to regularization
+            this.params(4) = mean(mean(abs((this.beta_p * dwp_ji) * this.updateCount)));        % tracks the change in weight because of updates
+            % this.params(5) = mean(mean(abs((this.regularizer * this.wp_ji) - this.wp_ji)));   % tracks changes due to regularization
 
             % this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji) * this.updateCount;
             this.wp_ji = (this.regularizer * this.wp_ji) + (this.beta_p * dwp_ji) * this.updateCount; % with weight regularization
         end
 
-        % Gaussian policy (exploration)
+        % Gaussian policy (exploration policy)
         function command = act(this, z_i)
-            z_j = tanh(this.wp_ji * z_i);           % activity of hidden layer
-            z_k = this.wp_kj * z_j;                 % activity of output layer
-
-            command = mvnrnd(z_k, eye(this.output_dim) * this.variance)';    % perturbation of actor's output by multivariate Gaussian
+            z_j = tanh(this.wp_ji * z_i);                                   % activity of hidden layer
+            z_k = this.wp_kj * z_j;                                         % activity of output layer
+            command = mvnrnd(z_k, eye(this.output_dim) * this.variance)';   % perturbation of actor's output by multivariate Gaussian
 
             % model state tracking
             this.z_i_prev = z_i;

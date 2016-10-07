@@ -23,7 +23,6 @@ classdef CACLAActorLin < handle
         command_prev;   % resulted action
 
         % model history tracking
-        param_num;
         params;
     end
 
@@ -32,8 +31,8 @@ classdef CACLAActorLin < handle
             obj.input_dim = PARAM{1};
             obj.output_dim = PARAM{2};
             obj.w_init_range = PARAM{3};
-            % obj.wp_ki = (2 * rand(obj.output_dim, obj.input_dim) - 1) * obj.w_init_range(1); % [-1, 1] * w_init_range
-            obj.wp_ki = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1); % [0, 1] * w_init_range
+            % obj.wp_ki = (2 * rand(obj.output_dim, obj.input_dim) - 1) * obj.w_init_range(1);  % [-1, 1] * w_init_range
+            obj.wp_ki = rand(obj.output_dim, obj.input_dim) * obj.w_init_range(1);              % [ 0, 1] * w_init_range
 
             obj.beta_p = PARAM{4};
             obj.varianceRange = PARAM{5};
@@ -41,8 +40,7 @@ classdef CACLAActorLin < handle
             obj.varDec = PARAM{6};
             obj.covmat = eye(obj.output_dim) * obj.variance;
 
-            obj.param_num = 2;
-            obj.params = zeros(1, obj.param_num);
+            obj.params = zeros(1, 2);
 
             obj.z_i_prev = zeros(obj.input_dim, 1);
             obj.z_k_prev = zeros(obj.output_dim, 1);
@@ -60,8 +58,7 @@ classdef CACLAActorLin < handle
 
         function command = act(this, z_i)
             z_k = this.wp_ki * z_i;                 % activity of output layer
-            % command = mvnrnd(z_k, this.covmat)';    % perturbation of actor's output multivariate version
-            command = mvnrnd(z_k, this.variance);
+            command = mvnrnd(z_k, this.variance);   % perturbation of actor's output multivariate version
 
             % model state tracking
             this.z_i_prev = z_i;
@@ -70,7 +67,7 @@ classdef CACLAActorLin < handle
         end
 
         function command = actHard(this, z_i)
-            command = this.wp_ki * z_i;                 % activity of output layer
+            command = this.wp_ki * z_i; % activity of output layer
         end
 
         function command = train(this, feature, delta, flag_update)
