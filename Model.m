@@ -51,6 +51,8 @@ classdef Model < handle
         weight_hist;        % L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
         % reward_hist;        % reward function
         metCost_hist;       % metabolic costs
+        actorLR_hist;       % actor learning rate
+        criticLR_hist;      % critic learning rate
         variance_hist;      % exploratory variance of actor
         savePath;           % where all the data are stored
         notes;              % is there any special things about this model to note?
@@ -158,6 +160,8 @@ classdef Model < handle
             % obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
             obj.lambdaMet_hist = zeros(obj.trainTime, 1);
+            obj.actorLR_hist = zeros(obj.trainTime, 1);
+            obj.criticLR_hist = zeros(obj.trainTime, 1);
             obj.variance_hist = zeros(obj.trainTime, 1);
 
             obj.responseResults = struct();

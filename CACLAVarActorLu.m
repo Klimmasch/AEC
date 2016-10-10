@@ -83,7 +83,9 @@ classdef CACLAVarActorLu < handle
             % this.params(5) = mean(mean(abs((this.regularizer * this.wp_ji) - this.wp_ji))); % tracks changes due to regularization
 
             % this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji) * this.updateCount;
-            this.wp_ji = (this.regularizer * this.wp_ji) + (this.beta_p * dwp_ji) * this.updateCount; % with weight regularization
+            this.wp_ji = (1 - (this.regularizer * this.beta_p)) * this.wp_ji;       % regularization
+            this.wp_ji = this.wp_ji + ((this.beta_p * dwp_ji) * this.updateCount);  % weight update
+            % this.wp_ji = (this.regularizer * this.wp_ji) + (this.beta_p * dwp_ji) * this.updateCount; % with weight regularization
         end
 
         % Gaussian policy (exploration)

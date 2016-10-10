@@ -165,20 +165,36 @@ PARAMSC = {nBasis, nBasisUsed, basisSize, eta, temperature};
 % # = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
 rlFlavour = [uint8(0), uint8(0)];
 
-continuous = uint8(1);                               % indicates if the policy is discrete (= 0) or continuous (= 1)
-% actionSpace = [-8, -4, -2, -1, -0.5, 0, ...        % vergence angles (discrete policy)
-%                 0.5, 1, 2, 4, 8];
-actionSpace = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ... % vergence angles (discrete policy) enable half pixel resolution
-                0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
-alpha_v = 0.75;                                         % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
-alpha_n = 0.025;                                     % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-alpha_p = 0.5;                                       % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
-xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
-gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
-regularizer = 1 - 1e-3;                              % actor weight regularization via factorial downscaling
+continuous = uint8(1);                             % indicates if the policy is discrete (= 0) or continuous (= 1)
+actionSpace = [-8, -4, -2, -1, -0.5, 0, ...        % vergence angles (discrete policy), add [-0.2, -0.1, 0.1, 0.2] to enabel half-pixel resolution
+               0.5, 1, 2, 4, 8];
 
-varianceRange = [1e-5, 1e-5];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
-                                                     % corresponds to softMax temperature in discrete RL models
+%% critic's learning rate
+criticLRRange = [0.75, 0.7];
+if (length(criticLRRange) == 1 || criticLRRange(1) == criticLRRange(2))
+    critLRDec = 0; % no variance decay
+elseif (criticLRRange(1) < criticLRRange(2))
+    sprintf('Error: It must hold criticLRRange(1) >= criticLRRange(2)')
+    return;
+else
+%     critLRDec = -(log(2) * trainTime) / log(criticLRRange(2) / criticLRRange(1)); % exponential decay factor
+    critLRDec = criticLRRange(1) - criticLRRange(2);                                % linear decay factor
+end
+
+%% actors learning rates
+actorLRRange = [0.5, 0];
+if (length(actorLRRange) == 1 || actorLRRange(1) == actorLRRange(2))
+    actLRDec = 0; % no variance decay
+elseif (actorLRRange(1) < actorLRRange(2))
+    sprintf('Error: It must hold actorLRRange(1) >= actorLRRange(2)')
+    return;
+else
+%     actLRDec = -(log(2) * trainTime) / log(actorLRRange(2) / actorLRRange(1)); % exponential decay factor
+    actLRDec = actorLRRange(1) - actorLRRange(2);                                % linear decay factor
+end
+
+%% variance decay
+varianceRange = [1e-5, 1e-5];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end], corresp. to softMax temperature in discrete RL models
 if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     varDec = 0; % no variance decay
 elseif (varianceRange(1) < varianceRange(2))
@@ -188,6 +204,15 @@ else
 %     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
     varDec = varianceRange(1) - varianceRange(2);
 end
+
+%% other RL and network parameters
+% alpha_v and alpha_p are now defined by criticLRRange and actorLRRange
+% alpha_v = 0.75;                                    % learning rate to update the value function | origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
+alpha_n = 0.025;                                     % learning rate of natural policy gradient | origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
+% alpha_p = 0.5;                                     % learning rate to update the policy function | origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
+xi = 0.3;                                            % discount factor | origin 0.3 | Alex P 0.3
+gamma = 0.3;                                         % learning rate to update cumulative value | origin 1
+regularizer = 1e-3 / actorLRRange(1);                % actor weight regularization via factorial downscaling, chosen to be equal to 0.99 in the beginning
 
 outputDim = 2;                                      % number of neurons in the output layer and amount of eye muscles
 if (continuous == 1)
@@ -208,8 +233,8 @@ deltaVar = 1;                                       % TD error variance tracking
 eta = 0.001;                                        % TD error variance scaling factor (CACLAVar)
 fiScale = 1e-5;                                     % scaling factor of Fisher Information matrix (CNGFI)
 
-PARAMRL = {actionSpace, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
-           continuous, deltaVar, eta, fiScale, rlFlavour, varDec, regularizer};
+PARAMRL = {actionSpace, criticLRRange, alpha_n, actorLRRange, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
+           continuous, deltaVar, eta, fiScale, rlFlavour, varDec, regularizer, critLRDec, actLRDec};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);
