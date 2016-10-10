@@ -118,8 +118,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                                 randomizationSeed, ...
                                 fileDescription);
         end
-        folder = '../results/';                         % local destination
-        % folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
+        % folder = '../results/';                         % local destination
+        folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
         mkdir(folder, modelName);
         model.savePath = strcat(folder, modelName);
 
@@ -326,6 +326,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
             model.metCost_hist(t) = metCost;
+            model.lambdaMet_hist(t) = model.lambdaMet;
             model.td_hist(t) = model.rlModel.CCritic.delta;
 
             model.weight_hist(t, 1) = model.rlModel.CCritic.params(1);

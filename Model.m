@@ -32,6 +32,7 @@ classdef Model < handle
         lambdaMet;          % factor of metCosts for reward function
         metCostRange;       % in case of metabolic costs decay, this provides the range
         metCostDec;         % auxiliary factor for the decay
+        lambdaMet_hist;     % tracks the lambdaMet in case of metCost decay
         reward_mean;        % tracks the exponentially weighted average of rewards
         reward_variance;    % and the variance for normalizing the reward (if desired)
 
@@ -156,6 +157,7 @@ classdef Model < handle
             obj.weight_hist = zeros(obj.trainTime, 6); % for also traking change in weights
             % obj.reward_hist = zeros(obj.trainTime, 1);
             obj.metCost_hist = zeros(obj.trainTime, 1);
+            obj.lambdaMet_hist = zeros(obj.trainTime, 1);
             obj.variance_hist = zeros(obj.trainTime, 1);
 
             obj.responseResults = struct();
