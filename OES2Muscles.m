@@ -17,7 +17,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     % OES2Muscles(200000, randomizationSeed, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
-    % learnedFile = '/home/lelais/Documents/MATLAB/results/model_05-Oct-2016_20:13:33_2000000_1_vardec_5e-5_0/model.mat';
+    % useLearnedFile = [1, 1];
+    % learnedFile = '/home/klimmasch/projects/results/model_05-Oct-2016_10:31:09_3000000_1_critic075_mc0_varDec5e5-0/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -117,8 +118,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                                 randomizationSeed, ...
                                 fileDescription);
         end
-        folder = '../results/';                         % local destination
-        % folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
+        % folder = '../results/';                         % local destination
+        folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
         mkdir(folder, modelName);
         model.savePath = strcat(folder, modelName);
 
@@ -304,16 +305,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                 model.scModel{i}.stepTrain();
             end
 
-            %% RL model
-            % Variance decay, i.e. reduction of actor's output perturbation => exploration decay
-            if (model.rlModel.CActor.varDec > 0)
-                %% exponential decay
-                % model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
-
-                %% linear decay
-                model.rlModel.CActor.variance = model.rlModel.CActor.variance - (model.rlModel.CActor.varDec / model.trainTime);
-            end
-
             % generate delta of muscle activations
             relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
@@ -335,6 +326,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
             model.metCost_hist(t) = metCost;
+            model.lambdaMet_hist(t) = model.lambdaMet;
             model.td_hist(t) = model.rlModel.CCritic.delta;
 
             model.weight_hist(t, 1) = model.rlModel.CCritic.params(1);
@@ -343,9 +335,29 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.weight_hist(t, 4) = model.rlModel.CActor.params(3);
             model.weight_hist(t, 5) = model.rlModel.CActor.params(4); % weight change hidden layer
             model.weight_hist(t, 6) = model.rlModel.CActor.params(5); % weight change output layer
+
             model.variance_hist(t) = model.rlModel.CActor.variance;
 
             model.trainedUntil = t;
+
+            %% RL model
+            % Variance decay, i.e. reduction of actor's output perturbation
+            if (model.rlModel.CActor.varDec > 0)
+                %% exponential decay
+                % model.rlModel.CActor.variance = model.rlModel.CActor.varianceRange(1) * 2 ^ (-t / model.rlModel.CActor.varDec);
+
+                %% linear decay
+                model.rlModel.CActor.variance = model.rlModel.CActor.variance - (model.rlModel.CActor.varDec / model.trainTime);
+            end
+
+            % metabolic cost decay
+            if (model.metCostDec > 0)
+                %% exponential decay
+                % model.lambdaMet = model.metCostRange(1) * 2 ^ (-t / model.metCostDec);
+
+                %% linear decay
+                model.lambdaMet = model.lambdaMet - (model.metCostDec/ model.trainTime);
+            end
 
             %% Removed
             % model.verge_actual(t) = angleNew;
@@ -383,6 +395,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
 
         elapsedTime = elapsedTime + toc;
+
     end
 
     % Total simulation time
