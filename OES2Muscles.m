@@ -197,7 +197,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     elapsedTime = 0;
     for iter1 = 1 : (timeToTrain / model.interval)
         % intermediate testing during training
-        if (testIt & find(testAt == t)) % have to use single & here, because the last statement is a scalar
+        if ((testIt == 1) & find(testAt == t) & (t > 0)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
             close all;
         end

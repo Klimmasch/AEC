@@ -102,180 +102,196 @@ classdef Model < handle
 
     methods
         function obj = Model(PARAM)
-            obj.textureFile = PARAM{1}{1};
-            obj.trainTime = PARAM{1}{2};
-            obj.testAt = PARAM{1}{3};
-            obj.sparseCodingType = PARAM{1}{4};
-            obj.focalLength = PARAM{1}{5};
-            obj.baseline = PARAM{1}{6};
-            obj.objDistMin = PARAM{1}{7};
-            obj.objDistMax = PARAM{1}{8};
-            obj.muscleInitMin = PARAM{1}{9};
-            obj.muscleInitMax = PARAM{1}{10};
-            obj.interval = PARAM{1}{11};
-            obj.lambdaMuscleFB = PARAM{1}{12};
-            obj.lambdaRec = PARAM{1}{13};
-            obj.metCostRange = PARAM{1}{14};
-            obj.lambdaMet = obj.metCostRange(1);            
-            obj.metCostDec = PARAM{1}{23};
-            obj.fixDistMin = PARAM{1}{19};
-            obj.fixDistMax = PARAM{1}{20};
-
-            % single eye
-            obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
-            obj.desiredAngleMax = atand(obj.baseline / (2 * obj.objDistMin));
-
-            obj.vergAngleMin = 2 * atand(obj.baseline / (2 * obj.fixDistMax));
-            obj.vergAngleMax = 2 * atand(obj.baseline / (2 * obj.fixDistMin));
-
-            % obj.vergAngleFixMin = 2 * atand(obj.baseline / (2 * 2));
-            obj.vergAngleFixMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
-            obj.vergAngleFixMax = 2 * atand(obj.baseline / (2 * obj.objDistMin));
-
-            %%% Create RL models
-            % Discrete or continuous policy
-            if (PARAM{3}{11} == 1)
-                obj.rlModel = ReinforcementLearningCont(PARAM{3});
-            else
-                obj.rlModel = ReinforcementLearning(PARAM{3});
-            end
-
-            % obj.recerr_hist = zeros(obj.trainTime, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
-            obj.recerr_hist = zeros(obj.trainTime / obj.interval, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
-            % obj.disp_hist = zeros(obj.trainTime, 1);
-            obj.vergerr_hist = zeros(obj.trainTime, 1);
-            % obj.verge_actual = zeros(obj.trainTime, 1);
-            % obj.verge_desired = zeros(obj.trainTime, 1);
-            % obj.Z = zeros(obj.trainTime, 1);
-            % obj.fixZ = zeros(obj.trainTime, 1);
-
-            obj.td_hist = zeros(obj.trainTime, 1);
-            % obj.feature_hist = zeros(obj.trainTime, 1);%zeros(obj.trainTime, PARAM{3}{9}(1));
-            obj.cmd_hist = zeros(obj.trainTime, 2);
-            obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
-            % obj.weight_hist = zeros(obj.trainTime, 4);
-            obj.weight_hist = zeros(obj.trainTime, 6); % for also traking change in weights
-            % obj.reward_hist = zeros(obj.trainTime, 1);
-            obj.metCost_hist = zeros(obj.trainTime, 1);
-            obj.lambdaMet_hist = zeros(obj.trainTime, 1);
-            obj.variance_hist = zeros(obj.trainTime, 1);
-
-            obj.responseResults = struct();
-            obj.testResult = [];
-            obj.testResult2 = [];
-            obj.testResult3 = [];
-            obj.testResult4 = [];
-            obj.testResult5 = [];
-            obj.testResult6 = [];
-            obj.testResult7 = [];
-            % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
-            obj.testHist = zeros(length(obj.testAt), 6);
-            obj.testHist(1, :) = [1.1593, -0.074, 7.4197, 1.0736, 0.9747, 3.3798]; % insert modelAt0 entry
-            obj.simulatedTime = 0;
-            obj.trainedUntil = 0;
-            obj.notes = '';
-
-            obj.reward_mean = 0;
-            obj.reward_variance = 1;
-
-            %%% Generate image processing constants
-            obj.patchSize = PARAM{1}{15};
-            obj.pxFieldOfView = PARAM{1}{16};
-            obj.dsRatio = PARAM{1}{17};
-            obj.stride = PARAM{1}{18};
-            obj.overlap = PARAM{1}{21};
-            obj.cutout = PARAM{1}{22};
-
-            % Prepare index matrix for image patches
-            obj.prepareColumnInd();
-            % cut out central region
-            if (obj.cutout == 1)
-                obj.prepareCutout();
-            end
-
-            %%% Create SC models
-            obj.scModel = {};
-            PARAM{2}{end + 1} = [cellfun('length', obj.columnInd)]; % append image batch size's 2nd dimensions
-            if (obj.sparseCodingType == 0)
-                for i = 1 : length(PARAM{2}{1})
-                    % pick respective parameters from PARAM cell array for ith SC model constructor
-                    obj.scModel{end + 1} = SparseCoding2(cellfun(@(x) x(i), PARAM{2}, 'UniformOutput', true));
+            %% if isempty(PARAM{1}{1}) -> indicator for copy constructor
+            if (~isempty(PARAM{1}{1}))
+                obj.textureFile = PARAM{1}{1};
+                obj.trainTime = PARAM{1}{2};
+                obj.testAt = PARAM{1}{3};
+                if (~(isempty(obj.testAt)) && (obj.testAt(1) ~= 0))
+                    obj.testAt = horzcat(0, obj.testAt);
                 end
-            else
-                %TODO: update depricated SparseCodingHomeo class
-                sprintf('SparseCodingHomeo class is DEPRICATED and therefore currently not supported!')
-                return;
-                % obj.scModel_Large = SparseCodingHomeo(PARAM{2}{1}); %coarse scale
-                % obj.scModel_Small = SparseCodingHomeo(PARAM{2}{2}); %fine scale
+                obj.sparseCodingType = PARAM{1}{4};
+                obj.focalLength = PARAM{1}{5};
+                obj.baseline = PARAM{1}{6};
+                obj.objDistMin = PARAM{1}{7};
+                obj.objDistMax = PARAM{1}{8};
+                obj.muscleInitMin = PARAM{1}{9};
+                obj.muscleInitMax = PARAM{1}{10};
+                obj.interval = PARAM{1}{11};
+                obj.lambdaMuscleFB = PARAM{1}{12};
+                obj.lambdaRec = PARAM{1}{13};
+                obj.metCostRange = PARAM{1}{14};
+                obj.lambdaMet = obj.metCostRange(1);
+                obj.metCostDec = PARAM{1}{23};
+                obj.fixDistMin = PARAM{1}{19};
+                obj.fixDistMax = PARAM{1}{20};
+
+                % single eye
+                obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
+                obj.desiredAngleMax = atand(obj.baseline / (2 * obj.objDistMin));
+
+                obj.vergAngleMin = 2 * atand(obj.baseline / (2 * obj.fixDistMax));
+                obj.vergAngleMax = 2 * atand(obj.baseline / (2 * obj.fixDistMin));
+
+                % obj.vergAngleFixMin = 2 * atand(obj.baseline / (2 * 2));
+                obj.vergAngleFixMin = 2 * atand(obj.baseline / (2 * obj.objDistMax));
+                obj.vergAngleFixMax = 2 * atand(obj.baseline / (2 * obj.objDistMin));
+
+                %%% Create RL models
+                % Discrete or continuous policy
+                if (PARAM{3}{11} == 1)
+                    obj.rlModel = ReinforcementLearningCont(PARAM{3});
+                else
+                    obj.rlModel = ReinforcementLearning(PARAM{3});
+                end
+
+                % obj.recerr_hist = zeros(obj.trainTime, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
+                obj.recerr_hist = zeros(obj.trainTime / obj.interval, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
+                % obj.disp_hist = zeros(obj.trainTime, 1);
+                obj.vergerr_hist = zeros(obj.trainTime, 1);
+                % obj.verge_actual = zeros(obj.trainTime, 1);
+                % obj.verge_desired = zeros(obj.trainTime, 1);
+                % obj.Z = zeros(obj.trainTime, 1);
+                % obj.fixZ = zeros(obj.trainTime, 1);
+
+                obj.td_hist = zeros(obj.trainTime, 1);
+                % obj.feature_hist = zeros(obj.trainTime, 1);%zeros(obj.trainTime, PARAM{3}{9}(1));
+                obj.cmd_hist = zeros(obj.trainTime, 2);
+                obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
+                % obj.weight_hist = zeros(obj.trainTime, 4);
+                obj.weight_hist = zeros(obj.trainTime, 6); % for also traking change in weights
+                % obj.reward_hist = zeros(obj.trainTime, 1);
+                obj.metCost_hist = zeros(obj.trainTime, 1);
+                obj.lambdaMet_hist = zeros(obj.trainTime, 1);
+                obj.variance_hist = zeros(obj.trainTime, 1);
+
+                obj.responseResults = struct();
+                obj.testResult = [];
+                obj.testResult2 = [];
+                obj.testResult3 = [];
+                obj.testResult4 = [];
+                obj.testResult5 = [];
+                obj.testResult6 = [];
+                obj.testResult7 = [];
+                % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
+                obj.testHist = zeros(length(obj.testAt), 6);
+                obj.testHist(1, :) = [1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517]; % insert modelAt0 entry
+                obj.simulatedTime = 0;
+                obj.trainedUntil = 0;
+                obj.notes = '';
+
+                obj.reward_mean = 0;
+                obj.reward_variance = 1;
+
+                %%% Generate image processing constants
+                obj.patchSize = PARAM{1}{15};
+                obj.pxFieldOfView = PARAM{1}{16};
+                obj.dsRatio = PARAM{1}{17};
+                obj.stride = PARAM{1}{18};
+                obj.overlap = PARAM{1}{21};
+                obj.cutout = PARAM{1}{22};
+
+                % Prepare index matrix for image patches
+                obj.prepareColumnInd();
+                % cut out central region
+                if (obj.cutout == 1)
+                    obj.prepareCutout();
+                end
+
+                %%% Create SC models
+                obj.scModel = {};
+                PARAM{2}{end + 1} = [cellfun('length', obj.columnInd)]; % append image batch size's 2nd dimensions
+                if (obj.sparseCodingType == 0)
+                    for i = 1 : length(PARAM{2}{1})
+                        % pick respective parameters from PARAM cell array for ith SC model constructor
+                        obj.scModel{end + 1} = SparseCoding2(cellfun(@(x) x(i), PARAM{2}, 'UniformOutput', true));
+                    end
+                else
+                    %TODO: update depricated SparseCodingHomeo class
+                    sprintf('SparseCodingHomeo class is DEPRICATED and therefore currently not supported!')
+                    return;
+                    % obj.scModel_Large = SparseCodingHomeo(PARAM{2}{1}); %coarse scale
+                    % obj.scModel_Small = SparseCodingHomeo(PARAM{2}{2}); %fine scale
+                end
+
+                % Intermediate patch matricies
+                obj.patchesLeft = cell(1, length(obj.scModel));
+                obj.patchesRight = cell(1, length(obj.scModel));
+                for i = 1 : length(obj.scModel)
+                    obj.patchesLeft{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
+                    obj.patchesRight{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
+                end
+
+                %%% Preparing Functions
+                % getMF functions
+                obj.degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
+                obj.metCosts = load('MetabolicCosts.mat');
+
+                resFactor = 10; % factor by which the resolution of the tabular should be increased
+                % resFactor = 13; % results in comparable amount of entries as the mfunctions
+                %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
+
+                % between 0 and 0.2/0.1 mus. act. the resulution is increased
+                usedRows = 3;
+                usedCols = 2;
+                obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : usedRows, 1 : usedCols), resFactor);
+                obj.degDiff = max(max(diff(obj.degreesIncRes)));                                                % distance between the entries
+                obj.scaleFacMR = ((usedRows - 1) / 10) / size(obj.degreesIncRes, 1);                            % table scaling factors for backwards
+                obj.scaleFacLR = ((usedCols - 1) / 10) / size(obj.degreesIncRes, 2);                            % calculation of table_index -> muscle inervation
+
+                % increased resolution of metCosts table
+                obj.metCostsIncRes = interp2(obj.metCosts.results(1 : usedRows, 1 : usedCols), resFactor);
+
+                % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
+                resolution = 100001;
+                approx = spline(1 : 11, obj.degrees.results_deg(:, 1));
+
+                xValPos = ppval(approx, 1 : 0.0001 : 11)';
+                yValPos = linspace(0, 1, resolution)';
+
+                % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
+                % yValNeg = linspace(-1, 0, resolution)';
+
+                % mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
+                obj.mfunctionMR = [xValPos, yValPos];
+                obj.mfunctionMR(:, 1) = obj.mfunctionMR(:, 1) * 2;  % angle for two eyes
+                obj.dAngleMR = abs(diff(obj.mfunctionMR(1 : 2, 1)));   % delta in angle
+                obj.dmf = diff(obj.mfunctionMR(1 : 2, 2));       % delta in muscle force
+
+                approx = spline(1 : 11, obj.degrees.results_deg(1, :));
+                xValPos = ppval(approx, 1 : 0.0001 : 11)';
+                yValPos = linspace(0, 1, resolution)';
+
+                obj.mfunctionLR = [xValPos, yValPos];
+                obj.mfunctionLR(:, 1) = obj.mfunctionLR(:, 1) * 2;    % angle for two eyes
+                obj.dAngleLR = abs(diff(obj.mfunctionLR(1 : 2, 1)));     % delta in angle
+
+                obj.angleMin = min(obj.mfunctionLR(obj.mfunctionLR(:, 1) > 0));
+                obj.angleMax = obj.mfunctionMR(end, 1);
+
+                % refreshImages
+                obj.imgRawLeft = uint8(zeros(240, 320, 3));
+                obj.imgRawRight = uint8(zeros(240, 320, 3));
+                obj.imgGrayLeft = uint8(zeros(240, 320, 3));
+                obj.imgGrayRight = uint8(zeros(240, 320, 3));
             end
-
-            % Intermediate patch matricies
-            obj.patchesLeft = cell(1, length(obj.scModel));
-            obj.patchesRight = cell(1, length(obj.scModel));
-            for i = 1 : length(obj.scModel)
-                obj.patchesLeft{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
-                obj.patchesRight{i} = zeros(obj.patchSize ^ 2, length(obj.columnInd{i}));
-            end
-
-            %%% Preparing Functions
-            % getMF functions
-            obj.degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
-            obj.metCosts = load('MetabolicCosts.mat');
-
-            resFactor = 10; % factor by which the resolution of the tabular should be increased
-            % resFactor = 13; % results in comparable amount of entries as the mfunctions
-            %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
-
-            % between 0 and 0.2/0.1 mus. act. the resulution is increased
-            usedRows = 3;
-            usedCols = 2;
-            obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : usedRows, 1 : usedCols), resFactor);
-            obj.degDiff = max(max(diff(obj.degreesIncRes)));                                                % distance between the entries
-            obj.scaleFacMR = ((usedRows - 1) / 10) / size(obj.degreesIncRes, 1);                            % table scaling factors for backwards
-            obj.scaleFacLR = ((usedCols - 1) / 10) / size(obj.degreesIncRes, 2);                            % calculation of table_index -> muscle inervation
-
-            % increased resolution of metCosts table
-            obj.metCostsIncRes = interp2(obj.metCosts.results(1 : usedRows, 1 : usedCols), resFactor);
-
-            % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
-            resolution = 100001;
-            approx = spline(1 : 11, obj.degrees.results_deg(:, 1));
-
-            xValPos = ppval(approx, 1 : 0.0001 : 11)';
-            yValPos = linspace(0, 1, resolution)';
-
-            % xValNeg = flipud(ppval(approx, 1 : 0.0001 : 11)' * -1);
-            % yValNeg = linspace(-1, 0, resolution)';
-
-            % mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
-            obj.mfunctionMR = [xValPos, yValPos];
-            obj.mfunctionMR(:, 1) = obj.mfunctionMR(:, 1) * 2;  % angle for two eyes
-            obj.dAngleMR = abs(diff(obj.mfunctionMR(1 : 2, 1)));   % delta in angle
-            obj.dmf = diff(obj.mfunctionMR(1 : 2, 2));       % delta in muscle force
-
-            approx = spline(1 : 11, obj.degrees.results_deg(1, :));
-            xValPos = ppval(approx, 1 : 0.0001 : 11)';
-            yValPos = linspace(0, 1, resolution)';
-
-            obj.mfunctionLR = [xValPos, yValPos];
-            obj.mfunctionLR(:, 1) = obj.mfunctionLR(:, 1) * 2;    % angle for two eyes
-            obj.dAngleLR = abs(diff(obj.mfunctionLR(1 : 2, 1)));     % delta in angle
-
-            obj.angleMin = min(obj.mfunctionLR(obj.mfunctionLR(:, 1) > 0));
-            obj.angleMax = obj.mfunctionMR(end, 1);
-
-            % refreshImages
-            obj.imgRawLeft = uint8(zeros(240, 320, 3));
-            obj.imgRawRight = uint8(zeros(240, 320, 3));
-            obj.imgGrayLeft = uint8(zeros(240, 320, 3));
-            obj.imgGrayRight = uint8(zeros(240, 320, 3));
         end
 
         %%% Copy constructor
         % Make a (deep) copy of a handle object
         function new = copy(this)
             % Instantiate new object of the same class
-            new = feval(class(this));
+            % dummyParams = {{'', 0, [0], 0, 0, 0, ...
+            %                 0, 0, 0, 0, 0, ...
+            %                 0, 0, [0, 0], 0, [0, 0], ...
+            %                 [0, 0], [0, 0], 0, 0, [0], 0, 0}, ...
+            %                {[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]}, ...
+            %                {[0], 0, 0, 0, 0, 0, [0, 0], 0, [0, 0, 0], [0, 0, 0], ...
+            %                 0, 0, 0, 0, [0, 0], 0, 0}};
+            dummyParams = {{''}, ...
+                           {}, ...
+                           {}};
+            new = feval(class(this), dummyParams);
 
             % Copy all non-hidden properties
             p = properties(this);
@@ -657,6 +673,7 @@ classdef Model < handle
             end
 
             %% Reconstruction Error
+            %% TODO: windowSize/indexing bug
             if (~isempty(find(level == 2)))
                 try
                     figure;
@@ -669,7 +686,7 @@ classdef Model < handle
                         %                       tmpError(windowSize + 1 : end), ...
                         %                       'color', [rand, rand, rand], 'LineWidth', 1.3);
                         tmpError = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(:, i));
-                        handleArray(i) = plot((windowSize + 1) * this.interval : size(this.recerr_hist, 1), ...
+                        handleArray(i) = plot((windowSize + 1) : size(this.recerr_hist, 1), ...
                                               tmpError(windowSize + 1 : end), ...
                                               'color', [rand, rand, rand], 'LineWidth', 1.3);
                     end
@@ -1075,7 +1092,16 @@ classdef Model < handle
 
             %% Testing performance as a function of traintime
             if (~isempty(find(level == 7)))
-                if (isfield(this, 'testHist'))
+                % if (any(strcmp('testHist',fieldnames(this))) && size(this.testHist, 1) > 1)
+                if ((~(isempty(this.testAt))) ...
+                    && (~(isempty(this.testHist))) ...
+                    && (this.testHist(1, 1) == 1.1593) ...
+                    && (size(this.testHist, 1) > 1))
+
+                    % sort fields in ascending order
+                    [this.testAt, sortIndex] = sort(this.testAt);
+                     this.testHist = this.testHist(sortIndex, :);
+
                     % RMSE vergErr
                     figure;
                     subplot(2, 2, 1);
@@ -1140,52 +1166,85 @@ classdef Model < handle
                     % try to update the model
                     try
                         % generate new model attributes
-                        clone = this.copy();
-                        tmpStr = GetFullPath(clone.savePath)
-                        tmpIndex = strfind(tmpStr, 'model');
-                        if (length(tmpIndex) == 1)
-                            clone.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : end));
-                        else
-                            clone.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : tmpIndex(2) - 2));
+                        model = this.copy();
+
+                        % set group path
+                        if (strcmp(model.savePath(1 : 10), '../results'))
+                            tmpStr = GetFullPath(model.savePath);
+                            tmpIndex = strfind(tmpStr, 'model');
+                            if (length(tmpIndex) == 1)
+                                model.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : end));
+                            else
+                                model.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : tmpIndex(2) - 2));
+                            end
                         end
 
                         % Get a list of all files and folders in this folder
-                        files = dir(clone.savePath);
+                        files = dir(model.savePath);
                         % Get a logical vector that tells which is a directory
                         dirFlags = [files.isdir];
                         % Extract only those that are directories.
                         subFolders = files(dirFlags);
 
+                        % generate testAt & testHist fields
+                        if (isempty(model.testAt))
+                            model.testAt = zeros(1, length(subFolders) - 2); % skip '.' and '..'
+                        end
+                        if (isempty(model.testHist))
+                            model.testHist = zeros(length(subFolders) - 2, 6); % skip '.' and '..'
+                        end
+
+                        % add modelAt0 entry
+                        if (str2num(subFolders(3).name(8 : end)) ~= 0)
+                            model.testAt = horzcat(0, model.testAt);
+
+                            if (model.testHist(1, 1 : 2) ~= [1.1593, 1.3440])
+                                model.testHist = vertcat([1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517], model.testHist);
+                            end
+                        end
+
                         % Extract all relevant data
-                        for k = 1 : length(subFolders)
+                        for k = 3 : length(subFolders) % skip '.' and '..'
                             % load intermediate model objects
-                            tmpModel = load(strcat(clone.savePath, '/', subFolders(k).name));
+                            tmpModel = load(strcat(model.savePath, '/', subFolders(k).name, '/model.mat'));
+                            tmpModel = tmpModel.model;
 
                             % get test iteration number
-                            clone.testAt(k + 1) = str2num(subFolders(k).name(9 : end));
+                            model.testAt(k - 1) = str2num(subFolders(k).name(8 : end));
 
-                            % generate test history
-                            % assumes testInterval = 20
-                            clone.testHist(k + 1, :) = [sqrt(mean(tmpModel.testResult3(:, 20) .^ 2)), ...
+                            % check if testing procedure needs to be repeated
+                            % generate test history, assumes testInterval = 20
+                            if (isempty(tmpModel.testResult7))
+                                sprintf('Warning: testResult7 is empty in %s, please execute testModelContiuous again.', subFolders(k).name)
+                                model.testHist(k - 1, :) = [sqrt(mean(tmpModel.testResult3(:, 20) .^ 2)), ...
+                                                        mean(abs(tmpModel.testResult3(:, 20) .^ 2)), ...
+                                                        std(abs(tmpModel.testResult3(:, 20) .^ 2)), ...
+                                                        0, ...
+                                                        0, ...
+                                                        0];
+                            else
+                                model.testHist(k - 1, :) = [sqrt(mean(tmpModel.testResult3(:, 20) .^ 2)), ...
                                                         mean(abs(tmpModel.testResult3(:, 20) .^ 2)), ...
                                                         std(abs(tmpModel.testResult3(:, 20) .^ 2)), ...
                                                         sqrt(mean(tmpModel.testResult7(:, 20) .^ 2)), ...
                                                         mean(abs(tmpModel.testResult7(:, 20) .^ 2)), ...
                                                         std(abs(tmpModel.testResult7(:, 20) .^ 2))];
+                            end
                         end
 
-                        % delete(model);
-                        % clear model;
-                        % model = clone;
+                        % sort fields in ascending order
+                        [model.testAt, sortIndex] = sort(model.testAt);
+                        model.testHist = model.testHist(sortIndex, :);
 
                         % overwrite old model
-                        save(strcat(clone.savePath, '/model'), 'model');
-
-                        % delete(clone);
-                        % clear clone;
+                        save(strcat(model.savePath, '/model'), 'model');
 
                         % try to plot again
-                        clone.allPlotSave(7);
+                        model.allPlotSave(7);
+
+                        % clean up
+                        % delete(model);
+                        % clear model;
                     catch
                         sprintf('Error: One or more file operations failed. Check path strings.')
                         return;
