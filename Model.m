@@ -673,7 +673,6 @@ classdef Model < handle
             end
 
             %% Reconstruction Error
-            %% TODO: windowSize/indexing bug
             if (~isempty(find(level == 2)))
                 try
                     figure;
@@ -1159,10 +1158,6 @@ classdef Model < handle
                     plotpath = sprintf('%s/performanceVsTraintime', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 else
-                    % TODO: check backward compatibility support
-                    % sprintf('Model is too old for allPlotSave(7), backward compatibility is not supported yet!')
-                    % return;
-
                     % try to update the model
                     try
                         % generate new model attributes
@@ -1234,7 +1229,7 @@ classdef Model < handle
 
                         % sort fields in ascending order
                         [model.testAt, sortIndex] = sort(model.testAt);
-                        model.testHist = model.testHist(sortIndex, :);
+                         model.testHist = model.testHist(sortIndex, :);
 
                         % overwrite old model
                         save(strcat(model.savePath, '/model'), 'model');
@@ -1246,7 +1241,7 @@ classdef Model < handle
                         % delete(model);
                         % clear model;
                     catch
-                        sprintf('Error: One or more file operations failed. Check path strings.')
+                        sprintf('Error: One or more file operations failed. Check path strings and directory items.')
                         return;
                     end
                 end
@@ -1356,7 +1351,7 @@ classdef Model < handle
             % title('Anaglyph');
             % subplot(2,3,3);
             % positionVector = [left, bottom, width, height], all between 0 and 1
-            sizeScaleImg = 0.6/numberScales;
+            sizeScaleImg = 0.6 / numberScales;
             for sp = 1:numberScales
                 if (sp == 1)
                     subplot('Position', [0.7, 0.9 - sizeScaleImg, sizeScaleImg, sizeScaleImg])
@@ -1385,10 +1380,6 @@ classdef Model < handle
         % @param titleStr               string identifier that is used for the title and the saved image
         % @param savePlot               true or false if the resulting plots should be saved
         %%%
-        %%TODO:
-        % enable multiple fixation dists in one plot with same init values
-        % idea: instead of contourf, just plot single lines that correspond to
-        % spec. obj. dists
         function h = plotTrajectory(this, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, directory, titleStr, savePlot)
             % simulator check
             if (isempty(simulator))

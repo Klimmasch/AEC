@@ -197,7 +197,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     elapsedTime = 0;
     for iter1 = 1 : (timeToTrain / model.interval)
         % intermediate testing during training
-        if ((testIt == 1) & find(testAt == t) & (t > 0)) % have to use single & here, because the last statement is a scalar
+        if ((testIt == 1) & find(testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
             close all;
         end
@@ -356,7 +356,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
                 % model.lambdaMet = model.metCostRange(1) * 2 ^ (-t / model.metCostDec);
 
                 %% linear decay
-                model.lambdaMet = model.lambdaMet - (model.metCostDec/ model.trainTime);
+                model.lambdaMet = model.lambdaMet - (model.metCostDec / model.trainTime);
             end
 
             %% Removed
@@ -395,7 +395,6 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
 
         elapsedTime = elapsedTime + toc;
-
     end
 
     % Total simulation time
