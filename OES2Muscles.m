@@ -82,6 +82,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
         end
     else
         model = config(textureFiles(2), trainTime, testAt, sparseCodingType);
+        % model = configVar('textureFile', textureFiles(2), 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType);
     end
 
     % check if main script and model are compatible
