@@ -1,9 +1,11 @@
 %%% Main script for launching experimental procedure
 % @param trainTime           training time in number of iterations
 % @param randomizationSeed   randomization seed
+% @param additionalParams    a list composed of 'identifier' followed by value, e.g ['alpha', 1, 'beta', 2, ...]
+%                            whereas 'identifier' has to appear in configVar.m
 % @param fileDescription     description of approach used as file name
 %%%
-function OES2Muscles(trainTime, randomizationSeed, fileDescription)
+function OES2Muscles(trainTime, randomizationSeed, additionalParams, fileDescription)
     rng(randomizationSeed);
 
     % useLearnedFile(1):    0 = don't do it
@@ -81,7 +83,11 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
             model.trainTime = trainTime;
         end
     else
-        model = config(textureFiles(2), trainTime, testAt, sparseCodingType);
+        % model = config(textureFiles, trainTime, testAt, sparseCodingType);
+
+        % additionalParams = ['textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType];
+        % PARAMS = [params, additionalParams];
+        % model = configVar(additionalParams); % this works when identifiers and params are cell arrays
     end
 
     % check if main script and model are compatible

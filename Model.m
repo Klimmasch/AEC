@@ -20,6 +20,8 @@ classdef Model < handle
         vergAngleFixMax;
 
         textureFile;        % config file containing texture stimulus list
+        nTrainStim;         % number of trainig stimuli loaded into the renderer
+        nTestStim;          % number of stimuli for testing
         trainTime;          % number of training (intended) iterations
         trainedUntil;       % how long did the training actually proceed?
         simulatedTime;      % how long did the model take to be learned (min)
@@ -105,6 +107,10 @@ classdef Model < handle
             %% if isempty(PARAM{1}{1}) -> indicator for copy constructor
             if (~isempty(PARAM{1}{1}))
                 obj.textureFile = PARAM{1}{1};
+                texture = load(sprintf('config/%s', obj.textureFile{2}));
+                obj.nTrainStim = length(texture.texture);
+                texture = load(sprintf('config/%s', obj.textureFile{1}));
+                obj.nTestStim = length(texture.texture);
                 obj.trainTime = PARAM{1}{2};
                 obj.testAt = PARAM{1}{3};
                 if (~(isempty(obj.testAt)) && (obj.testAt(1) ~= 0))

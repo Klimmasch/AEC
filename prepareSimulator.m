@@ -1,9 +1,11 @@
 %%% Script for instantiation of a simulator that can be used for testing etc.
 %%% Load will be the same images that are used for training and testing. 
-function simulator = prepareSimulator()
+function simulator = prepareSimulator(textureFiles)
 
-    textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
-    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    if isempty(textureFiles)
+        textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
+        % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    end
     
     % simulator = OpenEyeSim('create');
     simulator = OpenEyeSimV5('create');
