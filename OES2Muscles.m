@@ -46,7 +46,7 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
     nStimTest = 40;
 
     % Save model every #saveInterval training iterations
-    saveInterval = ceil(trainTime / 20);
+    saveInterval = ceil(trainTime / 20); %  
     % saveInterval = trainTime;
 
     % Track the evolution of all basis functions of the respective sparse coders
@@ -175,7 +175,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
     if (nStimTest > nTestTextures)
         nStimTest = nTestTextures;
-        sprintf('The file for testing textures only contains %d images, but I will use them all!', nStimTest)
+        sprintf('%d images were requested as training stimuli, but the renderer only holds %d.', nStimTest, nTestTextures)
+        % sprintf('The file for testing textures only contains %d images, but I will use them all!', nStimTest)
     end
 
     % Image patches cell array (input to model)
@@ -374,7 +375,8 @@ function OES2Muscles(trainTime, randomizationSeed, fileDescription)
 
         if (mod(t, 100) == 0)
             % offers an insight into the models view while it learns
-            % imwrite(stereoAnaglyph(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png'))
+            % imwrite(stereoAanglyph(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png'))
+            % imwrite(imfuse(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png'))
 
             sprintf('Training Iteration: %d\nObjectDistance:\t%6.2fm\tStart Error:\t%6.3f°\nEnd Fixation:\t%6.2fm\tEnd Error:\t%6.3f°\nMuscle Activations:\t[%.3f, %.3f]\nMean Relative Commands:\t[%.3f, %.3f]', ...
                     t, objDist, model.vergerr_hist(t - model.interval + 1), fixDepth, model.vergerr_hist(t), model.cmd_hist(t, :), ...
