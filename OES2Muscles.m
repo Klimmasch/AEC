@@ -5,7 +5,7 @@
 %                            whereas 'identifier' has to appear in configVar.m
 % @param fileDescription     description of approach used as file name
 %%%
-function OES2Muscles(trainTime, randomizationSeed, additionalParams, fileDescription)
+function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
     rng(randomizationSeed);
 
     % useLearnedFile(1):    0 = don't do it
@@ -48,7 +48,7 @@ function OES2Muscles(trainTime, randomizationSeed, additionalParams, fileDescrip
     nStimTest = 40;
 
     % Save model every #saveInterval training iterations
-    saveInterval = ceil(trainTime / 20); %  
+    saveInterval = ceil(trainTime / 20);
     % saveInterval = trainTime;
 
     % Track the evolution of all basis functions of the respective sparse coders
@@ -70,7 +70,7 @@ function OES2Muscles(trainTime, randomizationSeed, additionalParams, fileDescrip
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
     %               1 = do it
-    closeFigures = uint8(1);
+    closeFigures = uint8(0); % maybe necessary to use 0 when running headless 
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -85,9 +85,20 @@ function OES2Muscles(trainTime, randomizationSeed, additionalParams, fileDescrip
     else
         % model = config(textureFiles, trainTime, testAt, sparseCodingType);
 
-        % additionalParams = ['textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType];
-        % PARAMS = [params, additionalParams];
-        % model = configVar(additionalParams); % this works when identifiers and params are cell arrays
+        % for the new configVar, awt first copy values from before ... 
+        standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
+        % ... and then add those handled in the function call
+%         additionalParams = {};
+%         for p = 1 : length(identifiers)
+%             display(p);
+%             additionalParams(end + 1) = {identifiers(p)};
+%             additionalParams(end + 1) = {params(p)};
+% %             additionalParams{end + 1} = identifiers{p};
+% %             additionalParams{end + 1} = params{p};
+%         end
+        PARAMS = [standardParams, params];
+
+        model = configVar(PARAMS);
     end
 
     % check if main script and model are compatible
@@ -402,6 +413,10 @@ function OES2Muscles(trainTime, randomizationSeed, additionalParams, fileDescrip
             end
         end
 
+        if (~mod(t, 10000))
+            imwrite(imfuse(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, sprintf('/anaglyph%d.png', ceil(t / 10000))))
+        end
+
         elapsedTime = elapsedTime + toc;
     end
 
@@ -432,5 +447,5 @@ function OES2Muscles(trainTime, randomizationSeed, additionalParams, fileDescrip
         close all;
     end
 
-    quit % close the job after completion and release the matlab licence u.u
+    % quit % close the job after completion and release the matlab licence u.u, comment out in cluster??
 end

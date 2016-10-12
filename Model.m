@@ -749,6 +749,12 @@ classdef Model < handle
                     if (this.trainTime < windowSize * this.interval)
                         windowSize = round(this.trainTime / this.interval / 5);
                     end
+                    if windowSize < 2
+                        windowSize = 2;
+                    end
+                    if windowSize2 < 2
+                        windowSize2 = 2;
+                    end
                     cmd_hist_sma = filter(ones(1, windowSize) / windowSize, 1, this.cmd_hist(ind2, 1));
                     relCmd_hist_sma = filter(ones(1, windowSize2) / windowSize2, 1, this.relCmd_hist(ind2, 1));
 
