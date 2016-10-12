@@ -26,7 +26,7 @@ simulator = prepareSimulator(); % at first, we try to use a shared simulator for
 %% main loop
 parfor ind = 1 : nParams
     
-    OES2Muscles(nIters, rSeed, simulator, 'paramIdentifier', params(ind), sprintf('varDec%g--%g', params(ind));
+    OES2Muscles(nIters, rSeed, simulator, 'paramIdentifier', params(ind), sprintf('varDec%g--%g', params(ind)));
 end
 
 
