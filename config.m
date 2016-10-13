@@ -170,7 +170,7 @@ actionSpace = [-8, -4, -2, -1, -0.5, 0, ...        % vergence angles (discrete p
                0.5, 1, 2, 4, 8];
 
 %% critic's learning rate
-criticLRRange = [1, 0.5];
+criticLRRange = [0.75]; %[1, 0.5];
 if (length(criticLRRange) == 1 || criticLRRange(1) == criticLRRange(2))
     critLRDec = 0; % no variance decay
 elseif (criticLRRange(1) < criticLRRange(2))
@@ -182,7 +182,7 @@ else
 end
 
 %% actors learning rates
-actorLRRange = [0.75, 0.1];
+actorLRRange = [0.5]; %[0.75, 0.1];
 if (length(actorLRRange) == 1 || actorLRRange(1) == actorLRRange(2))
     actLRDec = 0; % no variance decay
 elseif (actorLRRange(1) < actorLRRange(2))
@@ -194,7 +194,7 @@ else
 end
 
 %% variance decay
-varianceRange = [5e-5, 5e-6];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end], corresp. to softMax temperature in discrete RL models
+varianceRange = [5e-5, 5e-5];                        % variance of action output, i.e. variance of Gaussian policy [training_start, training_end], corresp. to softMax temperature in discrete RL models
 if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     varDec = 0; % no variance decay
 elseif (varianceRange(1) < varianceRange(2))
