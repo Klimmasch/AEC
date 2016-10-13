@@ -1,10 +1,10 @@
 %%% Model testing procedure
-%@param model               respective model object to be tested
-%@param nStim               # stimuli to be tested, provide 0 if you just want to plot results
-%@pram plotIt               whether plots shall be generated
-%@param saveTestResults     whether to save the results (not recommended if model is still trained!)
-%@param simulator           simulator handle, provide [] if there is no simulator handle yet
-%@param reinitRenderer      1 if renderer was already initialized
+% @param model:             respective model object to be tested
+% @param nStim:             # stimuli to be tested, provide 0 if you just want to plot results
+% @pram plotIt:             whether plots shall be generated
+% @param saveTestResults:   whether to save the results (not recommended if model is still trained!)
+% @param simulator:         simulator handle, provide [] if there is no simulator handle yet
+% @param reinitRenderer:    1 if renderer was already initialized
 %                           0 if renderer wasn't initialized yet
 %%%
 function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer, folderName)
@@ -28,14 +28,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     % textureFile = 'Textures_vanHaterenTest.mat';
     % textureFile = 'Textures_celine.mat';                      % Celine's images
 
-
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
-        sprintf('Error: Model has no testResults!')
-        return;
+        error('Model has no testResults!');
     elseif (nStim == 1)
-        sprintf('Error: nStim must be != 1')
-        return;
+        error('nStim must be != 1');
     end
 
     %%% New renderer
@@ -264,7 +261,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         save(strcat(imageSavePath, '/reallyBadImages'), 'reallyBadImages');
 
         %% Reconstruction error and critic's response additional testing procedure
-        tmp = zeros(1, nStim * (2 + length(model.scModel)));
+        recErrCritVal = zeros(1, nStim * (2 + length(model.scModel)));
         % vergence start error
         vseRange = linspace(-1, 1, test2Resolution);
 
@@ -314,13 +311,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                     end
 
                     % Track reconstruction error and Critic's response
-                    % tmp(stimulusIndex, :) = [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
-                    tmp(1 + (stimulusIndex - 1) * (2 + length(model.scModel)) : stimulusIndex * (2 + length(model.scModel))) = ...
+                    % recErrCritVal(stimulusIndex, :) = [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
+                    recErrCritVal(1 + (stimulusIndex - 1) * (2 + length(model.scModel)) : stimulusIndex * (2 + length(model.scModel))) = ...
                         [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
                 end
-                % testResult4(odIndex, vseIndex, :) = mean(tmp);
-                % testResult4(odIndex, vseIndex, :) = reshape(tmp', [1, size(tmp, 1) * size(tmp, 2)]);
-                testResult4(odIndex, vseIndex, :) = tmp;
+                testResult4(odIndex, vseIndex, :) = recErrCritVal;
             end
         end
         testResult4(testResult4 == 0) = NaN;
@@ -351,7 +346,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % Uniform muscle activation distribution for two muscles
             % [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))));
 
-            currentTexture = randi(length(nStim));
+            currentTexture = randi(nStim);
 
             for iter = 1 : testInterval
                 model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange2(odIndex), 3);
@@ -402,7 +397,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         %% Generate muscle activation trajectories
         sprintf('Level 4/4')
-        trajPlotHandle = model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(length(nStim)), simulator, imageSavePath, folderName(9 : end), plotIt);
+        if (nStim == 40)
+            trajPlotHandle = model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(nStim), simulator, imageSavePath, folderName(9 : end), plotIt);
+        else
+            sprintf('Warning: nStim = %d < 40. Level 4 will be skipped.', nStim)
+        end
 
         if (measureTime == true)
             elapsedTime = toc;
@@ -444,8 +443,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 clear clone;
             catch
                 % catch when new model property isn't present in Model class yet
-                sprintf('Error: One or more new model properties (variables) are not present in Model.m class yet!')
-                return;
+                error('One or more new model properties (variables) are not present in Model.m class yet!');
             end
         end
     end
@@ -612,13 +610,52 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
         ylabel('Value', 'FontSize', 12);
         title('Critic Value vs. Vergence Error');
-        % if (~isempty(model.savePath))
-            plotpath = sprintf('%s/criticValvsVerErr', imageSavePath);
-            saveas(gcf, plotpath, 'png');
-        % end
+        plotpath = sprintf('%s/criticValvsVerErr', imageSavePath);
+        saveas(gcf, plotpath, 'png');
 
         % critic's response fine resolution
+        % average over all objDist and all stimuli
         vseRange = linspace(-1, 1, test2Resolution);
+        figure;
+        hold on;
+        grid on;
+        grid minor;
+
+        tmpMatrix = permute(model.testResult4(:, :, 1 : 2 + length(model.scModel) : end), [1, 3, 2]);                 % swap 2nd and 3rd dimension
+        tmpMatrix = reshape(tmpMatrix, [], size(model.testResult4(:, :, 1 : 2 + length(model.scModel) : end), 2), 1); % concatenate 3rd dimension long 1st dimension of new 2d matrix
+
+        % handle NaNs
+        tmpMean = mean(tmpMatrix, 1, 'omitnan');
+        % tmpMean(isnan(tmpMean)) = [];
+
+        vseRange = vseRange(1 : length(tmpMean));
+        tmpMax = vseRange(tmpMean == max(tmpMean, [], 'omitnan'));
+
+        tmpStd = std(tmpMatrix, 0, 1, 'omitnan');
+        % tmpStd(isnan(tmpStd)) = [];
+
+        [hl, hp] = boundedline(vseRange, tmpMean, tmpStd, 'alpha');
+
+        % hl.Marker = '*';
+        % hl.MarkerSize = 2.5;
+        % hl.Color = [rand, rand, rand];
+        % hp.FaceColor = hl.Color;
+        % hl.LineStyle = 'none';
+        % outlinebounds(hl3, hp);
+
+        if (nStim > 0)
+            xlabel(sprintf('Vergence Error [deg] (#stimuli=%d)', nStim), 'FontSize', 12);
+        else
+            xlabel('Vergence Error [deg]', 'FontSize', 12);
+        end
+        ylabel('Value', 'FontSize', 12);
+        title(sprintf('Critic Value vs. Vergence Error\nfor all objDist, max@vergErr = %.3f°', tmpMax));
+        plotpath = sprintf('%s/criticValvsVerErrFineAllObjDist.png', imageSavePath);
+        saveas(gcf, plotpath, 'png');
+
+
+        % average over all stimuli for each objDist
+        % vseRange = linspace(-1, 1, test2Resolution);
         for odIndex = 1 : length(objRange)
             figure;
             hold on;
@@ -653,11 +690,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
                 xlabel('Vergence Error [deg]', 'FontSize', 12);
             end
             ylabel('Value', 'FontSize', 12);
-            title(sprintf('Critic Value vs. Vergence Error\nobjDist = %.2fm, max@vergErr = %.3f°', objRange(odIndex), tmpMax));
-            % if (~isempty(model.savePath))
-                plotpath = sprintf('%s/criticValvsVerErrFine[%.2f].png', imageSavePath, objRange(odIndex));
-                saveas(gcf, plotpath, 'png');
-            % end
+            title(sprintf('Critic Value vs. Vergence Error\nobjDist = %.1fm, max@vergErr = %.3f°', objRange(odIndex), tmpMax));
+            plotpath = sprintf('%s/criticValvsVerErrFine[%.1fm].png', imageSavePath, objRange(odIndex));
+            saveas(gcf, plotpath, 'png');
         end
 
         %%% Plot the resonstruction error of basis functions over different disparities
@@ -732,10 +767,53 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         handleArray = zeros(1, 1 + length(model.scModel));
         captions = cell(1, length(handleArray));
         captions{1} = 'Total Error';
-        for i = 2 : length(handleArray)
-            captions{i} = sprintf('Scale %d Error', i - 1);
+        if (length(model.scModel) == 2)
+            captions{2} = sprintf('Coarse Scale Error');
+            captions{3} = sprintf('Fine Scale Error');
+        else
+            for i = 2 : length(handleArray)
+                captions{i} = sprintf('Scale %d Error', i - 1);
+            end
         end
 
+        % average over all objDist and all stimuli
+        figure;
+        hold on;
+        grid on;
+        grid minor;
+
+        tmpMatrix = permute(model.testResult4, [1, 3, 2]);                 % swap 2nd and 3rd dimension
+        tmpMatrix = reshape(tmpMatrix, [], size(model.testResult4, 2), 1); % concatenate 3rd dimension long 1st dimension of new 2d matrix
+
+        for i = 2 : length(handleArray) + 1
+            % handleArray(i - 1) = errorbar(vseRange, ...
+            %                               mean(model.testResult4(odIndex, :, i : 2 + length(model.scModel) : end), 3, 'omitnan'), ...
+            %                               std(model.testResult4(odIndex, :, i : 2 + length(model.scModel) : end), 0, 3, 'omitnan'), ...
+            %                               'LineWidth', 0.9);
+            handleArray(i - 1) = errorbar(vseRange, ...
+                                          mean(tmpMatrix(i : 2 + length(model.scModel) : end, :), 1, 'omitnan'), ...
+                                          std(tmpMatrix(i : 2 + length(model.scModel) : end, :), 0, 1, 'omitnan'), ...
+                                          'LineWidth', 0.9);
+        end
+
+        % get min value in total reconstruction error
+        tmpMean = mean(tmpMatrix(:, 2 : 2 + length(model.scModel) : end), 1, 'omitnan');
+        tmpMin = vseRange(tmpMean == min(tmpMean, [], 'omitnan'));
+
+        l = legend(handleArray, captions);
+        l.FontSize = 7;
+        l.Orientation = 'horizontal';
+        l.Location = 'southoutside';
+        xlim([vseRange(1) * 1.1, vseRange(end) * 1.1]);
+        % xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
+        xlabel('Vergence Error [deg]', 'FontSize', 12);
+        ylabel('Resonstruction Error', 'FontSize', 12);
+        title(sprintf('Reconstruction Error vs. Vergence Error\nfor all objDist, TotalMin@vergErr = %.4f°', tmpMin));
+
+        plotpath = sprintf('%s/recErrVsVergErrFineAllObjDist.png', imageSavePath);
+        saveas(gcf, plotpath, 'png');
+
+        % average over all stimuli for each objDist
         for odIndex = 1 : length(objRange)
             figure;
             hold on;
@@ -761,9 +839,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             % xlabel(sprintf('Vergence Error [deg] (bin size = %.2f°)', deltaVergErr), 'FontSize', 12);
             xlabel('Vergence Error [deg]', 'FontSize', 12);
             ylabel('Resonstruction Error', 'FontSize', 12);
-            title(sprintf('Reconstruction Error vs. Vergence Error\nobjDist = %.2fm, TotalMin@vergErr = %.4f°', objRange(odIndex), tmpMin));
+            title(sprintf('Reconstruction Error vs. Vergence Error\nobjDist = %.1fm, TotalMin@vergErr = %.4f°', objRange(odIndex), tmpMin));
 
-            plotpath = sprintf('%s/recErrVsVergErrFine[%.2fm].png', imageSavePath, objRange(odIndex));
+            plotpath = sprintf('%s/recErrVsVergErrFine[%.1fm].png', imageSavePath, objRange(odIndex));
             saveas(gcf, plotpath, 'png');
         end
 

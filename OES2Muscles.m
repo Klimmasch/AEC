@@ -70,7 +70,7 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
     %               1 = do it
-    closeFigures = uint8(0); % maybe necessary to use 0 when running headless 
+    closeFigures = uint8(0); % maybe necessary to use 0 when running headless
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -85,7 +85,7 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
     else
         % model = config(textureFiles, trainTime, testAt, sparseCodingType);
 
-        % for the new configVar, awt first copy values from before ... 
+        % for the new configVar, awt first copy values from before ...
         standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
         % ... and then add those handled in the function call
 %         additionalParams = {};
@@ -437,7 +437,7 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
     % plot results
     if (plotIt(1) == 1)
         if (isempty(testAt))
-            model.allPlotSave([1 : 6]);
+            model.allPlotSave([1 : 6]); % no test procedure during training -> no testPerformanceVsTraintime plot
         else
             model.allPlotSave([1 : 7]);
         end
