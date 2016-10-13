@@ -47,8 +47,9 @@ classdef CACLAVarActorLu < handle
             obj.deltaVar = PARAM{5};
             obj.eta = PARAM{6};
             obj.varDec = PARAM{7};
-
-            obj.params = zeros(1, 5);
+            
+            obj.param_num = 6;
+            obj.params = zeros(1, obj.param_num);
 
             obj.z_i_prev = zeros(obj.input_dim, 1);
             obj.z_j_prev = zeros(obj.hidden_dim, 1);
@@ -61,6 +62,7 @@ classdef CACLAVarActorLu < handle
         function update(this, delta)
             this.updateCount = ceil(delta / sqrt(this.deltaVar));
 
+            %% calculating updates
             % delta_weights(hidden -> output)
             dwp_kj = (this.command_prev - this.z_k_prev) * this.z_j_prev';
 
@@ -68,17 +70,24 @@ classdef CACLAVarActorLu < handle
             tmpVector = ((this.command_prev - this.z_k_prev)' * this.wp_kj)';
             dwp_ji = ((1 - this.z_j_prev .^ 2) * this.z_i_prev') .* repmat(tmpVector, 1, this.input_dim);
 
-            this.params(5) = mean(mean(abs((this.beta_p * dwp_kj) * this.updateCount)));
-            % this.wp_kj = this.wp_kj + this.params(5);
-
+            %% changing weights
+            this.params(6) = mean(mean(abs((this.beta_p * dwp_kj) * this.updateCount)));
+            
             this.wp_kj = this.wp_kj + (this.beta_p * dwp_kj) * this.updateCount;
             % this.wp_kj = (this.regularizer * this.wp_kj) + (this.beta_p * dwp_kj) * this.updateCount; % with weight regularization
 
+<<<<<<< HEAD
             this.params(4) = mean(mean(abs((this.beta_p * dwp_ji) * this.updateCount)));        % tracks the change in weight because of updates
             % this.params(5) = mean(mean(abs((this.regularizer * this.wp_ji) - this.wp_ji)));   % tracks changes due to regularization
+=======
+            this.params(4) = mean(mean(abs((this.beta_p * dwp_ji) * this.updateCount)));    % change in weight because of updates
+            this.params(5) = mean(mean(abs(this.wp_ji - ((1 - (this.regularizer * this.beta_p)) * this.wp_ji)))); % changes due to regularization
+>>>>>>> learnRateDecay
 
             % this.wp_ji = this.wp_ji + (this.beta_p * dwp_ji) * this.updateCount;
-            this.wp_ji = (this.regularizer * this.wp_ji) + (this.beta_p * dwp_ji) * this.updateCount; % with weight regularization
+            this.wp_ji = (1 - (this.regularizer * this.beta_p)) * this.wp_ji;       % regularization
+            this.wp_ji = this.wp_ji + ((this.beta_p * dwp_ji) * this.updateCount);  % weight update
+            % this.wp_ji = (this.regularizer * this.wp_ji) + (this.beta_p * dwp_ji) * this.updateCount; % with weight regularization
         end
 
         % Gaussian policy (exploration policy)

@@ -37,6 +37,7 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
 
     %%% Execute intermediate test procedure during training
     testAt = [1000000 : 1000000 : trainTime];
+    % testAt = [500000 : 500000 : trainTime]; % is more handy for shorter training times like 2mio
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -135,6 +136,7 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
                                 randomizationSeed, ...
                                 fileDescription);
         end
+
         % folder = '../results/';                         % local destination
         folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
         mkdir(folder, modelName);
@@ -344,7 +346,6 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
             model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
             model.metCost_hist(t) = metCost;
-            model.lambdaMet_hist(t) = model.lambdaMet;
             model.td_hist(t) = model.rlModel.CCritic.delta;
 
             model.weight_hist(t, 1) = model.rlModel.CCritic.params(1);
@@ -354,11 +355,33 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
             model.weight_hist(t, 5) = model.rlModel.CActor.params(4); % weight change hidden layer
             model.weight_hist(t, 6) = model.rlModel.CActor.params(5); % weight change output layer
 
+            % track all variables that may be decaying
             model.variance_hist(t) = model.rlModel.CActor.variance;
-
+            model.criticLR_hist(t) = model.rlModel.CCritic.alpha_v;
+            model.actorLR_hist(t) = model.rlModel.CActor.beta_p;
+            model.lambdaMet_hist(t) = model.lambdaMet;
+            
             model.trainedUntil = t;
 
             %% RL model
+            % critic learn rate decay
+            if (model.rlModel.criticDecFac > 0)
+                %% exponential decay
+                % model.rlModel.CCritic.alpha_v = model.rlModel.criticLearningRange(1) * 2 ^ (-t / model.rlModel.criticDecFac);
+
+                %% linear decay
+                model.rlModel.CCritic.alpha_v = model.rlModel.CCritic.alpha_v - (model.rlModel.criticDecFac / model.trainTime);
+            end
+
+            % actor learn rate decay
+            if (model.rlModel.actorDecFac > 0)
+                %% exponential decay
+                % model.rlModel.CActor.beta_p = model.rlModel.actorLearningRange(1) * 2 ^ (-t / model.rlModel.actorDecFac);
+
+                %% linear decay
+                model.rlModel.CActor.beta_p = model.rlModel.CActor.beta_p - (model.rlModel.actorDecFac / model.trainTime);
+            end
+
             % Variance decay, i.e. reduction of actor's output perturbation
             if (model.rlModel.CActor.varDec > 0)
                 %% exponential decay
