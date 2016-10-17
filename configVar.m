@@ -367,7 +367,7 @@ end
 
 % Critic learning rate range (value function)
 % origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
-[found, alpha_v, varParamArray] = parseparam(varParamArray, 'criticLRRange');
+[found, criticLRRange, varParamArray] = parseparam(varParamArray, 'criticLRRange');
 if (~found)
     criticLRRange = [0.75];
 end
@@ -412,7 +412,7 @@ end
 
 % Actor learning rate of Gaussean policy
 % origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
-[found, alpha_p, varParamArray] = parseparam(varParamArray, 'actorLRRange');
+[found, actorLRRange, varParamArray] = parseparam(varParamArray, 'actorLRRange');
 if (~found)
     actorLRRange = [0.5, 0];
 end
@@ -516,6 +516,10 @@ end
 
 PARAMRL = {actionSpace, criticLRRange, alpha_n, actorLRRange, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
            continuous, deltaVar, rl_eta, fiScale, rlFlavour, varDec, regularizer, critLRDec, actLRDec};
+
+if (~isempty(varParamArray))
+    error('varParamArray contains unrecognized elements, p.e. %s', varParamArray{1});
+end
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);

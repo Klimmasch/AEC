@@ -1,11 +1,11 @@
 %%% Main script for launching experimental procedure
 % @param trainTime           training time in number of iterations
 % @param randomizationSeed   randomization seed
-% @param additionalParams    a list composed of 'identifier' followed by value, e.g ['alpha', 1, 'beta', 2, ...]
+% @param inputParams         a list composed of 'identifier' followed by value, e.g {'alpha', 1, 'beta', 2, ...}
 %                            whereas 'identifier' has to appear in configVar.m
 % @param fileDescription     description of approach used as file name
 %%%
-function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
+function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
     rng(randomizationSeed);
 
     % useLearnedFile(1):    0 = don't do it
@@ -87,20 +87,12 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
         % old static version of config.m
         % model = config(textureFiles, trainTime, testAt, sparseCodingType);
 
-        % for the new configVar, at first copy values from before ... 
+        % for the new configVar, at first copy values from before ...
         standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
         % ... and then add those handled in the function call
-        % additionalParams = {}; % this now is handled in the parOES.m script.
-        % for p = 1 : length(identifiers)
-        %     display(p);
-        %     additionalParams(end + 1) = {identifiers(p)};
-        %     additionalParams(end + 1) = {params(p)};
-        %     % additionalParams{end + 1} = identifiers{p};
-        %     % additionalParams{end + 1} = params{p};
-        % end
-        PARAMS = [standardParams, params];
 
-        model = configVar(PARAMS);
+        paramVector = [standardParams, inputParams];
+        model = configVar(paramVector);
     end
 
     % check if main script and model are compatible
@@ -131,11 +123,6 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
                                 randomizationSeed, ...
                                 fileDescription);
         else
-            % modelName = sprintf('model_%s_%i_%i_%s', ...
-            %                     datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
-            %                     trainTime, ...
-            %                     randomizationSeed, ...
-            %                     fileDescription);
             modelName = sprintf('%s_%iiter_%i_%s', ...
                                 datestr(now, 'yy-mm-dd'), ...
                                 trainTime, ...
@@ -151,6 +138,8 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
         % backup all used files
         copyfile(strcat(mfilename, '.m'), model.savePath);
         copyfile('config.m', model.savePath);
+        copyfile('configVar.m', model.savePath);
+        copyfile('parOES.m', model.savePath);
         copyfile(strcat(class(model), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CCritic), '.m'), model.savePath);
@@ -366,7 +355,7 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
             model.criticLR_hist(t) = model.rlModel.CCritic.alpha_v;
             model.actorLR_hist(t) = model.rlModel.CActor.beta_p;
             model.lambdaMet_hist(t) = model.lambdaMet;
-            
+
             model.trainedUntil = t;
 
             %% RL model
