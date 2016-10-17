@@ -272,8 +272,7 @@ classdef Model < handle
                     end
                 else
                     %TODO: update depricated SparseCodingHomeo class
-                    sprintf('SparseCodingHomeo class is DEPRICATED and therefore currently not supported!')
-                    return;
+                    error('SparseCodingHomeo class is DEPRICATED and therefore currently not supported!');
                     % obj.scModel_Large = SparseCodingHomeo(PARAM{2}{1}); %coarse scale
                     % obj.scModel_Small = SparseCodingHomeo(PARAM{2}{2}); %fine scale
                 end
@@ -493,8 +492,7 @@ classdef Model < handle
                     %     reward_L = this.rlModel.J; %TODO: not supported for continuous rlModel
                     % catch
                     % end
-                    sprintf('All values in the extracted patches are zero. Check if the image rendering is alright!')
-                    return;
+                    error('All values in the extracted patches are zero. Check if the image rendering is alright!');
                 end
                 this.scModel{i}.sparseEncode(tmpImages);
                 errorArray(i) = sum(sum(this.scModel{i}.currentError .^ 2)) / sum(sum(tmpImages .^ 2));
@@ -732,7 +730,7 @@ classdef Model < handle
                     saveas(gcf, plotpath, 'png');
                 catch
                     % if windowsize > values in vergerr
-                    sprintf('Warning: windowSize >= vergerr')
+                    sprintf('Warning: windowSize >= vergerr. vergErrRMSE graph will not be generated.')
                 end
             end
 
@@ -764,7 +762,7 @@ classdef Model < handle
                     saveas(gcf, plotpath, 'png');
                 catch
                     % if windowsize > values in recerr_hist
-                    sprintf('Warning: windowSize >= recerr_hist')
+                    sprintf('Warning: windowSize >= recerr_hist. recErr graph will not be generated.')
                 end
             end
 
@@ -1223,9 +1221,9 @@ classdef Model < handle
                     ylabel('|\Deltamc| = |mc_{actual} - mc_{desired}|', 'FontSize', 12);
 
                     % Subplot overall title
-                    suptitle('Performance vs. Traintime');
+                    suptitle('Test Performance vs. Traintime');
 
-                    plotpath = sprintf('%s/performanceVsTraintime', this.savePath);
+                    plotpath = sprintf('%s/testPerformanceVsTraintime', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 else
                     % try to update the model
@@ -1311,8 +1309,7 @@ classdef Model < handle
                         % delete(model);
                         % clear model;
                     catch
-                        sprintf('Error: One or more file operations failed. Check path strings and directory items.')
-                        return;
+                        error('One or more file operations failed. Check path strings and directory items.');
                     end
                 end
             end
@@ -1453,8 +1450,7 @@ classdef Model < handle
         function h = plotTrajectory(this, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, directory, titleStr, savePlot)
             % simulator check
             if (isempty(simulator))
-                sprintf('An initialized simulator is necessary to continue.\nPlease execute simulator = prepareSimulator();')
-                return;
+                error('An initialized simulator is necessary to continue.\nPlease execute simulator = prepareSimulator();');
             end
 
             %%% Saturation function that keeps motor commands in [0, 1]
@@ -1481,8 +1477,7 @@ classdef Model < handle
                 initMethod = uint8(2);
 
             else
-                sprintf('Muscle initialization method %s not supported.', initMethod)
-                return;
+                error('Muscle initialization method %s not supported.', initMethod);
             end
 
             plotAnaglyphs = false;
@@ -1520,8 +1515,7 @@ classdef Model < handle
                                     clear clone;
                                 catch
                                     % catch when new model property isn't present in Model class yet
-                                    sprintf('Error: One or more new model properties (variables) are not present in Model.m class yet!')
-                                    return;
+                                    error('One or more new model properties (variables) are not present in Model.m class yet!');
                                 end
                             end
                         elseif (initMethod == 1)

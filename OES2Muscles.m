@@ -71,7 +71,7 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
     %               1 = do it
-    closeFigures = uint8(0); % maybe necessary to use 0 when running headless 
+    closeFigures = uint8(0); % maybe necessary to use 0 when running headless
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -466,7 +466,7 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
     % plot results
     if (plotIt(1) == 1)
         if (isempty(testAt))
-            model.allPlotSave([1 : 6]);
+            model.allPlotSave([1 : 6]); % no test procedure during training -> no testPerformanceVsTraintime plot
         else
             model.allPlotSave([1 : 7]);
         end

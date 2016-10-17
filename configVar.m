@@ -1,19 +1,23 @@
-% Model object configuration and generation
-% with support of variable parameter vector
-function model = configVar(myvarargin)
+% Model object configuration and generation with support of variable
+% parameter vector
+%
+% @param varParamArray: variable parameter cell array
+%                       {'paramName1', value1, 'paramName2', value2, ...}
+% return model:         handle (pointer) to generated model instance
+function model = configVar(varParamArray)
 
 % --------------------
 % Experiment paramters
 % --------------------
 
 % stimulus file name
-[found, textureFile, myvarargin] = parseparam(myvarargin, 'textureFile');
+[found, textureFile, varParamArray] = parseparam(varParamArray, 'textureFile');
 if (~found)
     textureFile = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 end
 
 % training duration
-[found, trainTime, myvarargin] = parseparam(myvarargin, 'trainTime');
+[found, trainTime, varParamArray] = parseparam(varParamArray, 'trainTime');
 if (~found)
     trainTime = 1000;
 end
@@ -23,13 +27,13 @@ if (~isscalar(trainTime) || trainTime < 1)
 end
 
 % points in time of intermediate test procedure during training
-[found, testAt, myvarargin] = parseparam(myvarargin, 'testAt');
+[found, testAt, varParamArray] = parseparam(varParamArray, 'testAt');
 if (~found)
     testAt = [1000000 : 1000000 : trainTime];
 end
 
 % sparse coding type
-[found, sparseCodingType, myvarargin] = parseparam(myvarargin, 'sparseCodingType');
+[found, sparseCodingType, varParamArray] = parseparam(varParamArray, 'sparseCodingType');
 if (~found)
     sparseCodingType = uint8(0);
 end
@@ -43,7 +47,7 @@ end
 % ----------------
 
 % period for changing the stimulus for the eyes | origin 10
-[found, interval, myvarargin] = parseparam(myvarargin, 'interval');
+[found, interval, varParamArray] = parseparam(varParamArray, 'interval');
 if (~found)
     interval = 10;
 end
@@ -55,7 +59,7 @@ end
 %%% Image processing constants
 
 % patch size [pixel] of one basis functon, i.e. "receptive field" size | origin 8
-[found, patchSize, myvarargin] = parseparam(myvarargin, 'patchSize');
+[found, patchSize, varParamArray] = parseparam(varParamArray, 'patchSize');
 if (~found)
     patchSize = 8;
 end
@@ -67,20 +71,20 @@ end
 % [peripheral, intermediate ..., central vision]
 % downsampling ratio, i.e. how many pixels in original image
 % correspond to how many pixels in downsampled image | origin [8, 2]
-[found, dsRatio, myvarargin] = parseparam(myvarargin, 'dsRatio');
+[found, dsRatio, varParamArray] = parseparam(varParamArray, 'dsRatio');
 if (~found)
     dsRatio = [4, 1];
 end
 
 % fields of view in original image [pixel] | origin [128, 80]
-[found, pxFieldOfViewOrig, myvarargin] = parseparam(myvarargin, 'pxFieldOfViewOrig');
+[found, pxFieldOfViewOrig, varParamArray] = parseparam(varParamArray, 'pxFieldOfViewOrig');
 if (~found)
     pxFieldOfViewOrig = [128, 40];
 end
 
 % fields of view in downsampled image [pixel] (previously called fovea)
 % pxFieldOfView = FieldOfView in original image [pixel] / dsRatio
-[found, pxFieldOfView, myvarargin] = parseparam(myvarargin, 'pxFieldOfView');
+[found, pxFieldOfView, varParamArray] = parseparam(varParamArray, 'pxFieldOfView');
 if (~found)
     pxFieldOfView = pxFieldOfViewOrig ./ dsRatio;
 end
@@ -97,13 +101,13 @@ if (~all(diff(pxFieldOfViewOrig) < 0))
 end
 
 % image patch strides | origin [1, patchSize / 2]
-[found, stride, myvarargin] = parseparam(myvarargin, 'stride');
+[found, stride, varParamArray] = parseparam(varParamArray, 'stride');
 if (~found)
     stride = [patchSize / 2, patchSize / 2];
 end
 
 % flag indicates whether cutout procedure is applied [1] or not [0]
-[found, cutout, myvarargin] = parseparam(myvarargin, 'cutout');
+[found, cutout, varParamArray] = parseparam(varParamArray, 'cutout');
 if (~found)
     cutout = uint8(0);
 end
@@ -114,7 +118,7 @@ end
 
 % overlap between the different layers measured in units of FINE scale,
 % works only in conjunction with cutout
-[found, overlap, myvarargin] = parseparam(myvarargin, 'overlap');
+[found, overlap, varParamArray] = parseparam(varParamArray, 'overlap');
 if (~found)
     overlap = 0;
 end
@@ -126,42 +130,42 @@ end
 %%% Camera parameters
 
 % vertical offset between left and right (0 in the iCub Simulator!)
-% [found, offset, myvarargin] = parseparam(myvarargin, 'offset');
+% [found, offset, varParamArray] = parseparam(varParamArray, 'offset');
 % if (~found)
 %     offset = 0;
 % end
 
 % focal length [px]
-[found, focalLength, myvarargin] = parseparam(myvarargin, 'focalLength');
+[found, focalLength, varParamArray] = parseparam(varParamArray, 'focalLength');
 if (~found)
     focalLength = 257.34;
 end
 
 % interocular distance [m]
-[found, baseline, myvarargin] = parseparam(myvarargin, 'baseline');
+[found, baseline, varParamArray] = parseparam(varParamArray, 'baseline');
 if (~found)
     baseline = 0.056;
 end
 
 % Object distance to eyes [m]
-[found, objDistMin, myvarargin] = parseparam(myvarargin, 'objDistMin');
+[found, objDistMin, varParamArray] = parseparam(varParamArray, 'objDistMin');
 if (~found)
     objDistMin = 0.5; % origin 0.5
 end
 
-[found, objDistMax, myvarargin] = parseparam(myvarargin, 'objDistMax');
+[found, objDistMax, varParamArray] = parseparam(varParamArray, 'objDistMax');
 if (~found)
     objDistMax = 6;   % origin 2
 end
 
 % Fixation distance [m]
 % used for eye fixation initialization
-[found, fixDistMin, myvarargin] = parseparam(myvarargin, 'fixDistMin');
+[found, fixDistMin, varParamArray] = parseparam(varParamArray, 'fixDistMin');
 if (~found)
     fixDistMin = 0.3379;
 end
 
-[found, fixDistMax, myvarargin] = parseparam(myvarargin, 'fixDistMax');
+[found, fixDistMax, varParamArray] = parseparam(varParamArray, 'fixDistMax');
 if (~found)
     fixDistMax = 6; % 3.2219 for objDistMax = 2m
 end
@@ -174,14 +178,14 @@ end
 
 % minimal initial muscle innervation
 % orig: 0.00807 corr. to vergAngleMin | 0 corr. to 1 deg
-[found, muscleInitMin, myvarargin] = parseparam(myvarargin, 'muscleInitMin');
+[found, muscleInitMin, varParamArray] = parseparam(varParamArray, 'muscleInitMin');
 if (~found)
     muscleInitMin = [0, 0];
 end
 
 % maximal initial muscle innervation
 % orig: 0.07186 corr. to vergAngleMax | 0.1 corrs. to 12.7 deg
-[found, muscleInitMax, myvarargin] = parseparam(myvarargin, 'muscleInitMax');
+[found, muscleInitMax, varParamArray] = parseparam(varParamArray, 'muscleInitMax');
 if (~found)
     muscleInitMax = [0.0064, 0.0166];
 end
@@ -197,7 +201,7 @@ end
 % 60% = 0.0761 | 70% = 0.0888 | 80% = 0.1015 | 90% = 0.1142 | 100% = 0.1269
 % 150% = 0.1903 | 200% = 0.2538 | 250% = 0.3172 | 300% = 0.3806
 %
-[found, lambdaMuscleFB, myvarargin] = parseparam(myvarargin, 'lambdaMuscleFB');
+[found, lambdaMuscleFB, varParamArray] = parseparam(varParamArray, 'lambdaMuscleFB');
 if (~found)
     lambdaMuscleFB = 0.1269;
 end
@@ -209,7 +213,7 @@ end
 % 6.391 * mean reconstruction error on average, whereby 6.391 * mean reconstruction error ~= 1
 % pure 15.647% = 1 | privious 77.12% = 4.929 | 100% = 6.391 | set to 1 for simplicity
 %
-[found, lambdaRec, myvarargin] = parseparam(myvarargin, 'lambdaRec');
+[found, lambdaRec, varParamArray] = parseparam(varParamArray, 'lambdaRec');
 if (~found)
     lambdaRec = 1;
 end
@@ -237,7 +241,7 @@ end
 % 57.8947% = 0.0939, 63.1579% = 0.1024, 68.4211% = 0.1110, 73.6842% = 0.1195, 78.9474% = 0.1281,
 % 84.2105% = 0.1366, 89.4737% = 0.1451, 94.7368% = 0.1537, 100.0000% = 0.1622
 %
-[found, metCostRange, myvarargin] = parseparam(myvarargin, 'metCostRange');
+[found, metCostRange, varParamArray] = parseparam(varParamArray, 'metCostRange');
 if (~found)
     metCostRange = [0, 0];
 end
@@ -267,32 +271,32 @@ PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, bas
 % Scales := [coarse, less_coarse, ..., fine], i.e. [peripheral vision, ..., central vision]
 
 % total number of basis | origin [288, 288]
-[found, nBasis, myvarargin] = parseparam(myvarargin, 'nBasis');
+[found, nBasis, varParamArray] = parseparam(varParamArray, 'nBasis');
 if (~found)
     nBasis = [400, 400];
 end
 
 % number of basis used to encode in sparse mode | origin [10, 10]
-[found, nBasisUsed, myvarargin] = parseparam(myvarargin, 'nBasisUsed');
+[found, nBasisUsed, varParamArray] = parseparam(varParamArray, 'nBasisUsed');
 if (~found)
     nBasisUsed = [10, 10];
 end
 
 % size of each (binocular) base vector: patchSize * patchSize * 2 (left + right eye) | origin [128, 128]
-[found, basisSize, myvarargin] = parseparam(myvarargin, 'basisSize');
+[found, basisSize, varParamArray] = parseparam(varParamArray, 'basisSize');
 if (~found)
     basisSize = [(patchSize ^ 2) * 2, (patchSize ^ 2) * 2];
 end
 
 % SC learning rate(s)
 % origin 0.01 | Lukas 0.1 | Alex P 0.5, origin 0.01 | Lukas 0.1 | Alex P 0.5 | Chong 0.2
-[found, sc_eta, myvarargin] = parseparam(myvarargin, 'sc_eta');
+[found, sc_eta, varParamArray] = parseparam(varParamArray, 'sc_eta');
 if (~found)
     sc_eta = [0.2, 0.2];
 end
 
 % temperature in softmax | origin 0.01
-[found, temperature, myvarargin] = parseparam(myvarargin, 'temperature');
+[found, temperature, varParamArray] = parseparam(varParamArray, 'temperature');
 if (~found)
     temperature = [0.01, 0.01];
 end
@@ -324,7 +328,7 @@ PARAMSC = {nBasis, nBasisUsed, basisSize, sc_eta, temperature};
 % 3 = CACLAVar          Actor Continuous Actor Critic Learning Automaton with (delta std) * update
 % 4 = CACLAVar2         Actor Continuous Actor Critic Learning Automaton with (delta std) * update [non-linear output layer]
 % # = CNGACFI           Actor Continuous Natural-Gradient Actor-Critc with Fisher Information matrix TODO: unsupported yet
-[found, rlFlavour, myvarargin] = parseparam(myvarargin, 'rlFlavour');
+[found, rlFlavour, varParamArray] = parseparam(varParamArray, 'rlFlavour');
 if (~found)
     rlFlavour = [uint8(0), uint8(0)];
 end
@@ -342,13 +346,13 @@ if (rlFlavour(2) < 0 || rlFlavour(2) > 4)
 end
 
 % indicates if the policy is discrete (= 0) or continuous (= 1)
-[found, continuous, myvarargin] = parseparam(myvarargin, 'continuous');
+[found, continuous, varParamArray] = parseparam(varParamArray, 'continuous');
 if (~found)
     continuous = uint8(1);
 end
 
 % vergence angles (discrete policy) enable half pixel resolution
-[found, actionSpace, myvarargin] = parseparam(myvarargin, 'actionSpace');
+[found, actionSpace, varParamArray] = parseparam(varParamArray, 'actionSpace');
 if (~found)
     actionSpace = [-8, -4, -2, -1, -0.5, -0.2, -0.1, ...
                     0, 0.1, 0.2, 0.5, 1, 2, 4, 8];
@@ -356,14 +360,14 @@ end
 
 % Critic learning rate (value function)
 % origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
-% [found, alpha_v, myvarargin] = parseparam(myvarargin, 'alpha_v');
+% [found, alpha_v, varParamArray] = parseparam(varParamArray, 'alpha_v');
 % if (~found)
 %     alpha_v = 0.75;
 % end
 
 % Critic learning rate range (value function)
 % origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
-[found, alpha_v, myvarargin] = parseparam(myvarargin, 'criticLRRange');
+[found, alpha_v, varParamArray] = parseparam(varParamArray, 'criticLRRange');
 if (~found)
     criticLRRange = [0.75];
 end
@@ -379,7 +383,7 @@ end
 
 % CRG Critic discount factor
 % origin 0.3 | Alex P 0.3
-[found, xi, myvarargin] = parseparam(myvarargin, 'xi');
+[found, xi, varParamArray] = parseparam(varParamArray, 'xi');
 if (~found)
     xi = 0.3;
 end
@@ -387,28 +391,28 @@ end
 % CACLA Critic discount factor
 % origin 1
 % TODO: fuse both discounting factors
-[found, gamma, myvarargin] = parseparam(myvarargin, 'gamma');
+[found, gamma, varParamArray] = parseparam(varParamArray, 'gamma');
 if (~found)
     gamma = 0.3;
 end
 
 % Actor learning rate of natural policy gradient
 % origin 0.05 | Chong 0.025 | Lukas 0.1 | Alex P 0.4
-[found, alpha_n, myvarargin] = parseparam(myvarargin, 'alpha_n');
+[found, alpha_n, varParamArray] = parseparam(varParamArray, 'alpha_n');
 if (~found)
     alpha_n = 0.025;
 end
 
 % % Actor learning rate of Gaussean policy
 % % origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
-% [found, alpha_p, myvarargin] = parseparam(myvarargin, 'alpha_p');
+% [found, alpha_p, varParamArray] = parseparam(varParamArray, 'alpha_p');
 % if (~found)
 %     alpha_p = 0.5;
 % end
 
 % Actor learning rate of Gaussean policy
 % origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
-[found, alpha_p, myvarargin] = parseparam(myvarargin, 'actorLRRange');
+[found, alpha_p, varParamArray] = parseparam(varParamArray, 'actorLRRange');
 if (~found)
     actorLRRange = [0.5, 0];
 end
@@ -425,14 +429,14 @@ end
 
 % Actor weight regularization via factorial downscaling
 % how it works: actor.wp_ji = (1 - (actor.regularizer * actor.learnRate)) * actor.wp_ji;
-[found, regularizer, myvarargin] = parseparam(myvarargin, 'regularizer');
+[found, regularizer, varParamArray] = parseparam(varParamArray, 'regularizer');
 if (~found)
     regularizer = 1e-3 / actorLRRange(1); % ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
 end
 
 % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
 % corresponds to softMax temperature in discrete RL models
-[found, varianceRange, myvarargin] = parseparam(myvarargin, 'varianceRange');
+[found, varianceRange, varParamArray] = parseparam(varParamArray, 'varianceRange');
 if (~found)
     varianceRange = [1e-5, 1e-5];
 end
@@ -440,21 +444,20 @@ if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     % no variance decay
     varDec = 0;
 elseif (varianceRange(1) < varianceRange(2))
-    sprintf('Error: It must hold varianceRange(1) >= varianceRange(2)')
-    return;
+    error('Error: It must hold varianceRange(1) >= varianceRange(2)');
 else
     % varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
     varDec = varianceRange(1) - varianceRange(2);
 end
 
 % Actor's number of neurons in the output layer and amount of eye muscles
-[found, outputDim, myvarargin] = parseparam(myvarargin, 'outputDim');
+[found, outputDim, varParamArray] = parseparam(varParamArray, 'outputDim');
 if (~found)
     outputDim = 2;
 end
 
 % Critic's and Actor's number of neurons in the input layer (Small + Large scale + Muscle activities)
-[found, inputDim, myvarargin] = parseparam(myvarargin, 'inputDim');
+[found, inputDim, varParamArray] = parseparam(varParamArray, 'inputDim');
 if (~found)
     if (continuous == 1)
         inputDim = sum(PARAMSC{1}) + outputDim; % number of neurons in the input layer (Small + Large scale + Muscle activities)
@@ -466,19 +469,19 @@ if (~found)
 end
 
 % Actor's number of neurons in the hidden layer
-[found, hiddenDim, myvarargin] = parseparam(myvarargin, 'hiddenDim');
+[found, hiddenDim, varParamArray] = parseparam(varParamArray, 'hiddenDim');
 if (~found)
     hiddenDim = 50;
 end
 
 % all network dimensions at once
-[found, dimensions, myvarargin] = parseparam(myvarargin, 'dimensions');
+[found, dimensions, varParamArray] = parseparam(varParamArray, 'dimensions');
 if (~found)
     dimensions = [inputDim, hiddenDim, outputDim];
 end
 
 % initial network weights
-[found, weight_range, myvarargin] = parseparam(myvarargin, 'weight_range');
+[found, weight_range, varParamArray] = parseparam(varParamArray, 'weight_range');
 if (~found)
     weight_range = [1 / inputDim, ...                   % maximum initial weight [critic_ji, actor_ji, actor_kj]
                     1 / (inputDim * hiddenDim), ...     % origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05] | AL 100 / (inputDim * hiddenDim)
@@ -488,25 +491,25 @@ end
 % Actor's reguralization factor
 % origin 0.01
 % TODO: DEPRICATED because it became obsolet, cleanup needed
-[found, lambda, myvarargin] = parseparam(myvarargin, 'lambda');
+[found, lambda, varParamArray] = parseparam(varParamArray, 'lambda');
 if (~found)
     lambda = 0.01;
 end
 
 % TD error variance tracking/approximating (CACLAVar)
-[found, deltaVar, myvarargin] = parseparam(myvarargin, 'deltaVar');
+[found, deltaVar, varParamArray] = parseparam(varParamArray, 'deltaVar');
 if (~found)
     deltaVar = 1;
 end
 
 % TD error variance scaling factor (CACLAVar)
-[found, rl_eta, myvarargin] = parseparam(myvarargin, 'rl_eta');
+[found, rl_eta, varParamArray] = parseparam(varParamArray, 'rl_eta');
 if (~found)
     rl_eta = 0.001;
 end
 
 % scaling factor of Fisher Information matrix (CNGFI)
-[found, fiScale, myvarargin] = parseparam(myvarargin, 'fiScale');
+[found, fiScale, varParamArray] = parseparam(varParamArray, 'fiScale');
 if (~found)
     fiScale = 1e-5;
 end

@@ -16,8 +16,7 @@ overlap = [0];                                  % Overlap between the different 
 
 % Sanity check of parameter values
 if (~all(diff(pxFieldOfViewOrig) < 0))
-    sprintf('pxFieldOfViewOrig must contain decreasing values,\ndue to convention it must hold [peripheral, intermediate ..., central vision].')
-    return;
+    error('pxFieldOfViewOrig must contain decreasing values,\ndue to convention it must hold [peripheral, intermediate ..., central vision].');
 % TODO: needs to be inserted and checked when model.preprocessImageCutout() is integrated
 % elseif (mod(pxFieldOfView(2 : end), dsRatio(1 : end - 1) ./ dsRatio(2 : end)))
 %     sprintf('pxFieldOfView(scale + 1) / (dsRatio(scale) / dsRatio(scale + 1)) must be an integer')
@@ -112,8 +111,7 @@ metCostRange = metCostRange .* lambdaRec; % #hack
 if (length(metCostRange) == 1 || metCostRange(1) == metCostRange(2))
     metCostDec = 0; % no decay
 elseif (metCostRange(1) < metCostRange(2))
-    sprintf('Error: It must hold metCostRange(1) >= metCostRange(2)')
-    return;
+    error('It must hold metCostRange(1) >= metCostRange(2)');
 else
 %     metCostDec = -(log(2) * trainTime) / log(metCostRange(2) / metCostRange(1)); % metCost decay factor
     metCostDec = metCostRange(1) - metCostRange(2);
@@ -140,14 +138,12 @@ if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
  || (length(basisSize) ~= length(dsRatio)) ...
  || (length(eta) ~= length(dsRatio)) ...
  || (length(temperature) ~= length(dsRatio)))
-    sprintf('Error: For usage of #%d scales all respective SC and model parameters needs to have length %d.', ...
-            length(dsRatio), length(dsRatio))
-    return;
+    error('For usage of #%d scales all respective SC and model parameters needs to have length %d.', ...
+          length(dsRatio), length(dsRatio));
 end
 
 if (length(dsRatio) > 1 && (length(overlap) ~= length(dsRatio) - 1))
-    sprintf('Error: For usage of #%d scales overlap needs to have length %d.', length(dsRatio) - 1)
-    return;
+    error('For usage of #%d scales overlap needs to have length %d.', length(dsRatio) - 1);
 end
 
 PARAMSC = {nBasis, nBasisUsed, basisSize, eta, temperature};
