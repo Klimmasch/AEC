@@ -31,14 +31,22 @@
 % var1Descr = {'1e-2', '1e-3', '1e-4'};
 % var2Descr = {'0.5', '0.5To0', '1To0'};
 
-varNames = {'gamma', 'interval'};
-var1 = {0.1, 0.3, 0.9};
-var2 = {10, 50, 100};
+% varNames = {'gamma', 'interval'};
+% var1 = {0.1, 0.3, 0.9};
+% var2 = {10, 50, 100};
 
-% descriptive parameter names used in folder name
-varDescr = {'cDiscout', 'interval'};
-var1Descr = {'01', '03', '09'};
-var2Descr = {'10', '50', '100'};
+varNames = {'criticLRRange', 'actorLRRange'};
+var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
+var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
+
+%% descriptive parameter names used in folder name
+% varDescr = {'cDiscout', 'interval'};
+% var1Descr = {'01', '03', '09'};
+% var2Descr = {'10', '50', '100'};
+
+varDescr = {'CriticLR', 'ActorLR'};
+var1Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+var2Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,7 +72,7 @@ iter = 1;
 for i = 1 : length(var1)
     for j = 1 : length(var2)
         paramValues(iter, :) = {cell2mat(var1(i)), cell2mat(var2(j))};
-        paramNames(iter, :) = {cell2mat(var1Descr(i)), cell2mat(var2Descr(j))};
+        paramStrings(iter, :) = {cell2mat(var1Descr(i)), cell2mat(var2Descr(j))};
         iter = iter + 1;
     end
 end
@@ -97,9 +105,12 @@ end
 
 %% main loop, TODO: test if renderers are not interfering (anaglyphs ...)
 parfor ind = 1 : nParams
-    % OES2Muscles(nIters, rSeed, paramValues(ind), sprintf('%s%s_%s%s', varDescr{1}, paramNames{ind, 1}, varDescr{2}, paramNames{ind, 2})); % sprintf('varDec%g--%g', paramValues{ind})
+    % OES2Muscles(nIters, rSeed, paramValues(ind), sprintf('%s%s_%s%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})); % sprintf('varDec%g--%g', paramValues{ind})
 
+    % OES2Muscles(nIters, rSeed, ...
+    %             {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
+    %             sprintf('cluster_%s_%4.2f_%s_%.0f', varDescr{1}, paramValues{ind, 1}, varDescr{2}, paramValues{ind, 2}));
     OES2Muscles(nIters, rSeed, ...
                 {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                sprintf('cluster_%s_%4.2f_%s_%.0f', varDescr{1}, paramValues{ind, 1}, varDescr{2}, paramValues{ind, 2}));
+                sprintf('cluster_%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
 end
