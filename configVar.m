@@ -356,9 +356,25 @@ end
 
 % Critic learning rate (value function)
 % origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
-[found, alpha_v, myvarargin] = parseparam(myvarargin, 'alpha_v');
+% [found, alpha_v, myvarargin] = parseparam(myvarargin, 'alpha_v');
+% if (~found)
+%     alpha_v = 0.75;
+% end
+
+% Critic learning rate range (value function)
+% origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
+[found, alpha_v, myvarargin] = parseparam(myvarargin, 'criticLRRange');
 if (~found)
-    alpha_v = 0.75;
+    criticLRRange = [0.75];
+end
+if (length(criticLRRange) == 1 || criticLRRange(1) == criticLRRange(2))
+    critLRDec = 0; % no variance decay
+elseif (criticLRRange(1) < criticLRRange(2))
+    sprintf('Error: It must hold criticLRRange(1) >= criticLRRange(2)')
+    return;
+else
+%     critLRDec = -(log(2) * trainTime) / log(criticLRRange(2) / criticLRRange(1)); % exponential decay factor
+    critLRDec = criticLRRange(1) - criticLRRange(2);                                % linear decay factor
 end
 
 % CRG Critic discount factor
@@ -383,17 +399,35 @@ if (~found)
     alpha_n = 0.025;
 end
 
+% % Actor learning rate of Gaussean policy
+% % origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
+% [found, alpha_p, myvarargin] = parseparam(myvarargin, 'alpha_p');
+% if (~found)
+%     alpha_p = 0.5;
+% end
+
 % Actor learning rate of Gaussean policy
 % origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
-[found, alpha_p, myvarargin] = parseparam(myvarargin, 'alpha_p');
+[found, alpha_p, myvarargin] = parseparam(myvarargin, 'actorLRRange');
 if (~found)
-    alpha_p = 0.5;
+    actorLRRange = [0.5, 0];
+end
+if (length(actorLRRange) == 1 || actorLRRange(1) == actorLRRange(2))
+    actLRDec = 0; % no variance decay
+elseif (actorLRRange(1) < actorLRRange(2))
+    sprintf('Error: It must hold actorLRRange(1) >= actorLRRange(2)')
+    return;
+else
+%     actLRDec = -(log(2) * trainTime) / log(actorLRRange(2) / actorLRRange(1)); % exponential decay factor
+    actLRDec = actorLRRange(1) - actorLRRange(2);                                % linear decay factor
 end
 
+
 % Actor weight regularization via factorial downscaling
+% how it works: actor.wp_ji = (1 - (actor.regularizer * actor.learnRate)) * actor.wp_ji;
 [found, regularizer, myvarargin] = parseparam(myvarargin, 'regularizer');
 if (~found)
-    regularizer = 1 - 1e-3;
+    regularizer = 1e-3 / actorLRRange(1); % ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
 end
 
 % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
@@ -402,7 +436,6 @@ end
 if (~found)
     varianceRange = [1e-5, 1e-5];
 end
-
 if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     % no variance decay
     varDec = 0;
@@ -449,7 +482,7 @@ end
 if (~found)
     weight_range = [1 / inputDim, ...                   % maximum initial weight [critic_ji, actor_ji, actor_kj]
                     1 / (inputDim * hiddenDim), ...     % origin [0.05, 0.4, 0.4] | Lukas [0.1, 0.05, 0.05] | AL 100 / (inputDim * hiddenDim)
-                    2 / (hiddenDim * outputDim)];       % linear [1/inputDim, 1/inputDim, -]
+                    1 / (hiddenDim * outputDim)];       % linear [1/inputDim, 1/inputDim, -]
 end
 
 % Actor's reguralization factor
@@ -478,8 +511,8 @@ if (~found)
     fiScale = 1e-5;
 end
 
-PARAMRL = {actionSpace, alpha_v, alpha_n, alpha_p, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
-           continuous, deltaVar, rl_eta, fiScale, rlFlavour, varDec, regularizer};
+PARAMRL = {actionSpace, criticLRRange, alpha_n, actorLRRange, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
+           continuous, deltaVar, rl_eta, fiScale, rlFlavour, varDec, regularizer, critLRDec, actLRDec};
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);

@@ -36,8 +36,8 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% Execute intermediate test procedure during training
-    testAt = [1000000 : 1000000 : trainTime];
-    % testAt = [500000 : 500000 : trainTime]; % is more handy for shorter training times like 2mio
+    % testAt = [1000000 : 1000000 : trainTime];
+    testAt = [500000 : 500000 : trainTime]; % is more handy for shorter training times like 2mio
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -84,19 +84,20 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
             model.trainTime = trainTime;
         end
     else
+        % old static version of config.m
         % model = config(textureFiles, trainTime, testAt, sparseCodingType);
 
-        % for the new configVar, awt first copy values from before ... 
+        % for the new configVar, at first copy values from before ... 
         standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
         % ... and then add those handled in the function call
-%         additionalParams = {};
-%         for p = 1 : length(identifiers)
-%             display(p);
-%             additionalParams(end + 1) = {identifiers(p)};
-%             additionalParams(end + 1) = {params(p)};
-% %             additionalParams{end + 1} = identifiers{p};
-% %             additionalParams{end + 1} = params{p};
-%         end
+        % additionalParams = {}; % this now is handled in the parOES.m script.
+        % for p = 1 : length(identifiers)
+        %     display(p);
+        %     additionalParams(end + 1) = {identifiers(p)};
+        %     additionalParams(end + 1) = {params(p)};
+        %     % additionalParams{end + 1} = identifiers{p};
+        %     % additionalParams{end + 1} = params{p};
+        % end
         PARAMS = [standardParams, params];
 
         model = configVar(PARAMS);
@@ -130,8 +131,13 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
                                 randomizationSeed, ...
                                 fileDescription);
         else
-            modelName = sprintf('model_%s_%i_%i_%s', ...
-                                datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
+            % modelName = sprintf('model_%s_%i_%i_%s', ...
+            %                     datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
+            %                     trainTime, ...
+            %                     randomizationSeed, ...
+            %                     fileDescription);
+            modelName = sprintf('%s_%iiter_%i_%s', ...
+                                datestr(now, 'yy-mm-dd'), ...
                                 trainTime, ...
                                 randomizationSeed, ...
                                 fileDescription);
@@ -436,9 +442,9 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
             end
         end
 
-        if (~mod(t, 10000))
-            imwrite(imfuse(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, sprintf('/anaglyph%d.png', ceil(t / 10000))))
-        end
+        % if (~mod(t, 10000))
+        %     imwrite(imfuse(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, sprintf('/anaglyph%d.png', ceil(t / 10000))))
+        % end
 
         elapsedTime = elapsedTime + toc;
     end
