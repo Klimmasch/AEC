@@ -1,11 +1,12 @@
 %%% Main script for launching experimental procedure
 % @param trainTime           training time in number of iterations
 % @param randomizationSeed   randomization seed
+% @param clusterCall         whether this is a cluster job 0 (no) 1 (yes)
 % @param inputParams         a list composed of 'identifier' followed by value, e.g {'alpha', 1, 'beta', 2, ...}
 %                            whereas 'identifier' has to appear in configVar.m
 % @param fileDescription     description of approach used as file name
 %%%
-function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
+function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fileDescription)
     rng(randomizationSeed);
 
     % useLearnedFile(1):    0 = don't do it
@@ -16,7 +17,7 @@ function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
     % If useLearnedFile = [1, 1] and you want to continue training, trainTime must be the overall desired train time,
     % i.e. trained at first 100k iterations with useLearnedFile = [0, 0], then decided to continue training for 100k more
     % iterations, then the overall train time for the model is 200k and you set useLearnedFile = [1, 1] and execute with
-    % OES2Muscles(200000, randomizationSeed, fileDescription)
+    % OES2Muscles(200000, randomizationSeed, clusterCall, inputParams, fileDescription)
     useLearnedFile = [0, 0];
     learnedFile = '';
     % useLearnedFile = [1, 1];
@@ -76,8 +77,7 @@ function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
         if (isempty(learnedFile))
-            sprintf('could not open the learned file! %s', learnedFile)
-            return;
+            error('could not open the learned file! %s', learnedFile);
         else
             model = load(learnedFile, 'model');
             model = model.model;
@@ -97,18 +97,15 @@ function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
 
     % check if main script and model are compatible
     if (model.rlModel.continuous == 0)
-        sprintf('Error: This training/main script is not compatible with discrete action space models!\nPlease execute OESDiscrete.m instead.')
-        return;
+        error('This training/main script is not compatible with discrete action space models!\nPlease execute OESDiscrete.m instead.');
     elseif (model.rlModel.CActor.output_dim < 2)
-        sprintf('Error: This training/main script is not compatible with %d eye muscle models!\nPlease execute OES1Muscle.m instead.', ...
-                model.rlModel.CActor.output_dim)
-        return;
+        error('This training/main script is not compatible with %d eye muscle models!\nPlease execute OES1Muscle.m instead.', ...
+                model.rlModel.CActor.output_dim);
     end
 
     % safety check for plotting functions
     if (trainTime <= model.interval)
-        sprintf('Error: trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
-        return;
+        error('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval);
     end
 
     % File management: either complete training with existing folder etc., or create a new one
@@ -189,8 +186,7 @@ function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
 
     if (nStimTest > nTestTextures)
         nStimTest = nTestTextures;
-        sprintf('%d images were requested as training stimuli, but the renderer only holds %d.', nStimTest, nTestTextures)
-        % sprintf('The file for testing textures only contains %d images, but I will use them all!', nStimTest)
+        sprintf('Warning: %d images were requested as training stimuli, but the renderer only holds %d.', nStimTest, nTestTextures)
     end
 
     % Image patches cell array (input to model)
@@ -408,7 +404,7 @@ function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
         % store every 10th iteration
         model.recerr_hist(t / model.interval, :) = recErrorArray;
 
-        if (mod(t, 100) == 0)
+        if ((clusterCall == 0 ) && (mod(t, 100) == 0))
             % offers an insight into the models view while it learns
             % imwrite(stereoAanglyph(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png'))
             % imwrite(imfuse(model.imgGrayLeft, model.imgGrayRight), strcat(model.savePath, '/anaglyph.png'))
@@ -420,7 +416,7 @@ function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
 
         % display per cent completed of training and save model
         if (~mod(t, saveInterval))
-            sprintf('%g%% is finished', (t / timeToTrain * 100))
+            sprintf('%g%% is finished %d/%d iterations', (t / timeToTrain * 100), t, timeToTrain)
             save(strcat(model.savePath, '/model'), 'model');
 
             % track basis function history
@@ -465,9 +461,12 @@ function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
         end
     end
 
-    if (closeFigures == 1)
+    if ((clusterCall == 0) && (closeFigures == 1))
         close all;
     end
 
-    % quit % close the job after completion and release the matlab licence u.u, comment out in cluster??
+    % close the job after completion and release the matlab licence u.u
+    if (clusterCall == 0)
+        quit
+    end
 end
