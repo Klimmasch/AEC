@@ -1034,7 +1034,7 @@ customColorMap4 = [
 3,69,3;
 2,68,2;
 1,67,1;
-0,66,0]
+0,66,0];
 
 if (number == 1)
     customColorMap = customColorMap1 / 255;
