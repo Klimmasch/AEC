@@ -461,6 +461,9 @@ function OES2Muscles(trainTime, randomizationSeed, params, fileDescription)
     if (testIt)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer, tempResultsFolderName)
         testModelContinuous(model, nStimTest, plotIt(2), 1, simulator, 0, sprintf('modelAt%d', t));
+        % print the time again after the line output of the testing script
+        sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
+            elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
     end
 
     % plot results

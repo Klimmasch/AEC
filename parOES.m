@@ -104,7 +104,7 @@ end
 % paramIdentifiers = ['alpha_v'];
 % params = [0.75];
 
-%% main loop, TODO: test if renderers are not interfering (anaglyphs ...)
+%% main loop
 parfor ind = 1 : nParams
     OES2Muscles(nIters, rSeed, PARAMS(ind), sprintf('%s%s_%s%s', varDescr{1}, PARAMSDescr{ind, 1}, varDescr{2}, PARAMSDescr{ind, 2})); % sprintf('varDec%g--%g', PARAMS{ind})
 end
