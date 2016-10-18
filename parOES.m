@@ -103,7 +103,7 @@ end
 % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
 % simulator = prepareSimulator(textureFiles); % at first, we try to use a shared simulator for all threads
 
-%% main loop, TODO: test if renderers are not interfering (anaglyphs ...)
+%% main loop
 parfor ind = 1 : nParams
     % OES2Muscles(nIters, rSeed, paramValues(ind), sprintf('%s%s_%s%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})); % sprintf('varDec%g--%g', paramValues{ind})
 
