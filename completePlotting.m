@@ -25,12 +25,12 @@ function completePlotting(simulator)
     imageFlag = sprintf('last%dvalues', takeLastValues);
 
     meanOffset = zeros(objRange, length(files), stimulusRange * takeLastValues);
-    
+
     for i = 1:length(files)
         model = load(files{i});
         model = model.model;
 %         model.allPlotSave(6);
-        testModelContinuous(model, stimulusRange, 1, 1, simulator, 0, sprintf('modelAt%d', model.trainedUntil));
+        testModelContinuous(model, stimulusRange, 1, 1, 0, simulator, 0, sprintf('modelAt%d', model.trainedUntil));
 
         sprintf('###### plotting and testing completed in %s #######', files{i});
         close all;

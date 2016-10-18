@@ -3,11 +3,12 @@
 % @param nStim:             # stimuli to be tested, provide 0 if you just want to plot results
 % @pram plotIt:             whether plots shall be generated
 % @param saveTestResults:   whether to save the results (not recommended if model is still trained!)
+% @param verbose:           generation of text output 0 (no) 1 (yes)
 % @param simulator:         simulator handle, provide [] if there is no simulator handle yet
 % @param reinitRenderer:    1 if renderer was already initialized
 %                           0 if renderer wasn't initialized yet
 %%%
-function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, reinitRenderer, folderName)
+function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, folderName)
 
     % should the simulation time be measured?
     % not recommended for use during training
@@ -112,8 +113,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
     % don't repeat testing procedure if nStim == 0, but just plot the results
     if (nStim > 0)
+        sprintf('Testing procedure at iter = %s started...', folderName(9 : end))
         for odIndex = 1 : length(objRange)
-            sprintf('Level 1/4 Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
+            if (verbose == 1)
+                sprintf('Level 1/4 Test iteration = %d/%d', odIndex, size(objRange, 2) * 2)
+            end
 
             % vergence start error
             vergMax = model.getVergErrMax(objRange(odIndex));
@@ -266,7 +270,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         vseRange = linspace(-1, 1, test2Resolution);
 
         for odIndex = 1 : length(objRange)
-            sprintf('Level 2/4 Test iteration = %d/%d', odIndex + size(objRange, 2), size(objRange, 2) * 2)
+            if (verbose == 1)
+                sprintf('Level 2/4 Test iteration = %d/%d', odIndex + size(objRange, 2), size(objRange, 2) * 2)
+            end
 
             for vseIndex = 1 : length(vseRange)
                 if (model.getVergErrMax(objRange(odIndex)) < vseRange(vseIndex))
@@ -330,7 +336,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
 
         tmpcnt = 1;
         for odIndex = 1 : length(testResult6) / testInterval
-            sprintf('Level 3/4 Test iteration = %d/%d', odIndex, length(testResult6) / testInterval)
+            if (verbose == 1)
+                sprintf('Level 3/4 Test iteration = %d/%d', odIndex, length(testResult6) / testInterval)
+            end
 
             % vergence start error
             vergMax = model.getVergErrMax(objRange2(odIndex));
@@ -396,7 +404,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
         end
 
         %% Generate muscle activation trajectories
-        sprintf('Level 4/4')
+        if (verbose == 1)
+            sprintf('Level 4/4')
+        end
+
         if (nStim == 40)
             trajPlotHandle = model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(nStim), simulator, imageSavePath, folderName(9 : end), plotIt);
         else
@@ -447,6 +458,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
             end
         end
     end
+
+    sprintf('Testing procedure at iter = %s finished. Graph generation started...', folderName(9 : end))
 
     %%% Plotting
     if (plotIt == 1)
@@ -1200,6 +1213,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, simulator, r
     catch
         sprintf('Warning: Current model has no \"testHist\" field. Performance history will not be stored.')
     end
+    sprintf('Testing procedure at iter = %s finished. Graph generation finished.', folderName(9 : end))
 end
 
 %this function generates anaglyphs of the large and small scale fovea and
