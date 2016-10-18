@@ -367,15 +367,14 @@ end
 
 % Critic learning rate range (value function)
 % origin 0.05 | Chong 1 | Lukas 0.9 | Alex P 0.4
-[found, alpha_v, varParamArray] = parseparam(varParamArray, 'criticLRRange');
+[found, criticLRRange, varParamArray] = parseparam(varParamArray, 'criticLRRange');
 if (~found)
     criticLRRange = [0.75];
 end
 if (length(criticLRRange) == 1 || criticLRRange(1) == criticLRRange(2))
     critLRDec = 0; % no variance decay
 elseif (criticLRRange(1) < criticLRRange(2))
-    sprintf('Error: It must hold criticLRRange(1) >= criticLRRange(2)')
-    return;
+    error('It must hold criticLRRange(1) >= criticLRRange(2)');
 else
 %     critLRDec = -(log(2) * trainTime) / log(criticLRRange(2) / criticLRRange(1)); % exponential decay factor
     critLRDec = criticLRRange(1) - criticLRRange(2);                                % linear decay factor
@@ -412,15 +411,14 @@ end
 
 % Actor learning rate of Gaussean policy
 % origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
-[found, alpha_p, varParamArray] = parseparam(varParamArray, 'actorLRRange');
+[found, actorLRRange, varParamArray] = parseparam(varParamArray, 'actorLRRange');
 if (~found)
     actorLRRange = [0.5, 0];
 end
 if (length(actorLRRange) == 1 || actorLRRange(1) == actorLRRange(2))
     actLRDec = 0; % no variance decay
 elseif (actorLRRange(1) < actorLRRange(2))
-    sprintf('Error: It must hold actorLRRange(1) >= actorLRRange(2)')
-    return;
+    error('It must hold actorLRRange(1) >= actorLRRange(2)');
 else
 %     actLRDec = -(log(2) * trainTime) / log(actorLRRange(2) / actorLRRange(1)); % exponential decay factor
     actLRDec = actorLRRange(1) - actorLRRange(2);                                % linear decay factor
@@ -516,6 +514,10 @@ end
 
 PARAMRL = {actionSpace, criticLRRange, alpha_n, actorLRRange, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
            continuous, deltaVar, rl_eta, fiScale, rlFlavour, varDec, regularizer, critLRDec, actLRDec};
+
+if (~isempty(varParamArray))
+    error('varParamArray contains unrecognized elements, p.e. %s', varParamArray{1});
+end
 
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);
