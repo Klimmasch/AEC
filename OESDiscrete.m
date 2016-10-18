@@ -306,8 +306,7 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
 
     %%% Testing procedure
     if (testIt == 1)
-        % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-        % testModelContinuous(model, 33, plotIt(2), 1, simulator, 0);
+        % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, folderName)
         sprintf('Warning: Testing procedure is currently not supported.')
     end
 

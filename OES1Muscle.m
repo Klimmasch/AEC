@@ -433,7 +433,7 @@ function OES1Muscle(trainTime, randomizationSeed, fileDescription)
     %%% Testing procedure
     if (testIt == 1)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, simulatorHandle, reinitRenderer)
-        testModelContinuous(model, 33, plotIt(2), 1, simulator, 0);
+        testModelContinuous(model, 33, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t));
     end
 
     if (closeFigures == 1)

@@ -108,15 +108,14 @@ end
 %% main loop
 parfor ind = 1 : nParams
 
-	% Hier vielleich einen Unterordner erstellen, in dem dann alle experimente in eigenen ordnern abgespeichert werden
-    % OES2Muscles(nIters, rSeed, paramValues(ind), sprintf('%s%s_%s%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})); % sprintf('varDec%g--%g', paramValues{ind})
+    % OES2Muscles(nIters, rSeed, 1, paramValues(ind), sprintf('%s%s_%s%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})); % sprintf('varDec%g--%g', paramValues{ind})
 
-    % OES2Muscles(nIters, rSeed, ...
+    % OES2Muscles(nIters, rSeed, 1, ...
     %             {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
     %             sprintf('cluster_%s_%4.2f_%s_%.0f', varDescr{1}, paramValues{ind, 1}, varDescr{2}, paramValues{ind, 2}));
-    
+
     display({varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}})
-    OES2Muscles(nIters, rSeed, ...
+    OES2Muscles(nIters, rSeed, 1, ...
                 {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
                 folderName, sprintf('cluster_%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
 end

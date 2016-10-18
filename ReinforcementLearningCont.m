@@ -37,8 +37,7 @@ classdef ReinforcementLearningCont < handle
                     criticParams = {PARAM{9}(1), obj.weight_range(1), obj.criticLearningRange(1), PARAM{5}, PARAM{6}};
                     obj.CCritic = CRGCritic(criticParams);
                 otherwise
-                    sprintf('Critic algorithm [No. #%d] not supported (anymore)!', obj.rlFlavour(1))
-                    return;
+                    error('Critic algorithm [No. #%d] not supported (anymore)!', obj.rlFlavour(1));
             end
 
             switch obj.rlFlavour(2)
@@ -74,8 +73,7 @@ classdef ReinforcementLearningCont < handle
                 %     actorParams = {PARAM{9}, 1, obj.weight_range(2:3), obj.actorLearningRange(1), PARAM{2}, PARAM{7}, PARAM{14}, PARAM{16}};
                 %     obj.CActor = CNGFIActor(actorParams);
                 otherwise
-                    sprintf('Actor algorithm [No. #%d] not supported (anymore)!', obj.rlFlavour(2))
-                    return;
+                    error('Actor algorithm [No. #%d] not supported (anymore)!', obj.rlFlavour(2));
             end
         end
 
