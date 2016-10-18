@@ -23,36 +23,38 @@
 % var1 = {10, 20, 50, 100};
 % var2 = {0.75};
 
-% varNames = {'regularizer', 'actorLRRange'};
-% var1 = {1e-2, 1e-3, 1e-4};
-% var2 = {[0.5], [0.5, 0], [1, 0]};
+varNames = {'regularizer', 'actorLRRange'};
+var1 = {1e-2, 1e-3, 1e-4};
+var2 = {[0.5], [0.5, 0], [1, 0]};
 
-% varDescr = {'regul', 'actorLR'};
-% var1Descr = {'1e-2', '1e-3', '1e-4'};
-% var2Descr = {'0.5', '0.5To0', '1To0'};
+varDescr = {'regul', 'actorLR'};
+var1Descr = {'1e-2', '5e-2', '1e-3', '5e-3', '1e-4'};
+var2Descr = {'0.5', '0.5To0', '1To0'};
 
 % varNames = {'gamma', 'interval'};
 % var1 = {0.1, 0.3, 0.9};
 % var2 = {10, 50, 100};
 
-varNames = {'criticLRRange', 'actorLRRange'};
-var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
-var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
+% varNames = {'criticLRRange', 'actorLRRange'};
+% var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
+% var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
 
 %% descriptive parameter names used in folder name
 % varDescr = {'cDiscout', 'interval'};
 % var1Descr = {'01', '03', '09'};
 % var2Descr = {'10', '50', '100'};
 
-varDescr = {'CriticLR', 'ActorLR'};
-var1Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
-var2Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+% varDescr = {'CriticLR', 'ActorLR'};
+% var1Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+% var2Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nIters = 2000000;               % number of iterations
 rSeed = 1;                      % random seed
+folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
+%TODO enable definition of other parameters that are not changed.
 % standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
 
 
@@ -105,12 +107,16 @@ end
 
 %% main loop
 parfor ind = 1 : nParams
+
+	% Hier vielleich einen Unterordner erstellen, in dem dann alle experimente in eigenen ordnern abgespeichert werden
     % OES2Muscles(nIters, rSeed, paramValues(ind), sprintf('%s%s_%s%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})); % sprintf('varDec%g--%g', paramValues{ind})
 
     % OES2Muscles(nIters, rSeed, ...
     %             {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
     %             sprintf('cluster_%s_%4.2f_%s_%.0f', varDescr{1}, paramValues{ind, 1}, varDescr{2}, paramValues{ind, 2}));
+    
+    display({varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}})
     OES2Muscles(nIters, rSeed, ...
                 {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                sprintf('cluster_%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+                folderName, sprintf('cluster_%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
 end
