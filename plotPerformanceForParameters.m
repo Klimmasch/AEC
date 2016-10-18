@@ -4,55 +4,90 @@
 %% to a specified set of two paramters.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotPerformanceForParameters()
-    files = { ...
-        % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:35:13_2000000_1_cluster_varDec1e4-1e4/modelAt2000000/model.mat', ...
-        % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:40:58_2000000_1_cluster_varDec1e4-1e5/modelAt2000000/model.mat', ...
-        % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:41:48_2000000_1_cluster_varDec1e4-1e6/modelAt2000000/model.mat', ...
-        % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:48:21_2000000_1_cluster_varDec1e5-1e5/modelAt2000000/model.mat', ...
-        % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:49:55_2000000_1_cluster_varDec1e5-1e6/modelAt2000000/model.mat', ...
-        % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:51:04_2000000_1_cluster_varDec1e6-1e6/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-2_actorLR_1To0/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-2_actorLR_0.5To0/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-2_actorLR_0.5/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-3_actorLR_1To0/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-3_actorLR_0.5To0/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-3_actorLR_0.5/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-4_actorLR_1To0/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-4_actorLR_0.5To0/modelAt2000000/model.mat', ...
-        '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-4_actorLR_0.5/modelAt2000000/model.mat', ...
-    };
+	parentFolder = '/home/aecgroup/aecdata/Results';	% folder with all subfolders containing the experiments
+	commonName = '1_cluster_CriticLR';					% a string (or part of it) all relevant folders share
+	files = dir(sprintf('%s/*%s*', parentFolder, commonName));
+	subFolder = 'modelAt500000';
+    % files = { ...
+    %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:35:13_2000000_1_cluster_varDec1e4-1e4/modelAt2000000/model.mat', ...
+    %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:40:58_2000000_1_cluster_varDec1e4-1e5/modelAt2000000/model.mat', ...
+    %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:41:48_2000000_1_cluster_varDec1e4-1e6/modelAt2000000/model.mat', ...
+    %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:48:21_2000000_1_cluster_varDec1e5-1e5/modelAt2000000/model.mat', ...
+    %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:49:55_2000000_1_cluster_varDec1e5-1e6/modelAt2000000/model.mat', ...
+    %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:51:04_2000000_1_cluster_varDec1e6-1e6/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-2_actorLR_1To0/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-2_actorLR_0.5To0/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-2_actorLR_0.5/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-3_actorLR_1To0/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-3_actorLR_0.5To0/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-3_actorLR_0.5/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-4_actorLR_1To0/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-4_actorLR_0.5To0/modelAt2000000/model.mat', ...
+    %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-4_actorLR_0.5/modelAt2000000/model.mat', ...
+    % };
 
 nFiles = length(files);
 
 %% here, specify the parameter ranges that should be used
-% varUpper = [1e-4, 1e-5, 1e-6];
-% varLower = [1e-4, 1e-5, 1e-6];
+%	these may simply be copied from parOES.m and putting ';'' after every set of params 
 
-varUpper = {'1e-2', '1e-3', '1e-4'};
-varLower = {'[1, 0]', '[0.5, 0]', '[0.5]'};
+% var1 = [1e-4, 1e-5, 1e-6];
+% var2 = [1e-4, 1e-5, 1e-6];
 
-length1 = length(varUpper);
-length2 = length(varLower);
+% var1 = {'1e-2', '1e-3', '1e-4'}; % regularizer
+% var2 = {'[1, 0]', '[0.5, 0]', '[0.5]'}; % actorLearningRange
+
+var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+
+%% further, specify parameters for plotting
+
+plotSavePath = './hiddenLayerRegulActorLRComparison';
+
+numberFormatVar1 = '%1.0e';
+numberFormatVar2 = '%1.0e';
+
+numberFormatVar1 = '[%1.2f - %1.2f]';
+numberFormatVar2 = '[%1.2f - %1.2f]';
+
+% numberFormatVar1 = '[%1.0e - %1.0e]';
+% numberFormatVar2 = '[%1.0e - %1.0e]';
+
+% labelVar1 = 'variance\nstart value';
+% labelVar2 = 'variance end value';
+
+labelVar1 = 'critic learning range';
+labelVar2 = 'actor learning range';
+
+% labelVar1 = 'Actor weight regularizer';
+% labelVar2 = 'Actor LR [start, end]';
+
+length1 = length(var1);
+length2 = length(var2);
 
 results = zeros(length1, length2, 3); % results are the three measurements rmse, median, and iqr
 
 iter = 1;
 for f = 1 : nFiles
-    model = load(files{f});
+    % model = load(files{f});
+    model = load(sprintf('%s/%s/%s/model.mat', parentFolder, files(f).name, subFolder));
     model = model.model;
     testInterval = model.interval * 2;
 
-    % find indizes
-    % ind = find(varUpper == model.rlModel.CActor.varianceRange(1));
-    % jnd = find(varLower == model.rlModel.CActor.varianceRange(2));
+    %% finding indizes: also needs to be updated everytime
+    % ind = find(var1 == model.rlModel.CActor.varianceRange(1));
+    % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
 
-    % results(ind, jnd, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
-    % results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval));
-    % results(ind, jnd, 3) = median(model.testResult3(:, testInterval));
+    ind = find(ismember(var1, model.rlModel.actorLearningRange, 'rows')); % note: different order than expected
+    jnd = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
 
-    results(ceil(f / 3) , iter, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
-    results(ceil(f / 3) , iter, 2) = iqr(model.testResult3(:, testInterval));
-    results(ceil(f / 3) , iter, 3) = median(model.testResult3(:, testInterval));
+    results(ind, jnd, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
+    results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval)) * 4;
+    results(ind, jnd, 3) = median(model.testResult3(:, testInterval));
+
+%     results(ceil(f / 3) , iter, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
+%     results(ceil(f / 3) , iter, 2) = iqr(model.testResult3(:, testInterval));
+%     results(ceil(f / 3) , iter, 3) = median(model.testResult3(:, testInterval));
 
     iter = iter + 1;
     if iter > 3
@@ -60,22 +95,25 @@ for f = 1 : nFiles
     end
 end
 
-% results(: ,:, 1) = results(:, :, 1)';
-% results(: ,:, 2) = results(:, :, 2)';
-% results(: ,:, 3) = results(:, :, 3)';
+results(: ,:, 1) = results(:, :, 1)';
+results(: ,:, 2) = results(:, :, 2)';
+results(: ,:, 3) = results(:, :, 3)';
 
 %% plotting section
-plotSavePath = './hiddenLayerRegulActorLRComparison';
+% var1descr = [];
+% var2descr = '';
 
-numberFormatVar1 = '%1.0e';
-numberFormatVar2 = '%1.0e';
-
-% labelVar1 = 'variance\nstart value';
-% labelVar2 = 'variance end value';
-
-labelVar1 = 'Actor weight regularizer';
-labelVar2 = 'Actor LR [start, end]';
-
+% [~, nEntries] = size(var1);
+% for ind1 = 1 : length1
+% 	var1descr(ind1) = '[';
+% 	for ind2 = 1 : nEntries
+% 		var1descr(ind1) = strcat(var1descr(ind), var1(ind1, ind2))
+% 		if ind2 < nEntries
+% 			var1descr(ind1) = strcat(var1descr(ind1), ',');
+% 		end
+% 	end
+% 	var1descr(ind1) = strcat(var1descr(ind1), ']');
+% end
 figure;
 title('Parameter Comparison');
 
@@ -96,12 +134,17 @@ txt = strtrim(cellstr(txt));
 [x, y] = meshgrid(1 : max(length1, length2));
 hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
-% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(varUpper(:)), numberFormatVar1), ...
-%          'YTick', 1:length2, 'YTickLabel', num2str(varLower(:), numberFormatVar2), ...
+% one dim. case
+% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(var1(:)), numberFormatVar1), ...
+%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:), numberFormatVar2), ...
 %          'TickLength', [0, 0]);
-set(gca, 'XTick', 1:length1, 'XTickLabel', varUpper, ...
-         'YTick', 1:length2, 'YTickLabel', varLower, ...
+% two dim case
+set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+         'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
          'TickLength', [0, 0]);
+% set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
+%          'YTick', 1:length2, 'YTickLabel', var2, ...
+%          'TickLength', [0, 0]);
 
 title('RMSE');
 xlabel(sprintf(labelVar2));
@@ -123,12 +166,17 @@ txt = strtrim(cellstr(txt));
 [x, y] = meshgrid(1 : max(length1, length2));
 hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
-% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(varUpper(:)), numberFormatVar1), ...
-%          'YTick', 1:length2, 'YTickLabel', num2str(varLower(:), numberFormatVar2), ...
+% one dim. case
+% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(var1(:)), numberFormatVar1), ...
+%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:), numberFormatVar2), ...
 %          'TickLength', [0, 0]);
-set(gca, 'XTick', 1:length1, 'XTickLabel', varUpper, ...
-         'YTick', 1:length2, 'YTickLabel', varLower, ...
+% two dim case
+set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+         'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
          'TickLength', [0, 0]);
+% set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
+%          'YTick', 1:length2, 'YTickLabel', var2, ...
+%          'TickLength', [0, 0]);
 
 title('IQR*4');
 xlabel(sprintf(labelVar2));
@@ -150,12 +198,17 @@ txt = strtrim(cellstr(txt));
 [x, y] = meshgrid(1 : max(length1, length2));
 hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
-% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(varUpper(:)), numberFormatVar1), ...
-%          'YTick', 1:length2, 'YTickLabel', num2str(varLower(:), numberFormatVar2), ...
+% one dim. case
+% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(var1(:)), numberFormatVar1), ...
+%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:), numberFormatVar2), ...
 %          'TickLength', [0, 0]);
-set(gca, 'XTick', 1:length1, 'XTickLabel', varUpper, ...
-         'YTick', 1:length2, 'YTickLabel', varLower, ...
+% two dim case
+set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+         'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
          'TickLength', [0, 0]);
+% set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
+%          'YTick', 1:length2, 'YTickLabel', var2, ...
+%          'TickLength', [0, 0]);
 
 title('Median');
 xlabel(sprintf(labelVar2));
@@ -169,4 +222,3 @@ colorbar();
 % saveas(gca, sprintf('%s_median.png', plotSavePath));
 
 saveas(gca, sprintf('%s.png', plotSavePath));
-
