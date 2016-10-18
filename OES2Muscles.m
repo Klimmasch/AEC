@@ -5,7 +5,7 @@
 %                            whereas 'identifier' has to appear in configVar.m
 % @param fileDescription     description of approach used as file name
 %%%
-function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
+function OES2Muscles(trainTime, randomizationSeed, inputParams, folderName, fileDescription)
     rng(randomizationSeed);
 
     % useLearnedFile(1):    0 = don't do it
@@ -130,8 +130,14 @@ function OES2Muscles(trainTime, randomizationSeed, inputParams, fileDescription)
                                 fileDescription);
         end
 
-        % folder = '../results/';                         % local destination
-        folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
+        if ~isempty(folderName)
+            % folder = sprintf('../results/%s/', folderName);                                               % local destination
+            folder = sprintf('/home/aecgroup/aecdata/Results/%s/', folderName);   % group folder destination
+        else
+            % folder = '../results/';                         % local destination
+            folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
+        end
+
         mkdir(folder, modelName);
         model.savePath = strcat(folder, modelName);
 
