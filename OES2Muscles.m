@@ -200,6 +200,10 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
     % Image patches cell array (input to model)
     currentView = cell(1, length(model.scModel));
 
+    if clusterCall
+        sprintf('Starting the simulation now ...')
+    end
+
     %%% Saturation function that keeps motor commands in [0, 1]
     %   corresponding to the muscelActivity/metabolicCost tables
     function cmd = checkCmd(cmd)

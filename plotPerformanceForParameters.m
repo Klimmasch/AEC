@@ -6,8 +6,9 @@
 function plotPerformanceForParameters()
 	parentFolder = '/home/aecgroup/aecdata/Results';	% folder with all subfolders containing the experiments
 	commonName = '1_cluster_CriticLR';					% a string (or part of it) all relevant folders share
+    commonName = 'cluster_varDec';
 	files = dir(sprintf('%s/*%s*', parentFolder, commonName));
-	subFolder = 'modelAt500000';
+	subFolder = 'modelAt2000000';
     % files = { ...
     %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:35:13_2000000_1_cluster_varDec1e4-1e4/modelAt2000000/model.mat', ...
     %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:40:58_2000000_1_cluster_varDec1e4-1e5/modelAt2000000/model.mat', ...
@@ -31,33 +32,34 @@ nFiles = length(files);
 %% here, specify the parameter ranges that should be used
 %	these may simply be copied from parOES.m and putting ';'' after every set of params 
 
-% var1 = [1e-4, 1e-5, 1e-6];
-% var2 = [1e-4, 1e-5, 1e-6];
+var1 = [1e-4, 1e-5, 1e-6];
+var2 = [1e-4, 1e-5, 1e-6];
 
 % var1 = {'1e-2', '1e-3', '1e-4'}; % regularizer
 % var2 = {'[1, 0]', '[0.5, 0]', '[0.5]'}; % actorLearningRange
 
-var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+% var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+% var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
 
 %% further, specify parameters for plotting
 
-plotSavePath = './hiddenLayerRegulActorLRComparison';
+% plotSavePath = './hiddenLayerRegulActorLRComparison';
+plotSavePath = './actorVardec_range_exploration.png';
 
 numberFormatVar1 = '%1.0e';
 numberFormatVar2 = '%1.0e';
 
-numberFormatVar1 = '[%1.2f - %1.2f]';
-numberFormatVar2 = '[%1.2f - %1.2f]';
+% numberFormatVar1 = '[%1.2f - %1.2f]';
+% numberFormatVar2 = '[%1.2f - %1.2f]';
 
 % numberFormatVar1 = '[%1.0e - %1.0e]';
 % numberFormatVar2 = '[%1.0e - %1.0e]';
 
-% labelVar1 = 'variance\nstart value';
-% labelVar2 = 'variance end value';
+labelVar1 = 'variance\nstart value';
+labelVar2 = 'variance end value';
 
-labelVar1 = 'critic learning range';
-labelVar2 = 'actor learning range';
+% labelVar1 = 'critic learning range';
+% labelVar2 = 'actor learning range';
 
 % labelVar1 = 'Actor weight regularizer';
 % labelVar2 = 'Actor LR [start, end]';
@@ -75,11 +77,11 @@ for f = 1 : nFiles
     testInterval = model.interval * 2;
 
     %% finding indizes: also needs to be updated everytime
-    % ind = find(var1 == model.rlModel.CActor.varianceRange(1));
-    % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
+    ind = find(var1 == model.rlModel.CActor.varianceRange(1));
+    jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
 
-    ind = find(ismember(var1, model.rlModel.actorLearningRange, 'rows')); % note: different order than expected
-    jnd = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
+    % ind = find(ismember(var1, model.rlModel.actorLearningRange, 'rows')); % note: different order than expected
+    % jnd = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
 
     results(ind, jnd, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
     results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval)) * 4;
@@ -95,9 +97,9 @@ for f = 1 : nFiles
     end
 end
 
-results(: ,:, 1) = results(:, :, 1)';
-results(: ,:, 2) = results(:, :, 2)';
-results(: ,:, 3) = results(:, :, 3)';
+results(: ,:, 1) = fliplr(results(:, :, 1));
+results(: ,:, 2) = fliplr(results(:, :, 2));
+results(: ,:, 3) = fliplr(results(:, :, 3));
 
 %% plotting section
 % var1descr = [];
@@ -135,13 +137,13 @@ txt = strtrim(cellstr(txt));
 hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
 % one dim. case
-% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(var1(:)), numberFormatVar1), ...
-%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:), numberFormatVar2), ...
-%          'TickLength', [0, 0]);
-% two dim case
-set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
-         'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flip(var2(:)), numberFormatVar1), ...
+         'YTick', 1:length2, 'YTickLabel', num2str(var1(:), numberFormatVar2), ...
          'TickLength', [0, 0]);
+% two dim case
+% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+%          'TickLength', [0, 0]);
 % set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
 %          'YTick', 1:length2, 'YTickLabel', var2, ...
 %          'TickLength', [0, 0]);
@@ -167,13 +169,13 @@ txt = strtrim(cellstr(txt));
 hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
 % one dim. case
-% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(var1(:)), numberFormatVar1), ...
-%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:), numberFormatVar2), ...
-%          'TickLength', [0, 0]);
-% two dim case
-set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
-         'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flip(var2(:)), numberFormatVar1), ...
+         'YTick', 1:length2, 'YTickLabel', num2str(var1(:), numberFormatVar2), ...
          'TickLength', [0, 0]);
+% two dim case
+% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+%          'TickLength', [0, 0]);
 % set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
 %          'YTick', 1:length2, 'YTickLabel', var2, ...
 %          'TickLength', [0, 0]);
@@ -199,13 +201,13 @@ txt = strtrim(cellstr(txt));
 hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
 % one dim. case
-% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flipud(var1(:)), numberFormatVar1), ...
-%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:), numberFormatVar2), ...
-%          'TickLength', [0, 0]);
-% two dim case
-set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
-         'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flip(var2(:)), numberFormatVar1), ...
+         'YTick', 1:length2, 'YTickLabel', num2str(var1(:), numberFormatVar2), ...
          'TickLength', [0, 0]);
+% two dim case
+% set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+%          'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+%          'TickLength', [0, 0]);
 % set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
 %          'YTick', 1:length2, 'YTickLabel', var2, ...
 %          'TickLength', [0, 0]);

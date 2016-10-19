@@ -23,26 +23,26 @@
 % var1 = {10, 20, 50, 100};
 % var2 = {0.75};
 
-varNames = {'regularizer', 'actorLRRange'};
-var1 = {1e-2, 1e-3, 1e-4};
-var2 = {[0.5], [0.5, 0], [1, 0]};
+% varNames = {'regularizer', 'actorLRRange'};
+% var1 = {1e-2, 1e-3, 1e-4};
+% var2 = {[0.5], [0.5, 0], [1, 0]};
 
-varDescr = {'regul', 'actorLR'};
-var1Descr = {'1e-2', '5e-2', '1e-3', '5e-3', '1e-4'};
-var2Descr = {'0.5', '0.5To0', '1To0'};
+% varDescr = {'regul', 'actorLR'};
+% var1Descr = {'1e-2', '5e-2', '1e-3', '5e-3', '1e-4'};
+% var2Descr = {'0.5', '0.5To0', '1To0'};
 
-% varNames = {'gamma', 'interval'};
-% var1 = {0.1, 0.3, 0.9};
-% var2 = {10, 50, 100};
+varNames = {'gamma', 'interval'};
+var1 = {0.1, 0.3, 0.9};
+var2 = {10, 50, 100};
 
 % varNames = {'criticLRRange', 'actorLRRange'};
 % var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
 % var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
 
 %% descriptive parameter names used in folder name
-% varDescr = {'cDiscout', 'interval'};
-% var1Descr = {'01', '03', '09'};
-% var2Descr = {'10', '50', '100'};
+varDescr = {'cDiscout', 'interval'};
+var1Descr = {'01', '03', '09'};
+var2Descr = {'10', '50', '100'};
 
 % varDescr = {'CriticLR', 'ActorLR'};
 % var1Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
@@ -53,7 +53,8 @@ var2Descr = {'0.5', '0.5To0', '1To0'};
 
 nIters = 2000000;               % number of iterations
 rSeed = 1;                      % random seed
-folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
+% folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
+folderName = 'Discount Factor vs Interval' % no ';' intended.
 %TODO enable definition of other parameters that are not changed.
 % standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
 

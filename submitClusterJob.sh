@@ -11,6 +11,6 @@
 
 # --ntasks=64 number of tasks to run
 # --test-only
-srun --partition=sleuths --cpus-per-task=8 --mem-per-cpu=2560 --gres gpu -LXserver \
+srun --partition=sleuths --cpus-per-task=9 --mem-per-cpu=2560 --gres gpu -LXserver \
 --job-name=myjob \
 matlab -nodisplay -r "parOES; quit"
