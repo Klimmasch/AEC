@@ -26,6 +26,7 @@ classdef Model < handle
         trainedUntil;       % how long did the training actually proceed?
         simulatedTime;      % how long did the model take to be learned (min)
         testAt;             % at which iteration steps online testing is performed
+        inputParams;        % non-default parameter vector used to generate model with configVar
 
         sparseCodingType;   % type of sparse coding
 
@@ -118,6 +119,7 @@ classdef Model < handle
                 if (~(isempty(obj.testAt)) && (obj.testAt(1) ~= 0))
                     obj.testAt = horzcat(0, obj.testAt);
                 end
+                obj.inputParams = {};
                 obj.sparseCodingType = PARAM{1}{4};
                 obj.focalLength = PARAM{1}{5};
                 obj.baseline = PARAM{1}{6};

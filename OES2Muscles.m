@@ -74,14 +74,39 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
     %               1 = do it
-    closeFigures = uint8(0); % maybe necessary to use 0 when running headless
+    closeFigures = uint8(1); % maybe necessary to use 0 when running headless
+
+    % check whether given cluster job can/shall be continued
+    if (clusterCall == 1)
+        if (isempty(folderName))
+            parentFolder = '/home/aecgroup/aecdata/Results';
+        else
+            parentFolder = strcat('/home/aecgroup/aecdata/Results/%s', folderName);
+        end
+
+        fullFolderName = dir(sprintf('%s/*%s*', parentFolder, fileDescription));
+        % if (~isempty(fullFolderName.name))
+        if (~isempty(fullFolderName))
+            learnedFile = strcat(parentFolder, '/', fullFolderName.name, '/model.mat');
+
+            if (exist(learnedFile, 'file') == 2) % indicates being a file (7 == directory)
+                useLearnedFile = [1, 1];
+            else
+                sprintf('Warning: %s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullFolderName.name)
+            end
+        end
+    end
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
         if (isempty(learnedFile))
-            error('could not open the learned file! %s', learnedFile);
+            error('learnedFile is an empty string.')
         else
-            model = load(learnedFile, 'model');
+            try
+                model = load(learnedFile, 'model');
+            catch
+                error('Could not open the learned file %s. File seems to be corrupted.', learnedFile);
+            end
             model = model.model;
             model.trainTime = trainTime;
         end
@@ -113,6 +138,11 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
     % File management: either complete training with existing folder etc., or create a new one
     if ((useLearnedFile(1) == 1) && (useLearnedFile(2) == 1))
         timeToTrain = model.trainTime - model.trainedUntil;
+        % cancel experiment if already finished
+        if (timeToTrain <= 0)
+            sprintf('Warning: timeToTrain = %d, training procedure aborted.', timeToTrain)
+            return;
+        end
     else
         if (sparseCodingType > 0)
             modelName = sprintf('model_%s_%i_%s_%i_%s', ...
@@ -129,12 +159,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
                                 fileDescription);
         end
 
-        if ~isempty(folderName)
-            % folder = sprintf('../results/%s/', folderName);                                               % local destination
-            folder = sprintf('/home/aecgroup/aecdata/Results/%s/', folderName);   % group folder destination
+        if (~isempty(folderName))
+            % folder = sprintf('../results/%s/', folderName);                       % local destination
+            folder = sprintf('/home/aecgroup/aecdata/Results/%s/', folderName);     % group folder destination
         else
-            % folder = '../results/';                         % local destination
-            folder = '/home/aecgroup/aecdata/Results/';   % group folder destination
+            % folder = '../results/';                       % local destination
+            folder = '/home/aecgroup/aecdata/Results/';     % group folder destination
         end
 
         mkdir(folder, modelName);
@@ -155,6 +185,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
         copyfile('results.ods', model.savePath);
 
         timeToTrain = model.trainTime;
+        model.inputParams = inputParams;
     end
 
     % additional notes/information to this model/approach
