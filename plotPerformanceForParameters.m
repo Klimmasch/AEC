@@ -7,7 +7,7 @@ function plotPerformanceForParameters()
 	parentFolder = '/home/aecgroup/aecdata/Results';	% folder with all subfolders containing the experiments
 	commonName = '1_cluster_CriticLR';					% a string (or part of it) all relevant folders share
 	files = dir(sprintf('%s/*%s*', parentFolder, commonName));
-	subFolder = 'modelAt500000';
+	subFolder = 'modelAt1500000';
     % files = { ...
     %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:35:13_2000000_1_cluster_varDec1e4-1e4/modelAt2000000/model.mat', ...
     %     % '/home/aecgroup/aecdata/Results/model_11-Oct-2016_15:40:58_2000000_1_cluster_varDec1e4-1e5/modelAt2000000/model.mat', ...
@@ -26,10 +26,11 @@ function plotPerformanceForParameters()
     %     '/home/aecgroup/aecdata/Results/16-10-15_2000000iter_1_regul_1e-4_actorLR_0.5/modelAt2000000/model.mat', ...
     % };
 
+plotSavePath = './CriticLRActorLR';
 nFiles = length(files);
 
 %% here, specify the parameter ranges that should be used
-%	these may simply be copied from parOES.m and putting ';'' after every set of params 
+%	these may simply be copied from parOES.m and putting ';'' after every set of params
 
 % var1 = [1e-4, 1e-5, 1e-6];
 % var2 = [1e-4, 1e-5, 1e-6];
@@ -41,8 +42,6 @@ var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.
 var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
 
 %% further, specify parameters for plotting
-
-plotSavePath = './hiddenLayerRegulActorLRComparison';
 
 numberFormatVar1 = '%1.0e';
 numberFormatVar2 = '%1.0e';
