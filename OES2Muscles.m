@@ -81,7 +81,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
         if (isempty(folderName))
             parentFolder = '/home/aecgroup/aecdata/Results';
         else
-            parentFolder = strcat('/home/aecgroup/aecdata/Results/%s', folderName);
+            parentFolder = strcat('/home/aecgroup/aecdata/Results/', folderName);
         end
 
         fullFolderName = dir(sprintf('%s/*%s*', parentFolder, fileDescription));
