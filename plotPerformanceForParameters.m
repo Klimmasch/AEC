@@ -27,8 +27,8 @@ var1 = flipud(var1); % setting the offspring to lower left had corner
 %% further, specify parameters for plotting
 
 % plotSavePath = './hiddenLayerRegulActorLRComparison';
-% plotSavePath = './actorVardec_range_exploration.png';
-plotSavePath = './CriticLRActorLR.png';
+% plotSavePath = './actorVardec_range_exploration';
+plotSavePath = './CriticLRActorLR';
 
 % numberFormatVar1 = '%1.0e';
 % numberFormatVar2 = '%1.0e';

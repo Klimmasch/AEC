@@ -142,6 +142,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
         if (timeToTrain <= 0)
             sprintf('Warning: timeToTrain = %d, training procedure aborted.', timeToTrain)
             return;
+        else
+            sprintf('Training procedure will be continued for %d iterations.', timeToTrain)
         end
     else
         if (sparseCodingType > 0)

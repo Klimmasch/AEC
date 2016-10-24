@@ -54,7 +54,7 @@ var2Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]'
 
 nIters = 2000000;               % number of iterations
 rSeed = 1;                      % random seed
-folderName = '';
+folderName = 'CriticLR vs ActorLR';
 % folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
 % folderName = 'Discount Factor vs Interval' % no ';' intended.
 %TODO enable definition of other parameters that are not changed.
