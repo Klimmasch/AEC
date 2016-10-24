@@ -26,7 +26,7 @@ function parOES(nWorkers)
 
 % varDescr = {'cDiscout', 'interval'};
 % numberFormatVar1 = '%1.1f';
-% numberFormatVar2 = '2.0f';
+% numberFormatVar2 = '%d';
 
 varNames = {'regularizer', 'actorLRRange'};
 var1 = {5e-4, 5e-5, 1e-5, 1e-6};    % {1e-2, 1e-3, 1e-4};
@@ -50,8 +50,8 @@ numberFormatVar2 = '[%1.2f-%1.2f]';
 nIters = 2000000;               % number of iterations
 rSeed = 1;                      % random seed
 % folderName = '';
-% folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
-folderName = 'Discount vs Interval' % no ';' intended.
+folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
+% folderName = 'Discount Factor vs Interval' % no ';' intended.
 %TODO enable definition of other parameters that are not changed.
 % standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
 
@@ -109,7 +109,8 @@ parfor ind = 1 : nParams
     %             {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
     %             sprintf('cluster_%s_%4.2f_%s_%.0f', varDescr{1}, paramValues{ind, 1}, varDescr{2}, paramValues{ind, 2}));
 
+    sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
     OES2Muscles(nIters, rSeed, 1, ...
                 {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                folderName, sprintf('cluster_%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+                folderName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
 end

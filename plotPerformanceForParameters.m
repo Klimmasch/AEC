@@ -3,9 +3,12 @@
 %% and plots their performance according
 %% to a specified set of two paramters.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotPerformanceForParameters()
-parentFolder = '/home/aecgroup/aecdata/Results';    % folder with all subfolders containing the experiments
-commonName = '1_cluster_CriticLR';                  % a string (or part of it) all relevant folders share
+% function plotPerformanceForParameters()
+% parentFolder = '/home/aecgroup/aecdata/Results/';    % folder with all subfolders containing the experiments
+parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate/'; 
+
+% commonName = '1_cluster_CriticLR';                  % a string (or part of it) all relevant folders share
+commonName = 'cluster';
 files = dir(sprintf('%s/*%s*', parentFolder, commonName));
 subFolder = 'modelAt2000000';
 nFiles = length(files);
@@ -13,28 +16,37 @@ nFiles = length(files);
 %% here, specify the parameter ranges that should be used
 %  these may simply be copied from parOES.m and putting ';'' after every set of params
 
+%% regularizer vs actor leaning range
+
+labelVar1 = 'Actor weight regularizer';
+labelVar2 = 'Actor LR [start, end]';
+
+var1 = [1e-2; 1e-3; 1e-4]; % regularizer
+var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
+
+numberFormatVar1 = '%1.0e';
+numberFormatVar2 = '[%1.2f - %1.2f]';
+
+plotSavePath = './hiddenLayerRegulActorLRComparison';
+
 % var1 = [1e-4, 1e-5, 1e-6];
 % var2 = [1e-4, 1e-5, 1e-6];
 
-% var1 = {'1e-2', '1e-3', '1e-4'}; % regularizer
-% var2 = {'[1, 0]', '[0.5, 0]', '[0.5]'}; % actorLearningRange
+% var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+% var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
 
-var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-
-var1 = flipud(var1); % setting the offspring to lower left had corner
+% var1 = flipud(var1); % setting the offspring to lower left had corner
 
 %% further, specify parameters for plotting
 
-% plotSavePath = './hiddenLayerRegulActorLRComparison';
 % plotSavePath = './actorVardec_range_exploration.png';
-plotSavePath = './CriticLRActorLR.png';
+% plotSavePath = './CriticLRActorLR.png';
 
 % numberFormatVar1 = '%1.0e';
 % numberFormatVar2 = '%1.0e';
 
-numberFormatVar1 = '[%1.2f - %1.2f]';
-numberFormatVar2 = '[%1.2f - %1.2f]';
+% numberFormatVar1 = '[%1.2f - %1.2f]';
+% numberFormatVar2 = '[%1.2f - %1.2f]';
 
 % numberFormatVar1 = '[%1.0e - %1.0e]';
 % numberFormatVar2 = '[%1.0e - %1.0e]';
@@ -42,18 +54,17 @@ numberFormatVar2 = '[%1.2f - %1.2f]';
 % labelVar1 = 'variance\nstart value';
 % labelVar2 = 'variance end value';
 
-labelVar1 = 'actor learning range';
-labelVar2 = 'critic learning range';
+% labelVar1 = 'actor learning range';
+% labelVar2 = 'critic learning range';
 
-% labelVar1 = 'Actor weight regularizer';
-% labelVar2 = 'Actor LR [start, end]';
+
 
 length1 = length(var1);
 length2 = length(var2);
 
 results = zeros(length1, length2, 3); % results are the three measurements rmse, median, and iqr
 
-iter = 1;
+% iter = 1;
 for f = 1 : nFiles
     try
         % model = load(files{f});
@@ -61,26 +72,38 @@ for f = 1 : nFiles
         model = model.model;
         testInterval = model.interval * 2;
 
+        % hack for some older simulations:
+        if length(model.rlModel.actorLearningRange) == 1
+            value = model.rlModel.actorLearningRange;
+            model.rlModel.actorLearningRange = [value, value];
+        end
+
+        sprintf(model.savePath)
+        sprintf('%d', model.rlModel.CActor.regularizer)
+
         %% finding indizes: also needs to be updated everytime
-    %     ind = find(var1 == model.rlModel.CActor.varianceRange(1));
-    %     jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
+        % ind = find(var1 == model.rlModel.CActor.varianceRange(1));
+        % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
+
+        ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
+        jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
         % note: different order than expected
-        ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
-        jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+        % ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
+        % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
         results(ind, jnd, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
         results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval)) * 4;
         results(ind, jnd, 3) = median(model.testResult3(:, testInterval));
 
-    %     results(ceil(f / 3) , iter, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
-    %     results(ceil(f / 3) , iter, 2) = iqr(model.testResult3(:, testInterval));
-    %     results(ceil(f / 3) , iter, 3) = median(model.testResult3(:, testInterval));
+        % results(ceil(f / 3) , iter, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
+        % results(ceil(f / 3) , iter, 2) = iqr(model.testResult3(:, testInterval));
+        % results(ceil(f / 3) , iter, 3) = median(model.testResult3(:, testInterval));
 
-        iter = iter + 1;
-        if iter > 3
-            iter = 1;
-        end
+        % iter = iter + 1;
+        % if iter > 3
+        %     iter = 1;
+        % end
     catch
        % catch case when (sub-)experiment started, but has no test results yet
        continue;
