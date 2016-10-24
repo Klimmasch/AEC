@@ -12,8 +12,7 @@ nFiles = length(files);
 
 % savety check
 if ((nTestFiles == 1) || (nTestFiles >= nFiles))
-    sprintf('Error: invalid value for nTestFiles!\nnTestFiles elem. [0, 2, #allStimuli - 1] and [0, 1[')
-    return;
+    error('invalid value for nTestFiles!\nnTestFiles elem. [0, 2, #allStimuli - 1] and [0, 1[');
 end
 
 % special case: use all stimuli in a single set

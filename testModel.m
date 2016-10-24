@@ -321,8 +321,8 @@ function testModel(model, randomizationSeed, objRange, vergRange, repeat, randSt
             for verg = 1 : size(vergRange, 2)
                 % when angle can't be reached by muscles
                 if (angleDes + vergRange(verg) < angleMin) && (model.rlModel.continuous == 1) % when angle can't be reached by muscles
-                    sprintf('Warning: vergrange exceeds possible muscle commands, angleDes: %d, vergenceError: %d, angleMin: %d', angleDes, vergRange(verg), angleMin)
-                    continue
+                    warning('vergrange exceeds possible muscle commands, angleDes: %d, vergenceError: %d, angleMin: %d', angleDes, vergRange(verg), angleMin);
+                    continue;
                 end
 
                 %generate two new pictures

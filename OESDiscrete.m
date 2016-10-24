@@ -66,14 +66,12 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
 
     % check if main script and model are compatible
     if (model.rlModel.continuous == 1)
-        sprintf('Error: This training/main script is not compatible with continuous action space models!\nPlease execute OES1Muscle.m or OES2Muscles.m instead.')
-        return;
+        error('This training/main script is not compatible with continuous action space models!\nPlease execute OES1Muscle.m or OES2Muscles.m instead.');
     end
 
     % safety check for plotting functions
     if (trainTime <= model.interval)
-        sprintf('Error: trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
-        return;
+        error('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval);
     end
 
     % File management: either complete training with existing folder etc.,
@@ -307,7 +305,7 @@ function OESDiscrete(trainTime, randomizationSeed, fileDescription)
     %%% Testing procedure
     if (testIt == 1)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, folderName)
-        sprintf('Warning: Testing procedure is currently not supported.')
+        warning('Testing procedure is currently not supported.');
     end
 
     if (closeFigures == 1)

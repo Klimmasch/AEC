@@ -92,7 +92,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
             if (exist(learnedFile, 'file') == 2) % indicates being a file (7 == directory)
                 useLearnedFile = [1, 1];
             else
-                sprintf('Warning: %s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullFolderName.name)
+                warning('%s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullFolderName.name);
             end
         end
     end
@@ -140,7 +140,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
         timeToTrain = model.trainTime - model.trainedUntil;
         % cancel experiment if already finished
         if (timeToTrain <= 0)
-            sprintf('Warning: timeToTrain = %d, training procedure aborted.', timeToTrain)
+            warning('timeToTrain = %d, training procedure aborted.', timeToTrain);
             return;
         else
             sprintf('Training procedure will be continued for %d iterations.', timeToTrain)
@@ -223,11 +223,11 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
         end
         tmpTexInd = tmpTexInd + nTextures;
     end
-    sprintf('%d textures were added to the buffer from the training and testing files', nTextures)
+    sprintf('%d textures were added to the buffer from the training and testing sets', nTextures)
 
     if (nStimTest > nTestTextures)
         nStimTest = nTestTextures;
-        sprintf('Warning: %d images were requested as training stimuli, but the renderer only holds %d.', nStimTest, nTestTextures)
+        warning('%d images were requested as training stimuli, but the renderer only holds %d.', nStimTest, nTestTextures);
     end
 
     % Image patches cell array (input to model)

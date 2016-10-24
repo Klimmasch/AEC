@@ -66,17 +66,14 @@ function OES1Muscle(trainTime, randomizationSeed, fileDescription)
 
     % check if main script and model are compatible
     if (model.rlModel.continuous == 0)
-        sprintf('Error: This training/main script is not compatible with discrete action space models!\nPlease execute OESDiscrete.m instead.')
-        return;
+        error('This training/main script is not compatible with discrete action space models!\nPlease execute OESDiscrete.m instead.');
     elseif (model.rlModel.CActor.output_dim > 1)
-        sprintf('Error: This training/main script is not compatible with %d eye muscle models!\nPlease execute OES2Muscles.m instead.', model.rlModel.CActor.output_dim)
-        return;
+        error('This training/main script is not compatible with %d eye muscle models!\nPlease execute OES2Muscles.m instead.', model.rlModel.CActor.output_dim);
     end
 
     % safety check for plotting functions
     if (trainTime <= model.interval)
-        sprintf('Error: trainTime[%d] must be > model.interval[%d]', trainTime, model.interval)
-        return;
+        error('trainTime[%d] must be > model.interval[%d]', trainTime, model.interval);
     end
 
     % File management: either complete training with existing folder etc.,

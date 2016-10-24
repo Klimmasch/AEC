@@ -411,7 +411,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         if (nStim == 40)
             trajPlotHandle = model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(nStim), simulator, imageSavePath, folderName(9 : end), plotIt);
         else
-            sprintf('Warning: nStim = %d < 40. Level 4 will be skipped.', nStim)
+            warning('nStim = %d < 40. Level 4 will be skipped.', nStim);
         end
 
         if (measureTime == true)
@@ -1211,7 +1211,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                        mean(abs(model.testResult7(:, testInterval) .^ 2)), ...
                        std(abs(model.testResult7(:, testInterval) .^ 2))];
     catch
-        sprintf('Warning: Current model has no \"testHist\" field. Performance history will not be stored.')
+        warning('Current model has no \"testHist\" field. Performance history will not be stored.');
     end
     sprintf('Testing procedure at iter = %s finished. Graph generation finished.', folderName(9 : end))
 end

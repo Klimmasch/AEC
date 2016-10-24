@@ -732,7 +732,7 @@ classdef Model < handle
                     saveas(gcf, plotpath, 'png');
                 catch
                     % if windowsize > values in vergerr
-                    sprintf('Warning: windowSize >= vergerr. vergErrRMSE graph will not be generated.')
+                    warning('windowSize >= vergerr. vergErrRMSE graph will not be generated.');
                 end
             end
 
@@ -764,7 +764,7 @@ classdef Model < handle
                     saveas(gcf, plotpath, 'png');
                 catch
                     % if windowsize > values in recerr_hist
-                    sprintf('Warning: windowSize >= recerr_hist. recErr graph will not be generated.')
+                    warning('windowSize >= recerr_hist. recErr graph will not be generated.');
                 end
             end
 
@@ -1280,7 +1280,7 @@ classdef Model < handle
                             % check if testing procedure needs to be repeated
                             % generate test history, assumes testInterval = 20
                             if (isempty(tmpModel.testResult7))
-                                sprintf('Warning: testResult7 is empty in %s, please execute testModelContiuous again.', subFolders(k).name)
+                                warning('testResult7 is empty in %s, please execute testModelContiuous again.', subFolders(k).name);
                                 model.testHist(k - 1, :) = [sqrt(mean(tmpModel.testResult3(:, 20) .^ 2)), ...
                                                         mean(abs(tmpModel.testResult3(:, 20) .^ 2)), ...
                                                         std(abs(tmpModel.testResult3(:, 20) .^ 2)), ...

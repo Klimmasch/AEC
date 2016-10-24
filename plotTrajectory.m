@@ -74,8 +74,7 @@ function plotTrajectory(model, objDist, startVergErr, initMethod, numIters, stim
                     clear clone;
                 catch
                     % catch when new model property isn't present in Model class yet
-                    sprintf('Error: One or more new model properties (variables) are not present in Model.m class yet!')
-                    return;
+                    error('One or more new model properties (variables) are not present in Model.m class yet!');
                 end
             end
         elseif (initMethod == 1)

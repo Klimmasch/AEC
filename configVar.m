@@ -442,7 +442,7 @@ if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     % no variance decay
     varDec = 0;
 elseif (varianceRange(1) < varianceRange(2))
-    error('Error: It must hold varianceRange(1) >= varianceRange(2)');
+    error('It must hold varianceRange(1) >= varianceRange(2)');
 else
     % varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
     varDec = varianceRange(1) - varianceRange(2);
