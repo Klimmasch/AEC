@@ -49,10 +49,10 @@ numberFormatVar2 = '[%1.2f-%1.2f]';
 
 nIters = 2000000;               % number of iterations
 rSeed = 1;                      % random seed
-folderName = 'CriticLR vs ActorLR';
-% folderName = '';
-folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
-% folderName = 'Discount Factor vs Interval' % no ';' intended.
+experimentDirName = 'CriticLR vs ActorLR';
+% experimentDirName = '';
+experimentDirName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
+% experimentDirName = 'Discount Factor vs Interval' % no ';' intended.
 %TODO enable definition of other parameters that are not changed.
 % standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
 
@@ -113,5 +113,5 @@ parfor ind = 1 : nParams
     sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
     OES2Muscles(nIters, rSeed, 1, ...
                 {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                folderName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+                experimentDirName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
 end

@@ -677,8 +677,6 @@ classdef Model < handle
 
             %% Vergence error
             if (~isempty(find(level == 1)))
-                % windowSize = 125;
-                % windowSize = 1000;
                 if (this.trainTime < windowSize * this.interval)
                     windowSize = round(this.trainTime / this.interval / 5);
                 end
@@ -699,9 +697,6 @@ classdef Model < handle
                 saveas(gcf, plotpath, 'png');
 
                 %% Root Mean Squared Vergence Error
-                % windowSize = 125;
-                % windowSize = 250;
-                % windowSize = 1000;
                 if (this.trainTime < windowSize * this.interval)
                     windowSize = round(this.trainTime / this.interval / 5);
                 end
@@ -744,10 +739,6 @@ classdef Model < handle
                     grid on;
                     handleArray = zeros(1, length(this.scModel));
                     for i = 1 : length(this.scModel)
-                        % tmpError = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(ind, i));
-                        % handleArray(i) = plot((windowSize + 1) * this.interval : this.interval : size(this.recerr_hist, 1), ...
-                        %                       tmpError(windowSize + 1 : end), ...
-                        %                       'color', [rand, rand, rand], 'LineWidth', 1.3);
                         tmpError = filter(ones(1, windowSize) / windowSize, 1, this.recerr_hist(:, i));
                         handleArray(i) = plot((windowSize + 1) : size(this.recerr_hist, 1), ...
                                               tmpError(windowSize + 1 : end), ...
@@ -801,7 +792,6 @@ classdef Model < handle
             if (~isempty(find(level == 4)))
                 if (this.rlModel.continuous == 1)
                     ind2 = 1 : 25 : this.trainTime;
-                    % windowSize = 1000;
                     windowSize = ceil(this.trainTime * 0.005);
                     windowSize2 = ceil(this.trainTime * 0.01);
                     if (this.trainTime < windowSize * this.interval)
@@ -1076,7 +1066,6 @@ classdef Model < handle
             %% Weights
             if (~isempty(find(level == 5)))
                 if (this.rlModel.continuous == 1)
-                    % L1 norm
                     figure;
                     hold on;
                     grid on;
@@ -1096,7 +1085,6 @@ classdef Model < handle
                     plotpath = sprintf('%s/weightsDevelopment', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 else
-                    % L1 norm
                     figure;
                     hold on;
                     grid on;
@@ -1140,7 +1128,6 @@ classdef Model < handle
                     handle(1).FaceColor = [1, 0.25, 0];
                     handle(2).FaceColor = [1, 0.549, 0];
                     axis([windowSize, inf, -inf, 0]);
-                    % l.Location = 'southwest';
                     l.Location = 'best';
                     tmpstr = '\lambda = ';
                     title(strcat(sprintf('Reward composition (SMA)\n%s %6.4f, ~%4.1f%% Metabolic Costs',tmpstr, this.lambdaMet, (this.lambdaMet / 0.1622) * 100)));
@@ -1161,7 +1148,6 @@ classdef Model < handle
 
             %% Testing performance as a function of traintime
             if (~isempty(find(level == 7)))
-                % if (any(strcmp('testHist',fieldnames(this))) && size(this.testHist, 1) > 1)
                 if ((~(isempty(this.testAt))) ...
                     && (~(isempty(this.testHist))) ...
                     && (this.testHist(1, 1) == 1.1593) ...
@@ -1306,10 +1292,6 @@ classdef Model < handle
 
                         % try to plot again
                         model.allPlotSave(7);
-
-                        % clean up
-                        % delete(model);
-                        % clear model;
                     catch
                         error('One or more file operations failed. Check path strings and directory items.');
                     end
