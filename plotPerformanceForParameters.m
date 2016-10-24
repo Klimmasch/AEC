@@ -40,7 +40,9 @@ plotSavePath = './hiddenLayerRegulActorLRComparison';
 %% further, specify parameters for plotting
 
 % plotSavePath = './actorVardec_range_exploration.png';
-% plotSavePath = './CriticLRActorLR.png';
+% plotSavePath = './hiddenLayerRegulActorLRComparison';
+% plotSavePath = './actorVardec_range_exploration';
+plotSavePath = './CriticLRActorLR';
 
 % numberFormatVar1 = '%1.0e';
 % numberFormatVar2 = '%1.0e';

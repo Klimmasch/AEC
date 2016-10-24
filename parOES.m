@@ -49,6 +49,7 @@ numberFormatVar2 = '[%1.2f-%1.2f]';
 
 nIters = 2000000;               % number of iterations
 rSeed = 1;                      % random seed
+folderName = 'CriticLR vs ActorLR';
 % folderName = '';
 folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
 % folderName = 'Discount Factor vs Interval' % no ';' intended.
