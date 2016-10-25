@@ -85,6 +85,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         end
 
         fullDir = dir(sprintf('%s/*%s*', absoluteDir, experimentName));
+        if length(fullDir) > 1
+            fullDir = fullDir(1);   % in case there are more than one folder (different days, etc)
+        end
         if (~isempty(fullDir))
             learnedFile = strcat(absoluteDir, '/', fullDir.name, '/model.mat');
 
@@ -108,6 +111,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             end
             model = model.model;
             model.trainTime = trainTime;
+            model.savePath = strcat(absoluteDir, '/', fullDir.name);
         end
     else
         % old static version of config.m
@@ -140,7 +144,11 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % cancel experiment if already finished
         if (timeToTrain <= 0)
             warning('timeToTrain = %d, i.e. training finished, therefore training procedure aborted.', timeToTrain);
-            return;
+            if exist(sprintf('%s/modelAt%d/model.mat',model.savePath,model.trainedUntil), 'file') == 2
+                return;     % abort simulation if the last testinf phase is also done
+            else
+                sprintf('... but testing will be started for modelAt%d', model.trainedUntil)
+            end
         else
             sprintf('Training procedure will be continued for %d iterations.', timeToTrain)
         end
@@ -483,8 +491,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
     % Total simulation time
     model.simulatedTime = model.simulatedTime + elapsedTime / 60; % [min]
-    sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
-            elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
+    try
+        sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
+                elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
+    catch
+        warning('elapsedTime = %d, catched erroneous printout.', elapsedTime);
+    end
 
     % store simulated time
     save(strcat(model.savePath, '/model'), 'model');
@@ -495,8 +507,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t));
 
         % print the time again after the line output of the testing script
-        sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
-            elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
+        try
+            sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
+                elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
+        catch
+            warning('elapsedTime = %d, catched erroneous printout.', elapsedTime);
+        end
     end
 
     % plot results

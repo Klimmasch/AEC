@@ -28,21 +28,24 @@ function parOES(nWorkers)
 % numberFormatVar1 = '%1.1f';
 % numberFormatVar2 = '%d';
 
-varNames = {'regularizer', 'actorLRRange'};
-var1 = {5e-4, 5e-5, 1e-5, 1e-6};    % {1e-2, 1e-3, 1e-4};
-var2 = {[0.5, 0], [1, 0]};
+% varNames = {'regularizer', 'actorLRRange'};
+% var1 = {5e-4, 5e-5, 1e-5, 1e-6};    % {1e-2, 1e-3, 1e-4};
+% var2 = {[0.5, 0], [1, 0]};
 
-varDescr = {'regul', 'actorLR'};
-numberFormatVar1 = '%1.0e';
-numberFormatVar2 = '[%1.2f-%1.2f]';
-
-% varNames = {'criticLRRange', 'actorLRRange'};
-% var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
-% var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
-
-% varDescr = {'CriticLR', 'ActorLR'};
-% numberFormatVar1 = '[%1.2f-%1.2f]';
+% varDescr = {'regul', 'actorLR'};
+% numberFormatVar1 = '%1.0e';
 % numberFormatVar2 = '[%1.2f-%1.2f]';
+
+varNames = {'criticLRRange', 'actorLRRange'};
+var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
+var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
+
+var1Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+var2Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+
+varDescr = {'CriticLR', 'ActorLR'};
+numberFormatVar1 = '[%1.2f-%1.2f]';
+numberFormatVar2 = '[%1.2f-%1.2f]';
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -51,7 +54,7 @@ nIters = 2000000;               % number of iterations
 rSeed = 1;                      % random seed
 experimentDirName = 'CriticLR vs ActorLR';
 % experimentDirName = '';
-experimentDirName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
+% experimentDirName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
 % experimentDirName = 'Discount Factor vs Interval' % no ';' intended.
 %TODO enable definition of other parameters that are not changed.
 % standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
@@ -68,7 +71,8 @@ iter = 1;
 for i = 1 : length(var1)
     for j = 1 : length(var2)
         paramValues(iter, :) = {cell2mat(var1(i)), cell2mat(var2(j))};
-        paramStrings(iter, :) = {num2str(var1{i}, numberFormatVar1), num2str(var2{j}, numberFormatVar2)};
+        paramStrings(iter, :) = {cell2mat(var1Descr(i)), cell2mat(var2Descr(j))}; % temporary solution for not renaming all folders ...
+        % paramStrings(iter, :) = {num2str(var1{i}, numberFormatVar1), num2str(var2{j}, numberFormatVar2)};
         iter = iter + 1;
     end
 end
