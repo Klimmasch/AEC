@@ -56,7 +56,12 @@ for s = 1:numScales
         B = B/max(max(abs(B))) + 0.5;
         C = padarray(padarray(blockproc(B,[di,1],fun1)-1,[1 1],'post')+1,[2,2]);
         imshow(C);
-        title(num2str(model.trainTime*0.1*(j-1)));
+        % title(num2str(model.trainTime*0.1*(j-1)));
+        if s == 1
+            title('Coarse Scale')
+        elseif s == 2
+            title('Fine Scale')
+        end
         drawnow; pause(.01);
     end
 end
