@@ -4,10 +4,10 @@
 % @param clusterCall         whether this is a cluster job 0 (no) 1 (yes)
 % @param inputParams         a list composed of 'identifier' followed by value, e.g {'alpha', 1, 'beta', 2, ...}
 %                            whereas 'identifier' has to appear in configVar.m
-% @param fileDescription     description of approach used as file name
+% @param experimentName     description of approach used as file name
 %%%
 
-function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, folderName, fileDescription)
+function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, experimentDirName, experimentName)
 
     rng(randomizationSeed);
 
@@ -19,7 +19,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
     % If useLearnedFile = [1, 1] and you want to continue training, trainTime must be the overall desired train time,
     % i.e. trained at first 100k iterations with useLearnedFile = [0, 0], then decided to continue training for 100k more
     % iterations, then the overall train time for the model is 200k and you set useLearnedFile = [1, 1] and execute with
-    % OES2Muscles(200000, randomizationSeed, clusterCall, inputParams, fileDescription)
+    % OES2Muscles(200000, randomizationSeed, clusterCall, inputParams, experimentName)
     useLearnedFile = [0, 0];
     learnedFile = '';
     % useLearnedFile = [1, 1];
@@ -78,21 +78,23 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
 
     % check whether given cluster job can/shall be continued
     if (clusterCall == 1)
-        if (isempty(folderName))
-            parentFolder = '/home/aecgroup/aecdata/Results';
+        if (isempty(experimentDirName))
+            absoluteDir = '/home/aecgroup/aecdata/Results';
         else
-            parentFolder = strcat('/home/aecgroup/aecdata/Results/', folderName);
+            absoluteDir = strcat('/home/aecgroup/aecdata/Results/', experimentDirName);
         end
 
-        fullFolderName = dir(sprintf('%s/*%s*', parentFolder, fileDescription));
-        % if (~isempty(fullFolderName.name))
-        if (~isempty(fullFolderName))
-            learnedFile = strcat(parentFolder, '/', fullFolderName.name, '/model.mat');
+        fullDir = dir(sprintf('%s/*%s*', absoluteDir, experimentName));
+        if length(fullDir) > 1
+            fullDir = fullDir(1);   % in case there are more than one folder (different days, etc)
+        end
+        if (~isempty(fullDir))
+            learnedFile = strcat(absoluteDir, '/', fullDir.name, '/model.mat');
 
             if (exist(learnedFile, 'file') == 2) % indicates being a file (7 == directory)
                 useLearnedFile = [1, 1];
             else
-                sprintf('Warning: %s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullFolderName.name)
+                warning('%s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullFolderName.name);
             end
         end
     end
@@ -109,6 +111,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
             end
             model = model.model;
             model.trainTime = trainTime;
+            model.savePath = strcat(absoluteDir, '/', fullDir.name);
         end
     else
         % old static version of config.m
@@ -140,30 +143,34 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
         timeToTrain = model.trainTime - model.trainedUntil;
         % cancel experiment if already finished
         if (timeToTrain <= 0)
-            sprintf('Warning: timeToTrain = %d, training procedure aborted.', timeToTrain)
-            return;
+            warning('timeToTrain = %d, i.e. training finished, therefore training procedure aborted.', timeToTrain);
+            if exist(sprintf('%s/modelAt%d/model.mat',model.savePath,model.trainedUntil), 'file') == 2
+                return;     % abort simulation if the last testinf phase is also done
+            else
+                sprintf('... but testing will be started for modelAt%d', model.trainedUntil)
+            end
         else
             sprintf('Training procedure will be continued for %d iterations.', timeToTrain)
         end
     else
         if (sparseCodingType > 0)
-            modelName = sprintf('model_%s_%i_%s_%i_%s', ...
-                                datestr(now, 'dd-mmm-yyyy_HH:MM:SS'), ...
+            modelName = sprintf('%s_%iiter_%s_%i_%s', ...
+                                datestr(now, 'yy-mm-dd'), ...
                                 trainTime, ...
                                 sparseCodingTypeName{sparseCodingType + 1}, ...
                                 randomizationSeed, ...
-                                fileDescription);
+                                experimentName);
         else
             modelName = sprintf('%s_%iiter_%i_%s', ...
                                 datestr(now, 'yy-mm-dd'), ...
                                 trainTime, ...
                                 randomizationSeed, ...
-                                fileDescription);
+                                experimentName);
         end
 
-        if (~isempty(folderName))
-            % folder = sprintf('../results/%s/', folderName);                       % local destination
-            folder = sprintf('/home/aecgroup/aecdata/Results/%s/', folderName);     % group folder destination
+        if (~isempty(experimentDirName))
+            % folder = sprintf('../results/%s/', experimentDirName);                       % local destination
+            folder = sprintf('/home/aecgroup/aecdata/Results/%s/', experimentDirName);     % group folder destination
         else
             % folder = '../results/';                       % local destination
             folder = '/home/aecgroup/aecdata/Results/';     % group folder destination
@@ -176,22 +183,25 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
         copyfile(strcat(mfilename, '.m'), model.savePath);
         copyfile('config.m', model.savePath);
         copyfile('configVar.m', model.savePath);
-        copyfile('parOES.m', model.savePath);
         copyfile(strcat(class(model), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CCritic), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CActor), '.m'), model.savePath);
-        if (model.rlModel.continuous == 1)
+        copyfile('results.ods', model.savePath);
+        if ((model.rlModel.continuous == 1) && (testIt == 1))
             copyfile('testModelContinuous.m', model.savePath);
         end
-        copyfile('results.ods', model.savePath);
+        if (clusterCall == 1)
+            copyfile('submitClusterJob.sh', model.savePath);
+            copyfile('parOES.m', model.savePath);
+        end
 
         timeToTrain = model.trainTime;
         model.inputParams = inputParams;
     end
 
     % additional notes/information to this model/approach
-    model.notes = [model.notes, fileDescription];
+    model.notes = [model.notes, experimentName];
 
     %% initialize renderer
     % simulator = OpenEyeSim('create'); % stable renderer
@@ -223,11 +233,11 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
         end
         tmpTexInd = tmpTexInd + nTextures;
     end
-    sprintf('%d textures were added to the buffer from the training and testing files', nTextures)
+    sprintf('%d textures were added to the buffer from the training and testing sets', nTextures)
 
     if (nStimTest > nTestTextures)
         nStimTest = nTestTextures;
-        sprintf('Warning: %d images were requested as training stimuli, but the renderer only holds %d.', nStimTest, nTestTextures)
+        warning('%d images were requested as training stimuli, but the renderer only holds %d.', nStimTest, nTestTextures);
     end
 
     % Image patches cell array (input to model)
@@ -482,20 +492,28 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
 
     % Total simulation time
     model.simulatedTime = model.simulatedTime + elapsedTime / 60; % [min]
-    sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
-            elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
+    try
+        sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
+                elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
+    catch
+        warning('elapsedTime = %d, catched erroneous printout.', elapsedTime);
+    end
 
     % store simulated time
     save(strcat(model.savePath, '/model'), 'model');
 
     %%% Final testing procedure
-    if (testIt)
-        % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, folderName)
+    if (testIt == 1)
+        % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, experimentDirName)
         testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t));
 
         % print the time again after the line output of the testing script
-        sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
-            elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
+        try
+            sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
+                elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
+        catch
+            warning('elapsedTime = %d, catched erroneous printout.', elapsedTime);
+        end
     end
 
     % plot results

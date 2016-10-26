@@ -20,15 +20,15 @@ function parOES(nWorkers)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% parameters that should be explored %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-varNames = {'gamma', 'interval'};
-var1 = {0.1, 0.3, 0.9};
-var2 = {10, 50, 100};
+% varNames = {'gamma', 'interval'};
+% var1 = {0.1, 0.3, 0.9};
+% var2 = {10, 50, 100};
 
-varDescr = {'cDiscout', 'interval'};
-numberFormatVar1 = '%1.1f';
-numberFormatVar2 = '%d';
+% varDescr = {'cDiscout', 'interval'};
+% numberFormatVar1 = '%1.1f';
+% numberFormatVar2 = '%d';
 
-folderName = 'Discount Factor vs Interval' % no ';' intended.
+% experimentDirName = 'Discount Factor vs Interval' % no ';' intended.
 
 % varNames = {'regularizer', 'actorLRRange'};
 % var1 = {5e-4, 5e-5, 1e-5, 1e-6};    % {1e-2, 1e-3, 1e-4};
@@ -38,18 +38,21 @@ folderName = 'Discount Factor vs Interval' % no ';' intended.
 % numberFormatVar1 = '%1.0e';
 % numberFormatVar2 = '[%1.2f-%1.2f]';
 
-% folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
+% experimentDirName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
 
-% varNames = {'criticLRRange', 'actorLRRange'};
-% var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
-% var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
 
-% varDescr = {'CriticLR', 'ActorLR'};
-% numberFormatVar1 = '[%1.2f-%1.2f]';
-% numberFormatVar2 = '[%1.2f-%1.2f]';
+varNames = {'criticLRRange', 'actorLRRange'};
+var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
+var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
 
-% folderName = 'CriticLR vs ActorLR';
-% folderName = '';
+var1Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+var2Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+
+varDescr = {'CriticLR', 'ActorLR'};
+numberFormatVar1 = '[%1.2f-%1.2f]';
+numberFormatVar2 = '[%1.2f-%1.2f]';
+
+experimentDirName = 'CriticLR vs ActorLR';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -71,7 +74,8 @@ iter = 1;
 for i = 1 : length(var1)
     for j = 1 : length(var2)
         paramValues(iter, :) = {cell2mat(var1(i)), cell2mat(var2(j))};
-        paramStrings(iter, :) = {num2str(var1{i}, numberFormatVar1), num2str(var2{j}, numberFormatVar2)};
+        paramStrings(iter, :) = {cell2mat(var1Descr(i)), cell2mat(var2Descr(j))}; % temporary solution for not renaming all folders ...
+        % paramStrings(iter, :) = {num2str(var1{i}, numberFormatVar1), num2str(var2{j}, numberFormatVar2)};
         iter = iter + 1;
     end
 end
@@ -116,5 +120,5 @@ parfor ind = 1 : nParams
     sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
     OES2Muscles(nIters, rSeed, 1, ...
                 {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                folderName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+                experimentDirName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
 end

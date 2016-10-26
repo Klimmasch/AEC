@@ -170,8 +170,7 @@ criticLRRange = [0.75]; %[1, 0.5];
 if (length(criticLRRange) == 1 || criticLRRange(1) == criticLRRange(2))
     critLRDec = 0; % no variance decay
 elseif (criticLRRange(1) < criticLRRange(2))
-    sprintf('Error: It must hold criticLRRange(1) >= criticLRRange(2)')
-    return;
+    error('It must hold criticLRRange(1) >= criticLRRange(2)');
 else
 %     critLRDec = -(log(2) * trainTime) / log(criticLRRange(2) / criticLRRange(1)); % exponential decay factor
     critLRDec = criticLRRange(1) - criticLRRange(2);                                % linear decay factor
@@ -182,8 +181,7 @@ actorLRRange = [0.5]; %[0.75, 0.1];
 if (length(actorLRRange) == 1 || actorLRRange(1) == actorLRRange(2))
     actLRDec = 0; % no variance decay
 elseif (actorLRRange(1) < actorLRRange(2))
-    sprintf('Error: It must hold actorLRRange(1) >= actorLRRange(2)')
-    return;
+    error('It must hold actorLRRange(1) >= actorLRRange(2)');
 else
 %     actLRDec = -(log(2) * trainTime) / log(actorLRRange(2) / actorLRRange(1)); % exponential decay factor
     actLRDec = actorLRRange(1) - actorLRRange(2);                                % linear decay factor
@@ -194,8 +192,7 @@ varianceRange = [5e-5, 5e-5];                        % variance of action output
 if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     varDec = 0; % no variance decay
 elseif (varianceRange(1) < varianceRange(2))
-    sprintf('Error: It must hold varianceRange(1) >= varianceRange(2)')
-    return;
+    error('It must hold varianceRange(1) >= varianceRange(2)');
 else
 %     varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
     varDec = varianceRange(1) - varianceRange(2);
