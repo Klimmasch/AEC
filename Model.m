@@ -1174,7 +1174,7 @@ classdef Model < handle
                     [hl, hp] = boundedline(this.testAt, this.testHist(:, 2), this.testHist(:, 3), 'alpha');
 
                     hl.Marker = 'x';
-                    hl.MarkerSize = 4;
+                    hl.MarkerSize = 5;
 
                     hl.Color = [rand, rand, rand];
                     hp.FaceColor = hl.Color;
@@ -1199,7 +1199,7 @@ classdef Model < handle
                     [hl, hp] = boundedline(this.testAt, this.testHist(:, 5), this.testHist(:, 6), 'alpha');
 
                     hl.Marker = 'x';
-                    hl.MarkerSize = 4;
+                    hl.MarkerSize = 5;
 
                     hl.Color = [rand, rand, rand];
                     hp.FaceColor = hl.Color;
