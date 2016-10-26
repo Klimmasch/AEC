@@ -20,6 +20,6 @@ fi
 
 # --test-only
 # --mem-per-cpu=2560
-srun --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=3584 --gres gpu -LXserver \
+srun --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=4000 --gres gpu:2 -LXserver \
 --job-name=CriticLRActorLR \
 matlab -nodisplay -r "parOES(${WORKERS}); quit"

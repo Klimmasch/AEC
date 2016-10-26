@@ -1580,7 +1580,7 @@ classdef Model < handle
             % shading interp;
             set(pcHandle, 'EdgeColor', 'none');
 
-            % colormap(createCM(1));
+            colormap(createCM(3));
             cb = colorbar();
             % cb.Label.String = 'vergence degree'; % use vergence degree as color dimension (background)
             cb.Label.String = 'metabolic costs';   % use metabolic costs as color dimension (background)

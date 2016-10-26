@@ -461,7 +461,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, fol
 
         % display per cent completed of training and save model
         if (~mod(t, saveInterval))
-            sprintf('%g%% is finished %d/%d iterations', (t / timeToTrain * 100), t, timeToTrain)
+            % sprintf('%g%% is finished %d/%d iterations', (t / timeToTrain * 100), t, timeToTrain)
+            sprintf('%g%% is finished %d/%d iterations', (t / model.trainTime * 100), t, model.trainTime)
             save(strcat(model.savePath, '/model'), 'model');
 
             % track basis function history

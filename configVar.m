@@ -29,7 +29,7 @@ end
 % points in time of intermediate test procedure during training
 [found, testAt, varParamArray] = parseparam(varParamArray, 'testAt');
 if (~found)
-    testAt = [1000000 : 1000000 : trainTime];
+    testAt = [500000 : 500000 : trainTime];
 end
 
 % sparse coding type

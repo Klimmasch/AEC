@@ -29,6 +29,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     % textureFile = 'Textures_vanHaterenTest.mat';
     % textureFile = 'Textures_celine.mat';                      % Celine's images
 
+
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
         error('Model has no testResults!');
@@ -63,6 +64,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     end
     imageSavePath = [model.savePath folderName];
     mkdir(imageSavePath);
+    
+    if (saveTestResults == 1)
+        save(strcat(imageSavePath, '/model'), 'model');
+    end
 
     % fixation interval at testing procedure
     testInterval = model.interval * 2;
