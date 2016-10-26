@@ -20,21 +20,25 @@ function parOES(nWorkers)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% parameters that should be explored %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% varNames = {'gamma', 'interval'};
-% var1 = {0.1, 0.3, 0.9};
-% var2 = {10, 50, 100};
+varNames = {'gamma', 'interval'};
+var1 = {0.1, 0.3, 0.9};
+var2 = {10, 50, 100};
 
-% varDescr = {'cDiscout', 'interval'};
-% numberFormatVar1 = '%1.1f';
-% numberFormatVar2 = '%d';
+varDescr = {'cDiscout', 'interval'};
+numberFormatVar1 = '%1.1f';
+numberFormatVar2 = '%d';
 
-varNames = {'regularizer', 'actorLRRange'};
-var1 = {5e-4, 5e-5, 1e-5, 1e-6};    % {1e-2, 1e-3, 1e-4};
-var2 = {[0.5, 0], [1, 0]};
+folderName = 'Discount Factor vs Interval' % no ';' intended.
 
-varDescr = {'regul', 'actorLR'};
-numberFormatVar1 = '%1.0e';
-numberFormatVar2 = '[%1.2f-%1.2f]';
+% varNames = {'regularizer', 'actorLRRange'};
+% var1 = {5e-4, 5e-5, 1e-5, 1e-6};    % {1e-2, 1e-3, 1e-4};
+% var2 = {[0.5, 0], [1, 0]};
+
+% varDescr = {'regul', 'actorLR'};
+% numberFormatVar1 = '%1.0e';
+% numberFormatVar2 = '[%1.2f-%1.2f]';
+
+% folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
 
 % varNames = {'criticLRRange', 'actorLRRange'};
 % var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
@@ -44,15 +48,14 @@ numberFormatVar2 = '[%1.2f-%1.2f]';
 % numberFormatVar1 = '[%1.2f-%1.2f]';
 % numberFormatVar2 = '[%1.2f-%1.2f]';
 
+% folderName = 'CriticLR vs ActorLR';
+% folderName = '';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nIters = 2000000;               % number of iterations
 rSeed = 1;                      % random seed
-folderName = 'CriticLR vs ActorLR';
-% folderName = '';
-folderName = 'Regularizer vs Actor Learning Rate' % no ';' intended.
-% folderName = 'Discount Factor vs Interval' % no ';' intended.
+
 %TODO enable definition of other parameters that are not changed.
 % standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
 
