@@ -4,12 +4,16 @@
 %% to a specified set of two paramters.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotPerformanceForParameters(modelAt)
-    % parentFolder = '/home/aecgroup/aecdata/Results/';    % folder with all subfolders containing the experiments
-    parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
-    % parentFolder = '/home/aecgroup/aecdata/Results/Discount Factor vs Interval'; 
-    % parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
-    % commonName = '1_cluster_CriticLR';                  % a string (or part of it) all relevant folders share
-    commonName = '0';
+    % folder with all subfolders containing the experiments
+    % parentFolder = '/home/aecgroup/aecdata/Results/';
+    % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
+    % parentFolder = '/home/aecgroup/aecdata/Results/Discount Factor vs Interval';
+    parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
+
+    % a string (or part of it) all relevant folders share
+    commonName = '1_cluster_CriticLR';
+    % commonName = '0';
+
     files = dir(sprintf('%s/*%s*', parentFolder, commonName));
     if isempty(modelAt)
         modelAt = 2000000;
@@ -21,16 +25,16 @@ function plotPerformanceForParameters(modelAt)
 
     %% regularizer vs actor leaning range
 
-    labelVar1 = 'Actor weight regularizer';
-    labelVar2 = 'Actor LR [start, end]';
+    % labelVar1 = 'Actor weight regularizer';
+    % labelVar2 = 'Actor LR [start, end]';
 
-    var1 = [1e-2; 1e-3; 5e-4; 1e-4; 5e-5; 1e-5; 1e-6]; % regularizer
-    var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
+    % var1 = [1e-2; 1e-3; 5e-4; 1e-4; 5e-5; 1e-5; 1e-6]; % regularizer
+    % var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
 
-    numberFormatVar1 = '%1.0e';
-    numberFormatVar2 = '[%1.2f - %1.2f]';
+    % numberFormatVar1 = '%1.0e';
+    % numberFormatVar2 = '[%1.2f - %1.2f]';
 
-    plotSavePath = strcat(parentFolder, '/hiddenLayerRegulActorLRComparison');
+    % plotSavePath = strcat(parentFolder, '/hiddenLayerRegulActorLRComparison');
 
 
     %% discount factor vs interval
@@ -48,17 +52,17 @@ function plotPerformanceForParameters(modelAt)
 
     %% actor LR vs critic LR
 
-    % labelVar1 = 'actor learning range';
-    % labelVar2 = 'critic learning range';
+    labelVar1 = 'actor learning range';
+    labelVar2 = 'critic learning range';
 
-    % var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-    % var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-    % var1 = flipud(var1); % setting the offspring to lower left had corner
+    var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    var1 = flipud(var1); % setting the offspring to lower left had corner
 
-    % numberFormatVar1 = '[%1.2f - %1.2f]';
-    % numberFormatVar2 = '[%1.2f - %1.2f]';
+    numberFormatVar1 = '[%1.2f - %1.2f]';
+    numberFormatVar2 = '[%1.2f - %1.2f]';
 
-    % plotSavePath = strcat(parentFolder, '/CriticLRActorLR.png');
+    plotSavePath = strcat(parentFolder, '/CriticLRActorLR.png');
 
     %%%%%%% after this, you just have to update the extraction of values in the for loop %%%%%%%%%%%
 
@@ -78,24 +82,24 @@ function plotPerformanceForParameters(modelAt)
             % testInterval = 20;
 
             % hack for some older simulations:
-            if length(model.rlModel.actorLearningRange) == 1
-                value = model.rlModel.actorLearningRange;
-                model.rlModel.actorLearningRange = [value, value];
-            end
+            % if length(model.rlModel.actorLearningRange) == 1
+            %     value = model.rlModel.actorLearningRange;
+            %     model.rlModel.actorLearningRange = [value, value];
+            % end
 
-    %         sprintf(model.savePath)
-    %         sprintf('%d', model.rlModel.CActor.regularizer)
+            % sprintf(model.savePath)
+            % sprintf('%d', model.rlModel.CActor.regularizer)
 
             %% finding indizes: also needs to be updated everytime
             % ind = find(var1 == model.rlModel.CActor.varianceRange(1));
             % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
 
-            ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
-            jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
+            % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
             % note: different order than expected
-            % ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
-            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+            ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
+            jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             % ind = find(ismember(var2, model.interval, 'rows'));
             % jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
@@ -118,10 +122,6 @@ function plotPerformanceForParameters(modelAt)
         end
     end
 
-    % results(:, :, 1) = fliplr(results(:, :, 1));
-    % results(:, :, 2) = fliplr(results(:, :, 2));
-    % results(:, :, 3) = fliplr(results(:, :, 3));
-
     %% plotting section
     % var1descr = [];
     % var2descr = '';
@@ -137,19 +137,23 @@ function plotPerformanceForParameters(modelAt)
     %   end
     %   var1descr(ind1) = strcat(var1descr(ind1), ']');
     % end
+
+    % mark unfinished experiments with white color code
+    colordata = createCM(3);
+    if (~isempty(results(results == 0)))
+        colordata(1, :) = [1, 1, 1];
+    end
+
     figure;
     % suptitle(sprintf('Parameter Comparison at %d iterations', modelAt));
 
     % plot the RMSE
     subplot(3, 1, 1);
+    colormap(colordata);
     imagesc(results(:, :, 1));
 
-    colordata = createCM(3);
-    colordata(1, :) = [1, 1, 1]; % plot Infs white
-    colormap(colordata);
-
     txt = results(:, :, 1);
-    txt(find(txt == 0)) = inf;
+    txt(txt == 0) = Inf;
     txt = num2str(txt(:),'%0.2f');
     txt = strtrim(cellstr(txt));
     [x, y] = meshgrid(1 : max(length1, length2));
@@ -175,10 +179,11 @@ function plotPerformanceForParameters(modelAt)
 
     % plot the interquartile range
     subplot(3, 1, 2);
+    colormap(colordata);
     imagesc(results(:, :, 2));
 
     txt = results(:, :, 2);
-    txt(find(txt == 0)) = inf;
+    txt(txt == 0) = Inf;
     txt = num2str(txt(:),'%0.2f');
     % txt(find(txt == '0.00')) = ' '; % this may cause errors.
     txt = strtrim(cellstr(txt));
@@ -205,10 +210,11 @@ function plotPerformanceForParameters(modelAt)
 
     % plot the median
     subplot(3, 1, 3);
+    colormap(colordata);
     imagesc(abs(results(:, :, 3))); % plot absolute values
 
     txt = results(:, :, 3);
-    txt(find(txt == 0)) = inf;
+    txt(txt == 0) = Inf;
     txt = num2str(txt(:),'%0.2f');
     % txt(find(txt == '0.00')) = ' '; % this may cause errors.
     txt = strtrim(cellstr(txt));
