@@ -64,7 +64,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     end
     imageSavePath = [model.savePath folderName];
     mkdir(imageSavePath);
-    
+
     if (saveTestResults == 1)
         save(strcat(imageSavePath, '/model'), 'model');
     end
@@ -332,9 +332,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         testResult4(testResult4 == 0) = NaN;
 
         %% Object distance vs. Fixation distance
-        objRange2 = [model.objDistMin, ...
+        objRange2 = [model.objDistMax, ...
                      model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, (length(testResult6) / testInterval) - 2), ...
-                     model.objDistMax];
+                     model.objDistMin];
 
         % let's try this part without muscle-reset between trials!
         [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))));

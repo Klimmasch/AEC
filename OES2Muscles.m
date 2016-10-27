@@ -94,7 +94,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             if (exist(learnedFile, 'file') == 2) % indicates being a file (7 == directory)
                 useLearnedFile = [1, 1];
             else
-                warning('%s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullFolderName.name);
+                warning('%s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullDir.name);
             end
         end
     end
