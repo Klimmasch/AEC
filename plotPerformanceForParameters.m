@@ -5,21 +5,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotPerformanceForParameters(modelAt)
     % parentFolder = '/home/aecgroup/aecdata/Results/';    % folder with all subfolders containing the experiments
-    parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
-    % parentFolder = '/home/aecgroup/aecdata/Results/Discount Factor vs Interval'; 
-    % parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
     % commonName = '1_cluster_CriticLR';                  % a string (or part of it) all relevant folders share
     commonName = '0';
-    files = dir(sprintf('%s/*%s*', parentFolder, commonName));
-    if isempty(modelAt)
-        modelAt = 2000000;
-    end
-    nFiles = length(files);
+    
 
     %% here, specify the parameter ranges that should be used
     %  these may simply be copied from parOES.m and putting ';'' after every set of params
 
     %% regularizer vs actor leaning range
+    parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
 
     labelVar1 = 'Actor weight regularizer';
     labelVar2 = 'Actor LR [start, end]';
@@ -34,6 +28,7 @@ function plotPerformanceForParameters(modelAt)
 
 
     %% discount factor vs interval
+    % parentFolder = '/home/aecgroup/aecdata/Results/Discount Factor vs Interval'; 
 
     % var1 = [0.1; 0.3; 0.9];
     % var2 = [10; 50; 100];
@@ -47,6 +42,7 @@ function plotPerformanceForParameters(modelAt)
     % plotSavePath = strcat(parentFolder, '/DiscountVsInterval');
 
     %% actor LR vs critic LR
+    % parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
 
     % labelVar1 = 'actor learning range';
     % labelVar2 = 'critic learning range';
@@ -62,6 +58,11 @@ function plotPerformanceForParameters(modelAt)
 
     %%%%%%% after this, you just have to update the extraction of values in the for loop %%%%%%%%%%%
 
+    files = dir(sprintf('%s/*%s*', parentFolder, commonName));
+    if isempty(modelAt)
+        modelAt = 2000000;
+    end
+    nFiles = length(files);
     length1 = length(var1);
     length2 = length(var2);
 
