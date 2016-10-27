@@ -1,24 +1,77 @@
 % parent = '/home/klimmasch/projects/results/Discount Factor vs Interval/'
 % files = dir('/home/klimmasch/projects/results/Discount Factor vs Interval/*00*');
-folder = 'Discount Factor vs Interval'
-% folder = 'Regularizer_vs_ActorLR'
+% folder = 'CriticLR vs ActorLR';
+% folder = 'Discount Factor vs Interval';
+% folder = 'Regularizer vs Actor Learning Rate';
+% folder = 'Regularizer vs ActorLR';
+% folder = 'Regularizer_vs_ActorLR';
 
-parent = strcat('/home/aecgroup/aecdata/Results/', folder);
-% parent = strcat('/home/klimmasch/projects/results/', folder);
-files = dir(sprintf('%s/*00*', parent));
+% parent = strcat('/home/aecgroup/aecdata/Results/', folder);
+% % parent = strcat('/home/klimmasch/projects/results/', folder);
+% files = dir(sprintf('%s/*00*', parent));
 
+% for f = 1:length(files)
+%     savePath = sprintf('%s/%s', parent, files(f).name)
+%     model = load(strcat(savePath, '/model.mat'));
 
-for f = 1:length(files)
-    savePath = sprintf('%s/%s', parent, files(f).name)
-    model = load(strcat(savePath, '/model.mat'));
+%     model = model.model;
+%     model.savePath = savePath;
+%     if length(model.rlModel.actorLearningRange) == 1
+%         val = model.rlModel.actorLearningRange(1);
+%         model.rlModel.actorLearningRange = [val, val];
+%     end
+% %     savePathNew = sprintf('%s/16-10-19_2000000iter_1_cluster_regul_%1.0e_actorLR_[%1.2f-%1.2f]', parent, model.rlModel.CActor.regularizer, model.rlModel.actorLearningRange(1), model.rlModel.actorLearningRange(2))
+% %     model.savePath = savePathNew;
+%     save(strcat(model.savePath, '/model'), 'model');
+% end
 
-    model = model.model;
-    model.savePath = savePath;
-    if length(model.rlModel.actorLearningRange) == 1
-        val = model.rlModel.actorLearningRange(1);
-        model.rlModel.actorLearningRange = [val, val];
+% fixing missing testAt500000 entry in testPerformanceVsTrainTime plot
+% clusterRuns = {'CriticLR vs ActorLR', 'Discount Factor vs Interval', 'Regularizer vs Actor Learning Rate', 'Regularizer vs ActorLR', 'Regularizer_vs_ActorLR'};
+clusterRuns = {'exploringMetCost'};
+
+for k = 1 : length(clusterRuns)
+    sprintf('Working on %s', clusterRuns{k})
+    parent = strcat('/home/aecgroup/aecdata/Results/', clusterRuns{k});
+    subFolders = dir(sprintf('%s/*_1_*', parent));
+
+    for l = 1 : length(subFolders)
+        % load final model instance
+        try
+            load(strcat(parent, '/', subFolders(l).name, '/model.mat'));
+        catch
+            warning('%s does not exist (yet), continue...', strcat(parent, '/', subFolders(l).name, '/model.mat'));
+            continue;
+        end
+
+        % fix index
+        if (model.testHist(2, 1) == 0)
+            model.testHist = [model.testHist(1, :); model.testHist(3 : 5, :); zeros(1, 6)];
+        end
+
+        % load testAt2000000 model
+        try
+            tmpModel = load(strcat(parent, '/', subFolders(l).name, '/modelAt2000000/model.mat'));
+        catch
+            warning('%s does not exist (yet), continue...', strcat(parent, '/', subFolders(l).name, '/modelAt2000000/model.mat'));
+            continue;
+        end
+
+        % include missing testAt2000000 entry
+        model.testHist(5, :) = [sqrt(mean(tmpModel.model.testResult3(:, tmpModel.model.interval * 2) .^ 2)), ...
+                                mean(abs(tmpModel.model.testResult3(:, tmpModel.model.interval * 2) .^ 2)), ...
+                                std(abs(tmpModel.model.testResult3(:, tmpModel.model.interval * 2) .^ 2)), ...
+                                sqrt(mean(tmpModel.model.testResult7(:, tmpModel.model.interval * 2) .^ 2)), ...
+                                mean(abs(tmpModel.model.testResult7(:, tmpModel.model.interval * 2) .^ 2)), ...
+                                std(abs(tmpModel.model.testResult7(:, tmpModel.model.interval * 2) .^ 2))];
+
+        % update model's savePath
+        model.savePath = strcat(parent, '/', subFolders(l).name);
+        
+        % save updated model
+        save(strcat(model.savePath, '/model'), 'model');
+
+        % replot
+        model.allPlotSave(7);
+        close all;
     end
-%     savePathNew = sprintf('%s/16-10-19_2000000iter_1_cluster_regul_%1.0e_actorLR_[%1.2f-%1.2f]', parent, model.rlModel.CActor.regularizer, model.rlModel.actorLearningRange(1), model.rlModel.actorLearningRange(2))
-%     model.savePath = savePathNew;
-    save(strcat(model.savePath, '/model'), 'model');
 end
