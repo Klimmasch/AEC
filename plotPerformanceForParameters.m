@@ -6,13 +6,13 @@
 function plotPerformanceForParameters(modelAt)
     % parentFolder = '/home/aecgroup/aecdata/Results/';    % folder with all subfolders containing the experiments
     % commonName = '1_cluster_CriticLR';                  % a string (or part of it) all relevant folders share
-    commonName = '0iter_';
+    commonName = '0iter_1_';
 
     %% here, specify the parameter ranges that should be used
     %  these may simply be copied from parOES.m and putting ';'' after every set of params
 
     %% regularizer vs actor leaning range
-    parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
+    % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
 
     % labelVar1 = 'Actor weight regularizer';
     % labelVar2 = 'Actor LR [start, end]';
@@ -27,7 +27,7 @@ function plotPerformanceForParameters(modelAt)
 
 
     %% discount factor vs interval
-    % parentFolder = '/home/aecgroup/aecdata/Results/Discount Factor vs Interval'; 
+    % parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources'; 
 
     % var1 = [0.1; 0.3; 0.9];
     % var2 = [10; 50; 100];
@@ -43,18 +43,32 @@ function plotPerformanceForParameters(modelAt)
     %% actor LR vs critic LR
     % parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
 
-    labelVar1 = 'actor learning range';
-    labelVar2 = 'critic learning range';
+    % labelVar1 = 'actor learning range';
+    % labelVar2 = 'critic learning range';
 
-    var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-    var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-    var1 = flipud(var1); % setting the offspring to lower left had corner
+    % var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    % var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    % var1 = flipud(var1); % setting the offspring to lower left had corner
 
-    numberFormatVar1 = '[%1.2f - %1.2f]';
-    numberFormatVar2 = '[%1.2f - %1.2f]';
+    % numberFormatVar1 = '[%1.2f - %1.2f]';
+    % numberFormatVar2 = '[%1.2f - %1.2f]';
 
-    plotSavePath = strcat(parentFolder, '/CriticLRActorLR.png');
+    % plotSavePath = strcat(parentFolder, '/CriticLRActorLR');
 
+    %% metabolic costs
+    % parentFolder = '/home/aecgroup/aecdata/Results/exploringMetCost'; 
+    parentFolder = '/home/klimmasch/projects/results/exploringMetCost'; 
+
+    var1 = [[0.0324, 0.0324]; [0.0162, 0.0162]; [0.0121, 0.0121]; [0.0081, 0.0081]; [0.0040, 0.0040]; [0,0]];
+    var2 = [1e-4]; % only chooses values with the right regularizer
+
+    labelVar1 = 'metabolic Costs';
+    labelVar2 = '';
+
+    numberFormatVar1 = '[%1.4f,%1.4f]';
+    numberFormatVar2 = '%';
+
+    plotSavePath = strcat(parentFolder, '/metCostComp');
     %%%%%%% after this, you just have to update the extraction of values in the for loop %%%%%%%%%%%
 
     files = dir(sprintf('%s/*%s*', parentFolder, commonName));
@@ -65,7 +79,8 @@ function plotPerformanceForParameters(modelAt)
     length1 = length(var1);
     length2 = length(var2);
 
-    results = zeros(length1, length2, 3); % results are the three measurements rmse, median, and iqr
+    results = zeros(length2, length1, 3); % results are the three measurements rmse, median, and iqr
+    resultsMC = zeros(length2, length1, 3); % results are the three measurements rmse, median, and iqr
     subFolder = sprintf('modelAt%d', modelAt);
 
     % iter = 1;
@@ -75,7 +90,7 @@ function plotPerformanceForParameters(modelAt)
             model = load(sprintf('%s/%s/%s/model.mat', parentFolder, files(f).name, subFolder));
             model = model.model;
             testInterval = model.interval * 2;
-            % testInterval = 20;
+            % testInterval = 200;
 
             % hack for some older simulations:
             % if length(model.rlModel.actorLearningRange) == 1
@@ -94,16 +109,28 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
             % note: different order than expected
-            ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
-            jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+            % ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             % ind = find(ismember(var2, model.interval, 'rows'));
             % jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
+
+            ind = find(ismember(var2, model.rlModel.CActor.regularizer, 'rows'));
+            jnd = find(ismember(var1, model.metCostRange, 'rows'));
 
             results(ind, jnd, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
             results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval)) * 4;
             results(ind, jnd, 3) = median(model.testResult3(:, testInterval));
 
+            resultsMC(ind, jnd, 1) = sqrt(mean(model.testResult7(:, testInterval) .^ 2));
+            resultsMC(ind, jnd, 2) = iqr(model.testResult7(:, testInterval)) * 4;
+            resultsMC(ind, jnd, 3) = median(model.testResult7(:, testInterval));
+
+%             display(model.rlModel.actorLearningRange)
+%             display(model.rlModel.CActor.regularizer)
+            % display(model.trainedUntil)
+            % display(model.metCostRange)
+            
             % results(ceil(f / 3) , iter, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
             % results(ceil(f / 3) , iter, 2) = iqr(model.testResult3(:, testInterval));
             % results(ceil(f / 3) , iter, 3) = median(model.testResult3(:, testInterval));
@@ -152,7 +179,9 @@ function plotPerformanceForParameters(modelAt)
     txt(txt == 0) = Inf;
     txt = num2str(txt(:),'%0.2f');
     txt = strtrim(cellstr(txt));
-    [x, y] = meshgrid(1 : max(length1, length2));
+    % [x, y] = meshgrid(1 : max(length1, length2));
+%     [x, y] = meshgrid(1 : length2, 1 : length1);
+    [x, y] = meshgrid(1 : length1, 1 : length2);
     hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
     % one dim. case
@@ -183,7 +212,8 @@ function plotPerformanceForParameters(modelAt)
     txt = num2str(txt(:),'%0.2f');
     % txt(find(txt == '0.00')) = ' '; % this may cause errors.
     txt = strtrim(cellstr(txt));
-    [x, y] = meshgrid(1 : max(length1, length2));
+%     [x, y] = meshgrid(1 : max(length1, length2));
+%     [x, y] = meshgrid(1 : length1, 1 : length2);
     hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
     % one dim. case
@@ -214,7 +244,7 @@ function plotPerformanceForParameters(modelAt)
     txt = num2str(txt(:),'%0.2f');
     % txt(find(txt == '0.00')) = ' '; % this may cause errors.
     txt = strtrim(cellstr(txt));
-    [x, y] = meshgrid(1 : max(length1, length2));
+%     [x, y] = meshgrid(1 : max(length1, length2));
     hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
     % one dim. case
@@ -236,4 +266,104 @@ function plotPerformanceForParameters(modelAt)
     % saveas(gca, sprintf('%s_median.png', plotSavePath));
 
     saveas(gca, sprintf('%s_at%diter.png', plotSavePath, modelAt));
+
+     figure;
+    suptitle(sprintf('Metabolic Costs at %d iterations', modelAt));
+
+    % plot the RMSE
+    subplot(3, 1, 1);
+    colormap(colordata);
+    imagesc(resultsMC(:, :, 1));
+
+    txt = resultsMC(:, :, 1);
+    txt(txt == 0) = Inf;
+    txt = num2str(txt(:),'%0.2f');
+    txt = strtrim(cellstr(txt));
+    % [x, y] = meshgrid(1 : max(length1, length2));
+%     [x, y] = meshgrid(1 : length2, 1 : length1);
+    [x, y] = meshgrid(1 : length1, 1 : length2);
+    hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
+
+    % one dim. case
+    % set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flip(var2(:)), numberFormatVar1), ...
+    %          'YTick', 1:length2, 'YTickLabel', num2str(var1(:), numberFormatVar2), ...
+    %          'TickLength', [0, 0]);
+    % two dim case
+    set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+             'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+             'TickLength', [0, 0], 'FontSize', 7);
+    % set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
+    %          'YTick', 1:length2, 'YTickLabel', var2, ...
+    %          'TickLength', [0, 0]);
+
+    title('RMSE');
+    xlabel(sprintf(labelVar1));
+    ylabel(sprintf(labelVar2));
+    colorbar();
+    % saveas(gca, sprintf('%s_rmse.png', plotSavePath));
+
+    % plot the interquartile range
+    subplot(3, 1, 2);
+    colormap(colordata);
+    imagesc(resultsMC(:, :, 2));
+
+    txt = resultsMC(:, :, 2);
+    txt(txt == 0) = Inf;
+    txt = num2str(txt(:),'%0.2f');
+    % txt(find(txt == '0.00')) = ' '; % this may cause errors.
+    txt = strtrim(cellstr(txt));
+%     [x, y] = meshgrid(1 : max(length1, length2));
+%     [x, y] = meshgrid(1 : length1, 1 : length2);
+    hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
+
+    % one dim. case
+    % set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flip(var2(:)), numberFormatVar1), ...
+    %          'YTick', 1:length2, 'YTickLabel', num2str(var1(:), numberFormatVar2), ...
+    %          'TickLength', [0, 0]);
+    % two dim case
+    set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+             'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+             'TickLength', [0, 0], 'FontSize', 7);
+    % set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
+    %          'YTick', 1:length2, 'YTickLabel', var2, ...
+    %          'TickLength', [0, 0]);
+
+    title('IQR*4');
+    xlabel(sprintf(labelVar1));
+    ylabel(sprintf(labelVar2));
+    colorbar();
+    % saveas(gca, sprintf('%s_iqr.png', plotSavePath));
+
+    % plot the median
+    subplot(3, 1, 3);
+    colormap(colordata);
+    imagesc(abs(resultsMC(:, :, 3))); % plot absolute values
+
+    txt = resultsMC(:, :, 3);
+    txt(txt == 0) = Inf;
+    txt = num2str(txt(:),'%0.2f');
+    % txt(find(txt == '0.00')) = ' '; % this may cause errors.
+    txt = strtrim(cellstr(txt));
+%     [x, y] = meshgrid(1 : max(length1, length2));
+    hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
+
+    % one dim. case
+    % set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(flip(var2(:)), numberFormatVar1), ...
+    %          'YTick', 1:length2, 'YTickLabel', num2str(var1(:), numberFormatVar2), ...
+    %          'TickLength', [0, 0]);
+    % two dim case
+    set(gca, 'XTick', 1:length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+             'YTick', 1:length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+             'TickLength', [0, 0], 'FontSize', 7);
+    % set(gca, 'XTick', 1:length1, 'XTickLabel', var1, ...
+    %          'YTick', 1:length2, 'YTickLabel', var2, ...
+    %          'TickLength', [0, 0]);
+
+    title('Median');
+    xlabel(sprintf(labelVar1));
+    ylabel(sprintf(labelVar2));
+    colorbar();
+    % saveas(gca, sprintf('%s_median.png', plotSavePath));
+
+    saveas(gca, sprintf('%s_metCost_at%diter.png', plotSavePath, modelAt));
 end
