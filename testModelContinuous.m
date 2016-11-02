@@ -71,6 +71,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
     % fixation interval at testing procedure
     testInterval = model.interval * 2;
+%     testInterval = 200;
 
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
@@ -403,7 +404,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         angleNew = model.vergAngleFixMin + (model.vergAngleFixMax - model.vergAngleFixMin) * rand(1, 1);
                     end
                 end
-                testResult6(tmpcnt, :) = [objRange2(odIndex), (model.baseline / 2) / tand(angleNew / 2)];
+                % testResult6(tmpcnt, :) = [objRange2(odIndex), (model.baseline / 2) / tand(angleNew / 2)];
+                testResult6(tmpcnt, :) = [atand(model.baseline / (2 * objRange2(odIndex))), angleNew];
                 tmpcnt = tmpcnt + 1;
             end
         end
@@ -1097,8 +1099,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         plot(model.testResult6(:, 2), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
 
         xlabel(sprintf('Iteration # (interval=%d)', testInterval), 'FontSize', 12);
-        ylabel('Distance [m]', 'FontSize', 12);
-        ylim([0, model.objDistMax + 1]);
+        ylabel('Angle [deg]', 'FontSize', 12);
+        % ylim([0, model.objDistMax + 1]);
+        ylim([0, atand(model.baseline / (2 * model.objDistMin)) + 1]);
         legend('desired (ObjDist)', 'actual (FixDist)');
         title('Vergence movements at testing');
         plotpath = sprintf('%s/fixationDistTesting', imageSavePath);
