@@ -333,6 +333,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         testResult4(testResult4 == 0) = NaN;
 
         %% Object distance vs. Fixation distance
+        rng(1); % lets search for another seed with more big angles!
         objRange2 = [model.objDistMax, ...
                      model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, (length(testResult6) / testInterval) - 2), ...
                      model.objDistMin];
@@ -405,7 +406,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                     end
                 end
                 % testResult6(tmpcnt, :) = [objRange2(odIndex), (model.baseline / 2) / tand(angleNew / 2)];
-                testResult6(tmpcnt, :) = [atand(model.baseline / (2 * objRange2(odIndex))), angleNew];
+                testResult6(tmpcnt, :) = [atand(model.baseline / (2 * objRange2(odIndex))), angleNew / 2];
                 tmpcnt = tmpcnt + 1;
             end
         end
@@ -1091,7 +1092,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             saveas(gcf, plotpath, 'png');
         end
 
-        %% Object distance vs. fixation distance
+        %% Object distance vs. fixation distance: in degree (one eye)
         figure;
         hold on;
         grid on;
@@ -1101,10 +1102,26 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         xlabel(sprintf('Iteration # (interval=%d)', testInterval), 'FontSize', 12);
         ylabel('Angle [deg]', 'FontSize', 12);
         % ylim([0, model.objDistMax + 1]);
-        ylim([0, atand(model.baseline / (2 * model.objDistMin)) + 1]);
+        ylim([0, (atand(model.baseline / (2 * model.objDistMin))) + 0.5]); % adjust to one muscle
         legend('desired (ObjDist)', 'actual (FixDist)');
         title('Vergence movements at testing');
-        plotpath = sprintf('%s/fixationDistTesting', imageSavePath);
+        plotpath = sprintf('%s/fixationDistTesting_degree', imageSavePath);
+        saveas(gcf, plotpath, 'png');
+
+        %% Object distance vs. fixation distance: in degree: in meter
+        figure;
+        hold on;
+        grid on;
+        plot((model.baseline) ./ (tand(model.testResult6(:, 1)) * 2), 'color', [0, 0.7255, 0.1765], 'LineWidth', 1.8); % adopt for two eyes
+        plot((model.baseline) ./ (tand(model.testResult6(:, 2)) * 2), 'color', [0, 0.6863, 1.0000], 'LineWidth', 1.3);
+
+        xlabel(sprintf('Iteration # (interval=%d)', testInterval), 'FontSize', 12);
+        ylabel('Distance [m]', 'FontSize', 12);
+        ylim([0, model.objDistMax + 1]);
+        % ylim([0, atand(model.baseline / (2 * model.objDistMin)) + 1]);
+        legend('desired (ObjDist)', 'actual (FixDist)');
+        title('Vergence movements at testing');
+        plotpath = sprintf('%s/fixationDistTesting_meter', imageSavePath);
         saveas(gcf, plotpath, 'png');
 
         %%% Final Figure
