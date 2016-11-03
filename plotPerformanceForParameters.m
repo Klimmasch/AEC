@@ -11,7 +11,7 @@ function plotPerformanceForParameters(modelAt)
     parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
 
     % a string (or part of it) all relevant folders share
-    commonName = '1_cluster_CriticLR';
+    commonName = 'CriticLR_';
     % commonName = '0';
 
     files = dir(sprintf('%s/*%s*', parentFolder, commonName));
