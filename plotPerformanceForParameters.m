@@ -12,18 +12,18 @@ function plotPerformanceForParameters(modelAt)
     %  these may simply be copied from parOES.m and putting ';'' after every set of params
 
     %% regularizer vs actor leaning range
-    % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
+    parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
 
-    % labelVar1 = 'Actor weight regularizer';
-    % labelVar2 = 'Actor LR [start, end]';
+    labelVar1 = 'Actor weight regularizer';
+    labelVar2 = 'Actor LR [start, end]';
 
-    % var1 = [1e-2; 1e-3; 5e-4; 1e-4; 5e-5; 1e-5; 1e-6]; % regularizer
-    % var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
+    var1 = [1e-2; 1e-3; 5e-4; 1e-4; 5e-5; 1e-5; 1e-6]; % regularizer
+    var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
 
-    % numberFormatVar1 = '%1.0e';
-    % numberFormatVar2 = '[%1.2f - %1.2f]';
+    numberFormatVar1 = '%1.0e';
+    numberFormatVar2 = '[%1.2f - %1.2f]';
 
-    % plotSavePath = strcat(parentFolder, '/hiddenLayerRegulActorLRComparison');
+    plotSavePath = strcat(parentFolder, '/hiddenLayerRegulActorLRComparison');
 
 
     %% discount factor vs interval
@@ -57,18 +57,18 @@ function plotPerformanceForParameters(modelAt)
 
     %% metabolic costs
     % parentFolder = '/home/aecgroup/aecdata/Results/exploringMetCost'; 
-    parentFolder = '/home/klimmasch/projects/results/exploringMetCost'; 
+    % % parentFolder = '/home/klimmasch/projects/results/exploringMetCost'; 
 
-    var1 = [[0.0324, 0.0324]; [0.0162, 0.0162]; [0.0121, 0.0121]; [0.0081, 0.0081]; [0.0040, 0.0040]; [0,0]];
-    var2 = [1e-4]; % only chooses values with the right regularizer
+    % var1 = [[0.0324, 0.0324]; [0.0162, 0.0162]; [0.0121, 0.0121]; [0.0081, 0.0081]; [0.0040, 0.0040]; [0,0]];
+    % var2 = [1e-4]; % only chooses values with the right regularizer
 
-    labelVar1 = 'metabolic Costs';
-    labelVar2 = '';
+    % labelVar1 = 'metabolic Costs';
+    % labelVar2 = '';
 
-    numberFormatVar1 = '[%1.4f,%1.4f]';
-    numberFormatVar2 = '%';
+    % numberFormatVar1 = '[%1.4f,%1.4f]';
+    % numberFormatVar2 = '%';
 
-    plotSavePath = strcat(parentFolder, '/metCostComp');
+    % plotSavePath = strcat(parentFolder, '/metCostComp');
     %%%%%%% after this, you just have to update the extraction of values in the for loop %%%%%%%%%%%
 
     files = dir(sprintf('%s/*%s*', parentFolder, commonName));
@@ -89,8 +89,12 @@ function plotPerformanceForParameters(modelAt)
             % model = load(files{f});
             model = load(sprintf('%s/%s/%s/model.mat', parentFolder, files(f).name, subFolder));
             model = model.model;
-            testInterval = model.interval * 2;
-            % testInterval = 200;
+            
+            if  parentFolder == '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources'
+                testInterval = 200;
+            else
+                testInterval = model.interval * 2;
+            end
 
             % hack for some older simulations:
             % if length(model.rlModel.actorLearningRange) == 1
@@ -105,8 +109,8 @@ function plotPerformanceForParameters(modelAt)
             % ind = find(var1 == model.rlModel.CActor.varianceRange(1));
             % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
 
-            % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
-            % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
+            ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
+            jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
             % note: different order than expected
             % ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
@@ -115,8 +119,8 @@ function plotPerformanceForParameters(modelAt)
             % ind = find(ismember(var2, model.interval, 'rows'));
             % jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
 
-            ind = find(ismember(var2, model.rlModel.CActor.regularizer, 'rows'));
-            jnd = find(ismember(var1, model.metCostRange, 'rows'));
+            % ind = find(ismember(var2, model.rlModel.CActor.regularizer, 'rows'));
+            % jnd = find(ismember(var1, model.metCostRange, 'rows'));
 
             results(ind, jnd, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
             results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval)) * 4;
@@ -268,7 +272,7 @@ function plotPerformanceForParameters(modelAt)
     saveas(gca, sprintf('%s_at%diter.png', plotSavePath, modelAt));
 
      figure;
-    suptitle(sprintf('Metabolic Costs at %d iterations', modelAt));
+    % suptitle(sprintf('Metabolic Costs at %d iterations', modelAt)); % does not look good.
 
     % plot the RMSE
     subplot(3, 1, 1);
