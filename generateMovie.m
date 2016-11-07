@@ -9,7 +9,7 @@
 %%%
 function generateMovie(objRange, nStimuli, reinitRenderer)
 
-    model = load('/home/klimmasch/projects/results/model_09-Aug-2016_21:15:49_2000000_nonhomeo_1_BMSF_vanHateren_newInit/model.mat');
+    model = load('/home/aecgroup/aecdata/Results/CriticLR vs ActorLR/16-11-02_2000000iter_1_regul_1e-04_actorRL_[1.00-0.00]_criticRL_[1.00-0.00]/model.mat');
     model = model.model;
 
     randomizationSeed = 3;
@@ -19,10 +19,10 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     rng(randomizationSeed);
 
 %    textureFile = 'Textures_vanHaterenTrain';
-    textureFile = 'Textures_vanHaterenTest';
+    % textureFile = 'Textures_vanHaterenTest';
 %     textureFile = 'Textures_vanHaterenTestMinimal';
 %     textureFile = 'Textures_celine'
-%     textureFile = 'Textures_mcgillManMadeTest(jpg)'
+    textureFile = 'Textures_mcgillManMadeTest(jpg)'
 
     imagesSavePath = sprintf('%s/movies', model.savePath);
     timeStamp = datestr(now, 'dd-mmm-yyyy_HH:MM:SS'); % used as a tag for the movies
@@ -203,45 +203,45 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
     angleMax = getAngle([0, 1]) * 2;
 
     %%% New renderer
-    simulator = OpenEyeSim('create');
+%     simulator = OpenEyeSim('create');
 %    simulator = OpenEyeSimV4('create');
-    if reinitRenderer
-        simulator.reinitRenderer();
-    else
-        simulator.initRenderer();
-    end
-    imgRawLeft = uint8(zeros(240, 320, 3));
-    imgRawRight = uint8(zeros(240, 320, 3));
-    imgGrayLeft = uint8(zeros(240, 320, 3));
-    imgGrayRight = uint8(zeros(240, 320, 3));
+%     if reinitRenderer
+%         simulator.reinitRenderer();
+%     else
+%         simulator.initRenderer();
+%     end
+%     imgRawLeft = uint8(zeros(240, 320, 3));
+%     imgRawRight = uint8(zeros(240, 320, 3));
+%     imgGrayLeft = uint8(zeros(240, 320, 3));
+%     imgGrayRight = uint8(zeros(240, 320, 3));
 
     % Image patches cell array (input to model)
-    currentView = cell(1, length(model.scModel));
+%     currentView = cell(1, length(model.scModel));
 
-    function refreshImages(texture, vergAngle, objDist)
-
-        simulator.add_texture(1, texture);
-        simulator.set_params(1, vergAngle, objDist, 0, 3);
-
-        result1 = simulator.generate_left();
-        result2 = simulator.generate_right();
-
-        imgRawLeft = permute(reshape(result1, ...
-                                     [size(imgRawLeft, 3), ...
-                                      size(imgRawLeft, 2), ...
-                                      size(imgRawLeft, 1)]), ...
-                                     [3, 2, 1]);
-
-        imgRawRight = permute(reshape(result2, ...
-                                      [size(imgRawRight, 3), ...
-                                       size(imgRawRight, 2), ...
-                                       size(imgRawRight, 1)]), ...
-                                      [3, 2, 1]);
-
-        % convert images to gray scale
-        imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
-        imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
-    end
+%     function refreshImages(texture, vergAngle, objDist)
+% 
+%         simulator.add_texture(1, texture);
+%         simulator.set_params(1, vergAngle, objDist, 0, 3);
+% 
+%         result1 = simulator.generate_left();
+%         result2 = simulator.generate_right();
+% 
+%         imgRawLeft = permute(reshape(result1, ...
+%                                      [size(imgRawLeft, 3), ...
+%                                       size(imgRawLeft, 2), ...
+%                                       size(imgRawLeft, 1)]), ...
+%                                      [3, 2, 1]);
+% 
+%         imgRawRight = permute(reshape(result2, ...
+%                                       [size(imgRawRight, 3), ...
+%                                        size(imgRawRight, 2), ...
+%                                        size(imgRawRight, 1)]), ...
+%                                       [3, 2, 1]);
+% 
+%         % convert images to gray scale
+%         imgGrayLeft = 0.2989 * imgRawLeft(:, :, 1) + 0.5870 * imgRawLeft(:, :, 2) + 0.1140 * imgRawLeft(:, :, 3);
+%         imgGrayRight = 0.2989 * imgRawRight(:, :, 1) + 0.5870 * imgRawRight(:, :, 2) + 0.1140 * imgRawRight(:, :, 3);
+%     end
 
     t = 1;
     %%% Average VergErr over Trial loop
@@ -304,7 +304,7 @@ function generateMovie(objRange, nStimuli, reinitRenderer)
 
                 for iteration = 1 : testInterval
                     % read input images and convert to gray scale
-                    refreshImages(currentTexture, angleNew / 2, tmpObjRange);
+                    model.refreshImages(currentTexture, angleNew / 2, tmpObjRange);
 
                     for i = 1 : length(model.scModel)
                         model.preprocessImage(imgGrayLeft, i, 1);
