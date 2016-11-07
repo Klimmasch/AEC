@@ -4,9 +4,16 @@
 %% to a specified set of two paramters.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotPerformanceForParameters(modelAt)
-    % parentFolder = '/home/aecgroup/aecdata/Results/';    % folder with all subfolders containing the experiments
-    % commonName = '1_cluster_CriticLR';                  % a string (or part of it) all relevant folders share
-    commonName = '0iter_1_';
+    
+    if isempty(modelAt)
+        modelAt = 2000000;
+    end
+
+    % folder with all subfolders containing the experiments
+    % parentFolder = '/home/aecgroup/aecdata/Results/';
+
+    % a common name shared by all relevant folders
+    commonName = 'iter_';
 
     %% here, specify the parameter ranges that should be used
     %  these may simply be copied from parOES.m and putting ';'' after every set of params
@@ -27,7 +34,7 @@ function plotPerformanceForParameters(modelAt)
 
 
     %% discount factor vs interval
-    % parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources'; 
+    % parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources';
 
     % var1 = [0.1; 0.3; 0.9];
     % var2 = [10; 50; 100];
@@ -56,8 +63,8 @@ function plotPerformanceForParameters(modelAt)
     % plotSavePath = strcat(parentFolder, '/CriticLRActorLR');
 
     %% metabolic costs
-    % parentFolder = '/home/aecgroup/aecdata/Results/exploringMetCost'; 
-    % % parentFolder = '/home/klimmasch/projects/results/exploringMetCost'; 
+    % parentFolder = '/home/aecgroup/aecdata/Results/exploringMetCost';
+    % parentFolder = '/home/klimmasch/projects/results/exploringMetCost';
 
     % var1 = [[0.0324, 0.0324]; [0.0162, 0.0162]; [0.0121, 0.0121]; [0.0081, 0.0081]; [0.0040, 0.0040]; [0,0]];
     % var2 = [1e-4]; % only chooses values with the right regularizer
@@ -79,7 +86,7 @@ function plotPerformanceForParameters(modelAt)
     length1 = length(var1);
     length2 = length(var2);
 
-    results = zeros(length2, length1, 3); % results are the three measurements rmse, median, and iqr
+    results = zeros(length2, length1, 5); % results are the three measurements rmse, median, and iqr, critValDelta, critValNiveau
     resultsMC = zeros(length2, length1, 3); % results are the three measurements rmse, median, and iqr
     subFolder = sprintf('modelAt%d', modelAt);
 
@@ -90,7 +97,7 @@ function plotPerformanceForParameters(modelAt)
             model = load(sprintf('%s/%s/%s/model.mat', parentFolder, files(f).name, subFolder));
             model = model.model;
             
-            if  parentFolder == '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources'
+            if strcmp(parentFolder, '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources')
                 testInterval = 200;
             else
                 testInterval = model.interval * 2;
@@ -126,23 +133,24 @@ function plotPerformanceForParameters(modelAt)
             results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval)) * 4;
             results(ind, jnd, 3) = median(model.testResult3(:, testInterval));
 
+            %%% Critic value function steepness
+            % critValDelta = mean(critic_value(vergErr = 0) - (critic_value(vergErr = -0.5) + critic_value(vergErr = 0.5)) / 2)
+            % critValNiveau = mean(critic_value(vergErr = 0))
+            % average over all stimuli and each objDist
+            test2Resolution = 101;
+            vseRange = linspace(-1, 1, test2Resolution);
+
+            % critValDelta
+            results(ind, jnd, 4) = mean(mean(abs(abs(model.testResult4(:, vseRange == 0, 1 : 2 + length(model.scModel) : end)) ...
+                                               - abs((model.testResult4(:, vseRange == -0.5, 1 : 2 + length(model.scModel) : end) ...
+                                                     + model.testResult4(:, vseRange == 0.5, 1 : 2 + length(model.scModel) : end)) / 2)), 3));
+            % critValNiveau
+            results(ind, jnd, 5) = mean(mean(abs(model.testResult4(:, vseRange == 0, 1 : 2 + length(model.scModel) : end)), 3));
+
+            % metabolic costs
             resultsMC(ind, jnd, 1) = sqrt(mean(model.testResult7(:, testInterval) .^ 2));
             resultsMC(ind, jnd, 2) = iqr(model.testResult7(:, testInterval)) * 4;
             resultsMC(ind, jnd, 3) = median(model.testResult7(:, testInterval));
-
-%             display(model.rlModel.actorLearningRange)
-%             display(model.rlModel.CActor.regularizer)
-            % display(model.trainedUntil)
-            % display(model.metCostRange)
-            
-            % results(ceil(f / 3) , iter, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
-            % results(ceil(f / 3) , iter, 2) = iqr(model.testResult3(:, testInterval));
-            % results(ceil(f / 3) , iter, 3) = median(model.testResult3(:, testInterval));
-
-            % iter = iter + 1;
-            % if iter > 3
-            %     iter = 1;
-            % end
         catch
            % catch case when (sub-)experiment started, but has no test results yet
            continue;
@@ -370,4 +378,49 @@ function plotPerformanceForParameters(modelAt)
     % saveas(gca, sprintf('%s_median.png', plotSavePath));
 
     saveas(gca, sprintf('%s_metCost_at%diter.png', plotSavePath, modelAt));
+
+    %%% Critic's value function
+    colordata = createCM(3);
+    colordata = flipud(colordata);
+    if (~isempty(results(results == 0)))
+        colordata(1, :) = [1, 1, 1];
+    end
+
+    figure;
+    % suptitle(sprintf('Parameter Comparison at %d iterations', modelAt));
+
+    % plot the critValDelta
+    subplot(2, 1, 1);
+    colormap(colordata);
+    imagesc(results(:, :, 4));
+
+    txt = results(:, :, 4);
+    txt(txt == 0) = Inf;
+    txt = num2str(txt(:),'%0.3f');
+    txt = strtrim(cellstr(txt));
+    hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
+
+    title(strcat('\Deltacritic_{val}', sprintf(' = |mean(critic_{val}(verg_{Err} = 0)\n - (critic_{val}(verg_{Err} = -0.5) + critic_{val}(verg_{Err} = 0.5)) / 2)|')));
+    xlabel(sprintf(labelVar1));
+    ylabel(sprintf(labelVar2));
+    colorbar();
+
+    % plot the critValNiveau
+    subplot(2, 1, 2);
+    colormap(colordata);
+    imagesc(results(:, :, 5));
+
+    txt = results(:, :, 5);
+    txt(txt == 0) = Inf;
+    txt = num2str(txt(:),'%0.3f');
+    % txt(find(txt == '0.00')) = ' '; % this may cause errors.
+    txt = strtrim(cellstr(txt));
+    hStrings = text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
+    
+    title(sprintf('critic_{val} Niveau = |mean(critic_{val}(verg_{Err} = 0))|'));
+    xlabel(sprintf(labelVar1));
+    ylabel(sprintf(labelVar2));
+    colorbar();
+
+    saveas(gca, sprintf('%s_CriticVal_at%diter.png', plotSavePath, modelAt));
 end
