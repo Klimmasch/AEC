@@ -189,7 +189,12 @@ function plotPerformanceForParameters(modelAt)
         for subfigIter = 1 : length(resultsIter{figIter})
             subplot(length(resultsIter{figIter}), 1, subfigIter);
             colormap(colordata);
-            imagesc(results(:, :, resultsIter{figIter}(subfigIter)));
+            if (figIter == 1 && subfigIter == 3)
+                % apply color to abs values in median plot
+                imagesc(abs(results(:, :, resultsIter{figIter}(subfigIter))));
+            else
+                imagesc(results(:, :, resultsIter{figIter}(subfigIter)));
+            end
 
             txt = results(:, :, resultsIter{figIter}(subfigIter));
             txt(txt == 0) = Inf;
