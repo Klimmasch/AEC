@@ -30,17 +30,19 @@ function plotPerformanceForParameters(modelAt)
 
     figName = 'CriticLRActorLR';
 
+
     %%% regularizer vs actor leaning range
     % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
 
-    % labelVar1 = 'Actor weight regularizer';
-    % labelVar2 = 'Actor LR [start, end]';
+    labelVar1 = 'Actor weight regularizer';
+    labelVar2 = 'Actor LR [start, end]';
 
-    % var1 = [1e-2; 1e-3; 5e-4; 1e-4; 5e-5; 1e-5; 1e-6]; % regularizer
-    % var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
+    var1 = [1e-2; 1e-3; 5e-4; 1e-4; 5e-5; 1e-5; 1e-6]; % regularizer
+    var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
 
-    % numberFormatVar1 = '%1.0e';
-    % numberFormatVar2 = '[%1.2f - %1.2f]';
+    numberFormatVar1 = '%1.0e';
+    numberFormatVar2 = '[%1.2f - %1.2f]';
+
 
     % figName = 'hiddenLayerRegulActorLRComparison';
 
@@ -60,6 +62,7 @@ function plotPerformanceForParameters(modelAt)
 
     %%% metabolic costs
     % parentFolder = '/home/klimmasch/projects/results/exploringMetCost';
+
 
     % labelVar1 = 'metabolic Costs';
     % labelVar2 = '';
@@ -92,6 +95,7 @@ function plotPerformanceForParameters(modelAt)
     length2 = length(var2);
     criticResolution = 101;
     vseRange = linspace(-1, 1, criticResolution);
+
 
     % results := |var1| x |var2| x
     %            {rmse(vergErr), median(vergErr), and iqr(vergErr),
@@ -234,6 +238,7 @@ function plotPerformanceForParameters(modelAt)
             ylabel(sprintf(labelVar2));
             colorbar();
         end
+
 
         if (figIter == 1)
             % suptitle(sprintf('Parameter Comparison at %d iterations', modelAt));
