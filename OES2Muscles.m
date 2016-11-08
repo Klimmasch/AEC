@@ -256,6 +256,25 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         cmd(i1) = 1;
     end
 
+    %%% Online signal normalization to 0 mean and unit variance by Welford (1962)
+    %
+    %   param n:            # of samples
+    %   param dataSample:   new datapoint
+    %   param signalType:   {1, 2, 3} := recErrSignal, metCostSignal, rewardSignal
+    %   return:             normalized data sample point
+    function normDataSample = onlineNormalize(n, dataSample, signalType)
+        if (n < 2)
+            normDataSample = dataSample;
+        end
+
+        delta = dataSample - model.currMean(signalType);
+        model.currMean(signalType) = model.currMean(signalType) + delta / n;
+        model.currM2(signalType) = model.currM2(signalType) + delta * (dataSample - model.currMean(signalType));
+
+        % n - 1 to get unbiased variance
+        normDataSample = (dataSample - model.currMean(signalType)) / sqrt(model.currM2(signalType) / (n - 1));
+    end
+
     %%% Main execution loop
     t = model.trainedUntil; % this is zero in newly initiated model
     command = [0; 0];
@@ -357,13 +376,22 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             %% Delta reward (part 2)
             % rewardFunction_prev = rewardFunctionReal;
 
-            %% Normalized reward [-1, 1]
+            %% Normalized reward mean = 0, std = 1
             % rewardFunction = rewardFunction / 100;
             % alpha = model.rlModel.CCritic.gamma; %weighting range (equal to reinforcement running average constant)
             % delta = rewardFunction - model.reward_mean;
             % model.reward_mean = (1 - alpha) * model.reward_mean + (alpha * delta);
             % model.reward_variance = (1 - alpha) * model.reward_variance + (alpha * delta^2);
             % rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
+            %
+            %% norm(reward)
+            rewardFunction = onlineNormalize(t, rewardFunction, 3);
+            %% norm(recErr)
+            % rewardFunction = onlineNormalize(t, model.lambdaRec * reward, 1) - model.lambdaMet * metCost;
+            %% norm(metCost)
+            % rewardFunction = model.lambdaRec * reward - onlineNormalize(t, model.lambdaMet * metCost, 2);
+            %% norm(recErr) norm(metCost)
+            % rewardFunction = onlineNormalize(t, model.lambdaRec * reward, 1) + onlineNormalize(t, model.lambdaMet * metCost, 2);
 
             %%% Learning
             %% Sparse coding models
