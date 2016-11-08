@@ -103,6 +103,9 @@ classdef Model < handle
         imgRawRight;
         imgGrayLeft;
         imgGrayRight;
+
+        currMean;       % approximations for online signal normalization
+        currM2;
     end
 
     methods
@@ -155,7 +158,6 @@ classdef Model < handle
                     obj.rlModel = ReinforcementLearning(PARAM{3});
                 end
 
-% <<<<<<< HEAD
                 % obj.recerr_hist = zeros(obj.trainTime, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
                 obj.recerr_hist = zeros(obj.trainTime / obj.interval, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
                 % obj.disp_hist = zeros(obj.trainTime, 1);
@@ -191,8 +193,9 @@ classdef Model < handle
                 obj.trainedUntil = 0;
                 obj.notes = '';
 
-                obj.reward_mean = 0;
-                obj.reward_variance = 1;
+                % [recErrSignal, metCostSignal, rewardSignal]
+                obj.currMean = zeros(1, 3);
+                obj.currM2 = zeros(1, 3);
 
                 %%% Generate image processing constants
                 obj.patchSize = PARAM{1}{15};
@@ -208,61 +211,6 @@ classdef Model < handle
                 if (obj.cutout == 1)
                     obj.prepareCutout();
                 end
-% =======
-            % % obj.recerr_hist = zeros(obj.trainTime, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
-            % obj.recerr_hist = zeros(obj.trainTime / obj.interval, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
-            % % obj.disp_hist = zeros(obj.trainTime, 1);
-            % obj.vergerr_hist = zeros(obj.trainTime, 1);
-            % % obj.verge_actual = zeros(obj.trainTime, 1);
-            % % obj.verge_desired = zeros(obj.trainTime, 1);
-            % % obj.Z = zeros(obj.trainTime, 1);
-            % % obj.fixZ = zeros(obj.trainTime, 1);
-
-            % obj.td_hist = zeros(obj.trainTime, 1);
-            % % obj.feature_hist = zeros(obj.trainTime, 1);%zeros(obj.trainTime, PARAM{3}{9}(1));
-            % obj.cmd_hist = zeros(obj.trainTime, 2);
-            % obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
-            % % obj.weight_hist = zeros(obj.trainTime, 4);
-            % obj.weight_hist = zeros(obj.trainTime, 6); % for also traking change in weights
-            % % obj.reward_hist = zeros(obj.trainTime, 1);
-            % obj.metCost_hist = zeros(obj.trainTime, 1);
-            % obj.lambdaMet_hist = zeros(obj.trainTime, 1);
-            % obj.actorLR_hist = zeros(obj.trainTime, 1);
-            % obj.criticLR_hist = zeros(obj.trainTime, 1);
-            % obj.variance_hist = zeros(obj.trainTime, 1);
-
-            % obj.responseResults = struct();
-            % obj.testResult = [];
-            % obj.testResult2 = [];
-            % obj.testResult3 = [];
-            % obj.testResult4 = [];
-            % obj.testResult5 = [];
-            % obj.testResult6 = [];
-            % obj.testResult7 = [];
-            % % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
-            % obj.testHist = zeros(length(obj.testAt), 6);
-            % obj.simulatedTime = 0;
-            % obj.trainedUntil = 0;
-            % obj.notes = '';
-
-            % obj.reward_mean = 0;
-            % obj.reward_variance = 1;
-
-            % %%% Generate image processing constants
-            % obj.patchSize = PARAM{1}{15};
-            % obj.pxFieldOfView = PARAM{1}{16};
-            % obj.dsRatio = PARAM{1}{17};
-            % obj.stride = PARAM{1}{18};
-            % obj.overlap = PARAM{1}{21};
-            % obj.cutout = PARAM{1}{22};
-
-            % % Prepare index matrix for image patches
-            % obj.prepareColumnInd();
-            % % cut out central region
-            % if (obj.cutout == 1)
-            %     obj.prepareCutout();
-            % end
-% >>>>>>> learnRateDecay
 
                 %%% Create SC models
                 obj.scModel = {};
