@@ -385,7 +385,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
             %
             %% norm(reward)
-            rewardFunction = onlineNormalize(t, rewardFunction, 3);
+            % rewardFunction = onlineNormalize(t, rewardFunction, 3);
             %% norm(recErr)
             % rewardFunction = onlineNormalize(t, model.lambdaRec * reward, 1) - model.lambdaMet * metCost;
             %% norm(metCost)
