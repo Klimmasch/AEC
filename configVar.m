@@ -429,7 +429,7 @@ end
 % how it works: actor.wp_ji = (1 - (actor.regularizer * actor.learnRate)) * actor.wp_ji;
 [found, regularizer, varParamArray] = parseparam(varParamArray, 'regularizer');
 if (~found)
-    regularizer = 1e-4; % old: 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
+    regularizer = 1e-4; % new: 1e-4 old: 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
 end
 
 % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
