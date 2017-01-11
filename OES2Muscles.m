@@ -385,7 +385,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
             %
             %% norm(reward)
-            % rewardFunction = onlineNormalize(t, rewardFunction, 3);
+%             rewardFunction = onlineNormalize(t, rewardFunction, 3);
             %% norm(recErr)
             % rewardFunction = onlineNormalize(t, model.lambdaRec * reward, 1) - model.lambdaMet * metCost;
             %% norm(metCost)
@@ -416,12 +416,19 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             anglerr = angleDes - angleNew;                              % vergence error [deg]
             % disparity = 2 * model.focalLength * tand(anglerr / 2);    % current disp [px]
 
+            %%% track all movement-related stuff
             model.vergerr_hist(t) = anglerr; % every 10th => adjust displayBasisNEW.m and testModelContinuous.m
             model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
-            model.metCost_hist(t) = metCost;
+            
             model.td_hist(t) = model.rlModel.CCritic.delta;
 
+            %%% track all reward associated stuff
+            model.reward_hist(t) = rewardFunction;
+            model.metCost_hist(t) = metCost;
+            %  model.recerr_hist(t, :) = recErrorArray; % is tracked every 10th iteration
+
+            %%% track all weight-related stuff
             model.weight_hist(t, 1) = model.rlModel.CCritic.params(1);
             model.weight_hist(t, 2) = model.rlModel.CActor.params(1);
             model.weight_hist(t, 3) = model.rlModel.CActor.params(2);

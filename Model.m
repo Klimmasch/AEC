@@ -41,6 +41,8 @@ classdef Model < handle
 
         % Model data history
         recerr_hist;        % reconstruction error [coarse scale, fine scale]
+        metCost_hist;       % metabolic costs
+        reward_hist;        % reward (usefull when normalization comes into play)
         % disp_hist;          % disparity
         vergerr_hist;       % vergence error
         % verge_actual;       % actual vergence angle
@@ -52,8 +54,6 @@ classdef Model < handle
         cmd_hist;           % vergence commands
         relCmd_hist;        % relativ changes in motor commands
         weight_hist;        % L1/L2, i.e. sum abs, sum pow2 weights of actor and critic
-        % reward_hist;        % reward function
-        metCost_hist;       % metabolic costs
         actorLR_hist;       % actor learning rate
         criticLR_hist;      % critic learning rate
         variance_hist;      % exploratory variance of actor
@@ -162,6 +162,7 @@ classdef Model < handle
                 obj.recerr_hist = zeros(obj.trainTime / obj.interval, length(PARAM{2}{1})); % recerr_hist = t x #SC_scales
                 % obj.disp_hist = zeros(obj.trainTime, 1);
                 obj.vergerr_hist = zeros(obj.trainTime, 1);
+                obj.reward_hist = zeros(obj.trainTime, 1);
                 % obj.verge_actual = zeros(obj.trainTime, 1);
                 % obj.verge_desired = zeros(obj.trainTime, 1);
                 % obj.Z = zeros(obj.trainTime, 1);
@@ -173,7 +174,6 @@ classdef Model < handle
                 obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
                 % obj.weight_hist = zeros(obj.trainTime, 4);
                 obj.weight_hist = zeros(obj.trainTime, 6); % for also traking change in weights
-                % obj.reward_hist = zeros(obj.trainTime, 1);
                 obj.metCost_hist = zeros(obj.trainTime, 1);
                 obj.lambdaMet_hist = zeros(obj.trainTime, 1);
                 obj.variance_hist = zeros(obj.trainTime, 1);
@@ -1092,6 +1092,7 @@ classdef Model < handle
                     plotpath = sprintf('%s/rewardHistory', this.savePath);
                     saveas(gcf, plotpath, 'png');
                 end
+                %% TODO: implement plot solely for this.reward_hist
             end
 
             %% Testing performance as a function of traintime
