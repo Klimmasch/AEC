@@ -131,7 +131,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 vergMax = 2;
             end
             vseRange = [linspace(-2, 0, 4), linspace(0, vergMax, 4)];
-            vseRange = [vseRange(1 : 3), vseRange(5 : end)];
+            vseRange = [vseRange(1 : 3), vseRange(5 : end)]; % remove one 0
             % vseRange = [-3:3];
             % vseRange = linspace(-1, 1, 7);
             % angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
@@ -1052,7 +1052,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             yb = linspace(min(model.testResult5(:, 2)), max(model.testResult5(:, 2)), size(histHandle, 1));
 
             pcHandle = pcolor(xb, yb, histHandle);
-            axis([0, xb(end), 0, yb(end)]);
+            
+            axis([0, max([xb(end), 0.01]), 0, max([yb(end), 0.01])]); % take the max between those values in case xb(end) or yb(end) == 0
             shading interp;
             set(pcHandle, 'EdgeColor', 'none');
 

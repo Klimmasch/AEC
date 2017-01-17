@@ -10,7 +10,7 @@
 function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, experimentDirName, experimentName)
 
     rng(randomizationSeed);
-
+    
     % useLearnedFile(1):    0 = don't do it
     %                       1 = use previously learned policy specified in learnedFile
     % useLearnedFile(2):    0 = retrain with same/new parameters
@@ -275,9 +275,16 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         normDataSample = (dataSample - model.currMean(signalType)) / sqrt(model.currM2(signalType) / (n - 1));
     end
 
+    %% these parameters can be put in the model:
+    % vergErrMax = 0;
+    % angleMin = (atand(model.baseline / (2 * model.objDistMax)) * 2) - vergErrMax; %angle for both eyes
+    % angleMax = (atand(model.baseline / (2 * model.objDistMin)) * 2) + vergErrMax;
+    angleMin = 0;                                                           % corresponds to parallel looking eyes
+    angleMax = (atand(model.baseline / (2 * model.objDistMax)) * 2) + 5;    % corr. to maximal obj dist but still in the large scale patches    
+    
     %%% Main execution loop
     t = model.trainedUntil; % this is zero in newly initiated model
-    command = [0; 0];
+    command = [0; 0]; %[0.1; 0.1];
     % rewardFunction_prev = 0;
     elapsedTime = 0;
     for iter1 = 1 : (timeToTrain / model.interval)
@@ -298,15 +305,46 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         objDist = model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, 1);
         angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
 
-        %% Initialize muscle activities
-        % Uniform object fixation distribution
-        fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
-
-        % Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
-        % [command, angleNew] = model.getMF2(fixationDist, 0);
-
-        % Uniform muscle activation distribution for two muscles
-        [command, angleNew] = model.getMFedood(fixationDist, 0);
+        %% Initialize muscle activities depending on init method
+        if model.initMethod < 3
+            if model.initMethod < 1
+                % initMethod = 0: completely random muscle commands
+                command = rand(2, 1) .* [0.1; 0.2];
+                angleNew = model.getAngle(command) * 2;
+            else
+                % Uniform object fixation distribution
+                fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
+                
+                if model.initMethod == 1
+                     % initMethod = 1: Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
+                    [command, angleNew] = model.getMF2(fixationDist, 0);
+                else
+                    % initMethod = 2: Uniform muscle activation distribution for two muscles
+                    [command, angleNew] = model.getMFedood(fixationDist, 0);
+                end
+            end
+        else
+            % initMethod = 3: add a random vector to the last command
+            % the new command should lie within some boundaries, specified by angleMin and angleMax
+            dummy = true;
+            commandOld = command;
+            rangeMax = 0.02;
+            
+            while dummy
+                [relativeCommand(1, 1), relativeCommand(2, 1)] = pol2cart(rand(1) * pi * 2, rand(1) * rangeMax);
+                command = command + relativeCommand;
+                command = checkCmd(command);
+                angleNew = model.getAngle(command) * 2;
+                
+                if (angleNew > angleMin) && (angleNew < angleMax)
+                    dummy = false;
+                else
+                    command = commandOld;
+                    rangeMax = rangeMax + 0.005;
+                end
+            end
+        end
+        
 
         % testing input distribution
         % nSamples = 10000;
@@ -385,7 +423,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
             %
             %% norm(reward)
-%             rewardFunction = onlineNormalize(t, rewardFunction, 3);
+            % rewardFunction = onlineNormalize(t, rewardFunction, 3);
             %% norm(recErr)
             % rewardFunction = onlineNormalize(t, model.lambdaRec * reward, 1) - model.lambdaMet * metCost;
             %% norm(metCost)

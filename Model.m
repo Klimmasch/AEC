@@ -27,6 +27,7 @@ classdef Model < handle
         simulatedTime;      % how long did the model take to be learned (min)
         testAt;             % at which iteration steps online testing is performed
         inputParams;        % non-default parameter vector used to generate model with configVar
+        initMethod;         % string identifying the initialization of muscle commands
 
         sparseCodingType;   % type of sparse coding
 
@@ -122,7 +123,7 @@ classdef Model < handle
                 if (~(isempty(obj.testAt)) && (obj.testAt(1) ~= 0))
                     obj.testAt = horzcat(0, obj.testAt);
                 end
-                obj.inputParams = {};
+                obj.inputParams = PARAM{1}{25};
                 obj.sparseCodingType = PARAM{1}{4};
                 obj.focalLength = PARAM{1}{5};
                 obj.baseline = PARAM{1}{6};
@@ -138,6 +139,7 @@ classdef Model < handle
                 obj.metCostDec = PARAM{1}{23};
                 obj.fixDistMin = PARAM{1}{19};
                 obj.fixDistMax = PARAM{1}{20};
+                obj.initMethod = PARAM{1}{24};
 
                 % single eye
                 obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
@@ -238,6 +240,8 @@ classdef Model < handle
                 %%% Preparing Functions
                 % getMF functions
                 obj.degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
+%                 obj.degrees = load('DegreesFlatter.mat');
+%                 obj.degrees = load('DegreesFlatInverted.mat');
                 obj.metCosts = load('MetabolicCosts.mat');
 
                 resFactor = 10; % factor by which the resolution of the tabular should be increased
@@ -971,7 +975,7 @@ classdef Model < handle
                         title(strcat('Total Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
 
                         pcHandle = pcolor(xb, yb, histHandle);
-                        axis([0, xb(end), 0, yb(end)]);
+                        axis([0, max(xb(end), 0.01), 0, max(yb(end), 0.01)]);
                         shading interp;
                         set(pcHandle, 'EdgeColor', 'none');
 
@@ -1100,7 +1104,8 @@ classdef Model < handle
                 if ((~(isempty(this.testAt))) ...
                     && (~(isempty(this.testHist))) ...
                     && (this.testHist(1, 1) == 1.1593) ...
-                    && (size(this.testHist, 1) > 1))
+                    && (size(this.testHist, 1) > 1)) ...
+                    && (this.testHist(end) ~= 0)
 
                     % sort fields in ascending order
                     [this.testAt, sortIndex] = sort(this.testAt);
@@ -1196,7 +1201,9 @@ classdef Model < handle
 
                         % add modelAt0 entry
                         if (str2num(subFolders(3).name(8 : end)) ~= 0)
-                            model.testAt = horzcat(0, model.testAt);
+                            if (model.testAt(1) ~= 0)
+                                model.testAt = horzcat(0, model.testAt);
+                            end
 
                             if (model.testHist(1, 1 : 2) ~= [1.1593, 1.3440])
                                 model.testHist = vertcat([1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517], model.testHist);
@@ -1391,7 +1398,7 @@ classdef Model < handle
         %%% This method creates a trajectory from the given paramters and plots it
         %%% on the plane of object depth.
         %%% Note that this script is intended solely for continuous models.
-        % @param objDist                the object distance
+        % @param objDist                array of object distances
         % @param startVergErr           the vergence error to muscles start with
         % @param initMethod             either 'simple' or 'random'
         % @param numIters               number of iterations that are executed
@@ -1429,6 +1436,9 @@ classdef Model < handle
             elseif strcmp(initMethod, 'simple')
                 initMethod = uint8(2);
 
+            elseif strcmp(initMethod, 'perturbed')
+                initMethod = uint8(3);
+
             else
                 error('Muscle initialization method %s not supported.', initMethod);
             end
@@ -1442,6 +1452,13 @@ classdef Model < handle
                 figure;
                 figIter = 1;
             end
+
+            command = [0.07, 0.1];
+%             vergErrMax = 2;
+%             angleMin = (atand(this.baseline / (2 * this.objDistMax)) * 2) - vergErrMax; %angle for both eyes
+%             angleMax = (atand(this.baseline / (2 * this.objDistMin)) * 2) + vergErrMax;
+            angleMinT = 0;
+            angleMaxT = (atand(this.baseline / (2 * this.objDistMax)) * 2) + 6;
 
             for odIndex = 1 : length(objDist)
                 angleDes = 2 * atand(this.baseline / (2 * objDist(odIndex)));
@@ -1476,6 +1493,25 @@ classdef Model < handle
                             angleNew = this.getAngle(command);
                         elseif (initMethod == 2)
                             [command, angleNew] = this.getMF2(objDist(odIndex), startVergErr(vergErrIndex));
+                        elseif (initMethod == 3)
+                            % 'perturbed' init: take the last command and add a random vector to it but stay within boundaries
+                            dummy = true;
+                            commandOld = command;
+                            rangeMax = 0.02;
+                            
+                            while dummy
+                                [relativeCommand(1, 1), relativeCommand(2, 1)] = pol2cart(rand(1) * pi * 2, rand(1) * rangeMax);
+                                command = command + relativeCommand;
+                                command = checkCmd(command);
+                                angleNew = model.getAngle(command) * 2;
+                                
+                                if (angleNew > angleMinT) && (angleNew < angleMaxT)
+                                    dummy = false;
+                                else
+                                    command = commandOld;
+                                    rangeMax = rangeMax + 0.005;
+                                end
+                            end
                         end
                         trajectory(odIndex, vergErrIndex, stimIter, 1, :) = command;
 

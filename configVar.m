@@ -10,6 +10,8 @@ function model = configVar(varParamArray)
 % Experiment paramters
 % --------------------
 
+origParams = varParamArray;    % save input parameters to write into the Model
+
 % stimulus file name
 [found, textureFile, varParamArray] = parseparam(varParamArray, 'textureFile');
 if (~found)
@@ -70,7 +72,7 @@ end
 
 % [peripheral, intermediate ..., central vision]
 % downsampling ratio, i.e. how many pixels in original image
-% correspond to how many pixels in downsampled image | origin [8, 2]
+% correspond to one pixels in downsampled image | origin [8, 2]
 [found, dsRatio, varParamArray] = parseparam(varParamArray, 'dsRatio');
 if (~found)
     dsRatio = [4, 1];
@@ -259,10 +261,26 @@ else
     metCostDec = metCostRange(1) - metCostRange(2);
 end
 
-PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
-              objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
-              lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
-              dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec};
+%%% muscle initialization / reset method 
+% 0 ('simple')      : use random muscle commands out of [0, 0.1] for lateral and [0,
+%                     0.2] for medial rectus
+% 1 ('advanced')    : first, uniformly draw a object distance, then set one
+%                     muscle actity to 0 and calculate the other muscle activity
+% 2 ('moreAdvanced'): first, uniformly draw a object distance, then uniformly draw
+%                     a point from all possible mucle commands that fixate this distance
+% 3 ('perturbed')   : take the last command and add a random vector with radius
+%                     uniformly drawn from [0, 0.02] (max 2 % muscle activity for both muscles)
+%%%
+[found, initMethod, varParamArray] = parseparam(varParamArray, 'initMethod');
+if (~found)
+    initMethod = 2;
+end
+
+PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, ...
+              baseline, objDistMin, objDistMax, muscleInitMin, muscleInitMax, ...
+              interval, lambdaMuscleFB, lambdaRec, metCostRange, patchSize, ...
+              pxFieldOfView, dsRatio, stride, fixDistMin, fixDistMax, ...
+              overlap, cutout, metCostDec, initMethod, origParams};
 
 % ------------------------
 % Sparce Coding parameters
@@ -429,7 +447,7 @@ end
 % how it works: actor.wp_ji = (1 - (actor.regularizer * actor.learnRate)) * actor.wp_ji;
 [found, regularizer, varParamArray] = parseparam(varParamArray, 'regularizer');
 if (~found)
-    regularizer = 1e-4; % old: 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
+    regularizer = 1e-5; % old: 1e-3 / actorLRRange(1);
 end
 
 % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
