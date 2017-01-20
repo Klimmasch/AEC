@@ -175,12 +175,20 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         % Absolute command feedback # concatination
                         if (model.rlModel.continuous == 1)
                             if (model.rlModel.CActor.output_dim == 1)
-                                feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                                % feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                                % z-transformed raw feature vector (no muscle feedback scaling)
+                                feature = [bfFeature; command(2)];
                             else
-                                feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                                % feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                                % z-transformed raw feature vector (no muscle feedback scaling)
+                                feature = [bfFeature; command];
                             end
                         else
                             feature = bfFeature;
+                        end
+                        % z-transformed raw feature vector (no muscle feedback scaling)
+                        for i = 1 : length(feature)
+                            feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
                         end
 
                         %%% Calculate metabolic costs
@@ -314,12 +322,20 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                     % Absolute command feedback # concatination
                     if (model.rlModel.continuous == 1)
                         if (model.rlModel.CActor.output_dim == 1)
-                            feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                            % feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                            % z-transformed raw feature vector (no muscle feedback scaling)
+                            feature = [bfFeature; command(2)];
                         else
-                            feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                            % feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                            % z-transformed raw feature vector (no muscle feedback scaling)
+                            feature = [bfFeature; command];
                         end
                     else
                         feature = bfFeature;
+                    end
+                    % z-transformed raw feature vector (no muscle feedback scaling)
+                    for i = 1 : length(feature)
+                        feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
                     end
 
                     % Track reconstruction error and Critic's response
@@ -379,12 +395,20 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 % Absolute command feedback # concatination
                 if (model.rlModel.continuous == 1)
                     if (model.rlModel.CActor.output_dim == 1)
-                        feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                        % feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                        % z-transformed raw feature vector (no muscle feedback scaling)
+                        feature = [bfFeature; command(2)];
                     else
-                        feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                        % feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                        % z-transformed raw feature vector (no muscle feedback scaling)
+                        feature = [bfFeature; command];
                     end
                 else
                     feature = bfFeature;
+                end
+                % z-transformed raw feature vector (no muscle feedback scaling)
+                for i = 1 : length(feature)
+                    feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
                 end
 
                 %%% Action
