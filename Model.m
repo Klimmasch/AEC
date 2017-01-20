@@ -1539,11 +1539,18 @@ classdef Model < handle
                             end
 
                             [bfFeature, ~, ~] = this.generateFR(currentView);              % encode image patches
-                            % feature = [bfFeature; command * this.lambdaMuscleFB];          % append muscle activities to feature vector
-                            feature = [bfFeature; command];                                % z-transformed raw feature vector (no muscle feedback scaling)
-                            for i = 1 : length(feature)
-                                feature(i) = this.onlineNormalize(this.trainedUntil, feature(i), i, 0);
-                            end
+
+                            %% Standard feature vector compilation:
+                            % append muscle activities to basis function vector
+                            feature = [bfFeature; command * this.lambdaMuscleFB];
+
+                            %% Normalized feature vector:
+                            % z-transform raw feature vector (no muscle feedback scaling)
+                            % feature = [bfFeature; command];
+                            % for i = 1 : length(feature)
+                            %     feature(i) = this.onlineNormalize(this.trainedUntil, feature(i), i, 0);
+                            % end
+
                             relativeCommand = this.rlModel.act(feature);                   % generate change in muscle activity
                             command = checkCmd(command + relativeCommand);                 % calculate new muscle activities
                             angleNew = this.getAngle(command) * 2;                         % transform into angle

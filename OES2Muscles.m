@@ -338,13 +338,14 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             %%% Feedback
             % Generate RL model's input feature vector by
             % basis function feature vector & total muscle command concatination
-            % feature = [bfFeature; command * model.lambdaMuscleFB];
+            feature = [bfFeature; command * model.lambdaMuscleFB];
 
-            % z-transformed raw feature vector (no muscle feedback scaling)
-            feature = [bfFeature; command];
-            for i = 1 : length(feature)
-                feature(i) = model.onlineNormalize(t, feature(i), i, 1);
-            end
+            %% Normalized feature vector
+            % z-transform raw feature vector (no muscle feedback scaling)
+            % feature = [bfFeature; command];
+            % for i = 1 : length(feature)
+            %     feature(i) = model.onlineNormalize(t, feature(i), i, 1);
+            % end
 
             %%% Calculate metabolic costs
             metCost = model.getMetCost(command) * 2;
