@@ -106,6 +106,7 @@ classdef Model < handle
 
         currMean;       % approximations for online signal normalization
         currM2;
+        desiredStdZT;   % desired standard deviation of each z-transformed variable
     end
 
     methods
@@ -169,7 +170,8 @@ classdef Model < handle
                 % obj.fixZ = zeros(obj.trainTime, 1);
 
                 obj.td_hist = zeros(obj.trainTime, 1);
-                % obj.feature_hist = zeros(obj.trainTime, 1);%zeros(obj.trainTime, PARAM{3}{9}(1));
+                % obj.feature_hist = zeros(obj.trainTime, 1);
+                % obj.feature_hist = zeros(1000, PARAM{3}{9}(1) * 2);
                 obj.cmd_hist = zeros(obj.trainTime, 2);
                 obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
                 % obj.weight_hist = zeros(obj.trainTime, 4);
@@ -193,9 +195,15 @@ classdef Model < handle
                 obj.trainedUntil = 0;
                 obj.notes = '';
 
-                % [recErrSignal, metCostSignal, rewardSignal]
-                obj.currMean = zeros(1, 3);
-                obj.currM2 = zeros(1, 3);
+                % normalization of [recErrSignal, metCostSignal, rewardSignal]
+                % obj.currMean = zeros(1, 3);
+                % obj.currM2 = zeros(1, 3);
+                % obj.desiredStdZT = PARAM{1}{24};
+
+                % normalization of nth entry in feature vector
+                obj.currMean = zeros(1, PARAM{3}{9}(1));
+                obj.currM2 = zeros(1, PARAM{3}{9}(1));
+                obj.desiredStdZT = PARAM{1}{24};
 
                 %%% Generate image processing constants
                 obj.patchSize = PARAM{1}{15};
@@ -237,12 +245,14 @@ classdef Model < handle
 
                 %%% Preparing Functions
                 % getMF functions
-                obj.degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
-                obj.metCosts = load('MetabolicCosts.mat');
+                obj.degrees = load('Degrees.mat');          % f(medial_rectus_activiation, medial_rectus_activiation) = vergence_angle table 'results_deg'
+                % obj.degrees = load('DegreesFlatter.mat');
+                obj.metCosts = load('MetabolicCosts.mat');  % f(medial_rectus_activiation, medial_rectus_activiation) = metabolic_cost table 'results'
 
-                resFactor = 10; % factor by which the resolution of the tabular should be increased
+                % factor by which the resolution of the tabular should be increased
+                % resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
                 % resFactor = 13; % results in comparable amount of entries as the mfunctions
-                %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
+                resFactor = 10;
 
                 % between 0 and 0.2/0.1 mus. act. the resulution is increased
                 usedRows = 3;
@@ -267,17 +277,17 @@ classdef Model < handle
 
                 % mfunction = [xValNeg(1 : end - 1), yValNeg(1 : end - 1); xValPos, yValPos];
                 obj.mfunctionMR = [xValPos, yValPos];
-                obj.mfunctionMR(:, 1) = obj.mfunctionMR(:, 1) * 2;  % angle for two eyes
-                obj.dAngleMR = abs(diff(obj.mfunctionMR(1 : 2, 1)));   % delta in angle
-                obj.dmf = diff(obj.mfunctionMR(1 : 2, 2));       % delta in muscle force
+                obj.mfunctionMR(:, 1) = obj.mfunctionMR(:, 1) * 2;      % angle for two eyes
+                obj.dAngleMR = abs(diff(obj.mfunctionMR(1 : 2, 1)));    % delta in angle
+                obj.dmf = diff(obj.mfunctionMR(1 : 2, 2));              % delta in muscle force
 
                 approx = spline(1 : 11, obj.degrees.results_deg(1, :));
                 xValPos = ppval(approx, 1 : 0.0001 : 11)';
                 yValPos = linspace(0, 1, resolution)';
 
                 obj.mfunctionLR = [xValPos, yValPos];
-                obj.mfunctionLR(:, 1) = obj.mfunctionLR(:, 1) * 2;    % angle for two eyes
-                obj.dAngleLR = abs(diff(obj.mfunctionLR(1 : 2, 1)));     % delta in angle
+                obj.mfunctionLR(:, 1) = obj.mfunctionLR(:, 1) * 2;      % angle for two eyes
+                obj.dAngleLR = abs(diff(obj.mfunctionLR(1 : 2, 1)));    % delta in angle
 
                 obj.angleMin = min(obj.mfunctionLR(obj.mfunctionLR(:, 1) > 0));
                 obj.angleMax = obj.mfunctionMR(end, 1);
@@ -291,16 +301,9 @@ classdef Model < handle
         end
 
         %%% Copy constructor
-        % Make a (deep) copy of a handle object
+        %   Creates a (deep) copy of a handle object
         function new = copy(this)
             % Instantiate new object of the same class
-            % dummyParams = {{'', 0, [0], 0, 0, 0, ...
-            %                 0, 0, 0, 0, 0, ...
-            %                 0, 0, [0, 0], 0, [0, 0], ...
-            %                 [0, 0], [0, 0], 0, 0, [0], 0, 0}, ...
-            %                {[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]}, ...
-            %                {[0], 0, 0, 0, 0, 0, [0, 0], 0, [0, 0, 0], [0, 0, 0], ...
-            %                 0, 0, 0, 0, [0, 0], 0, 0}};
             dummyParams = {{''}, ...
                            {}, ...
                            {}};
@@ -316,8 +319,8 @@ classdef Model < handle
             end
         end
 
-        % Generates index matrix for image patches
-        % Filled image batch, i.e. all patches for the respective scale are used
+        %%% Generates index matrix for image patches
+        %   Filled image batch, i.e. all patches for the respective scale are used
         function prepareColumnInd(this)
             % index matrix
             this.columnInd = {};
@@ -341,7 +344,7 @@ classdef Model < handle
             end
         end
 
-        % Cuts out smaller scales from larger scales' fields of view
+        %%% Cuts out smaller scales from larger scales' fields of view
         function prepareCutout(this)
             % most inner layer does not need a cutout
             % therefore n-1 cuts per n layers
@@ -384,8 +387,8 @@ classdef Model < handle
         end
 
         %%% Patch generation
-        % scScale:  SC scale index elem {coarse := 1, 2, ..., fine = #}
-        % eyePos:   eye position index elem {1 := left, 2 := right}
+        %   param scScale:  SC scale index elem {coarse := 1, 2, ..., fine = #}
+        %   param eyePos:   eye position index elem {1 := left, 2 := right}
         function preprocessImage(this, scScale, eyePos)
             if (eyePos == 1)
                 img = this.imgGrayLeft;
@@ -457,8 +460,43 @@ classdef Model < handle
             totalFeature = vertcat(featureArray{:});    % join feature vectors
         end
 
-        % Calculates muscle force for medial rectus
-        % maps {vergenceAngle} -> {muscleForce} for one muscle
+        %%% Online signal normalization to 0 mean and unit variance by Welford (1962)
+        %   also known as z-transformation
+        %
+        %   currMean :=         current mean approximation
+        %   currM2 :=           current sum of squares of differences from the current mean
+        %   desiredStdZT :=     desired std. deviation
+        %
+        %   param n:            index of sample
+        %   param dataSample:   new datapoint
+        %   param signalType:   {1, 2, 3} := recErrSignal, metCostSignal, rewardSignal; for reward normalization
+        %                       {1, 2, ..., feature_n} := nth entry in feature vector; for feature vector normalization
+        %   param updateFlag:   {0, 1} := whether current means and M2s shall be updated
+        %
+        %   return:             normalized data sample point
+        function normDataSample = onlineNormalize(this, n, dataSample, signalType, updateFlag)
+            if (n < 2)
+                normDataSample = dataSample * this.desiredStdZT;
+                return;
+            end
+
+            if (updateFlag == 1)
+                delta = dataSample - this.currMean(signalType);
+                this.currMean(signalType) = this.currMean(signalType) + delta / n;
+                this.currM2(signalType) = this.currM2(signalType) + delta * (dataSample - this.currMean(signalType));
+            end
+
+            % n - 1 to get unbiased variance
+            normDataSample = ((dataSample - this.currMean(signalType)) / sqrt(this.currM2(signalType) / (n - 1))) * this.desiredStdZT;
+
+            % catch case if signal == 0 until now
+            if (isnan(normDataSample))
+                normDataSample = 0;
+            end
+        end
+
+        %%% Calculates muscle force for medial rectus
+        %   maps {vergenceAngle} -> {muscleForce} for one muscle
         function mf = getMF(this, vergAngle)
             % look up index of vergAngle
             if (vergAngle >= this.degrees.results_deg(1, 1) * 2)
@@ -470,8 +508,8 @@ classdef Model < handle
             end
         end
 
-        % Calculates muscle force for two muscles
-        % the activation of on muscle is always 0.
+        %%% Calculates muscle force for two muscles
+        %   the activation of on muscle is always 0.
         function [mf, angleInit] = getMF2(this, objDist, desVergErr)
             % correct vergence angle for given object distance
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
@@ -490,9 +528,9 @@ classdef Model < handle
             end
         end
 
-        % Calculates muscle force for two muscles
-        % drawn from all permitted mf(l, m) ^= f(objDist, desVergErr), where l, m >= 0
-        % == get muscle force equally distributed over object distance.
+        %%% Calculates muscle force for two muscles
+        %   drawn from all permitted mf(l, m) ^= f(objDist, desVergErr), where l, m >= 0
+        %   == get muscle force equally distributed over object distance.
         function [command, angleInit] = getMFedood(this, objDist, desVergErr)
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             angleInit = angleCorrect - desVergErr;
@@ -510,8 +548,8 @@ classdef Model < handle
             command = [mfLR; mfMR];
         end
 
-        % Maps {objDist, desVergErr} -> {medialRectusActivations, lateralRectusActivations},
-        % i.e. calculates all muscle activity cominations corresponding to specified {objDist, desVergErr}
+        %%% Maps {objDist, desVergErr} -> {medialRectusActivations, lateralRectusActivations},
+        %   i.e. calculates all muscle activity combinations corresponding to specified {objDist, desVergErr}
         function [mfLR, mfMR] = getAnglePoints(this, objDist, desVergErr)
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             angleInit = angleCorrect - desVergErr;
@@ -525,40 +563,41 @@ classdef Model < handle
             mfLR = yi .* this.scaleFacLR;
         end
 
-        % mapping muscle activity to angle (one eye)
+        %%% Maps {medialRectusActivations, lateralRectusActivations} -> VergErr
+        %   i.e., maps muscle activity to angle (one eye)
         function angle = getAngle(this, command)
-            cmd = (command * 10) + 1;                                       % scale commands to table entries
-            angle = interp2(this.degrees.results_deg, cmd(1), cmd(2), 'spline'); % interpolate in table by cubic splines
+            cmd = (command * 10) + 1;                                               % scale commands to table entries
+            angle = interp2(this.degrees.results_deg, cmd(1), cmd(2), 'spline');    % interpolate in table by cubic splines
         end
 
-        % depricated method: slightly faster variant, also a bit less precise,
-        % only works for the medial rectus
+        %%% Maps {medialRectusActivations, lateralRectusActivations} -> VergErr
+        %   DEPRICATED method: slightly faster variant, also a bit less precise,
+        %   only works for the medial rectus
         function angle = getAngle2(this, command)
             angleIndex = find(this.mfunctionMR(:, 2) <= command(2) + this.dmf & this.mfunctionMR(:, 2) >= command(2) - this.dmf);
             angle = this.mfunctionMR(angleIndex, 1);
             angle = angle(ceil(length(angle) / 2));
         end
 
-        % calculation of metabolic costs
+        %%% Calculates/interpolates metabolic costs resulting from given command
         function tmpMetCost = getMetCost(this, command)
-            cmd = (command * 10) + 1;                                           % scale commands to table entries
-            tmpMetCost = interp2(this.metCosts.results, cmd(1), cmd(2), 'spline');   % interpolate in table by cubic splines
+            cmd = (command * 10) + 1;                                               % scale commands to table entries
+            tmpMetCost = interp2(this.metCosts.results, cmd(1), cmd(2), 'spline');  % interpolate in table by cubic splines
         end
 
-        %%% Helper function for calculating {objDist} -> {maxVergErr}
+        %%% Calculates max. permitted verg_angle {objDist} -> {maxVergErr}
         function vergErrMax = getVergErrMax(this, objDist)
             % correct vergence angle for given object distance
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             vergErrMax = angleCorrect - this.angleMin;
         end
 
-        %% Updating images during simulation
-        %%% Generates two new images for both eyes
-        % simulator:    a renderer instance
-        % texture:      file path of texture input
-        % eyeAngle:     angle of single eye (rotation from offspring)
-        % objDist:      distance of stimulus
-        % scaleImSize:  scaling factor of stimulus plane [m]
+        %%% Updates images during simulation by generating two new images for both eyes
+        %   param simulator:    a renderer instance
+        %   param texture:      file path of texture input
+        %   param eyeAngle:     angle of single eye (rotation from offspring)
+        %   param objDist:      distance of stimulus
+        %   param scaleImSize:  scaling factor of stimulus plane [m]
         function refreshImages(this, simulator, texture, eyeAngle, objDist, scaleImSize)
             simulator.add_texture(1, texture);
             simulator.set_params(1, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
@@ -584,11 +623,11 @@ classdef Model < handle
         end
 
         %%% Generates two new images for both eyes for experimental renderer
-        % simulator:    a renderer instance
-        % textureNumber:    index of stimulus in memory buffer
-        % eyeAngle:         angle of single eye (rotation from offspring)
-        % objDist:          distance of stimulus
-        % scaleImSize:  scaling factor of stimulus plane [m]
+        %   param simulator:        a renderer instance
+        %   param textureNumber:    index of stimulus in memory buffer
+        %   param eyeAngle:         angle of single eye (rotation from offspring)
+        %   param objDist:          distance of stimulus
+        %   param scaleImSize:      scaling factor of stimulus plane [m]
         function refreshImagesNew(this, simulator, textureNumber, eyeAngle, objDist, scaleImSize)
             simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
 
@@ -612,8 +651,8 @@ classdef Model < handle
             this.imgGrayRight = 0.2989 * this.imgRawRight(:, :, 1) + 0.5870 * this.imgRawRight(:, :, 2) + 0.1140 * this.imgRawRight(:, :, 3);
         end
 
-        %% Plot all gathered performance data and save graphs
-        %  @param level:    # of plot elem range [1, 7]
+        %%% Plot all gathered performance data and save graphs
+        %   param level:    # of plot elem range [1, 7]
         function allPlotSave(this, level)
 
             % only take the last value before the image/texture is changed
@@ -1250,8 +1289,8 @@ classdef Model < handle
             end
         end
 
-        % Generates anaglyphs of the large and small scale fovea and
-        % one of the two unpreprocessed gray scale images
+        %%% Generates anaglyphs of the large and small scale fovea and
+        %   one of the two unpreprocessed gray scale images
         function generateAnaglyphs(this, identifier, markScales, infos, imgNumber)
 
             numberScales = length(this.scModel);
@@ -1377,7 +1416,7 @@ classdef Model < handle
                     subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg])
                 end
                 imshow(scaleImages{sp});
-%                 descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{9}(sp))};
+                % descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{9}(sp))};
                 descr = {sprintf('Scale %d', sp)};
                 % todo: the fist two values in text have to be adapted, especially
                 % for more than 2 scales, also the size of the letters,
@@ -1388,18 +1427,17 @@ classdef Model < handle
             fig.delete();
         end
 
-        %%% This method creates a trajectory from the given paramters and plots it
-        %%% on the plane of object depth.
-        %%% Note that this script is intended solely for continuous models.
-        % @param objDist                the object distance
-        % @param startVergErr           the vergence error to muscles start with
-        % @param initMethod             either 'simple' or 'random'
-        % @param numIters               number of iterations that are executed
-        % @param stimuliIndices         an array of indizes from the texture files
-        % @param simulator              either a simulator object or [] for a new one
-        % @param titleStr               string identifier that is used for the title and the saved image
-        % @param savePlot               true or false if the resulting plots should be saved
-        %%%
+        %%% Creates a movement trajectory from the given paramters and plots it
+        %   on the plane of object depth.
+        %   Note that this script is intended solely for continuous models.
+        %   param objDist:          the object distance
+        %   param startVergErr:     the vergence error to muscles start with
+        %   param initMethod:       either 'simple' or 'random'
+        %   param numIters:         number of iterations that are executed
+        %   param stimuliIndices:   an array of indizes from the texture files
+        %   param simulator:        either a simulator object or [] for a new one
+        %   param titleStr:         string identifier that is used for the title and the saved image
+        %   param savePlot:         true or false if the resulting plots should be saved
         function h = plotTrajectory(this, objDist, startVergErr, initMethod, numIters, stimuliIndices, simulator, directory, titleStr, savePlot)
             % simulator check
             if (isempty(simulator))
@@ -1501,7 +1539,11 @@ classdef Model < handle
                             end
 
                             [bfFeature, ~, ~] = this.generateFR(currentView);              % encode image patches
-                            feature = [bfFeature; command * this.lambdaMuscleFB];          % append muscle activities to feature vector
+                            % feature = [bfFeature; command * this.lambdaMuscleFB];          % append muscle activities to feature vector
+                            feature = [bfFeature; command];                                % z-transformed raw feature vector (no muscle feedback scaling)
+                            for i = 1 : length(feature)
+                                feature(i) = this.onlineNormalize(this.trainedUntil, feature(i), i, 0);
+                            end
                             relativeCommand = this.rlModel.act(feature);                   % generate change in muscle activity
                             command = checkCmd(command + relativeCommand);                 % calculate new muscle activities
                             angleNew = this.getAngle(command) * 2;                         % transform into angle
@@ -1586,14 +1628,13 @@ classdef Model < handle
                         if (numIters >= this.interval)
                             plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 1), [this.interval, 1]) ./ this.scaleFacLR + 1, ...
                                  reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 2), [this.interval, 1]) ./ this.scaleFacMR + 1, ...
-                                 '.-', 'color', 'r', 'LineWidth', 1.5, 'MarkerSize', 7); % vielleicht ne andere Farbe ...
+                                 '-o', 'color', 'r', 'LineWidth', 1.5, 'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 7); % vielleicht ne andere Farbe ...
                         end
 
                         % plot init point
                         plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / this.scaleFacLR + 1, ...
                              trajectory(odIndex, vergErrIndex, stim, 1, 2) / this.scaleFacMR + 1, ...
                             'r.', 'MarkerSize', 15);
-                            % 'color', tmpRed, 'MarkerSize', 15); 'color', [41 / 255, 1, 94 / 255],
 
                         % plot destination point
                         plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / this.scaleFacLR + 1, ...
@@ -1617,7 +1658,7 @@ classdef Model < handle
         end
 
         %%% This methods displays the current binocular basis functions of the model.
-        %%% If the history of basis functions was saved, their development is displayed.
+        %   If the history of basis functions was saved, their development is displayed.
         function displayBasis(this, savePlot)
             % r = 16; c = 18; %how to arrange the basis in rows and cols
             r = 20;
@@ -1675,7 +1716,7 @@ classdef Model < handle
     end
 end
 
-%% Not overlapping Patch generation
+% %%% Not overlapping Patch generation
 % function patchesNoOv = preprocessImageNoOv(img, fovea, downSampling, patchSize)
 %     img = .2989 * img(:,:,1) + .5870 * img(:,:,2) + .1140 * img(:,:,3);
 %     for i = 1:log2(downSampling)
@@ -1695,7 +1736,7 @@ end
 %     patchesNoOv = im2col(img, [patchSize patchSize], 'distinct');
 % end
 
-%% Generation of random vergence angles according to truncated Laplace distribution
+% %%% Generation of random vergence angles according to truncated Laplace distribution
 % function l = truncLaplacian(diversity, range)
 %     % see wikipedia for the generation of random numbers according to the
 %     % LaPlace distribution via the inversion method
