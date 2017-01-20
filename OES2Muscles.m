@@ -3,7 +3,7 @@
 % @param randomizationSeed   randomization seed
 % @param clusterCall         whether this is a cluster job 0 (no) 1 (yes)
 % @param inputParams         a list composed of 'identifier' followed by value, e.g {'alpha', 1, 'beta', 2, ...}
-%                            whereas 'identifier' has to appear in configVar.m
+%                            whereas 'identifier' has to be present in configVar.m
 % @param experimentName     description of approach used as file name
 %%%
 
@@ -23,7 +23,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     useLearnedFile = [0, 0];
     learnedFile = '';
     % useLearnedFile = [1, 1];
-    % learnedFile = '/home/klimmasch/projects/results/model_05-Oct-2016_10:31:09_3000000_1_critic075_mc0_varDec5e5-0/model.mat';
+    % learnedFile = '/home/aecgroup/aecdata/Results/17-01-11_2000000iter_1_feature_Vector_Normalize/model.mat';
 
     %%% Stimulus declaration
     % textureFile = 'Textures_mcgillManMadeTrain(jpg).mat';     % McGill man made database
@@ -111,7 +111,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             end
             model = model.model;
             model.trainTime = trainTime;
-            model.savePath = strcat(absoluteDir, '/', fullDir.name);
+
+            try
+                model.savePath = strcat(absoluteDir, '/', fullDir.name);
+            catch
+                warning('Either absoluteDir or fullDir not defined.\nmodel.savePath remains %s', model.savePath);
+            end
         end
     else
         % old static version of config.m
@@ -256,25 +261,6 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         cmd(i1) = 1;
     end
 
-    %%% Online signal normalization to 0 mean and unit variance by Welford (1962)
-    %
-    %   param n:            # of samples
-    %   param dataSample:   new datapoint
-    %   param signalType:   {1, 2, 3} := recErrSignal, metCostSignal, rewardSignal
-    %   return:             normalized data sample point
-    function normDataSample = onlineNormalize(n, dataSample, signalType)
-        if (n < 2)
-            normDataSample = dataSample;
-        end
-
-        delta = dataSample - model.currMean(signalType);
-        model.currMean(signalType) = model.currMean(signalType) + delta / n;
-        model.currM2(signalType) = model.currM2(signalType) + delta * (dataSample - model.currMean(signalType));
-
-        % n - 1 to get unbiased variance
-        normDataSample = (dataSample - model.currMean(signalType)) / sqrt(model.currM2(signalType) / (n - 1));
-    end
-
     %%% Main execution loop
     t = model.trainedUntil; % this is zero in newly initiated model
     command = [0; 0];
@@ -330,7 +316,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             t = t + 1;
 
             %% Update retinal images
-            % refreshImages(currentTexture, angleNew / 2, objDist, 3);  % stable renderer
+            % refreshImages(currentTexture, angleNew / 2, objDist, 3); % stable renderer
             model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3); % experimental renderer
 
             %% Generate & save the anaglyph picture
@@ -352,7 +338,13 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             %%% Feedback
             % Generate RL model's input feature vector by
             % basis function feature vector & total muscle command concatination
-            feature = [bfFeature; command * model.lambdaMuscleFB];
+            % feature = [bfFeature; command * model.lambdaMuscleFB];
+
+            % z-transformed raw feature vector (no muscle feedback scaling)
+            feature = [bfFeature; command];
+            for i = 1 : length(feature)
+                feature(i) = model.onlineNormalize(t, feature(i), i, 1);
+            end
 
             %%% Calculate metabolic costs
             metCost = model.getMetCost(command) * 2;
@@ -385,13 +377,13 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % rewardFunction = (rewardFunction - model.reward_mean) / sqrt(model.reward_variance);
             %
             %% norm(reward)
-%             rewardFunction = onlineNormalize(t, rewardFunction, 3);
+            % rewardFunction = model.onlineNormalize(t, rewardFunction, 3, 1);
             %% norm(recErr)
-            % rewardFunction = onlineNormalize(t, model.lambdaRec * reward, 1) - model.lambdaMet * metCost;
+            % rewardFunction = model.onlineNormalize(t, model.lambdaRec * reward, 1, 1) - model.lambdaMet * metCost;
             %% norm(metCost)
-            % rewardFunction = model.lambdaRec * reward - onlineNormalize(t, model.lambdaMet * metCost, 2);
+            % rewardFunction = model.lambdaRec * reward - model.onlineNormalize(t, model.lambdaMet * metCost, 2, 1);
             %% norm(recErr) norm(metCost)
-            % rewardFunction = onlineNormalize(t, model.lambdaRec * reward, 1) + onlineNormalize(t, model.lambdaMet * metCost, 2);
+            % rewardFunction = model.onlineNormalize(t, model.lambdaRec * reward, 1, 1) + model.onlineNormalize(t, model.lambdaMet * metCost, 2, 1);
 
             %%% Learning
             %% Sparse coding models
@@ -420,7 +412,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             model.vergerr_hist(t) = anglerr; % every 10th => adjust displayBasisNEW.m and testModelContinuous.m
             model.relCmd_hist(t, :) = relativeCommand;
             model.cmd_hist(t, :) = command;
-            
+
             model.td_hist(t) = model.rlModel.CCritic.delta;
 
             %%% track all reward associated stuff
@@ -485,7 +477,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % model.verge_actual(t) = angleNew;
             % model.verge_desired(t) = angleDes;
             % model.reward_hist(t) = rewardFunction;
-            % model.feature_hist(t) = mean(bfFeature);
+            % model.feature_hist(t, :) = mean(bfFeature);
             % model.Z(t) = objDist;
             % model.fixZ(t) = fixDepth;
             % model.disp_hist(t) = disparity;
