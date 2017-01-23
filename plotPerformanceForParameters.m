@@ -165,8 +165,9 @@ function plotPerformanceForParameters(modelAt)
     %            {rmse(vergErr), median(vergErr), and iqr(vergErr),
     %             rmse(deltaMC), median(deltaMC), and iqr(deltaMC),
     %             critValDelta, critValNiveau,
-    %             stepLengthFirst, stepLengthTotal}    %see below for explanation of this values 
-    results = zeros(length2, length1, 10);
+    %             stepLengthFirst, stepLengthTotal
+    %             medialRectusWobbling, lateralRectusWobbeling}    %see below for explanation of this values 
+    results = zeros(length2, length1, 12);
 
     for f = 1 : length(subExperiments)
         try
@@ -248,14 +249,19 @@ function plotPerformanceForParameters(modelAt)
         % critValNiveau
         results(ind, jnd, 8) = mean(mean(abs(model.testResult4(:, vseRange == 0, 1 : 2 + length(model.scModel) : end)), 3));
         
-        %%% investigate step width: take absolute difference between consecutive
-        %%% muscle activities or vergence errors as measurement; better:
-        %%% absolute relative muscle activities! model.testResult5[n](abs(1), abs(2), rel(1), rel(2))
+        %%% investigate step width: take absolute relative muscle activities
+        %%% model.testResult5[n](abs(1), abs(2), rel(1), rel(2))
         %%% For every model, display first value for 0.5 and 6 meters, and the sum over all 20 trials
         startInd = find(mod(1 : length(model.testResult5), testInterval) == 1); %indizes of every first action during testing
         % results(ind, jnd, 9) = norm([model.testResult5(startInd, 3), model.testResult5(startInd, 4)], 2);
         results(ind, jnd, 9) = sum(sqrt(sum(model.testResult5(startInd, 3:4)'.^2)));
         results(ind, jnd, 10) = sum(sqrt(sum(model.testResult5(:, 3:4)'.^2)));
+        
+        %%% approaching the axis bahaviour (aka. wobbling)
+        %%% at first, take the mean vector of muscle activities after model verged
+        %%% after that, use the length of that vector for colorcoding in tabular
+        results(ind, jnd, 11 : 12) = getWobblingVectors(model, testInterval);
+        results(ind, jnd, 13) = sqrt(results(ind, jnd, 11)^2 + results(ind, jnd, 12)^2);
     end
 
     % ----------------
@@ -270,7 +276,7 @@ function plotPerformanceForParameters(modelAt)
 
     [x, y] = meshgrid(1 : length1, 1 : length2);
     titleStrings = {'RMSE', 'IQR*4', 'Median'};
-    resultsIter = {[1 : 3]; [4 : 6]; [9, 10]; [7, 8]};
+    resultsIter = {[1 : 3]; [4 : 6]; [9, 10, 13]; [7, 8]};
 
     for figIter = 1 : 4
         if (figIter >= 3)
@@ -291,15 +297,33 @@ function plotPerformanceForParameters(modelAt)
             else
                 imagesc(results(:, :, resultsIter{figIter}(subfigIter)));
             end
-
+            
             txt = results(:, :, resultsIter{figIter}(subfigIter));
-            txt(txt == 0) = Inf;
-            if (figIter < 4)
+            
+            if ~(figIter == 3 && subfigIter == 3)
+                txt(txt == 0) = Inf;        % remove missing data points exept when zeros are possible 
+            end
+                
+            if (figIter == 4)
                 txt = num2str(txt(:), '%0.2f');
+            elseif (figIter == 3) && (subfigIter == 3)
+                txt = num2str(txt(:), '%0.4f');
             else
                 txt = num2str(txt(:), '%0.3f');
             end
+            
             txt = strtrim(cellstr(txt));
+            
+            if (figIter == 3) && (subfigIter == 3)
+                smallerZero = results(:, :, 11) < 0; % should be the same as results(:, :, 12)
+                smallerZero = smallerZero(:);
+                txt(smallerZero) = strcat('-', txt(smallerZero));
+                
+                greaterZero = results(:, :, 11) > 0; % should be the same as results(:, :, 12)
+                greaterZero = greaterZero(:);
+                txt(greaterZero) = strcat('+', txt(greaterZero));
+            end
+            
             text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
 %             if (size(var1, 2) == 2)
@@ -322,6 +346,8 @@ function plotPerformanceForParameters(modelAt)
                 title('First Step Length');
             elseif (figIter == 3 && subfigIter == 2)
                 title('Total Step Length');
+            elseif (figIter == 3 && subfigIter == 3)
+                title('Wobbling Effect');
             elseif (figIter == 4 && subfigIter == 1)
                 title(strcat('\Deltacritic_{val}', ...
                              sprintf(' = |mean(critic_{val}(verg_{Err} = 0)\n - (critic_{val}(verg_{Err} = -0.5)'), ...
@@ -349,5 +375,33 @@ function plotPerformanceForParameters(modelAt)
             saveas(gca, sprintf('%s_CriticVal_at%diter.png', plotSavePath, modelAt));
         end
     end
+end
 
-    
+function [medialDelta, lateralDelta] = getWobblingVectors(model, testInterval)
+    onePixelBoundary = atand(1 / model.focalLength);
+    startInd = find(mod(1 : length(model.testResult5), testInterval) == 1); % all start values
+    nTrials = length(startInd);
+
+    medialDelta = 0;
+    lateralDelta = 0;
+    nSamples = 0;
+
+    for i = 1 : length(startInd)
+        ind = startInd(i);
+        if abs(model.testResult2(ind + testInterval - 1, 1))  < onePixelBoundary % if the last value is accurate enough
+            trialInd = find(abs(model.testResult2(ind : ind + testInterval - 1, 1)) <= onePixelBoundary); % find first value that is below one pixel accuracy
+            trialInd = trialInd(1);
+            
+            vector = model.testResult5(ind + testInterval - 1, 1) - model.testResult5(ind + trialInd, 1);
+            medialDelta = medialDelta + vector;
+            vector = model.testResult5(ind + testInterval - 1, 2) - model.testResult5(ind + trialInd, 2);
+            lateralDelta = lateralDelta + vector;
+            nSamples = nSamples + 1;
+        end
+    end
+
+    medialDelta = medialDelta / nSamples;
+    lateralDelta = lateralDelta / nSamples;
+    testDataUsed = nSamples / nTrials
+
+end
