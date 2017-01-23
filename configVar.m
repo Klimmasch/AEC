@@ -6,11 +6,11 @@
 % return model:         handle (pointer) to generated model instance
 function model = configVar(varParamArray)
 
-% --------------------
-% Experiment paramters
-% --------------------
+% ---------------------
+% Experiment parameters
+% ---------------------
 
-origParams = varParamArray;    % save input parameters to write into the Model
+origParamsinputParams = varParamArray; % save input parameters to write into the Model
 
 % stimulus file name
 [found, textureFile, varParamArray] = parseparam(varParamArray, 'textureFile');
@@ -261,7 +261,7 @@ else
     metCostDec = metCostRange(1) - metCostRange(2);
 end
 
-%%% muscle initialization / reset method 
+%%% muscle initialization / reset method
 % 0 ('simple')      : use random muscle commands out of [0, 0.1] for lateral and [0,
 %                     0.2] for medial rectus
 % 1 ('advanced')    : first, uniformly draw a object distance, then set one
@@ -276,11 +276,17 @@ if (~found)
     initMethod = 2;
 end
 
-PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, ...
-              baseline, objDistMin, objDistMax, muscleInitMin, muscleInitMax, ...
-              interval, lambdaMuscleFB, lambdaRec, metCostRange, patchSize, ...
-              pxFieldOfView, dsRatio, stride, fixDistMin, fixDistMax, ...
-              overlap, cutout, metCostDec, initMethod, origParams};
+% Desired standard deviation of each z-transformed variable
+[found, desiredStdZT, varParamArray] = parseparam(varParamArray, 'desiredStdZT');
+if (~found)
+    desiredStdZT = 1;
+end
+
+PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
+              objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
+              lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
+              dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
+              initMethod, inputParams, desiredStdZT};
 
 % ------------------------
 % Sparce Coding parameters
@@ -447,7 +453,7 @@ end
 % how it works: actor.wp_ji = (1 - (actor.regularizer * actor.learnRate)) * actor.wp_ji;
 [found, regularizer, varParamArray] = parseparam(varParamArray, 'regularizer');
 if (~found)
-    regularizer = 1e-4; %% newest experiments: 1e-5
+    regularizer = 1e-5; % new: 1e-4 old: 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
 end
 
 % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
