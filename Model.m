@@ -240,24 +240,30 @@ classdef Model < handle
                 %%% Preparing Functions
                 % getMF functions
                 obj.degrees = load('Degrees.mat');              %loads tabular for resulting degrees as 'results_deg'
-%                 obj.degrees = load('DegreesFlatter.mat');
-%                 obj.degrees = load('DegreesFlatInverted.mat');
+                % obj.degrees = load('DegreesFlatter.mat');
+                % obj.degrees = load('DegreesFlatInverted.mat');
+                % obj.degrees = load('DegreesFlatRotated.mat');
                 obj.metCosts = load('MetabolicCosts.mat');
 
                 resFactor = 10; % factor by which the resolution of the tabular should be increased
                 % resFactor = 13; % results in comparable amount of entries as the mfunctions
                 %resFac, size of tabular: 5,33 | 6,65 | 10,1025 | 13,8193 | x,(2^x)+1
 
-                % between 0 and 0.2/0.1 mus. act. the resulution is increased
+                % between 0 and 0.2/0.1 mus. act. the resolution is increased
                 usedRows = 3;
                 usedCols = 2;
                 obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : usedRows, 1 : usedCols), resFactor);
-                obj.degDiff = max(max(diff(obj.degreesIncRes)));                                                % distance between the entries
-                obj.scaleFacMR = ((usedRows - 1) / 10) / size(obj.degreesIncRes, 1);                            % table scaling factors for backwards
-                obj.scaleFacLR = ((usedCols - 1) / 10) / size(obj.degreesIncRes, 2);                            % calculation of table_index -> muscle inervation
+                % obj.degreesIncRes = interp2(obj.degrees.results_deg(end - usedRows + 1 : end, end - usedCols + 1 : end), resFactor);
+                  
+                obj.degDiff = abs(max(max(diff(obj.degreesIncRes)))); % distance between the entries
+                % obj.degDiff = max(max(diff(obj.degreesIncRes)));
+                
+                obj.scaleFacMR = ((usedRows - 1) / 10) / size(obj.degreesIncRes, 1);    % table scaling factors for backwards
+                obj.scaleFacLR = ((usedCols - 1) / 10) / size(obj.degreesIncRes, 2);	% calculation of table_index -> muscle inervation
 
                 % increased resolution of metCosts table
                 obj.metCostsIncRes = interp2(obj.metCosts.results(1 : usedRows, 1 : usedCols), resFactor);
+                % obj.metCostsIncRes = interp2(obj.metCosts.results(end - usedRows + 1 : end, end - usedCols + 1 : end), resFactor);
 
                 % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
                 resolution = 100001;
@@ -484,6 +490,7 @@ classdef Model < handle
             % look up index of angleInit
             % if objDist not fixateable with medial rectus, use lateral rectus
             if (angleInit >= this.mfunctionMR(1, 1))
+            % if (angleInit < this.mfunctionMR(1, 1))   % for rotated tabular
                 indAngleInit = find(this.mfunctionMR(:, 1) <= angleInit + this.dAngleMR & this.mfunctionMR(:, 1) >= angleInit - this.dAngleMR);
                 mf = this.mfunctionMR(indAngleInit, 2);
                 mf = [0; mf(ceil(length(mf) / 2))];
@@ -510,7 +517,10 @@ classdef Model < handle
             % transform indizes to muscle activities
             mfMR = xi(i) * this.scaleFacMR;
             mfLR = yi(i) * this.scaleFacLR;
-
+            
+            % mfMR = mfMR + 0.6; % for the rotated angles tabular
+            % mfLR = mfLR + 0.7;
+            
             command = [mfLR; mfMR];
         end
 
@@ -1464,8 +1474,8 @@ classdef Model < handle
                 angleDes = 2 * atand(this.baseline / (2 * objDist(odIndex)));
 
                 for stimIter = 1 : nStimuli
-                    % currentTexture = stimuliIndices(stimIter);
-                    currentTexture = randi(40); % hack
+                    currentTexture = stimuliIndices(stimIter);
+                    % currentTexture = randi(40); % hack
 
                     for vergErrIndex = 1 : length(startVergErr)
                         % muscle init
