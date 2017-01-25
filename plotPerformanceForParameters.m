@@ -16,85 +16,84 @@ function plotPerformanceForParameters(modelAt)
     % 8)    figure name
 
     %%% actor LR vs critic LR
-%     parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
-% 
-%     labelVar1 = 'actor learning range';
-%     labelVar2 = 'critic learning range';
-% 
-%     var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-%     var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-%     var1 = flipud(var1); % setting the offspring to lower left hand corner
-% 
-%     numberFormatVar1 = '[%1.2f - %1.2f]';
-%     numberFormatVar2 = '[%1.2f - %1.2f]';
-% 
-%     figName = 'CriticLRActorLR';
+    % parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
+
+    % labelVar1 = 'actor learning range';
+    % labelVar2 = 'critic learning range';
+
+    % var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    % var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    % var1 = flipud(var1); % setting the offspring to lower left hand corner
+
+    % numberFormatVar1 = '[%1.2f - %1.2f]';
+    % numberFormatVar2 = '[%1.2f - %1.2f]';
+
+    % figName = 'CriticLRActorLR';
 
 
     %%% regularizer vs actor leaning range
-%     parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
-% 
-%     labelVar1 = 'Actor weight regularizer';
-%     labelVar2 = 'Actor LR [start, end]';
-% 
-%     var1 = [1e-2; 1e-3; 5e-4; 1e-4; 5e-5; 1e-5; 1e-6]; % regularizer
-%     var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
-% 
-%     numberFormatVar1 = '%1.0e';
-%     numberFormatVar2 = '[%1.2f - %1.2f]';
-% 
-% 
-%     figName = 'hiddenLayerRegulActorLRComparison';
+    % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
+
+    % labelVar1 = 'Actor weight regularizer';
+    % labelVar2 = 'Actor LR [start, end]';
+
+    % var1 = [1e-2; 1e-3; 5e-4; 1e-4; 5e-5; 1e-5; 1e-6]; % regularizer
+    % var2 = [[1, 0]; [0.5, 0]; [0.5, 0.5]]; % actorLearningRange
+
+    % numberFormatVar1 = '%1.0e';
+    % numberFormatVar2 = '[%1.2f - %1.2f]';
+
+
+    % figName = 'hiddenLayerRegulActorLRComparison';
 
     %%% discount factor vs interval
-%     parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources';
-% 
-%     labelVar1 = 'discount factor';
-%     labelVar2 = 'interval';
-% 
-%     var1 = [0.1; 0.3; 0.9];
-%     var2 = [10; 50; 100];
-% 
-%     numberFormatVar1 = '%1.1f';
-%     numberFormatVar2 = '%d';
-% 
-%     figName = 'DiscountVsInterval';
+    % parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources';
+
+    % labelVar1 = 'discount factor';
+    % labelVar2 = 'interval';
+
+    % var1 = [0.1; 0.3; 0.9];
+    % var2 = [10; 50; 100];
+
+    % numberFormatVar1 = '%1.1f';
+    % numberFormatVar2 = '%d';
+
+    % figName = 'DiscountVsInterval';
 
     %%% metabolic costs
-%     parentFolder = '/home/klimmasch/projects/results/exploringMetCost';
-% 
-% 
-%     labelVar1 = 'metabolic Costs';
-%     labelVar2 = '';
-% 
-%     var1 = [[0.0324, 0.0324]; [0.0162, 0.0162]; [0.0121, 0.0121]; [0.0081, 0.0081]; [0.0040, 0.0040]; [0,0]];
-%     var2 = [1e-4]; % only chooses values with the right regularizer
-% 
-%     numberFormatVar1 = '[%1.4f,%1.4f]';
-%     numberFormatVar2 = '%';
-% 
-%     figName = 'metCostComp';
+    % parentFolder = '/home/klimmasch/projects/results/exploringMetCost';
+
+    % labelVar1 = 'metabolic Costs';
+    % labelVar2 = '';
+
+    % var1 = [[0.0324, 0.0324]; [0.0162, 0.0162]; [0.0121, 0.0121]; [0.0081, 0.0081]; [0.0040, 0.0040]; [0,0]];
+    % var2 = [1e-4]; % only chooses values with the right regularizer
+
+    % numberFormatVar1 = '[%1.4f,%1.4f]';
+    % numberFormatVar2 = '%';
+
+    % figName = 'metCostComp';
 
     %%% new variance decay
-%     parentFolder = '/home/aecgroup/aecdata/Results/varDec_new';
-% 
-%     labelVar1 = 'critic learning range';
-%     labelVar2 = 'variance range';
-% 
-%     var1 = [[1, 0]; [0.75, 0.75]];
-%     var2 = [[1e-4, 5e-6]; [1e-4, 0]; [5e-5, 5e-5]; [5e-5, 5e-6]; [5e-5, 0]; [1e-5, 1e-5]; [1e-5, 5e-6]; [1e-5, 0]; [5e-6, 5e-6]; [5e-6, 5e-6]; [5e-6, 0]];
-%     % var1 = flipud(var1); % setting the offspring to lower left hand corner
-% 
-%     numberFormatVar1 = '[%1.2f - %1.2f]';
-%     numberFormatVar2 = '[%1.0e - %1.0e]';
-% 
-%     figName = 'varDecVsCritic';
+    % parentFolder = '/home/aecgroup/aecdata/Results/varDec_new';
+
+    % labelVar1 = 'critic learning range';
+    % labelVar2 = 'variance range';
+
+    % var1 = [[1, 0]; [0.75, 0.75]];
+    % var2 = [[1e-4, 5e-6]; [1e-4, 0]; [5e-5, 5e-5]; [5e-5, 5e-6]; [5e-5, 0]; [1e-5, 1e-5]; [1e-5, 5e-6]; [1e-5, 0]; [5e-6, 5e-6]; [5e-6, 5e-6]; [5e-6, 0]];
+    % % var1 = flipud(var1); % setting the offspring to lower left hand corner
+
+    % numberFormatVar1 = '[%1.2f - %1.2f]';
+    % numberFormatVar2 = '[%1.0e - %1.0e]';
+
+    % figName = 'varDecVsCritic';
 
     %%% steplength: actor LR vs regularizer (new)
     % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul';
 
 
-    %  labelVar1 = 'Actor weight regularizer';
+    % labelVar1 = 'Actor weight regularizer';
     % labelVar2 = 'Actor LR [start, end]';
 
     % var1 = [1e-4; 1e-5; 1e-6]; % regularizer
@@ -105,38 +104,52 @@ function plotPerformanceForParameters(modelAt)
 
 
     % figName = 'steplength_actorLRvsRegul';
+    
+    %%% steplength: actor LR vs regularizer (1 mio steps)
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul_1mio';
+
+    % labelVar1 = 'Actor weight regularizer';
+    % labelVar2 = 'Actor LR [start, end]';
+
+    % var1 = [1e-4; 1e-5; 1e-6]; % regularizer
+    % var2 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]]; % actorLearningRange
+
+    % numberFormatVar1 = '%1.0e';
+    % numberFormatVar2 = '[%1.2f - %1.2f]';
+
+    % figName = 'steplength_actorLRvsRegul_1mio';
 
     %% steplength: actor LR vs variance range (regularizar: 1e-5 to increase stepwith further)
-    parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsVariance_reg1e-5';
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsVariance_reg1e-5';
+
+
+    % labelVar1 = 'Actor LR [start, end]';
+    % labelVar2 = 'Variance Range  [start, end]';
+
+    % var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
+    % var2 = [[1e-4, 1e-4]; [1e-5, 1e-5]; [1e-4, 1e-6]; [1e-5, 1e-6]; [1e-4, 0]; [1e-5, 0]];
+
+    % numberFormatVar1 = '[%1.1f-%1.1f]';
+    % numberFormatVar2 = '[%1.0e-%1.0e]';
+
+
+    % figName = 'steplength_actorLRvsVar_reg1e-5';
+
+    %% actor LR vs Weight initialization
+    parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsWeightInit';
 
 
     labelVar1 = 'Actor LR [start, end]';
-    labelVar2 = 'Variance Range  [start, end]';
+    labelVar2 = 'Weight Init [crit, hid, out]';
 
     var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
-    var2 = [[1e-4, 1e-4]; [1e-5, 1e-5]; [1e-4, 1e-6]; [1e-5, 1e-6]; [1e-4, 0]; [1e-5, 0]];
+    var2 = [[1e-3, 6e-5, 2e-2]; [1e-2, 6e-5, 2e-2]; [1e-3, 1e-4, 2e-2]; [1e-3, 6e-5, 1e-1]; [1e-3, 1e-4, 1e-1]; [1e-2, 1e-4, 1e-1]];
 
     numberFormatVar1 = '[%1.1f-%1.1f]';
-    numberFormatVar2 = '[%1.0e-%1.0e]';
+    numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
 
 
-    figName = 'steplength_actorLRvsVar_reg1e-5';
-
-    %% actor LR vs Weight initialization
-%     parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsWeightInit';
-% 
-% 
-%     labelVar1 = 'Actor LR [start, end]';
-%     labelVar2 = 'Weight Init [crit, hid, out]';
-% 
-%     var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
-%     var2 = [[1e-3, 6e-5, 2e-2]; [1e-2, 6e-5, 2e-2]; [1e-3, 1e-4, 2e-2]; [1e-3, 6e-5, 1e-1]; [1e-3, 1e-4, 1e-1]; [1e-2, 1e-4, 1e-1]];
-% 
-%     numberFormatVar1 = '[%1.1f-%1.1f]';
-%     numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
-% 
-% 
-%     figName = 'steplength_actorVsWeights';
+    figName = 'steplength_actorVsWeights';
 
 
     % ------------------
@@ -149,235 +162,241 @@ function plotPerformanceForParameters(modelAt)
     subExperiments = subExperiments(3 : end);       % exclude '.' and '..' directories
 
     if (~exist('modelAt'))
-        modelAt = 2000000;
+        modelAt = [2000000];
     end
-    subFolder = sprintf('modelAt%d', modelAt);
+    
+    for trainedUntil = 1 : length(modelAt)
+        subFolder = sprintf('modelAt%d', modelAt(trainedUntil));
 
-    plotSavePath = strcat(parentFolder, '/', figName);
+        plotSavePath = strcat(parentFolder, '/', figName);
 
-    length1 = length(var1);
-    length2 = length(var2);
-    criticResolution = 101;
-    vseRange = linspace(-1, 1, criticResolution);
+        length1 = length(var1);
+        length2 = length(var2);
+        criticResolution = 101;
+        vseRange = linspace(-1, 1, criticResolution);
 
 
-    % results := |var1| x |var2| x
-    %            {rmse(vergErr), median(vergErr), and iqr(vergErr),
-    %             rmse(deltaMC), median(deltaMC), and iqr(deltaMC),
-    %             critValDelta, critValNiveau,
-    %             stepLengthFirst, stepLengthTotal
-    %             medialRectusWobbling, lateralRectusWobbeling}    %see below for explanation of this values 
-    results = zeros(length2, length1, 12);
+        % results := |var1| x |var2| x
+        %            {rmse(vergErr), median(vergErr), and iqr(vergErr),
+        %             rmse(deltaMC), median(deltaMC), and iqr(deltaMC),
+        %             critValDelta, critValNiveau,
+        %             stepLengthFirst, stepLengthTotal
+        %             medialRectusWobbling, lateralRectusWobbeling}    %see below for explanation of this values 
+        results = zeros(length2, length1, 12);
 
-    for f = 1 : length(subExperiments)
-        try
-            model = load(sprintf('%s/%s/%s/model.mat', parentFolder, subExperiments(f).name, subFolder));
-        catch
-           % catch case when (sub-)experiment started, but has no test results yet
-           continue;
-        end
-        model = model.model;
-
-        testInterval = model.interval * 2;
-        % testInterval = 200;
-
-        % hack for some older simulations:
-        if length(model.rlModel.actorLearningRange) == 1
-            value = model.rlModel.actorLearningRange;
-            model.rlModel.actorLearningRange = [value, value];
-        end
-
-        %%% Extract indicies
-        %%% actor exploration variance range
-        % ind = find(var1 == model.rlModel.CActor.varianceRange(1));
-        % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
-
-        %%% regularizer vs actor leaning range
-        % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
-        % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
-
-        % %%% actor LR vs critic LR
-%         ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
-%         jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
-
-        %%% discount factor vs interval
-%         ind = find(ismember(var2, model.interval, 'rows'));
-%         jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
-
-        %%% regularizer vs metabolic costs
-%         ind = find(ismember(var2, model.rlModel.CActor.regularizer, 'rows'));
-%         jnd = find(ismember(var1, model.metCostRange, 'rows'));
-
-        %%% actor LR vs critic LR
-%         ind = find(ismember(var2, model.rlModel.CActor.varianceRange, 'rows'));
-%         jnd = find(ismember(var1, model.rlModel.criticLearningRange, 'rows'));
-
-        %%% actor LR vs variance range
-        ind = find(ismember(var2, model.rlModel.CActor.varianceRange, 'rows'));
-        jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
-
-        %%% actor LR vs weight init
-%         ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
-%         jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
-
-        %%% Extract results
-        %%% Vergence Error
-        try
-            results(ind, jnd, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
-        catch
-            display(model.savePath)
-            sprintf('seems to lack the training results ...')
-            continue
-        end
-        results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval)) * 4;
-        results(ind, jnd, 3) = median(model.testResult3(:, testInterval));
-
-        %%% delta Metabolic costs
-        results(ind, jnd, 4) = sqrt(mean(model.testResult7(:, testInterval) .^ 2));
-        results(ind, jnd, 5) = iqr(model.testResult7(:, testInterval)) * 4;
-        results(ind, jnd, 6) = median(model.testResult7(:, testInterval));
-
-        %%% Critic value function steepness
-        % critValDelta = mean(critic_value(vergErr = 0) - (critic_value(vergErr = -0.5) + critic_value(vergErr = 0.5)) / 2)
-        % critValNiveau = mean(critic_value(vergErr = 0))
-        % average over all stimuli and each objDist
-
-        % critValDelta
-        results(ind, jnd, 7) = mean(mean(abs(abs(model.testResult4(:, vseRange == 0, 1 : 2 + length(model.scModel) : end)) ...
-                                           - abs((model.testResult4(:, vseRange == -0.5, 1 : 2 + length(model.scModel) : end) ...
-                                                 + model.testResult4(:, vseRange == 0.5, 1 : 2 + length(model.scModel) : end)) / 2)), 3));
-        % critValNiveau
-        results(ind, jnd, 8) = mean(mean(abs(model.testResult4(:, vseRange == 0, 1 : 2 + length(model.scModel) : end)), 3));
-        
-        %%% investigate step width: take absolute relative muscle activities
-        %%% model.testResult5[n](abs(1), abs(2), rel(1), rel(2))
-        %%% For every model, display first value for 0.5 and 6 meters, and the sum over all 20 trials
-        startInd = find(mod(1 : length(model.testResult5), testInterval) == 1); %indizes of every first action during testing
-        % results(ind, jnd, 9) = norm([model.testResult5(startInd, 3), model.testResult5(startInd, 4)], 2);
-        results(ind, jnd, 9) = sum(sqrt(sum(model.testResult5(startInd, 3:4)'.^2)));
-        results(ind, jnd, 10) = sum(sqrt(sum(model.testResult5(:, 3:4)'.^2)));
-        
-        %%% approaching the axis bahaviour (aka. wobbling)
-        %%% at first, take the mean vector of muscle activities after model verged
-        %%% after that, use the length of that vector for colorcoding in tabular
-        results(ind, jnd, 11 : 12) = getWobblingVectors(model, testInterval);
-        results(ind, jnd, 13) = sqrt(results(ind, jnd, 11)^2 + results(ind, jnd, 12)^2);
-    end
-
-    % ----------------
-    % Results plotting
-    % ----------------
-
-    % mark unfinished experiments with white color code
-    colordata = createCM(3);
-    if (~isempty(results(results == 0)))
-        colordata(1, :) = [1, 1, 1];
-    end
-
-    [x, y] = meshgrid(1 : length1, 1 : length2);
-    titleStrings = {'RMSE', 'IQR*4', 'Median'};
-    resultsIter = {[1 : 3]; [4 : 6]; [9, 10, 13]; [7, 8]};
-
-    for figIter = 1 : 4
-        if (figIter >= 3)
-            colordata = createCM(3);
-            colordata = flipud(colordata);
-            if (~isempty(results(results == 0)))
-                colordata(1, :) = [1, 1, 1];
+        for f = 1 : length(subExperiments)
+            try
+                model = load(sprintf('%s/%s/%s/model.mat', parentFolder, subExperiments(f).name, subFolder));
+            catch
+               % catch case when (sub-)experiment started, but has no test results yet
+               continue;
             end
+            model = model.model;
+
+            testInterval = model.interval * 2;
+            % testInterval = 200;
+
+            % hack for some older simulations:
+            if length(model.rlModel.actorLearningRange) == 1
+                value = model.rlModel.actorLearningRange;
+                model.rlModel.actorLearningRange = [value, value];
+            end
+
+            %%% Extract indicies
+            %%% actor exploration variance range
+            % ind = find(var1 == model.rlModel.CActor.varianceRange(1));
+            % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
+
+            %%% regularizer vs actor leaning range
+            % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
+
+            %%% actor LR vs critic LR
+            % ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+
+            %%% discount factor vs interval
+            % ind = find(ismember(var2, model.interval, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
+
+            %%% regularizer vs metabolic costs
+            % ind = find(ismember(var2, model.rlModel.CActor.regularizer, 'rows'));
+            % jnd = find(ismember(var1, model.metCostRange, 'rows'));
+
+            %%% actor LR vs critic LR
+            % ind = find(ismember(var2, model.rlModel.CActor.varianceRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.criticLearningRange, 'rows'));
+
+            %%% actor LR vs variance range
+            % ind = find(ismember(var2, model.rlModel.CActor.varianceRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+
+            %%% actor LR vs weight init
+                ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
+                jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+
+        
+            if isempty(ind) || isempty(jnd)
+                sprintf('%s \n was not included in the tabular', model.savePath)
+                continue
+            end
+            %%% Extract results
+            %%% Vergence Error
+            try
+                results(ind, jnd, 1) = sqrt(mean(model.testResult3(:, testInterval) .^ 2));
+            catch
+                sprintf('%s\nseems to lack the training results ...', model.savePath)
+                continue
+            end
+            results(ind, jnd, 2) = iqr(model.testResult3(:, testInterval)) * 4;
+            results(ind, jnd, 3) = median(model.testResult3(:, testInterval));
+
+            %%% delta Metabolic costs
+            results(ind, jnd, 4) = sqrt(mean(model.testResult7(:, testInterval) .^ 2));
+            results(ind, jnd, 5) = iqr(model.testResult7(:, testInterval)) * 4;
+            results(ind, jnd, 6) = median(model.testResult7(:, testInterval));
+
+            %%% Critic value function steepness
+            % critValDelta = mean(critic_value(vergErr = 0) - (critic_value(vergErr = -0.5) + critic_value(vergErr = 0.5)) / 2)
+            % critValNiveau = mean(critic_value(vergErr = 0))
+            % average over all stimuli and each objDist
+
+            % critValDelta
+            results(ind, jnd, 7) = mean(mean(abs(abs(model.testResult4(:, vseRange == 0, 1 : 2 + length(model.scModel) : end)) ...
+                                               - abs((model.testResult4(:, vseRange == -0.5, 1 : 2 + length(model.scModel) : end) ...
+                                                     + model.testResult4(:, vseRange == 0.5, 1 : 2 + length(model.scModel) : end)) / 2)), 3));
+            % critValNiveau
+            results(ind, jnd, 8) = mean(mean(abs(model.testResult4(:, vseRange == 0, 1 : 2 + length(model.scModel) : end)), 3));
+
+            %%% investigate step width: take absolute relative muscle activities
+            %%% model.testResult5[n](abs(1), abs(2), rel(1), rel(2))
+            startInd = find(mod(1 : length(model.testResult5), testInterval) == 1); %indizes of every first action during testing
+            % results(ind, jnd, 9) = norm([model.testResult5(startInd, 3), model.testResult5(startInd, 4)], 2);
+            results(ind, jnd, 9) = sum(sqrt(sum(model.testResult5(startInd, 3:4)'.^2))); % or mean() ?
+            results(ind, jnd, 10) = sum(sqrt(sum(model.testResult5(:, 3:4)'.^2)));
+
+            %%% approaching the axis bahaviour (aka. wobbling)
+            %%% at first, take the mean vector of muscle activities after model verged
+            %%% after that, use the length of that vector for colorcoding in tabular
+            [medVec, latVec, ~] = getWobblingVectors(model, testInterval);
+            results(ind, jnd, 11 : 12) = [medVec, latVec];
+            results(ind, jnd, 13) = sqrt(results(ind, jnd, 11)^2 + results(ind, jnd, 12)^2);
         end
 
-        figure;
-        for subfigIter = 1 : length(resultsIter{figIter})
-            subplot(length(resultsIter{figIter}), 1, subfigIter);
-            colormap(colordata);
-            if (figIter == 1 && subfigIter == 3)
-                % apply color to abs values in median plot
-                imagesc(abs(results(:, :, resultsIter{figIter}(subfigIter))));
-            else
-                imagesc(results(:, :, resultsIter{figIter}(subfigIter)));
+        % ----------------
+        % Results plotting
+        % ----------------
+
+        % mark unfinished experiments with white color code
+        colordata = createCM(3);
+        if (~isempty(results(results == 0)))
+            colordata(1, :) = [1, 1, 1];
+        end
+
+        [x, y] = meshgrid(1 : length1, 1 : length2);
+        titleStrings = {'RMSE', 'IQR*4', 'Median'};
+        resultsIter = {[1 : 3]; [4 : 6]; [9, 10, 13]; [7, 8]};
+
+        for figIter = 1 : 4
+            if (figIter >= 3)
+                colordata = createCM(3);
+                colordata = flipud(colordata);
+                if (~isempty(results(results == 0)))
+                    colordata(1, :) = [1, 1, 1];
+                end
             end
-            
-            txt = results(:, :, resultsIter{figIter}(subfigIter));
-            
-            if ~(figIter == 3 && subfigIter == 3)
+
+            figure;
+            for subfigIter = 1 : length(resultsIter{figIter})
+                subplot(length(resultsIter{figIter}), 1, subfigIter);
+                colormap(colordata);
+                if (figIter == 1 && subfigIter == 3)
+                    % apply color to abs values in median plot
+                    imagesc(abs(results(:, :, resultsIter{figIter}(subfigIter))));
+                else
+                    imagesc(results(:, :, resultsIter{figIter}(subfigIter)));
+                end
+
+                txt = results(:, :, resultsIter{figIter}(subfigIter));
                 txt(txt == 0) = Inf;        % remove missing data points exept when zeros are possible 
+
+                if ~(figIter == 4)
+                    txt = num2str(txt(:), '%0.2f');
+                else
+                    txt = num2str(txt(:), '%0.3f');
+                end
+
+                % special case: wobbling analysis
+                if (figIter == 3 && subfigIter == 3)
+                    % for wobbling, use the vectors as labels,
+                    medVals = results(:, :, 11);
+                    latVals = results(:, :, 12);
+                    allVals = [medVals(:), latVals(:)];
+
+                    txt = cell(1, length(allVals));
+                    for k = 1 : length(allVals)
+                        % txt{k} = sprintf(strcat(num2str(allVals(k, 1), '%0.4f'), '\n', num2str(allVals(k, 2), '%0.4f')));
+                        txt{k} = strcat(num2str(allVals(k, 1), '%0.4f'), '/', num2str(allVals(k, 2), '%0.4f'));
+                    end
+                end
+
+                txt = strtrim(cellstr(txt));
+
+                text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
+
+        %             if (size(var1, 2) == 2)
+                    % two dim case
+                    set(gca, 'XTick', 1 : length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
+                             'YTick', 1 : length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
+                             'TickLength', [0, 0], 'FontSize', 7);
+        %             elseif (size(var1, 2) == 1)
+        %                 % one dim. case
+        %                 set(gca, 'XTick', 1 : length1, 'XTickLabel', var1, ...
+        %                          'YTick', 1 : length2, 'YTickLabel', var2, ...
+        %                          'TickLength', [0, 0]);
+        %             else
+        %                 error('Parameter range var1 has unsupported size of %d x %d.', size(var1));
+        %             end
+
+                if (figIter < 3)
+                    title(titleStrings{subfigIter});
+                elseif (figIter == 3 && subfigIter == 1)
+                    title('First Step Length');
+                elseif (figIter == 3 && subfigIter == 2)
+                    title('Total Step Length');
+                elseif (figIter == 3 && subfigIter == 3)
+                    title('Wobbling Effect');
+                elseif (figIter == 4 && subfigIter == 1)
+                    title(strcat('\Deltacritic_{val}', ...
+                                 sprintf(' = |mean(critic_{val}(verg_{Err} = 0)\n - (critic_{val}(verg_{Err} = -0.5)'), ...
+                                 ' + critic_{val}(verg_{Err} = 0.5)) / 2)|'));
+                else  (figIter == 4 && subfigIter == 2)
+                    title(sprintf('critic_{val} Niveau = |mean(critic_{val}(verg_{Err} = 0))|'));
+                end
+
+                xlabel(sprintf(labelVar1));
+                ylabel(sprintf(labelVar2));
+                colorbar();
             end
-                
-            if (figIter == 4)
-                txt = num2str(txt(:), '%0.2f');
-            elseif (figIter == 3) && (subfigIter == 3)
-                txt = num2str(txt(:), '%0.4f');
-            else
-                txt = num2str(txt(:), '%0.3f');
+
+
+            if (figIter == 1)
+                suptitle(sprintf('Vergence Error at %d iterations', modelAt(trainedUntil)));
+                saveas(gca, sprintf('%s_vergErr_at%diter.png', plotSavePath, modelAt(trainedUntil)));
+            elseif (figIter == 2)
+                suptitle(sprintf('Metabolic Costs at %d iterations', modelAt(trainedUntil)));
+                saveas(gca, sprintf('%s_metCost_at%diter.png', plotSavePath, modelAt(trainedUntil)));
+            elseif (figIter == 3)
+                suptitle(sprintf('Step Length at %d iterations', modelAt(trainedUntil)));
+                saveas(gca, sprintf('%s_StepLength_at%diter.png', plotSavePath, modelAt(trainedUntil)));
+            elseif (figIter == 4)
+                saveas(gca, sprintf('%s_CriticVal_at%diter.png', plotSavePath, modelAt(trainedUntil)));
             end
-            
-            txt = strtrim(cellstr(txt));
-            
-            if (figIter == 3) && (subfigIter == 3)
-                smallerZero = results(:, :, 11) < 0; % should be the same as results(:, :, 12)
-                smallerZero = smallerZero(:);
-                txt(smallerZero) = strcat('-', txt(smallerZero));
-                
-                greaterZero = results(:, :, 11) > 0; % should be the same as results(:, :, 12)
-                greaterZero = greaterZero(:);
-                txt(greaterZero) = strcat('+', txt(greaterZero));
-            end
-            
-            text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
-
-%             if (size(var1, 2) == 2)
-                % two dim case
-                set(gca, 'XTick', 1 : length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
-                         'YTick', 1 : length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
-                         'TickLength', [0, 0], 'FontSize', 7);
-%             elseif (size(var1, 2) == 1)
-%                 % one dim. case
-%                 set(gca, 'XTick', 1 : length1, 'XTickLabel', var1, ...
-%                          'YTick', 1 : length2, 'YTickLabel', var2, ...
-%                          'TickLength', [0, 0]);
-%             else
-%                 error('Parameter range var1 has unsupported size of %d x %d.', size(var1));
-%             end
-
-            if (figIter < 3)
-                title(titleStrings{subfigIter});
-            elseif (figIter == 3 && subfigIter == 1)
-                title('First Step Length');
-            elseif (figIter == 3 && subfigIter == 2)
-                title('Total Step Length');
-            elseif (figIter == 3 && subfigIter == 3)
-                title('Wobbling Effect');
-            elseif (figIter == 4 && subfigIter == 1)
-                title(strcat('\Deltacritic_{val}', ...
-                             sprintf(' = |mean(critic_{val}(verg_{Err} = 0)\n - (critic_{val}(verg_{Err} = -0.5)'), ...
-                             ' + critic_{val}(verg_{Err} = 0.5)) / 2)|'));
-            else  (figIter == 4 && subfigIter == 2)
-                title(sprintf('critic_{val} Niveau = |mean(critic_{val}(verg_{Err} = 0))|'));
-            end
-
-            xlabel(sprintf(labelVar1));
-            ylabel(sprintf(labelVar2));
-            colorbar();
-        end
-
-
-        if (figIter == 1)
-            suptitle(sprintf('Vergence Error at %d iterations', modelAt));
-            saveas(gca, sprintf('%s_vergErr_at%diter.png', plotSavePath, modelAt));
-        elseif (figIter == 2)
-            suptitle(sprintf('Metabolic Costs at %d iterations', modelAt));
-            saveas(gca, sprintf('%s_metCost_at%diter.png', plotSavePath, modelAt));
-        elseif (figIter == 3)
-            suptitle(sprintf('Step Length at %d iterations', modelAt));
-            saveas(gca, sprintf('%s_StepLength_at%diter.png', plotSavePath, modelAt));
-        elseif (figIter == 4)
-            saveas(gca, sprintf('%s_CriticVal_at%diter.png', plotSavePath, modelAt));
         end
     end
 end
 
-function [medialDelta, lateralDelta] = getWobblingVectors(model, testInterval)
+function [medialDelta, lateralDelta, testDataUsed] = getWobblingVectors(model, testInterval)
     onePixelBoundary = atand(1 / model.focalLength);
     startInd = find(mod(1 : length(model.testResult5), testInterval) == 1); % all start values
     nTrials = length(startInd);
@@ -392,9 +411,9 @@ function [medialDelta, lateralDelta] = getWobblingVectors(model, testInterval)
             trialInd = find(abs(model.testResult2(ind : ind + testInterval - 1, 1)) <= onePixelBoundary); % find first value that is below one pixel accuracy
             trialInd = trialInd(1);
             
-            vector = model.testResult5(ind + testInterval - 1, 1) - model.testResult5(ind + trialInd, 1);
+            vector = model.testResult5(ind + testInterval - 1, 1) - model.testResult5(ind + trialInd - 1, 1);
             medialDelta = medialDelta + vector;
-            vector = model.testResult5(ind + testInterval - 1, 2) - model.testResult5(ind + trialInd, 2);
+            vector = model.testResult5(ind + testInterval - 1, 2) - model.testResult5(ind + trialInd - 1, 2);
             lateralDelta = lateralDelta + vector;
             nSamples = nSamples + 1;
         end
@@ -402,6 +421,6 @@ function [medialDelta, lateralDelta] = getWobblingVectors(model, testInterval)
 
     medialDelta = medialDelta / nSamples;
     lateralDelta = lateralDelta / nSamples;
-    testDataUsed = nSamples / nTrials
+    testDataUsed = nSamples / nTrials;
 
 end
