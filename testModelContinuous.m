@@ -443,18 +443,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             end
         end
 
-        %% Generate muscle activation trajectories
+        %% Desired vergence angle and metabolic costs approach [%] vs. iteration
         if (verbose == 1)
             sprintf('Level 4/4')
         end
 
-        if (nStim == 40)
-            trajPlotHandle = model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(nStim), simulator, imageSavePath, folderName(9 : end), plotIt);
-        else
-            warning('nStim = %d < 40. Level 4 will be skipped.', nStim);
-        end
-
-        %% Desired vergence angle and metabolic costs approach [%] vs. iteration
         vergenceAngleApproach = zeros(size(testResult5, 1) / testInterval, testInterval);
         metCostsApproach = zeros(size(testResult5, 1) / testInterval, testInterval);
         vergAngle = zeros(1, testInterval);
@@ -1391,6 +1384,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             end
         end
     end
+
+    %% Generate muscle activation trajectories
+    trajPlotHandle = model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(max(nStim, 40)), simulator, imageSavePath, folderName(9 : end), plotIt);
 
     %%% Results overview table generation
     resultsFN = strcat(model.savePath, '/results.ods'); % file name
