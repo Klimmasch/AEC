@@ -268,10 +268,10 @@ classdef Model < handle
                 usedCols = 2;
                 obj.degreesIncRes = interp2(obj.degrees.results_deg(1 : usedRows, 1 : usedCols), resFactor);
                 % obj.degreesIncRes = interp2(obj.degrees.results_deg(end - usedRows + 1 : end, end - usedCols + 1 : end), resFactor);
-                  
+
                 obj.degDiff = abs(max(max(diff(obj.degreesIncRes)))); % distance between the entries
                 % obj.degDiff = max(max(diff(obj.degreesIncRes)));
-                
+
                 obj.scaleFacMR = ((usedRows - 1) / 10) / size(obj.degreesIncRes, 1);    % table scaling factors for backwards
                 obj.scaleFacLR = ((usedCols - 1) / 10) / size(obj.degreesIncRes, 2);	% calculation of table_index -> muscle inervation
 
@@ -562,10 +562,10 @@ classdef Model < handle
             % transform indizes to muscle activities
             mfMR = xi(i) * this.scaleFacMR;
             mfLR = yi(i) * this.scaleFacLR;
-            
+
             % mfMR = mfMR + 0.6; % for the rotated angles tabular
             % mfLR = mfLR + 0.7;
-            
+
             command = [mfLR; mfMR];
         end
 
@@ -1681,29 +1681,41 @@ classdef Model < handle
                     for vergErrIndex = 1 : length(startVergErr)
 
                         % first plot all
-                        plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ this.scaleFacLR + 1, ...
-                             reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ this.scaleFacMR + 1, ...
-                             'color', [1, 201 / 255, 41 / 255],  'LineWidth', 1.5);
+                        hl2 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ this.scaleFacLR + 1, ...
+                                   reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ this.scaleFacMR + 1, ...
+                                   'color', [1, 201 / 255, 41 / 255], 'LineWidth', 1);
 
                         % plot iter 1-interval in differen color if numIters >= model.interval
                         if (numIters >= this.interval)
-                            plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 1), [this.interval, 1]) ./ this.scaleFacLR + 1, ...
-                                 reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 2), [this.interval, 1]) ./ this.scaleFacMR + 1, ...
-                                 '-or', 'LineWidth', 1.5, 'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
+                            hl1 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 1), [this.interval, 1]) ./ this.scaleFacLR + 1, ...
+                                       reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 2), [this.interval, 1]) ./ this.scaleFacMR + 1, ...
+                                       '-or', 'LineWidth', 1, 'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
+                        else
+                            hl1 = [];
                         end
 
                         % plot init point
                         % plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / this.scaleFacLR + 1, ...
                         %      trajectory(odIndex, vergErrIndex, stim, 1, 2) / this.scaleFacMR + 1, ...
-                        %     'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
+                        %     'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
 
                         % plot destination point
-                        plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / this.scaleFacLR + 1, ...
-                             trajectory(odIndex, vergErrIndex, stim, end, 2) / this.scaleFacMR + 1, ...
-                             'MarkerEdgeColor','k', 'MarkerFaceColor', 'g', 'MarkerSize', 6);
+                        hl3 = plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / this.scaleFacLR + 1, ...
+                                   trajectory(odIndex, vergErrIndex, stim, end, 2) / this.scaleFacMR + 1, ...
+                                   'o', 'LineWidth', 1, 'MarkerEdgeColor','k', 'MarkerFaceColor', 'g', 'MarkerSize', 4);
                     end
                 end
             end
+
+            % just use last handle instanciation for legend
+            % hl1.DisplayName = sprintf('first %d iterations', this.interval);
+            % hl2.DisplayName = sprintf('additional %d iterations', numIters - this.interval);
+            % hl3.DisplayName = 'end fixation';
+            % l = legend([hl1, hl2, hl3]);
+            % % l.FontSize = 7;
+            % l.Orientation = 'horizontal';
+            % l.Location = 'southoutside';
+            % l.Box = 'off';
 
             xlabel('lateral rectus activation [%]');
             ylabel('medial rectus activation [%]');
