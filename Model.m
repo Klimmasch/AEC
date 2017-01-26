@@ -70,6 +70,8 @@ classdef Model < handle
         testResult5;
         testResult6;
         testResult7;
+        vergenceAngleApproach;
+        metCostsApproach;
         testHist;           % history of testing performance over traintime
 
         % Image processing
@@ -190,6 +192,8 @@ classdef Model < handle
                 obj.testResult5 = [];
                 obj.testResult6 = [];
                 obj.testResult7 = [];
+                obj.vergenceAngleApproach = [];
+                obj.metCostsApproach = [];
                 % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
                 obj.testHist = zeros(length(obj.testAt), 6);
                 obj.testHist(1, :) = [1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517]; % insert modelAt0 entry
@@ -512,22 +516,25 @@ classdef Model < handle
         end
 
         %%% Calculates muscle force for two muscles
-        %   the activation of on muscle is always 0.
+        %   the activation of one muscle is always 0.
+        %
+        %   return mf:        [lateralRectusActivation; medialRectusActivation]
+        %          angleInit: desired init angle for given vergence error [deg]
         function [mf, angleInit] = getMF2(this, objDist, desVergErr)
             % correct vergence angle for given object distance
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
             % desired init angle for given vergence error [deg]
             angleInit = angleCorrect - desVergErr;
             % look up index of angleInit
-            % if objDist not fixateable with medial rectus, use lateral rectus
             if (angleInit >= this.mfunctionMR(1, 1))
                 indAngleInit = find(this.mfunctionMR(:, 1) <= angleInit + this.dAngleMR & this.mfunctionMR(:, 1) >= angleInit - this.dAngleMR);
                 mf = this.mfunctionMR(indAngleInit, 2);
-                mf = [0; mf(ceil(length(mf) / 2))];
+                mf = [0; mf(ceil(length(mf) / 2))]; % take middle entry
             else
+                % if objDist not fixateable with medial rectus, use lateral rectus
                 indAngleInit = find(this.mfunctionLR(:, 1) <= angleInit + this.dAngleLR & this.mfunctionLR(:, 1) >= angleInit - this.dAngleLR);
                 mf = this.mfunctionLR(indAngleInit, 2);
-                mf = [mf(ceil(length(mf) / 2)); 0];
+                mf = [mf(ceil(length(mf) / 2)); 0]; % take middle entry
             end
         end
 
@@ -1585,6 +1592,7 @@ classdef Model < handle
                             % for i = 1 : length(feature)
                             %     feature(i) = this.onlineNormalize(this.trainedUntil, feature(i), i, 0);
                             % end
+                            % feature = [feature(1 : end - 2); feature(end - 1 : end) * this.lambdaMuscleFB];
 
                             relativeCommand = this.rlModel.act(feature);                   % generate change in muscle activity
                             command = checkCmd(command + relativeCommand);                 % calculate new muscle activities
@@ -1664,24 +1672,24 @@ classdef Model < handle
                         % first plot all
                         plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ this.scaleFacLR + 1, ...
                              reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ this.scaleFacMR + 1, ...
-                             '.-', 'color', [1, 201 / 255, 41 / 255],  'LineWidth', 1.5, 'MarkerSize', 7);
+                             'color', [1, 201 / 255, 41 / 255],  'LineWidth', 1.5);
 
                         % plot iter 1-interval in differen color if numIters >= model.interval
                         if (numIters >= this.interval)
                             plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 1), [this.interval, 1]) ./ this.scaleFacLR + 1, ...
                                  reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 2), [this.interval, 1]) ./ this.scaleFacMR + 1, ...
-                                 '-o', 'color', 'r', 'LineWidth', 1.5, 'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 7); % vielleicht ne andere Farbe ...
+                                 '-or', 'LineWidth', 1.5, 'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
                         end
 
                         % plot init point
-                        plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / this.scaleFacLR + 1, ...
-                             trajectory(odIndex, vergErrIndex, stim, 1, 2) / this.scaleFacMR + 1, ...
-                            'r.', 'MarkerSize', 15);
+                        % plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / this.scaleFacLR + 1, ...
+                        %      trajectory(odIndex, vergErrIndex, stim, 1, 2) / this.scaleFacMR + 1, ...
+                        %     'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
 
                         % plot destination point
                         plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / this.scaleFacLR + 1, ...
                              trajectory(odIndex, vergErrIndex, stim, end, 2) / this.scaleFacMR + 1, ...
-                             'g.',  'MarkerSize', 15);
+                             'MarkerEdgeColor','k', 'MarkerFaceColor', 'g', 'MarkerSize', 6);
                     end
                 end
             end

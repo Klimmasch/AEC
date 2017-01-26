@@ -10,7 +10,7 @@ function model = configVar(varParamArray)
 % Experiment parameters
 % ---------------------
 
-origParamsinputParams = varParamArray; % save input parameters to write into the Model
+inputParams = varParamArray; % save input parameters to write into the Model
 
 % stimulus file name
 [found, textureFile, varParamArray] = parseparam(varParamArray, 'textureFile');
