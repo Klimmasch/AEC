@@ -9,6 +9,7 @@
 
 function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, experimentDirName, experimentName)
 
+    % Initialize random number generator with given seed
     rng(randomizationSeed);
 
     % useLearnedFile(1):    0 = don't do it
@@ -275,10 +276,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     elapsedTime = 0;
     for iter1 = 1 : (timeToTrain / model.interval)
         % intermediate testing during training
+        rngState = rng; % store current state
         if ((testIt == 1) & find(testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t));
             close all;
         end
+        rng(rngState); % restore state after testing, to not mess up the experiment
 
         tic; % start/continue time count
 
@@ -572,7 +575,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     %%% Final testing procedure
     if (testIt == 1)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, experimentDirName)
+        rngState = rng; % store current state
         testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t));
+        rng(rngState); % restore state after testing, to not mess up the experiment
 
         % print the time again after the line output of the testing script
         try
