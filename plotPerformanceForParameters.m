@@ -104,7 +104,7 @@ function plotPerformanceForParameters(modelAt)
 
 
     % figName = 'steplength_actorLRvsRegul';
-    
+
     %%% steplength: actor LR vs regularizer (1 mio steps)
     % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul_1mio';
 
@@ -136,21 +136,33 @@ function plotPerformanceForParameters(modelAt)
     % figName = 'steplength_actorLRvsVar_reg1e-5';
 
     %% actor LR vs Weight initialization
-    parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsWeightInit';
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsWeightInit';
 
 
-    labelVar1 = 'Actor LR [start, end]';
-    labelVar2 = 'Weight Init [crit, hid, out]';
+    % labelVar1 = 'Actor LR [start, end]';
+    % labelVar2 = 'Weight Init [crit, hid, out]';
 
-    var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
-    var2 = [[1e-3, 6e-5, 2e-2]; [1e-2, 6e-5, 2e-2]; [1e-3, 1e-4, 2e-2]; [1e-3, 6e-5, 1e-1]; [1e-3, 1e-4, 1e-1]; [1e-2, 1e-4, 1e-1]];
+    % var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
+    % var2 = [[1e-3, 6e-5, 2e-2]; [1e-2, 6e-5, 2e-2]; [1e-3, 1e-4, 2e-2]; [1e-3, 6e-5, 1e-1]; [1e-3, 1e-4, 1e-1]; [1e-2, 1e-4, 1e-1]];
 
-    numberFormatVar1 = '[%1.1f-%1.1f]';
-    numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
+    % numberFormatVar1 = '[%1.1f-%1.1f]';
+    % numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
 
 
-    figName = 'steplength_actorVsWeights';
+    % figName = 'steplength_actorVsWeights';
 
+    parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_seed2';
+
+    labelVar1 = 'lambda_{MuscleFB}';
+    labelVar2 = 'Feat. vect.\nstd. dev.';
+
+    var1 = [0, 0.5, 1, 2]';
+    var2 = flip([0.005, 0.0075, 0.01, 0.015, 0.02]');
+
+    numberFormatVar1 = '%1.1f';
+    numberFormatVar2 = '%1.4f';
+
+    figName = 'lambdaMuscleFB_vs_desiredStdZT';
 
     % ------------------
     % Results extraction
@@ -164,7 +176,7 @@ function plotPerformanceForParameters(modelAt)
     if (~exist('modelAt'))
         modelAt = [2000000];
     end
-    
+
     for trainedUntil = 1 : length(modelAt)
         subFolder = sprintf('modelAt%d', modelAt(trainedUntil));
 
@@ -181,7 +193,7 @@ function plotPerformanceForParameters(modelAt)
         %             rmse(deltaMC), median(deltaMC), and iqr(deltaMC),
         %             critValDelta, critValNiveau,
         %             stepLengthFirst, stepLengthTotal
-        %             medialRectusWobbling, lateralRectusWobbeling}    %see below for explanation of this values 
+        %             medialRectusWobbling, lateralRectusWobbeling}    %see below for explanation of this values
         results = zeros(length2, length1, 12);
 
         for f = 1 : length(subExperiments)
@@ -232,10 +244,13 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% actor LR vs weight init
-                ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
-                jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+            % ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
-        
+            %%% muscle feedback vs feature vector standar deviation
+            ind = find(ismember(var2, model.desiredStdZT, 'rows'));
+            jnd = find(ismember(var1, model.lambdaMuscleFB, 'rows'));
+
             if isempty(ind) || isempty(jnd)
                 sprintf('%s \n was not included in the tabular', model.savePath)
                 continue
@@ -318,7 +333,7 @@ function plotPerformanceForParameters(modelAt)
                 end
 
                 txt = results(:, :, resultsIter{figIter}(subfigIter));
-                txt(txt == 0) = Inf;        % remove missing data points exept when zeros are possible 
+                txt(txt == 0) = Inf;        % remove missing data points exept when zeros are possible
 
                 if ~(figIter == 4)
                     txt = num2str(txt(:), '%0.2f');
@@ -410,7 +425,7 @@ function [medialDelta, lateralDelta, testDataUsed] = getWobblingVectors(model, t
         if abs(model.testResult2(ind + testInterval - 1, 1))  < onePixelBoundary % if the last value is accurate enough
             trialInd = find(abs(model.testResult2(ind : ind + testInterval - 1, 1)) <= onePixelBoundary); % find first value that is below one pixel accuracy
             trialInd = trialInd(1);
-            
+
             vector = model.testResult5(ind + testInterval - 1, 1) - model.testResult5(ind + trialInd - 1, 1);
             medialDelta = medialDelta + vector;
             vector = model.testResult5(ind + testInterval - 1, 2) - model.testResult5(ind + trialInd - 1, 2);
