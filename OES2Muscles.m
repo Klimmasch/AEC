@@ -40,7 +40,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
     %%% Execute intermediate test procedure during training
     % testAt = [1000000 : 1000000 : trainTime];
-    testAt = [500000 : 500000 : trainTime]; % is more handy for shorter training times like 2mio
+    testAt = [500000 : 500000 : trainTime];
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -122,7 +122,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % old static version of config.m
         % model = config(textureFiles, trainTime, testAt, sparseCodingType);
 
-        % for the new configVar, at first copy values from before ...
+        % for configVar, at first copy values from before ...
         standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
         % ... and then add those handled in the function call
 
@@ -241,8 +241,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     sprintf('%d textures were added to the buffer from the training and testing sets', nTextures)
 
     if (nStimTest > nTestTextures)
-        nStimTest = nTestTextures;
         warning('%d images were requested as training stimuli, but the renderer only holds %d.', nStimTest, nTestTextures);
+        nStimTest = nTestTextures;
     end
 
     % Image patches cell array (input to model)
