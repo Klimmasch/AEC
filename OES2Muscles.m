@@ -384,6 +384,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % for i = 1 : length(feature)
             %     feature(i) = model.onlineNormalize(t, feature(i), i, 1);
             % end
+            % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
 
             %%% Calculate metabolic costs
             metCost = model.getMetCost(command) * 2;

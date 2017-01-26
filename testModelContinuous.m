@@ -29,7 +29,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     % textureFile = 'Textures_vanHaterenTest.mat';
     % textureFile = 'Textures_celine.mat';                      % Celine's images
 
-
     % cancel testing procedure
     if ((nStim == 0) && (isempty(model.testResult)))
         error('Model has no testResults!');
@@ -71,7 +70,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
     % fixation interval at testing procedure
     testInterval = model.interval * 2;
-%     testInterval = 200;
 
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
@@ -193,6 +191,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         % for i = 1 : length(feature)
                         %     feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
                         % end
+                        % % post normalization muscle feedback scaling
+                        % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
 
                         %%% Calculate metabolic costs
                         % metCost = getMetCost(command) * 2;
@@ -219,7 +219,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         % track commands for correlation plot
                         % and metabolic costs
                         if (model.rlModel.CActor.output_dim >= 2)
-                            testResult5(tr5Ind, :) = [command; relativeCommand];
+                            testResult5(tr5Ind, :) = [command; relativeCommand]';
                             tr5Ind = tr5Ind + 1;
 
                             testResult7(tr7Ind, iter - 1) = model.getMetCost(command) * 2 - metCostDesired;
@@ -271,12 +271,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 testResult(odIndex, vseIndex, 3 * testInterval + 4 : 4 * testInterval + 4) = std(tmpResult2);
                 testResult(odIndex, vseIndex, 4 * testInterval + 5 : 5 * testInterval + 5) = mean(tmpResult3);  % critic's response
                 testResult(odIndex, vseIndex, 5 * testInterval + 6 : 6 * testInterval + 6) = std(tmpResult3);
-                % testResult(odIndex, vseIndex, 1 : 11) = mean(tmpResult1);   % vergErr
-                % testResult(odIndex, vseIndex, 12 : 22) = std(tmpResult1);
-                % testResult(odIndex, vseIndex, 23 : 33) = mean(tmpResult2);  % deltaMF
-                % testResult(odIndex, vseIndex, 34 : 44) = std(tmpResult2);
-                % testResult(odIndex, vseIndex, 45 : 55) = mean(tmpResult3);  % critic's response
-                % testResult(odIndex, vseIndex, 56 : 66) = std(tmpResult3);
             end
         end
         save(strcat(imageSavePath, '/reallyBadImages'), 'reallyBadImages');
@@ -343,6 +337,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                     % for i = 1 : length(feature)
                     %     feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
                     % end
+                    % % post normalization muscle feedback scaling
+                    % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
 
                     % Track reconstruction error and Critic's response
                     % recErrCritVal(stimulusIndex, :) = [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
@@ -419,6 +415,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 % for i = 1 : length(feature)
                 %     feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
                 % end
+                % % post normalization muscle feedback scaling
+                % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
 
                 %%% Action
                 relativeCommand = model.rlModel.act(feature);
@@ -455,6 +453,77 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             warning('nStim = %d < 40. Level 4 will be skipped.', nStim);
         end
 
+        %% Desired vergence angle and metabolic costs approach [%] vs. iteration
+        vergenceAngleApproach = zeros(size(testResult5, 1) / testInterval, testInterval);
+        metCostsApproach = zeros(size(testResult5, 1) / testInterval, testInterval);
+        vergAngle = zeros(1, testInterval);
+        metCost = zeros(1, testInterval);
+
+        % calculate all desired vergence angles and metabolic costs
+        angleDes = objRange';
+        metCostDesired = objRange';
+        for odIndex = 1 : length(objRange)
+            [cmdDesired, angleDes(odIndex)] = model.getMF2(objRange(odIndex), 0);
+            metCostDesired(odIndex) = model.getMetCost(cmdDesired) * 2;
+        end
+        angleDes = repelem(angleDes, 7 * nStim, 1);
+        metCostDesired = repelem(metCostDesired, 7 * nStim, 1);
+
+        for trial = 1 : size(vergenceAngleApproach, 1)
+            % starting point in muscle space
+            cmdStart = [testResult5(trial * testInterval - testInterval + 1, 1) - testResult5(trial * testInterval - testInterval + 1, 3); ...
+                        testResult5(trial * testInterval - testInterval + 1, 2) - testResult5(trial * testInterval - testInterval + 1, 4)];
+
+            angleStart = model.getAngle(cmdStart) * 2;
+            metCostStart = model.getMetCost(cmdStart) * 2;
+
+            % deltaVergenceAngleDesired = vergAngleDesired - vergAngleStart
+            deltaVergAnglDesired = angleDes(trial) - angleStart;
+
+            % deltaMetabolicCostsDesired = metCostDesired - metCostStart
+            deltaMetCostDesired = metCostDesired(trial) - metCostStart;
+
+            for iter = 1 : testInterval
+                % vergenceAngle(iteration)
+                vergAngle(iter) = model.getAngle([testResult5(trial * testInterval - testInterval + iter, 1); ...
+                                                  testResult5(trial * testInterval - testInterval + iter, 2)]) * 2;
+
+                % metabolicCosts(iteration)
+                metCost(iter) = model.getMetCost([testResult5(trial * testInterval - testInterval + iter, 1); ...
+                                                  testResult5(trial * testInterval - testInterval + iter, 2)]) * 2;
+            end
+
+            % vergenceAngleApproach(iteration) = (vergAngle(iteration) - vergAngleStart) / deltaDesired
+            vergenceAngleApproach(trial, :) = (vergAngle - angleStart) / deltaVergAnglDesired;
+
+            % metCostsApproach(iteration) = (metCost(iteration) - metCostStart) / deltaDesired
+            metCostsApproach(trial, :) = (metCost - metCostStart) / deltaMetCostDesired;
+        end
+        % scale to [%]
+        vergenceAngleApproach = vergenceAngleApproach .* 100;
+        metCostsApproach = metCostsApproach .* 100;
+
+        % remove trials with 0° vergence start error
+        memberChange = false;
+        if (nStim == 0)
+            nStim = 40; % catch 'just plot it' case
+            memberChange = true;
+        end
+
+        odIndex2 = 0 : length(objRange) - 1;         % object distance iterator
+        idxStart = (odIndex2 * 7 + 3) * nStim + 1;   % start indicies of respective trials
+        idxEnd = (odIndex2 * 7 + 4) * nStim;         % end indicies of respective trials
+
+        for k = flip([1 : length(objRange)])
+            vergenceAngleApproach(idxStart(k) : idxEnd(k), :) = [];
+        end
+
+        % undo change
+        if (memberChange == true)
+            nStim = 0;
+            memberChange = false;
+        end
+
         if (measureTime == true)
             elapsedTime = toc;
             sprintf('Time = %.2f [h] = %.2f [min] = %f [sec]\nFrequency = %.4f [iterations/sec]', ...
@@ -471,6 +540,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             model.testResult5 = testResult5;
             model.testResult6 = testResult6;
             model.testResult7 = testResult7;
+            model.vergenceAngleApproach = vergenceAngleApproach;
+            model.metCostsApproach = metCostsApproach;
             if (saveTestResults == 1)
                 save(strcat(imageSavePath, '/model'), 'model');
             end
@@ -488,6 +559,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 model.testResult5 = testResult5;
                 model.testResult6 = testResult6;
                 model.testResult7 = testResult7;
+                model.vergenceAngleApproach = vergenceAngleApproach;
+                model.metCostsApproach = metCostsApproach;
                 if (saveTestResults == 1)
                     save(strcat(imageSavePath, '/model'), 'model');
                 end
@@ -936,6 +1009,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         %% Check for bias at 0° vergence start error
         if (nStim == 0)
             nStim = size(model.testResult3, 1) / (length(objRange) * 7);
+            memberChange = true;
         end
 
         boxlabels = cell(1, length(objRange));
@@ -1072,6 +1146,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         plotpath = sprintf('%s/totalMetCostsObjDist', imageSavePath);
         saveas(gcf, plotpath, 'png');
 
+        if (memberChange == true)
+            nStim = 0;
+            memberChange = false;
+        end
+
         %%% Muscle correlation check
         % Total
         if (model.rlModel.CActor.output_dim >= 2)
@@ -1085,7 +1164,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             yb = linspace(min(model.testResult5(:, 2)), max(model.testResult5(:, 2)), size(histHandle, 1));
 
             pcHandle = pcolor(xb, yb, histHandle);
-            
+
             axis([0, max([xb(end), 0.01]), 0, max([yb(end), 0.01])]); % take the max between those values in case xb(end) or yb(end) == 0
             shading interp;
             set(pcHandle, 'EdgeColor', 'none');
@@ -1161,6 +1240,155 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         %%% Final Figure
         % subplot(2, 2, 1)
 
+        %%% Desired vergence angle approach [%] vs. iteration
+        % Just for backward compatibility
+        % TODO: remove this redundancy as soon as backward compatibility fades off
+        if (nStim == 0)
+            nStim = 40; % catch 'just plot it' case
+            memberChange = true;
+
+            %% Desired vergence angle and metabolic costs approach [%] vs. iteration
+            vergenceAngleApproach = zeros(size(model.testResult5, 1) / testInterval, testInterval);
+            metCostsApproach = zeros(size(model.testResult5, 1) / testInterval, testInterval);
+            vergAngle = zeros(1, testInterval);
+            metCost = zeros(1, testInterval);
+
+            % calculate all desired vergence angles and metabolic costs
+            angleDes = objRange';
+            metCostDesired = objRange';
+            for odIndex = 1 : length(objRange)
+                [cmdDesired, angleDes(odIndex)] = model.getMF2(objRange(odIndex), 0);
+                metCostDesired(odIndex) = model.getMetCost(cmdDesired) * 2;
+            end
+            angleDes = repelem(angleDes, 7 * nStim, 1);
+            metCostDesired = repelem(metCostDesired, 7 * nStim, 1);
+
+            for trial = 1 : size(vergenceAngleApproach, 1)
+                % starting point in muscle space
+                cmdStart = [model.testResult5(trial * testInterval - testInterval + 1, 1) - model.testResult5(trial * testInterval - testInterval + 1, 3); ...
+                            model.testResult5(trial * testInterval - testInterval + 1, 2) - model.testResult5(trial * testInterval - testInterval + 1, 4)];
+
+                angleStart = model.getAngle(cmdStart) * 2;
+                metCostStart = model.getMetCost(cmdStart) * 2;
+
+                % deltaVergenceAngleDesired = vergAngleDesired - vergAngleStart
+                deltaVergAnglDesired = angleDes(trial) - angleStart;
+
+                % deltaMetabolicCostsDesired = metCostDesired - metCostStart
+                deltaMetCostDesired = metCostDesired(trial) - metCostStart;
+
+                for iter = 1 : testInterval
+                    % vergenceAngle(iteration)
+                    vergAngle(iter) = model.getAngle([model.testResult5(trial * testInterval - testInterval + iter, 1); ...
+                                                      model.testResult5(trial * testInterval - testInterval + iter, 2)]) * 2;
+
+                    % metabolicCosts(iteration)
+                    metCost(iter) = model.getMetCost([model.testResult5(trial * testInterval - testInterval + iter, 1); ...
+                                                      model.testResult5(trial * testInterval - testInterval + iter, 2)]) * 2;
+                end
+
+                % vergenceAngleApproach(iteration) = (vergAngle(iteration) - vergAngleStart) / deltaDesired
+                vergenceAngleApproach(trial, :) = (vergAngle - angleStart) / deltaVergAnglDesired;
+
+                % metCostsApproach(iteration) = (metCost(iteration) - metCostStart) / deltaDesired
+                metCostsApproach(trial, :) = (metCost - metCostStart) / deltaMetCostDesired;
+            end
+            % scale to [%]
+            vergenceAngleApproach = vergenceAngleApproach .* 100;
+            metCostsApproach = metCostsApproach .* 100;
+
+            % remove trials with 0° vergence start error
+            odIndex2 = 0 : length(objRange) - 1;         % object distance iterator
+            idxStart = (odIndex2 * 7 + 3) * nStim + 1;   % start indicies of respective trials
+            idxEnd = (odIndex2 * 7 + 4) * nStim;         % end indicies of respective trials
+
+            for k = flip([1 : length(objRange)])
+                vergenceAngleApproach(idxStart(k) : idxEnd(k), :) = [];
+            end
+
+            % undo change
+            if (memberChange == true)
+                nStim = 0;
+                memberChange = false;
+            end
+        end
+
+        % TODO: use model.vergenceAngleApproach as soon as backward compatibility fades off
+        figure();
+        hold on;
+        grid on;
+        b = boxplot(vergenceAngleApproach);
+
+        % remove outliers
+        outl = findobj(b,'tag','Outliers');
+        set(outl, 'Visible', 'off');
+
+        % rescale axis to whiskers + offset
+        upWi = findobj(b, 'tag', 'Upper Whisker');
+        lowWi = findobj(b, 'tag', 'Lower Whisker');
+        axis([0, testInterval + 1, ...
+              min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+              max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+        xlabel('Iteration step', 'FontSize', 12);
+        ylabel('Vergence Angle Approach [%]', 'FontSize', 12);
+        title(sprintf('Vergence Angle Approach over Trial\nmodel trained for #%d iterations', model.trainedUntil));
+
+        plotpath = sprintf('%s/vergenceAngleApproach', imageSavePath);
+        saveas(gcf, plotpath, 'png');
+
+        %%% Desired metabolic costs approach [%] vs. iteration
+        % TODO: use model.metCostsApproach as soon as backward compatibility fades off
+        figure();
+        hold on;
+        grid on;
+        b = boxplot(metCostsApproach);
+
+        % remove outliers
+        outl = findobj(b,'tag','Outliers');
+        set(outl, 'Visible', 'off');
+
+        % rescale axis to whiskers + offset
+        upWi = findobj(b, 'tag', 'Upper Whisker');
+        lowWi = findobj(b, 'tag', 'Lower Whisker');
+        axis([0, testInterval + 1, ...
+              min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+              max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+        xlabel('Iteration step', 'FontSize', 12);
+        ylabel('Metabolic Costs Approach [%]', 'FontSize', 12);
+        title(sprintf('Metabolic Costs Approach over Trial\nmodel trained for #%d iterations', model.trainedUntil));
+
+        plotpath = sprintf('%s/metCostsApproach', imageSavePath);
+        saveas(gcf, plotpath, 'png');
+
+        % Backward compatibility
+        if (saveTestResults == 1)
+            % catch non-existing variables error, occuring in non-up-to-date models
+            try
+                clone = model.copy();
+                delete(model);
+                clear model;
+                model = clone;
+                model.testResult = testResult;
+                model.testResult2 = testResult2;
+                model.testResult3 = testResult3;
+                model.testResult4 = testResult4;
+                model.testResult5 = testResult5;
+                model.testResult6 = testResult6;
+                model.testResult7 = testResult7;
+                model.vergenceAngleApproach = vergenceAngleApproach;
+                model.metCostsApproach = metCostsApproach;
+                if (saveTestResults == 1)
+                    save(strcat(imageSavePath, '/model'), 'model');
+                end
+                delete(clone);
+                clear clone;
+            catch
+                % catch when new model property isn't present in Model class yet
+                error('One or more new model properties (variables) are not present in Model.m class yet!');
+            end
+        end
     end
 
     %%% Results overview table generation
