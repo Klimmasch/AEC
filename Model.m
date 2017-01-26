@@ -1679,7 +1679,10 @@ classdef Model < handle
                 % orange = [1, 94 / 255, 41 / 255],
                 for stim = 1 : length(stimuliIndices)
                     for vergErrIndex = 1 : length(startVergErr)
-
+    
+                       % trajectory(:, :, :, :, 1) = trajectory(:, :, :, :, 1) - 0.7;
+                       % trajectory(:, :, :, :, 2) = trajectory(:, :, :, :, 2) - 0.6;
+                        
                         % first plot all
                         hl2 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ this.scaleFacLR + 1, ...
                                    reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ this.scaleFacMR + 1, ...
