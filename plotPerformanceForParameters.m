@@ -153,14 +153,14 @@ function plotPerformanceForParameters(modelAt)
 
     parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_seed2';
 
-    labelVar1 = 'lambda_{MuscleFB}';
+    labelVar1 = 'Scaling of muscle feedback';
     labelVar2 = 'Feat. vect.\nstd. dev.';
 
     var1 = [0, 0.5, 1, 2]';
     var2 = flip([0.005, 0.0075, 0.01, 0.015, 0.02]');
 
-    numberFormatVar1 = '%1.1f';
-    numberFormatVar2 = '%1.4f';
+    numberFormatVar1 = '%f';
+    numberFormatVar2 = '%f';
 
     figName = 'lambdaMuscleFB_vs_desiredStdZT';
 
