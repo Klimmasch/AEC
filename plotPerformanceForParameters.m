@@ -136,20 +136,52 @@ function plotPerformanceForParameters(modelAt)
     % figName = 'steplength_actorLRvsVar_reg1e-5';
 
     %% actor LR vs Weight initialization
-    parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsWeightInit';
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsWeightInit';
 
 
-    labelVar1 = 'Actor LR [start, end]';
-    labelVar2 = 'Weight Init [crit, hid, out]';
+    % labelVar1 = 'Actor LR [start, end]';
+    % labelVar2 = 'Weight Init [crit, hid, out]';
 
-    var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
-    var2 = [[1e-3, 6e-5, 2e-2]; [1e-2, 6e-5, 2e-2]; [1e-3, 1e-4, 2e-2]; [1e-3, 6e-5, 1e-1]; [1e-3, 1e-4, 1e-1]; [1e-2, 1e-4, 1e-1]];
+    % var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
+    % var2 = [[1e-3, 6e-5, 2e-2]; [1e-2, 6e-5, 2e-2]; [1e-3, 1e-4, 2e-2]; [1e-3, 6e-5, 1e-1]; [1e-3, 1e-4, 1e-1]; [1e-2, 1e-4, 1e-1]];
 
-    numberFormatVar1 = '[%1.1f-%1.1f]';
-    numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
+    % numberFormatVar1 = '[%1.1f-%1.1f]';
+    % numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
 
 
-    figName = 'steplength_actorVsWeights';
+    % figName = 'steplength_actorVsWeights';
+
+    %% regularizer vs desired standard deviation in feature vector
+    % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs desiredStdZT';
+
+
+    % labelVar1 = 'Regularizer';
+    % labelVar2 = 'Std. dev. in Feature Vector';
+
+    % var1 = [5e-5, 1e-5, 5e-6, 1e-6]';
+    % var2 = [0.005, 0.01, 0.02, 0.04, 0.08]';
+
+    % numberFormatVar1 = '%1.0e';
+    % numberFormatVar2 = '%1.3f';
+
+
+    % figName = 'regul_vs_stdInFeat';
+
+    %% regularizer vs desired standard deviation in feature vector
+    parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_flat';
+
+
+    labelVar1 = 'scaling of muscle feedback';
+    labelVar2 = 'Std. dev. in Feature Vector';
+
+    var1 = [0, 0.5, 1, 2]';
+    var2 = [0.005, 0.0075, 0.01, 0.015, 0.02]';
+
+    numberFormatVar1 = '%g';
+    numberFormatVar2 = '%g';
+
+
+    figName = 'muscleFB_vs_stdInFeat_flat';
 
 
     % ------------------
@@ -232,9 +264,17 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% actor LR vs weight init
-                ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
-                jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+            % ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
+            %%% regularizer vs std in feature vector
+            % ind = find(ismember(var2, model.desiredStdZT, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
+
+
+            %%% lambda muscle feedback  vs std in feature vector
+            ind = find(ismember(var2, model.desiredStdZT, 'rows'));
+            jnd = find(ismember(var1, model.lambdaMuscleFB, 'rows'));
         
             if isempty(ind) || isempty(jnd)
                 sprintf('%s \n was not included in the tabular', model.savePath)
@@ -337,6 +377,7 @@ function plotPerformanceForParameters(modelAt)
                     for k = 1 : length(allVals)
                         % txt{k} = sprintf(strcat(num2str(allVals(k, 1), '%0.4f'), '\n', num2str(allVals(k, 2), '%0.4f')));
                         txt{k} = strcat(num2str(allVals(k, 1), '%0.4f'), '/', num2str(allVals(k, 2), '%0.4f'));
+                        % txt{k} = strcat(num2str(allVals(k, 1), '%1.1g'), '/', num2str(allVals(k, 2), '%1.1g'));
                     end
                 end
 

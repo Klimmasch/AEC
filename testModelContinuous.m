@@ -70,6 +70,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
     % fixation interval at testing procedure
     testInterval = model.interval * 2;
+    % testInterval = 200;
 
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
