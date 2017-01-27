@@ -1,13 +1,14 @@
 %%% Model testing procedure
-% @param model:             respective model object to be tested
-% @param nStim:             # stimuli to be tested, provide 0 if you just want to plot results
-% @pram plotIt:             whether plots shall be generated
-% @param saveTestResults:   whether to save the results (not recommended if model is still trained!)
-% @param verbose:           generation of text output 0 (no) 1 (yes)
-% @param simulator:         simulator handle, provide [] if there is no simulator handle yet
-% @param reinitRenderer:    1 if renderer was already initialized
+% param model:              respective model object to be tested
+% param nStim:              # stimuli to be tested, provide 0 if you just want to plot results
+% pram plotIt:              whether plots shall be generated
+% param saveTestResults:    whether to save the results (not recommended if model is still trained!)
+% param verbose:            generation of text output 0 (no) 1 (yes)
+% param simulator:          simulator handle, provide [] if there is no simulator handle yet
+% param reinitRenderer:     1 if renderer was already initialized
 %                           0 if renderer wasn't initialized yet
-%%%
+% param folderName:         subfolder name of this testing instance, default: 'modelAtX', X = completed training # iteration
+% param level:              array of level numbers, i.e. which testing/plotting parts shall be executed
 function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, folderName)
 
     % should the simulation time be measured?
@@ -82,7 +83,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     tmpResult2 = zeros(nStim, testInterval + 1);
     tmpResult3 = zeros(nStim, testInterval + 1);
 
-    testResult = zeros(length(objRange), 7, 66); % mean and std of vergenceError, deltaMF and critics response for different obj dists and starting pos
+    testResult = zeros(length(objRange), 7, 6 * testInterval + 6); % mean and std of vergenceError, deltaMF and critics response for different obj dists and starting pos
     testResult2 = zeros(length(objRange) * 7 * nStim * testInterval, 1 + length(model.scModel)); % reconstruction error statistics
 
     testResult3 = zeros(length(objRange) * 7 * nStim, testInterval); % ALL single values
@@ -133,7 +134,6 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             vseRange = [vseRange(1 : 3), vseRange(5 : end)]; % remove one 0
             % vseRange = [-3:3];
             % vseRange = linspace(-1, 1, 7);
-            % angleDes = 2 * atand(model.baseline / (2 * objRange(odIndex)));
             [cmdDesired, angleDes] = model.getMF2(objRange(odIndex), 0);
             metCostDesired = model.getMetCost(cmdDesired) * 2;
 
@@ -542,10 +542,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         catch
             % catch non-existing variables error, occuring in non-up-to-date models
             try
-                clone = model.copy();
-                delete(model);
-                clear model;
-                model = clone;
+                clone = model.copy();                                   % create deep copy & handle/pointer of model object
+                delete(model);                                          % delete old object instance
+                clear model;                                            % delete handle/pointer to deleted model object
+                model = clone;                                          % copy new handle/pointer
                 model.testResult = testResult;
                 model.testResult2 = testResult2;
                 model.testResult3 = testResult3;
@@ -558,8 +558,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 if (saveTestResults == 1)
                     save(strcat(imageSavePath, '/model'), 'model');
                 end
-                delete(clone);
-                clear clone;
+                clear clone;                                            % delete obsolete handle/pointer
             catch
                 % catch when new model property isn't present in Model class yet
                 error('One or more new model properties (variables) are not present in Model.m class yet!');
@@ -1237,7 +1236,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         %%% Desired vergence angle approach [%] vs. iteration
         % Just for backward compatibility
         % TODO: remove this redundancy as soon as backward compatibility fades off
-        if (nStim == 0)
+        if ((nStim == 0) && (isempty(model.vergenceAngleApproach) || isempty(model.metCostsApproach)))
             nStim = 40; % catch 'just plot it' case
             memberChange = true;
 
@@ -1364,29 +1363,19 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 delete(model);
                 clear model;
                 model = clone;
-                model.testResult = testResult;
-                model.testResult2 = testResult2;
-                model.testResult3 = testResult3;
-                model.testResult4 = testResult4;
-                model.testResult5 = testResult5;
-                model.testResult6 = testResult6;
-                model.testResult7 = testResult7;
                 model.vergenceAngleApproach = vergenceAngleApproach;
                 model.metCostsApproach = metCostsApproach;
-                if (saveTestResults == 1)
-                    save(strcat(imageSavePath, '/model'), 'model');
-                end
-                delete(clone);
+                save(strcat(imageSavePath, '/model'), 'model');
                 clear clone;
             catch
                 % catch when new model property isn't present in Model class yet
                 error('One or more new model properties (variables) are not present in Model.m class yet!');
             end
         end
-    end
 
-    %% Generate muscle activation trajectories
-    trajPlotHandle = model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(max(nStim, 40)), simulator, imageSavePath, folderName(9 : end), plotIt);
+        %% Generate muscle activation trajectories
+        model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(max(nStim, 40)), simulator, imageSavePath, folderName(9 : end), plotIt);
+    end
 
     %%% Results overview table generation
     resultsFN = strcat(model.savePath, '/results.ods'); % file name

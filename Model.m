@@ -1535,7 +1535,6 @@ classdef Model < handle
                                     clear this;
                                     this = clone;
                                     [command, angleNew] = this.getMFedood(objDist(odIndex), startVergErr(vergErrIndex));
-                                    delete(clone);
                                     clear clone;
                                 catch
                                     % catch when new model property isn't present in Model class yet
