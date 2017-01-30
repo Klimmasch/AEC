@@ -1,8 +1,9 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% This script reads in a number of models
-%% and plots their performance according
-%% to a specified set of two paramters.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% This script reads in a number of models and plots their
+%% performance according to a specified set of two paramters.
+%%
+%% => Cluster run overview
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotPerformanceForParameters(modelAt)
     % ---------------------
     % Experiment definition
@@ -30,7 +31,6 @@ function plotPerformanceForParameters(modelAt)
 
     % figName = 'CriticLRActorLR';
 
-
     %%% regularizer vs actor leaning range
     % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
 
@@ -42,7 +42,6 @@ function plotPerformanceForParameters(modelAt)
 
     % numberFormatVar1 = '%1.0e';
     % numberFormatVar2 = '[%1.2f - %1.2f]';
-
 
     % figName = 'hiddenLayerRegulActorLRComparison';
 
@@ -92,7 +91,6 @@ function plotPerformanceForParameters(modelAt)
     %%% steplength: actor LR vs regularizer (new)
     % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul';
 
-
     % labelVar1 = 'Actor weight regularizer';
     % labelVar2 = 'Actor LR [start, end]';
 
@@ -101,7 +99,6 @@ function plotPerformanceForParameters(modelAt)
 
     % numberFormatVar1 = '%1.0e';
     % numberFormatVar2 = '[%1.2f - %1.2f]';
-
 
     % figName = 'steplength_actorLRvsRegul';
 
@@ -119,9 +116,8 @@ function plotPerformanceForParameters(modelAt)
 
     % figName = 'steplength_actorLRvsRegul_1mio';
 
-    %% steplength: actor LR vs variance range (regularizar: 1e-5 to increase stepwith further)
+    %%% steplength: actor LR vs variance range (regularizar: 1e-5 to increase stepwith further)
     % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsVariance_reg1e-5';
-
 
     % labelVar1 = 'Actor LR [start, end]';
     % labelVar2 = 'Variance Range  [start, end]';
@@ -132,10 +128,9 @@ function plotPerformanceForParameters(modelAt)
     % numberFormatVar1 = '[%1.1f-%1.1f]';
     % numberFormatVar2 = '[%1.0e-%1.0e]';
 
-
     % figName = 'steplength_actorLRvsVar_reg1e-5';
 
-    %% actor LR vs Weight initialization
+    %%% actor LR vs Weight initialization
     % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsWeightInit';
 
     % labelVar1 = 'Actor LR [start, end]';
@@ -147,12 +142,10 @@ function plotPerformanceForParameters(modelAt)
     % numberFormatVar1 = '[%1.1f-%1.1f]';
     % numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
 
-
     % figName = 'steplength_actorVsWeights';
 
-    %% regularizer vs desired standard deviation in feature vector
+    %%% regularizer vs desired standard deviation in feature vector
     % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs desiredStdZT';
-
 
     % labelVar1 = 'Regularizer';
     % labelVar2 = 'Std. dev. in Feature Vector';
@@ -163,28 +156,23 @@ function plotPerformanceForParameters(modelAt)
     % numberFormatVar1 = '%1.0e';
     % numberFormatVar2 = '%1.3f';
 
-
     % figName = 'regul_vs_stdInFeat';
 
-    %% regularizer vs desired standard deviation in feature vector
-%     parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_flat';
-% 
-% 
-%     labelVar1 = 'scaling of muscle feedback';
-%     labelVar2 = 'Std. dev. in Feature Vector';
-% 
-%     var1 = [0, 0.5, 1, 2]';
-%     var2 = [0.005, 0.0075, 0.01, 0.015, 0.02]';
-% 
-%     numberFormatVar1 = '%g';
-%     numberFormatVar2 = '%g';
-% 
-% 
-%     figName = 'muscleFB_vs_stdInFeat_flat';
-    
-    %% muscle feddback vs desired std in feature vector
-    % figName = 'steplength_actorVsWeights';
+    %%% regularizer vs desired standard deviation in feature vector
+    % parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_flat';
 
+    % labelVar1 = 'scaling of muscle feedback';
+    % labelVar2 = 'Std. dev. in Feature Vector';
+
+    % var1 = [0, 0.5, 1, 2]';
+    % var2 = [0.005, 0.0075, 0.01, 0.015, 0.02]';
+
+    % numberFormatVar1 = '%g';
+    % numberFormatVar2 = '%g';
+
+    % figName = 'muscleFB_vs_stdInFeat_flat';
+
+    %%% muscle feddback vs desired std in feature vector
     parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_seed2';
 
     labelVar1 = 'Scaling of muscle feedback';
@@ -208,7 +196,7 @@ function plotPerformanceForParameters(modelAt)
     subExperiments = subExperiments(3 : end);       % exclude '.' and '..' directories
 
     if (~exist('modelAt'))
-        modelAt = [2000000];
+        modelAt = 2000000;
     end
 
     for trainedUntil = 1 : length(modelAt)
@@ -220,7 +208,6 @@ function plotPerformanceForParameters(modelAt)
         length2 = length(var2);
         criticResolution = 101;
         vseRange = linspace(-1, 1, criticResolution);
-
 
         % results := |var1| x |var2| x
         %            {rmse(vergErr), median(vergErr), and iqr(vergErr),
@@ -285,11 +272,10 @@ function plotPerformanceForParameters(modelAt)
             % ind = find(ismember(var2, model.desiredStdZT, 'rows'));
             % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
-
             %%% lambda muscle feedback  vs std in feature vector
             ind = find(ismember(var2, model.desiredStdZT, 'rows'));
             jnd = find(ismember(var1, model.lambdaMuscleFB, 'rows'));
-        
+
             if isempty(ind) || isempty(jnd)
                 sprintf('%s \n was not included in the tabular', model.savePath)
                 continue
@@ -372,7 +358,7 @@ function plotPerformanceForParameters(modelAt)
                 end
 
                 txt = results(:, :, resultsIter{figIter}(subfigIter));
-                txt(txt == 0) = Inf;        % remove missing data points exept when zeros are possible
+                txt(txt == 0) = Inf; % remove missing data points exept when zeros are possible
 
                 if ~(figIter == 4)
                     txt = num2str(txt(:), '%0.2f');
@@ -382,7 +368,7 @@ function plotPerformanceForParameters(modelAt)
 
                 % special case: wobbling analysis
                 if (figIter == 3 && subfigIter == 3)
-                    % for wobbling, use the vectors as labels,
+                    % for wobbling, use the vectors as labels
                     medVals = results(:, :, 11);
                     latVals = results(:, :, 12);
                     allVals = [medVals(:), latVals(:)];
@@ -396,22 +382,21 @@ function plotPerformanceForParameters(modelAt)
                 end
 
                 txt = strtrim(cellstr(txt));
-
                 text(x(:), y(:), txt(:), 'HorizontalAlignment', 'center');
 
-        %             if (size(var1, 2) == 2)
+                % if (size(var1, 2) == 2)
                     % two dim case
                     set(gca, 'XTick', 1 : length1, 'XTickLabel', num2str(var1(:, :), numberFormatVar1), ...
                              'YTick', 1 : length2, 'YTickLabel', num2str(var2(:, :), numberFormatVar2), ...
                              'TickLength', [0, 0], 'FontSize', 7);
-        %             elseif (size(var1, 2) == 1)
-        %                 % one dim. case
-        %                 set(gca, 'XTick', 1 : length1, 'XTickLabel', var1, ...
-        %                          'YTick', 1 : length2, 'YTickLabel', var2, ...
-        %                          'TickLength', [0, 0]);
-        %             else
-        %                 error('Parameter range var1 has unsupported size of %d x %d.', size(var1));
-        %             end
+                % elseif (size(var1, 2) == 1)
+                %     % one dim. case
+                %     set(gca, 'XTick', 1 : length1, 'XTickLabel', var1, ...
+                %              'YTick', 1 : length2, 'YTickLabel', var2, ...
+                %              'TickLength', [0, 0]);
+                % else
+                %     error('Parameter range var1 has unsupported size of %d x %d.', size(var1));
+                % end
 
                 if (figIter < 3)
                     title(titleStrings{subfigIter});
@@ -425,7 +410,7 @@ function plotPerformanceForParameters(modelAt)
                     title(strcat('\Deltacritic_{val}', ...
                                  sprintf(' = |mean(critic_{val}(verg_{Err} = 0)\n - (critic_{val}(verg_{Err} = -0.5)'), ...
                                  ' + critic_{val}(verg_{Err} = 0.5)) / 2)|'));
-                else  (figIter == 4 && subfigIter == 2)
+                elseif (figIter == 4 && subfigIter == 2)
                     title(sprintf('critic_{val} Niveau = |mean(critic_{val}(verg_{Err} = 0))|'));
                 end
 
@@ -433,7 +418,6 @@ function plotPerformanceForParameters(modelAt)
                 ylabel(sprintf(labelVar2));
                 colorbar();
             end
-
 
             if (figIter == 1)
                 suptitle(sprintf('Vergence Error at %d iterations', modelAt(trainedUntil)));
@@ -477,5 +461,4 @@ function [medialDelta, lateralDelta, testDataUsed] = getWobblingVectors(model, t
     medialDelta = medialDelta / nSamples;
     lateralDelta = lateralDelta / nSamples;
     testDataUsed = nSamples / nTrials;
-
 end
