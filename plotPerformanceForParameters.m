@@ -2,8 +2,8 @@
 %% This script reads in a number of models and plots their
 %% performance according to a specified set of two paramters.
 %%
-%% => Cluster run overview
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% => Cluster run overview
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotPerformanceForParameters(modelAt)
     % ---------------------
     % Experiment definition
@@ -46,18 +46,18 @@ function plotPerformanceForParameters(modelAt)
     % figName = 'hiddenLayerRegulActorLRComparison';
 
     %%% discount factor vs interval
-    % parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources';
+    parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources';
 
-    % labelVar1 = 'discount factor';
-    % labelVar2 = 'interval';
+    labelVar1 = 'discount factor';
+    labelVar2 = 'interval';
 
-    % var1 = [0.1; 0.3; 0.9];
-    % var2 = [10; 50; 100];
+    var1 = [0.1; 0.3; 0.9];
+    var2 = [10; 50; 100];
 
-    % numberFormatVar1 = '%1.1f';
-    % numberFormatVar2 = '%d';
+    numberFormatVar1 = '%1.1f';
+    numberFormatVar2 = '%d';
 
-    % figName = 'DiscountVsInterval';
+    figName = 'DiscountVsInterval';
 
     %%% metabolic costs
     % parentFolder = '/home/klimmasch/projects/results/exploringMetCost';
@@ -214,9 +214,11 @@ function plotPerformanceForParameters(modelAt)
         %            {rmse(vergErr), median(vergErr), and iqr(vergErr),
         %             rmse(deltaMC), median(deltaMC), and iqr(deltaMC),
         %             critValDelta, critValNiveau,
-        %             stepLengthFirst, stepLengthTotal
-        %             medialRectusWobbling, lateralRectusWobbeling}    %see below for explanation of this values
-        results = zeros(length2, length1, 12);
+        %             stepLengthFirst, stepLengthTotal,
+        %             medialRectusWobbling, lateralRectusWobbeling,
+        %             errorReduction1stStep, errorReduction2ndStep, medianMetcostReductionLastStep,
+        %             }    %see below for explanation of this values
+        results = zeros(length2, length1, 17);
 
         for f = 1 : length(subExperiments)
             try
@@ -250,8 +252,8 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% discount factor vs interval
-            % ind = find(ismember(var2, model.interval, 'rows'));
-            % jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
+            ind = find(ismember(var2, model.interval, 'rows'));
+            jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
 
             %%% regularizer vs metabolic costs
             % ind = find(ismember(var2, model.rlModel.CActor.regularizer, 'rows'));
@@ -274,11 +276,11 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
             %%% lambda muscle feedback  vs std in feature vector
-            ind = find(ismember(var2, model.desiredStdZT, 'rows'));
-            jnd = find(ismember(var1, model.lambdaMuscleFB, 'rows'));
-
-            if (isempty(ind) || isempty(jnd))
-                warning('%s \n was not included in the tabular', model.savePath);
+            % ind = find(ismember(var2, model.desiredStdZT, 'rows'));
+            % jnd = find(ismember(var1, model.lambdaMuscleFB, 'rows'));
+        
+            if isempty(ind) || isempty(jnd)
+                sprintf('%s \n was not included in the tabular', model.savePath)
                 continue
             end
             %%% Extract results
@@ -322,6 +324,16 @@ function plotPerformanceForParameters(modelAt)
             [medVec, latVec, ~] = getWobblingVectors(model, testInterval);
             results(ind, jnd, 11 : 12) = [medVec, latVec];
             results(ind, jnd, 13) = sqrt(results(ind, jnd, 11)^2 + results(ind, jnd, 12)^2);
+            try
+                %%% percent of reduction of vergence error after 2 steps
+                results(ind, jnd, 14) = median(model.vergenceAngleApproach(:,1));
+                results(ind, jnd, 15) = median(model.vergenceAngleApproach(:,2));
+                results(ind, jnd, 16) = median(model.vergenceAngleApproach(:,end));
+                %%% percent of reduction of metabolic costs at end of trial
+                results(ind, jnd, 17) = median(model.metCostsApproach(:,end));
+            catch
+                sprintf('%s\nis missing vergenceAngleApproach and/or metCostApproach', model.savePath)
+            end
         end
 
         % ----------------
@@ -336,9 +348,9 @@ function plotPerformanceForParameters(modelAt)
 
         [x, y] = meshgrid(1 : length1, 1 : length2);
         titleStrings = {'RMSE', 'IQR*4', 'Median'};
-        resultsIter = {[1 : 3]; [4 : 6]; [9, 10, 13]; [7, 8]};
+        resultsIter = {[1 : 3]; [4 : 6]; [9, 10, 13]; [7, 8]; [14, 17, 13]};
 
-        for figIter = 1 : 4
+        for figIter = 1 : length(resultsIter)
             if (figIter >= 3)
                 colordata = createCM(3);
                 colordata = flipud(colordata);
@@ -368,8 +380,8 @@ function plotPerformanceForParameters(modelAt)
                 end
 
                 % special case: wobbling analysis
-                if (figIter == 3 && subfigIter == 3)
-                    % for wobbling, use the vectors as labels
+                if (figIter == 3 && subfigIter == 3) || (figIter == 5 && subfigIter == 3)
+                    % for wobbling, use the vectors as labels,
                     medVals = results(:, :, 11);
                     latVals = results(:, :, 12);
                     allVals = [medVals(:), latVals(:)];
@@ -378,6 +390,20 @@ function plotPerformanceForParameters(modelAt)
                     for k = 1 : length(allVals)
                         % txt{k} = sprintf(strcat(num2str(allVals(k, 1), '%0.4f'), '\n', num2str(allVals(k, 2), '%0.4f')));
                         txt{k} = strcat(num2str(allVals(k, 1), '%0.4f'), '/', num2str(allVals(k, 2), '%0.4f'));
+                        % txt{k} = strcat(num2str(allVals(k, 1), '%1.1g'), '/', num2str(allVals(k, 2), '%1.1g'));
+                    end
+                elseif (figIter == 5 && subfigIter == 1)
+                    % for reduction of vergence error in percent, use the
+                    % first two steps
+                    firstStep = results(:, :, 14);
+                    secondStep = results(:, :, 15);
+                    lastStep = results(:, :, 16);
+                    allVals = [firstStep(:), secondStep(:), lastStep(:)];
+
+                    txt = cell(1, length(allVals));
+                    for k = 1 : length(allVals)
+                        % txt{k} = sprintf(strcat(num2str(allVals(k, 1), '%0.4f'), '\n', num2str(allVals(k, 2), '%0.4f')));
+                        txt{k} = strcat(num2str(allVals(k, 1), '%0.1f'), '/', num2str(allVals(k, 2), '%0.1f'), '/', num2str(allVals(k, 3), '%0.1f'));
                         % txt{k} = strcat(num2str(allVals(k, 1), '%1.1g'), '/', num2str(allVals(k, 2), '%1.1g'));
                     end
                 end
@@ -401,18 +427,30 @@ function plotPerformanceForParameters(modelAt)
 
                 if (figIter < 3)
                     title(titleStrings{subfigIter});
-                elseif (figIter == 3 && subfigIter == 1)
-                    title('First Step Length');
-                elseif (figIter == 3 && subfigIter == 2)
-                    title('Total Step Length');
-                elseif (figIter == 3 && subfigIter == 3)
-                    title('Wobbling Effect');
-                elseif (figIter == 4 && subfigIter == 1)
-                    title(strcat('\Deltacritic_{val}', ...
-                                 sprintf(' = |mean(critic_{val}(verg_{Err} = 0)\n - (critic_{val}(verg_{Err} = -0.5)'), ...
-                                 ' + critic_{val}(verg_{Err} = 0.5)) / 2)|'));
-                elseif (figIter == 4 && subfigIter == 2)
-                    title(sprintf('critic_{val} Niveau = |mean(critic_{val}(verg_{Err} = 0))|'));
+                elseif figIter == 3
+                    if subfigIter == 1
+                        title('First Step Length');
+                    elseif subfigIter == 2
+                        title('Total Step Length');
+                    elseif subfigIter == 3
+                        title('Wobbling Effect');
+                    end
+                elseif figIter == 4
+                    if subfigIter == 1
+                        title(strcat('\Deltacritic_{val}', ...
+                                     sprintf(' = |mean(critic_{val}(verg_{Err} = 0)\n - (critic_{val}(verg_{Err} = -0.5)'), ...
+                                     ' + critic_{val}(verg_{Err} = 0.5)) / 2)|'));
+                    elseif subfigIter == 2
+                        title(sprintf('critic_{val} Niveau = |mean(critic_{val}(verg_{Err} = 0))|'));
+                    end
+                elseif figIter == 5
+                    if subfigIter == 1
+                        title('Reduction of Vergence Error [1st step, 2nd step]');
+                    elseif subfigIter == 2
+                        title('Reduction of Metabolic Costs [last step]');
+                    elseif subfigIter == 3
+                        title('Wobbling Effect')
+                    end
                 end
 
                 xlabel(sprintf(labelVar1));
@@ -431,6 +469,8 @@ function plotPerformanceForParameters(modelAt)
                 saveas(gca, sprintf('%s_StepLength_at%diter.png', plotSavePath, modelAt(trainedUntil)));
             elseif (figIter == 4)
                 saveas(gca, sprintf('%s_CriticVal_at%diter.png', plotSavePath, modelAt(trainedUntil)));
+            elseif (figIter == 5)
+                saveas(gca, sprintf('%s_Wobbling_at%diter.png', plotSavePath, modelAt(trainedUntil)));
             end
         end
     end

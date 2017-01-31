@@ -6,6 +6,70 @@
 % folder = 'Regularizer vs ActorLR';
 % folder = 'Regularizer_vs_ActorLR';
 % folder = 'exploringMetCost'
+<<<<<<< HEAD
+% folder = 'Gamma_vs_Interval_fewerResources'
+% folder = 'varDec_new'
+% folder = 'steplength_actorVsWeightInit'
+% folder = 'steplength_actorVsVariance_reg1e-5';
+% folder = 'steplength_actorVsRegul';
+% folder = 'Gamma_vs_Interval_fewerResources';
+
+folders = {'steplength_actorVsRegul', 'steplength_actorVsRegul_1mio', 'steplength_actorVsRegul_reg1e-5', 'steplength_actorVsWeightInit', 'increase_step_width'};
+
+for k = 1 : length(folders)
+    
+    folder = folders{k};
+    
+    parent = strcat('/home/aecgroup/aecdata/Results/', folder);
+    % parent = strcat('/home/klimmasch/projects/results/', folder);
+    files = dir(sprintf('%s/*00iter_1_*', parent));
+    % simulator = prepareSimulator([]);
+
+    modelAt = [500000, 1000000, 1500000, 2000000];
+
+    for t = 1 : length(modelAt) 
+        for f = 1 : length(files)
+            savePath = sprintf('%s/%s', parent, files(f).name)
+            filePath = strcat(savePath, sprintf('/modelAt%d/', modelAt(t)))
+        %     filePath = strcat(savePath, '/')
+            try
+                model = load(strcat(filePath, 'model.mat'));
+            catch
+                sprintf(filePath, ' \n contains no valid file')
+                continue
+            end
+            % model = load(strcat(savePath, '/model.mat'));
+
+            model = model.model;
+            model.savePath = savePath;
+            % if length(model.rlModel.actorLearningRange) == 1
+            %     val = model.rlModel.actorLearningRange(1);
+            %     model.rlModel.actorLearningRange = [val, val];
+            % end
+            % display(model.savePath)
+            % save(strcat(model.savePath, '/model'), 'model');
+
+            if ~exist(strcat(filePath, 'metCostsApproach.png'))
+                nStimTest = 0;
+                try
+                    testModelContinuous(model, nStimTest, 1, 1, 1, simulator, 0, sprintf('modelAt%d', modelAt(t)));
+                catch 
+                    testModelContinuous(model, 40, 1, 1, 1, simulator, 0, sprintf('modelAt%d', modelAt(t)));
+    %                 sprintf('%s\n seem to have no training data.', model.savePath)
+                end
+        %         model.allPlotSave([1:7]);
+            else
+                sprintf('skipping testing')
+            end
+
+
+        %     model.allPlotSave([7]);
+        %     display(model.trainedUntil)
+        %     display(size(model.testResult7))
+        %     model.allPlotSave([1:3,5:7]); % level == 4 seems to cause problems in some interval>10 cases
+            close all;
+        end
+=======
 % folder = 'Gamma_vs_Interval_fewerResources/'
 % folder = 'lambdaMuscleFB_vs_desiredStdZT';
 folder = 'lambdaMuscleFB_vs_desiredStdZT_seed2';
@@ -37,6 +101,7 @@ for f = 1:length(files)
         model = model.model;
         testModelContinuous(model, nStimTest, 1, 1, 0, simulator, 0, sprintf('modelAt%d', t(i)));
         close all;
+>>>>>>> 321dfa388af3b63ad7b24a441c1d542be68c8a34
     end
 end
 
