@@ -9,7 +9,8 @@ classdef Model < handle
         objDistMax;
         muscleInitMin;      % minimal initial muscle innervation
         muscleInitMax;      % maximal --"--
-        interval;           % period of eye stimulus change
+        interval;           % period of eye stimulus change at training
+        testInterval;       % period of eye stimulus change at testing
         desiredAngleMin;    % min/max desired vergence angle
         desiredAngleMax;
         fixDistMin;
@@ -126,6 +127,7 @@ classdef Model < handle
                 if (~(isempty(obj.testAt)) && (obj.testAt(1) ~= 0))
                     obj.testAt = horzcat(0, obj.testAt);
                 end
+                obj.testInterval = PARAM{1}{27};
                 obj.inputParams = PARAM{1}{25};
                 obj.sparseCodingType = PARAM{1}{4};
                 obj.focalLength = PARAM{1}{5};
@@ -1509,9 +1511,9 @@ classdef Model < handle
             end
 
             command = [0.07, 0.1];
-%             vergErrMax = 2;
-%             angleMin = (atand(this.baseline / (2 * this.objDistMax)) * 2) - vergErrMax; %angle for both eyes
-%             angleMax = (atand(this.baseline / (2 * this.objDistMin)) * 2) + vergErrMax;
+            % vergErrMax = 2;
+            % angleMin = (atand(this.baseline / (2 * this.objDistMax)) * 2) - vergErrMax; %angle for both eyes
+            % angleMax = (atand(this.baseline / (2 * this.objDistMin)) * 2) + vergErrMax;
             angleMinT = 0;
             angleMaxT = (atand(this.baseline / (2 * this.objDistMax)) * 2) + 6;
 

@@ -48,7 +48,7 @@ end
 % Model parameters
 % ----------------
 
-% period for changing the stimulus for the eyes | origin 10
+% period for changing the stimulus for the eyes at training | origin 10
 [found, interval, varParamArray] = parseparam(varParamArray, 'interval');
 if (~found)
     interval = 10;
@@ -56,6 +56,16 @@ end
 
 if (~isscalar(interval) || interval < 1)
     error('interval must be scalar >= 1');
+end
+
+% period for changing the stimulus for the eyes at testing | origin 10
+[found, testInterval, varParamArray] = parseparam(varParamArray, 'testInterval');
+if (~found)
+    testInterval = interval * 2;
+end
+
+if (~isscalar(testInterval) || testInterval < 2)
+    error('testInterval must be scalar >= 2');
 end
 
 %%% Image processing constants
@@ -286,7 +296,7 @@ PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, bas
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
-              initMethod, inputParams, desiredStdZT};
+              initMethod, inputParams, desiredStdZT, testInterval};
 
 % ------------------------
 % Sparce Coding parameters
