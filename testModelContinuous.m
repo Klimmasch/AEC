@@ -71,7 +71,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
     % fixation interval at testing procedure
     testInterval = model.interval * 2;
-    % testInterval = 200;
+%     testInterval = 200
 
     command = [0; 0];
     objRange = [model.objDistMin : 0.5 : model.objDistMax];
@@ -352,7 +352,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         testResult4(testResult4 == 0) = NaN;
 
         %% Object distance vs. Fixation distance
-        rng(1); % lets search for another seed with more big angles!
+        rng(42); % lets search for another seed with more big angles!
         objRange2 = [model.objDistMax, ...
                      model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, (length(testResult6) / testInterval) - 2), ...
                      model.objDistMin];
@@ -1310,7 +1310,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         figure();
         hold on;
         grid on;
-        b = boxplot(vergenceAngleApproach);
+        b = boxplot(model.vergenceAngleApproach);
 
         % remove outliers
         outl = findobj(b,'tag','Outliers');
@@ -1335,7 +1335,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         figure();
         hold on;
         grid on;
-        b = boxplot(metCostsApproach);
+        b = boxplot(model.metCostsApproach);
 
         % remove outliers
         outl = findobj(b,'tag','Outliers');
