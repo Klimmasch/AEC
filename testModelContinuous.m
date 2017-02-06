@@ -86,6 +86,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     end
 
     % fixation interval at testing procedure
+
     if (isempty(model.testInterval))
         model.testInterval = model.interval * 2;
         % model.testInterval = 200;
@@ -405,7 +406,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 sprintf('Level 3/4 Object distance vs. Fixation distance')
             end
 
-            rng(1); % lets search for another seed with more big angles!
+            rng(42); % lets search for another seed with more big angles!
             objRange2 = [model.objDistMax, ...
                          model.objDistMin + (model.objDistMax - model.objDistMin) * rand(1, (length(testResult6) / model.testInterval) - 2), ...
                          model.objDistMin];
@@ -1428,6 +1429,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             figure();
             hold on;
             grid on;
+
             try
                 if (~isempty(model.metCostsApproach))
                     b = boxplot(model.metCostsApproach);
