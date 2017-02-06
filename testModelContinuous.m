@@ -45,6 +45,13 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         error('level(1) = %d must be > 0!', level(1));
     end
 
+    % backward compatibility for feat. norm.
+    % TODO: remove as soon as it won't be needed
+    if ((isempty(model.normFeatVect)) && (model.desiredStdZT ~= 1))
+        model.normFeatVect = 1;
+    else
+        model.normFeatVect = 0;
+    end
 
     %%% New renderer
     if (isempty(simulator))
@@ -190,28 +197,36 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             tr2Ind = tr2Ind + 1;
 
                             % Absolute command feedback # concatination
-                            if (model.rlModel.continuous == 1)
-                                if (model.rlModel.CActor.output_dim == 1)
-                                    feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
-
-                                    % z-transformed raw feature vector (no muscle feedback scaling)
-                                    % feature = [bfFeature; command(2)];
+                            if (model.normFeatVect == 0)
+                                if (model.rlModel.continuous == 1)
+                                    if (model.rlModel.CActor.output_dim == 1)
+                                        feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                                    else
+                                        feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                                    end
                                 else
-                                    feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
-
-                                    % z-transformed raw feature vector (no muscle feedback scaling)
-                                    % feature = [bfFeature; command];
+                                    feature = bfFeature;
                                 end
                             else
-                                feature = bfFeature;
-                            end
+                                if (model.rlModel.continuous == 1)
+                                    if (model.rlModel.CActor.output_dim == 1)
+                                        % z-transformed raw feature vector (no muscle feedback scaling)
+                                        feature = [bfFeature; command(2)];
+                                    else
+                                        % z-transformed raw feature vector (no muscle feedback scaling)
+                                        feature = [bfFeature; command];
+                                    end
+                                else
+                                    feature = bfFeature;
+                                end
 
-                            % z-transformed raw feature vector (no muscle feedback scaling)
-                            % for i = 1 : length(feature)
-                            %     feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
-                            % end
-                            % % post normalization muscle feedback scaling
-                            % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+                                % z-transformed raw feature vector (no muscle feedback scaling)
+                                for i = 1 : length(feature)
+                                    feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
+                                end
+                                % post normalization muscle feedback scaling
+                                feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+                            end
 
                             %%% Calculate metabolic costs
                             % metCost = getMetCost(command) * 2;
@@ -342,28 +357,36 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         [bfFeature, ~, recErrorArray] = model.generateFR(currentView);
 
                         % Absolute command feedback # concatination
-                        if (model.rlModel.continuous == 1)
-                            if (model.rlModel.CActor.output_dim == 1)
-                                feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
-
-                                % z-transformed raw feature vector (no muscle feedback scaling)
-                                % feature = [bfFeature; command(2)];
+                        if (model.normFeatVect == 0)
+                            if (model.rlModel.continuous == 1)
+                                if (model.rlModel.CActor.output_dim == 1)
+                                    feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                                else
+                                    feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                                end
                             else
-                                feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
-
-                                % z-transformed raw feature vector (no muscle feedback scaling)
-                                % feature = [bfFeature; command];
+                                feature = bfFeature;
                             end
                         else
-                            feature = bfFeature;
-                        end
+                            if (model.rlModel.continuous == 1)
+                                if (model.rlModel.CActor.output_dim == 1)
+                                    % z-transformed raw feature vector (no muscle feedback scaling)
+                                    feature = [bfFeature; command(2)];
+                                else
+                                    % z-transformed raw feature vector (no muscle feedback scaling)
+                                    feature = [bfFeature; command];
+                                end
+                            else
+                                feature = bfFeature;
+                            end
 
-                        % z-transformed raw feature vector (no muscle feedback scaling)
-                        % for i = 1 : length(feature)
-                        %     feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
-                        % end
-                        % % post normalization muscle feedback scaling
-                        % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+                            % z-transformed raw feature vector (no muscle feedback scaling)
+                            for i = 1 : length(feature)
+                                feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
+                            end
+                            % post normalization muscle feedback scaling
+                            feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+                        end
 
                         % Track reconstruction error and Critic's response
                         % recErrCritVal(stimulusIndex, :) = [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
@@ -426,28 +449,36 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                     [bfFeature, ~, ~] = model.generateFR(currentView);
 
                     % Absolute command feedback # concatination
-                    if (model.rlModel.continuous == 1)
-                        if (model.rlModel.CActor.output_dim == 1)
-                            feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
-
-                            % z-transformed raw feature vector (no muscle feedback scaling)
-                            % feature = [bfFeature; command(2)];
+                    if (model.normFeatVect == 0)
+                        if (model.rlModel.continuous == 1)
+                            if (model.rlModel.CActor.output_dim == 1)
+                                feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                            else
+                                feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                            end
                         else
-                            feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
-
-                            % z-transformed raw feature vector (no muscle feedback scaling)
-                            % feature = [bfFeature; command];
+                            feature = bfFeature;
                         end
                     else
-                        feature = bfFeature;
-                    end
+                        if (model.rlModel.continuous == 1)
+                            if (model.rlModel.CActor.output_dim == 1)
+                                % z-transformed raw feature vector (no muscle feedback scaling)
+                                feature = [bfFeature; command(2)];
+                            else
+                                % z-transformed raw feature vector (no muscle feedback scaling)
+                                feature = [bfFeature; command];
+                            end
+                        else
+                            feature = bfFeature;
+                        end
 
-                    % z-transformed raw feature vector (no muscle feedback scaling)
-                    % for i = 1 : length(feature)
-                    %     feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
-                    % end
-                    % % post normalization muscle feedback scaling
-                    % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+                        % z-transformed raw feature vector (no muscle feedback scaling)
+                        for i = 1 : length(feature)
+                            feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
+                        end
+                        % post normalization muscle feedback scaling
+                        feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+                    end
 
                     %%% Action
                     relativeCommand = model.rlModel.act(feature);

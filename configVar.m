@@ -286,17 +286,31 @@ if (~found)
     initMethod = 2;
 end
 
+% Keep(0) or normalize(1) feature fector by z-transform
+[found, normFeatVect, varParamArray] = parseparam(varParamArray, 'normFeatVect');
+if (~found)
+    normFeatVect = 0;
+end
+
+if ((normFeatVect ~= 0) && (normFeatVect ~= 1))
+    error('normFeatVect must be a scalar in {0, 1}');
+end
+
 % Desired standard deviation of each z-transformed variable
 [found, desiredStdZT, varParamArray] = parseparam(varParamArray, 'desiredStdZT');
 if (~found)
     desiredStdZT = 1;
 end
 
+if (desiredStdZT <= 0)
+    error('desiredStdZT must be a scalar in ]0, inf[');
+end
+
 PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
-              initMethod, inputParams, desiredStdZT, testInterval};
+              initMethod, inputParams, normFeatVect, desiredStdZT, testInterval};
 
 % ------------------------
 % Sparce Coding parameters

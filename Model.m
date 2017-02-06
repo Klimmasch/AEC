@@ -108,6 +108,7 @@ classdef Model < handle
         imgGrayLeft;
         imgGrayRight;
 
+        normFeatVect;   % keep(0) or normalize(1) feature fector by z-transform
         currMean;       % approximations for online signal normalization
         currM2;
         desiredStdZT;   % desired standard deviation of each z-transformed variable
@@ -127,7 +128,7 @@ classdef Model < handle
                 if (~(isempty(obj.testAt)) && (obj.testAt(1) ~= 0))
                     obj.testAt = horzcat(0, obj.testAt);
                 end
-                obj.testInterval = PARAM{1}{27};
+                obj.testInterval = PARAM{1}{28};
                 obj.inputParams = PARAM{1}{25};
                 obj.sparseCodingType = PARAM{1}{4};
                 obj.focalLength = PARAM{1}{5};
@@ -209,9 +210,10 @@ classdef Model < handle
                 % obj.desiredStdZT = PARAM{1}{26};
 
                 % normalization of nth entry in feature vector
+                obj.normFeatVect = PARAM{1}{26};
                 obj.currMean = zeros(1, PARAM{3}{9}(1));
                 obj.currM2 = zeros(1, PARAM{3}{9}(1));
-                obj.desiredStdZT = PARAM{1}{26};
+                obj.desiredStdZT = PARAM{1}{27};
 
                 %%% Generate image processing constants
                 obj.patchSize = PARAM{1}{15};
@@ -1591,23 +1593,25 @@ classdef Model < handle
                                 currentView{i} = vertcat(this.patchesLeft{i}, this.patchesRight{i});
                             end
 
-                            [bfFeature, ~, ~] = this.generateFR(currentView);              % encode image patches
+                            [bfFeature, ~, ~] = this.generateFR(currentView); % encode image patches
 
-                            %% Standard feature vector compilation:
-                            % append muscle activities to basis function vector
-                            feature = [bfFeature; command * this.lambdaMuscleFB];
+                            if (this.normFeatVect == 0)
+                                %% Standard feature vector compilation:
+                                % append muscle activities to basis function vector
+                                feature = [bfFeature; command * this.lambdaMuscleFB];
+                            else
+                                %% Normalized feature vector:
+                                % z-transform raw feature vector (no muscle feedback scaling)
+                                feature = [bfFeature; command];
+                                for i = 1 : length(feature)
+                                    feature(i) = this.onlineNormalize(this.trainedUntil, feature(i), i, 0);
+                                end
+                                feature = [feature(1 : end - 2); feature(end - 1 : end) * this.lambdaMuscleFB];
+                            end
 
-                            %% Normalized feature vector:
-                            % z-transform raw feature vector (no muscle feedback scaling)
-                            % feature = [bfFeature; command];
-                            % for i = 1 : length(feature)
-                            %     feature(i) = this.onlineNormalize(this.trainedUntil, feature(i), i, 0);
-                            % end
-                            % feature = [feature(1 : end - 2); feature(end - 1 : end) * this.lambdaMuscleFB];
-
-                            relativeCommand = this.rlModel.act(feature);                   % generate change in muscle activity
-                            command = checkCmd(command + relativeCommand);                 % calculate new muscle activities
-                            angleNew = this.getAngle(command) * 2;                         % transform into angle
+                            relativeCommand = this.rlModel.act(feature);    % generate change in muscle activity
+                            command = checkCmd(command + relativeCommand);  % calculate new muscle activities
+                            angleNew = this.getAngle(command) * 2;          % transform into angle
 
                             trajectory(odIndex, vergErrIndex, stimIter, iter + 1, :) = command;
 
