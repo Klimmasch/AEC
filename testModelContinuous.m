@@ -9,7 +9,7 @@
 %                           0 if renderer wasn't initialized yet
 % param folderName:         subfolder name of this testing instance, default: 'modelAtX', X = completed training # iteration
 % param level:              array of level numbers, i.e. which testing/plotting parts shall be executed
-%                           elem. [1, 5]
+%                           elem. [1, 5] (1: vergenceStartErrors, 2: reconstrErrCritic, 3: ObjDistvsFixDist, 4: approachings, 5: trajectory)
 function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, folderName, level)
 
     % should the simulation time be measured?
@@ -47,9 +47,12 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
     % backward compatibility for feat. norm.
     % TODO: remove as soon as it won't be needed
-    if ((isempty(model.normFeatVect)) && (model.desiredStdZT ~= 1))
+    if ((isempty(model.normFeatVect)) && (isempty(model.desiredStdZT)))
+        model.normFeatVect = 0;
+        model.desiredStdZT = 1;
+    elseif ((isempty(model.normFeatVect)) && (model.desiredStdZT ~= 1))
         model.normFeatVect = 1;
-    else
+    elseif ((isempty(model.normFeatVect)) && (model.desiredStdZT == 1))
         model.normFeatVect = 0;
     end
 
