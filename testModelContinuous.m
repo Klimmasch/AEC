@@ -9,7 +9,7 @@
 %                           0 if renderer wasn't initialized yet
 % param folderName:         subfolder name of this testing instance, default: 'modelAtX', X = completed training # iteration
 % param level:              array of level numbers, i.e. which testing/plotting parts shall be executed
-%                           elem. [1, 5]
+%                           elem. [1, 5] (1: vergenceStartErrors, 2: reconstrErrCritic, 3: ObjDistvsFixDist, 4: approachings, 5: trajectory)
 function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, folderName, level)
 
     % should the simulation time be measured?
@@ -199,7 +199,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                                     % feature = [bfFeature; command(2)];
                                 else
                                     feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
-
+                                    
+                                    %% for bias
+                                    % feature = [feature; 1];
                                     % z-transformed raw feature vector (no muscle feedback scaling)
                                     % feature = [bfFeature; command];
                                 end
@@ -351,7 +353,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                                 % feature = [bfFeature; command(2)];
                             else
                                 feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
-
+                                %% for bias
+                                % feature = [feature; 1];
                                 % z-transformed raw feature vector (no muscle feedback scaling)
                                 % feature = [bfFeature; command];
                             end
@@ -435,7 +438,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             % feature = [bfFeature; command(2)];
                         else
                             feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
-
+                            %% for bias
+                            % feature = [feature; 1];
                             % z-transformed raw feature vector (no muscle feedback scaling)
                             % feature = [bfFeature; command];
                         end

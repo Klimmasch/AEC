@@ -41,7 +41,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
     %%% Execute intermediate test procedure during training
     % testAt = [1000000 : 1000000 : trainTime];
-    testAt = [500000 : 500000 : trainTime];
+    % testAt = [500000 : 500000 : trainTime];
+    testAt = [250000 : 250000 : trainTime];
+    
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -77,8 +79,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     %               1 = do it
     closeFigures = uint8(1); % maybe necessary to use 0 when running headless
 
-    % check whether given cluster job can/shall be continued
-    if (clusterCall == 1)
+    % check whether given (cluster) job can/shall be continued
+    % if (clusterCall == 1)
         if (isempty(experimentDirName))
             absoluteDir = '/home/aecgroup/aecdata/Results';
         else
@@ -98,7 +100,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
                 warning('%s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullDir.name);
             end
         end
-    end
+    % end
 
     % Load model from file or instantiate and initiate new model object
     if (useLearnedFile(1) == 1)
@@ -354,6 +356,15 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % figure; histogram(dists); title('distances');
 
         for iter2 = 1 : model.interval
+            % if mod(t, 500) == 0
+                if mod(t, 100000) == 0
+                    investigateMotorSpace(model, simulator, 3, [], 5, 1); % safe the model only every second time
+                    close all;
+                % else
+                    % investigateMotorSpace(model, simulator, 3, [], 5, 0);
+                end
+                % close all;
+            % end
             t = t + 1;
 
             %% Update retinal images
@@ -362,7 +373,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
             %% Generate & save the anaglyph picture
             % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-            % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [model.savePath '/anaglyph.png']); %this one works for all tested matlab
+            % imwrite(imfuse(model.imgGrayLeft, model.imgGrayRight, 'falsecolor'), sprintf('%s/anaglyph.png', model.savePath)); %this one works for all tested matlab
             % more advanced functions that generated the anaglyphs of the foveal views
             % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
 
@@ -379,8 +390,16 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             %%% Feedback
             % Generate RL model's input feature vector by
             % basis function feature vector & total muscle command concatination
+            % try
             feature = [bfFeature; command * model.lambdaMuscleFB];
-
+            % catch
+            %     sprintf('Fehler in\n%s\nsimulator broke down', model.savePath)
+            %     quit;
+            % end
+            
+            %% bias analysis
+            % feature = [feature; 1];
+            
             %% Normalized feature vector
             % z-transform raw feature vector (no muscle feedback scaling)
             % feature = [bfFeature; command];

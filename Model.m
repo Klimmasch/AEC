@@ -1597,6 +1597,9 @@ classdef Model < handle
                             % append muscle activities to basis function vector
                             feature = [bfFeature; command * this.lambdaMuscleFB];
 
+                            %% for bias
+                            % feature = [feature; 1];
+                            
                             %% Normalized feature vector:
                             % z-transform raw feature vector (no muscle feedback scaling)
                             % feature = [bfFeature; command];
