@@ -357,12 +357,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
         for iter2 = 1 : model.interval
             % if mod(t, 500) == 0
-                if mod(t, 100000) == 0
-                    investigateMotorSpace(model, simulator, 3, [], 5, 1); % safe the model only every second time
-                    close all;
+                % if mod(t, 100000) == 0
+                    % investigateMotorSpace(model, simulator, 3, [], 5, 1); % safe the model only every second time
+                    % close all;
                 % else
                     % investigateMotorSpace(model, simulator, 3, [], 5, 0);
-                end
+                % end
                 % close all;
             % end
             t = t + 1;
