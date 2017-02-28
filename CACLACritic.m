@@ -11,7 +11,7 @@ classdef CACLACritic < handle
         % Reinforcement Learning parameters
         delta;          % estimate of Temporal Difference error
         alpha_v;        % step-size schedule of v_ji update "learning rate"
-        gamma;          % discount factor of previous state TODO: why is the current state discounted then?
+        gamma;          % discount factor of previous state
         value;          % critic's value estimation (output)
 
         % input/output tracking of previous time step

@@ -40,10 +40,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% Execute intermediate test procedure during training
-    % testAt = [1000000 : 1000000 : trainTime];
     % testAt = [500000 : 500000 : trainTime];
     testAt = [250000 : 250000 : trainTime];
-    
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -390,23 +388,21 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             %%% Feedback
             % Generate RL model's input feature vector by
             % basis function feature vector & total muscle command concatination
-            % try
-            feature = [bfFeature; command * model.lambdaMuscleFB];
-            % catch
-            %     sprintf('Fehler in\n%s\nsimulator broke down', model.savePath)
-            %     quit;
-            % end
-            
+
+            if (model.normFeatVect == 0)
+                feature = [bfFeature; command * model.lambdaMuscleFB];
+            else
+                %% Normalized feature vector
+                % z-transform raw feature vector (no muscle feedback scaling)
+                feature = [bfFeature; command];
+                for i = 1 : length(feature)
+                    feature(i) = model.onlineNormalize(t, feature(i), i, 1);
+                end
+                feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+            end
+
             %% bias analysis
             % feature = [feature; 1];
-            
-            %% Normalized feature vector
-            % z-transform raw feature vector (no muscle feedback scaling)
-            % feature = [bfFeature; command];
-            % for i = 1 : length(feature)
-            %     feature(i) = model.onlineNormalize(t, feature(i), i, 1);
-            % end
-            % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
 
             %%% Calculate metabolic costs
             metCost = model.getMetCost(command) * 2;
