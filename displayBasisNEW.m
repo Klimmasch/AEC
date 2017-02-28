@@ -1,6 +1,6 @@
 %%% Display the basis according to the binocularity
 %TODO test this updated version with model that kept track of their basis
-close all
+% close all
 r = 16; c = 18; %how to arrange the basis in rows and cols
 
 % len = size(model.scModel_Small.basisHist,3);  %# of trials saved

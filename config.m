@@ -117,10 +117,15 @@ else
     metCostDec = metCostRange(1) - metCostRange(2);
 end
 
+initMethod = 2;
+desiredStdZT = 0.02;
+inputParams = []; % when using configVar, this contains all params that are deviating from the standard ones
+
 PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
-              dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec};
+              dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
+              initMethod, inputParams, desiredStdZT};
 
 %%% Sparce Coding parameters
 % Scales := [coarse, less_coarse, ..., fine], i.e. [peripheral vision, ..., central vision]

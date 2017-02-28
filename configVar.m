@@ -212,10 +212,10 @@ end
 % 10% = 0.0127 | 20% = 0.0254 | 30% = 0.0381 | 40% = 0.0508 | 50% = 0.0634
 % 60% = 0.0761 | 70% = 0.0888 | 80% = 0.1015 | 90% = 0.1142 | 100% = 0.1269
 % 150% = 0.1903 | 200% = 0.2538 | 250% = 0.3172 | 300% = 0.3806
-%
+% standard before normalization: 0.1269
 [found, lambdaMuscleFB, varParamArray] = parseparam(varParamArray, 'lambdaMuscleFB');
 if (~found)
-    lambdaMuscleFB = 0.1269;
+    lambdaMuscleFB = 1;
 end
 
 %%% Reward function parameters, i.e. their "proportions" to the whole reward signal
@@ -289,7 +289,7 @@ end
 % Desired standard deviation of each z-transformed variable
 [found, desiredStdZT, varParamArray] = parseparam(varParamArray, 'desiredStdZT');
 if (~found)
-    desiredStdZT = 1;
+    desiredStdZT = 0.02;
 end
 
 PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
@@ -492,7 +492,7 @@ end
 [found, inputDim, varParamArray] = parseparam(varParamArray, 'inputDim');
 if (~found)
     if (continuous == 1)
-        inputDim = sum(PARAMSC{1}) + outputDim; % number of neurons in the input layer (Small + Large scale + Muscle activities)
+        inputDim = sum(PARAMSC{1}) + outputDim; % number of neurons in the input layer (Small + Large scale + Muscle activities) 802
     else
         inputDim = sum(PARAMSC{1});             % only small + large scale basis function inputs in discrete models
         varianceRange = 1;

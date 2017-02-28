@@ -42,7 +42,9 @@ classdef CACLACritic < handle
 
         function update(this, reward)
             this.delta = reward + this.gamma * this.value - this.v_ji * this.feature_prev;
+            % this.delta = (reward * (1 - this.gamma)) + this.gamma * this.value - this.v_ji * this.feature_prev; % scale the reward to make the value indep. of gamma
             dv_ji = this.alpha_v * this.delta * this.feature_prev';
+            % this.v_ji = (1 - (1e-5 * this.alpha_v)) * this.v_ji; % similar to the actor 
             this.v_ji = this.v_ji + dv_ji;
         end
 
