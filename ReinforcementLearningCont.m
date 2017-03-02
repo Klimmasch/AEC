@@ -12,6 +12,7 @@ classdef ReinforcementLearningCont < handle
         actorLearningRange;     % boundaries for learning rates of actor
         actorDecFac;            % learning rate decay factor for the actor
         criticDecFac;           % learning rate decay factor for the critic
+        bias;                   % constant bias in the network
     end
 
     methods
@@ -23,6 +24,7 @@ classdef ReinforcementLearningCont < handle
             obj.actorLearningRange = PARAM{4};
             obj.criticDecFac = PARAM{18};
             obj.actorDecFac = PARAM{19};
+            obj.bias = PARAM{20};
 
             % instantiate chosen Actor and Critic
             switch obj.rlFlavour(1)
