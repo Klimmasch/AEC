@@ -289,7 +289,7 @@ end
 % Keep(0) or normalize(1) feature fector by z-transform
 [found, normFeatVect, varParamArray] = parseparam(varParamArray, 'normFeatVect');
 if (~found)
-    normFeatVect = 0;
+    normFeatVect = 1;
 end
 
 if ((normFeatVect ~= 0) && (normFeatVect ~= 1))
@@ -502,6 +502,12 @@ if (~found)
     outputDim = 2;
 end
 
+% use a additional constant bias
+[found, bias, varParamArray] = parseparam(varParamArray, 'bias');
+if (~found)
+    bias = 0;
+end
+
 % Critic's and Actor's number of neurons in the input layer (Small + Large scale + Muscle activities)
 [found, inputDim, varParamArray] = parseparam(varParamArray, 'inputDim');
 if (~found)
@@ -511,6 +517,9 @@ if (~found)
         inputDim = sum(PARAMSC{1});             % only small + large scale basis function inputs in discrete models
         varianceRange = 1;
         outputDim = 1;                          % only one delta angle output in discrete models
+    end
+    if (bias == 1)
+        inputDim = inputDim + 1;
     end
 end
 
@@ -561,7 +570,7 @@ if (~found)
 end
 
 PARAMRL = {actionSpace, criticLRRange, alpha_n, actorLRRange, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
-           continuous, deltaVar, rl_eta, fiScale, rlFlavour, varDec, regularizer, critLRDec, actLRDec};
+           continuous, deltaVar, rl_eta, fiScale, rlFlavour, varDec, regularizer, critLRDec, actLRDec, bias};
 
 if (~isempty(varParamArray))
     error('varParamArray contains unrecognized elements, p.e. %s', varParamArray{1});
