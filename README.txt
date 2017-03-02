@@ -8,7 +8,7 @@ scenes in a virtual environment. For that you execute:
 $ ./setupOESRenderer.sh
 
 If you get a success message, everything is set up properly. If you get error
-messages, p.e. if makeOpenEyeSim couldn't be located, try executing
+messages, e.g. if makeOpenEyeSim couldn't be located, try executing
 makeOpenEyeSim within the Matlab environment (within the GUI). The script was
 tested within GNOME, but within other desktop environments the afore mentioned
 errors can occur.
@@ -54,10 +54,13 @@ $ matlab -nodisplay -r "OES2Muscles(with, respective, parameter, passing)"
 
 The algorithm works roughly in the following way:
 
-a) OES2Muscles calls config.m
-   In config.m you need to define all model parameters beforehand
+a) OES2Muscles calls configVar.m
+   In configVar.m all parameters needed/implemented are set do (working) default
+   values. If you want to change some of these parameters, you need to pass your
+   modifications to configVar(). Check configVar's documentation for more info.
+   In config.m you need to define all model parameters beforehand (depricated).
 
-b) config.m calls Model.m to create a model object instance
+b) config*.m calls Model.m to create a model object instance
 
 c) Model.m calls SparseCoding*.m to create the necessary sparse coder object
    instances
@@ -72,10 +75,15 @@ e) Model.m initiates/preallocates some necessary constants and variables and
    finalizes the model object creation
 
 f) OES*.m script continues by backing up all used scritps, classes and config
-   files into ../results/timestamp_user_defined_name_of_experiment/
+   files into our shared group folder (default):
+   /home/aecgroup/aecdata/Results/user_defined_name_of_experiment
+   or a local folder../results/timestamp_user_defined_name_of_experiment/
 
 g) OES*.m script conducts the experiment and saves all resulting figures of the
    training and of course the model file into the directory mentioned in f)
 
 h) OES*.m script executes testModelContinuous.m to conduct the testing procedure
    whereby all figures generated are also saved into the folder mentioned in f)
+
+i) By default, testModelContinuous.m is also executed within the training phase
+   periodically (check model.testAt)
