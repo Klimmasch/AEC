@@ -10,7 +10,8 @@ function model = configVar(varParamArray)
 % Experiment parameters
 % ---------------------
 
-inputParams = varParamArray; % save input parameters to write into the Model
+% save parameter vector for documentation (model.varParamArray)
+inputParams = varParamArray;
 
 % stimulus file name
 [found, textureFile, varParamArray] = parseparam(varParamArray, 'textureFile');
@@ -424,7 +425,7 @@ if (length(criticLRRange) == 1 || criticLRRange(1) == criticLRRange(2))
 elseif (criticLRRange(1) < criticLRRange(2))
     error('It must hold criticLRRange(1) >= criticLRRange(2)');
 else
-%     critLRDec = -(log(2) * trainTime) / log(criticLRRange(2) / criticLRRange(1)); % exponential decay factor
+    % critLRDec = -(log(2) * trainTime) / log(criticLRRange(2) / criticLRRange(1)); % exponential decay factor
     critLRDec = criticLRRange(1) - criticLRRange(2);                                % linear decay factor
 end
 
@@ -468,16 +469,16 @@ if (length(actorLRRange) == 1 || actorLRRange(1) == actorLRRange(2))
 elseif (actorLRRange(1) < actorLRRange(2))
     error('It must hold actorLRRange(1) >= actorLRRange(2)');
 else
-%     actLRDec = -(log(2) * trainTime) / log(actorLRRange(2) / actorLRRange(1)); % exponential decay factor
+    % actLRDec = -(log(2) * trainTime) / log(actorLRRange(2) / actorLRRange(1)); % exponential decay factor
     actLRDec = actorLRRange(1) - actorLRRange(2);                                % linear decay factor
 end
 
-
 % Actor weight regularization via factorial downscaling
 % how it works: actor.wp_ji = (1 - (actor.regularizer * actor.learnRate)) * actor.wp_ji;
+% previously 1e-4 | 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
 [found, regularizer, varParamArray] = parseparam(varParamArray, 'regularizer');
 if (~found)
-    regularizer = 1e-5; % new: 1e-4 old: 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
+    regularizer = 1e-5;
 end
 
 % variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
@@ -584,8 +585,8 @@ model = Model(PARAM);
 % -------------------------
 
 % Parses parameter vector and prunes it on successful find
-% @param paramVector:    parameter vector
-% @param param:          searched paramter name
+% @param paramVector:   parameter vector
+% @param param:         searched paramter name
 %
 % return found:         [0, 1] success flag
 % return val:           value of parameter
