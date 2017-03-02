@@ -231,6 +231,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                                 % post normalization muscle feedback scaling
                                 feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
                             end
+                            
+                            %% bias analysis
+                            if (model.rlModel.bias == 1)
+                                feature = [feature; 1];
+                            end
 
                             %%% Calculate metabolic costs
                             % metCost = getMetCost(command) * 2;
@@ -391,6 +396,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             % post normalization muscle feedback scaling
                             feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
                         end
+                        
+                        %% bias analysis
+                        if (model.rlModel.bias == 1)
+                            feature = [feature; 1];
+                        end
 
                         % Track reconstruction error and Critic's response
                         % recErrCritVal(stimulusIndex, :) = [model.rlModel.CCritic.v_ji * feature, sum(recErrorArray), recErrorArray];
@@ -484,6 +494,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
                     end
 
+                    %% bias analysis
+                    if (model.rlModel.bias == 1)
+                        feature = [feature; 1];
+                    end
+                        
                     %%% Action
                     relativeCommand = model.rlModel.act(feature);
 

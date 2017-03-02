@@ -177,8 +177,7 @@ classdef Model < handle
                 % obj.fixZ = zeros(obj.trainTime, 1);
 
                 obj.td_hist = zeros(obj.trainTime, 1);
-                % obj.feature_hist = zeros(obj.trainTime, 1);
-                % obj.feature_hist = zeros(1000, PARAM{3}{9}(1) * 2);
+                % obj.feature_hist = zeros(obj.trainTime, PARAM{3}{9}(1)); % PARAM{3}{9}(1) : inputDim
                 obj.cmd_hist = zeros(obj.trainTime, 2);
                 obj.relCmd_hist = zeros(obj.trainTime, PARAM{3}{9}(3)); % relCmd_hist = t x output_dim
                 % obj.weight_hist = zeros(obj.trainTime, 4);
@@ -1609,8 +1608,10 @@ classdef Model < handle
                                 feature = [feature(1 : end - 2); feature(end - 1 : end) * this.lambdaMuscleFB];
                             end
 
-                            %% for bias
-                            % feature = [feature; 1];
+                            %% bias analysis
+                            if (this.rlModel.bias == 1)
+                                feature = [feature; 1];
+                            end
 
                             relativeCommand = this.rlModel.act(feature);    % generate change in muscle activity
                             command = checkCmd(command + relativeCommand);  % calculate new muscle activities

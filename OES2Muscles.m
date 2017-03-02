@@ -402,7 +402,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             end
 
             %% bias analysis
-            % feature = [feature; 1];
+            if (model.rlModel.bias == 1)
+                feature = [feature; 1];
+            end
 
             %%% Calculate metabolic costs
             metCost = model.getMetCost(command) * 2;
@@ -535,7 +537,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % model.verge_actual(t) = angleNew;
             % model.verge_desired(t) = angleDes;
             % model.reward_hist(t) = rewardFunction;
-            % model.feature_hist(t, :) = mean(bfFeature);
+            % model.feature_hist(t, :) = feature;
             % model.Z(t) = objDist;
             % model.fixZ(t) = fixDepth;
             % model.disp_hist(t) = disparity;
