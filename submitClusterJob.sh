@@ -11,12 +11,14 @@ then
 fi
 
 # standard cluster call
-srun --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=5120 --gres gpu:2 -LXserver \
+# use --mem-per-cpu=5120 for runs with traintime > 1 mio --reservation=lelasch --mem-per-cpu=3072, 
+# available until next friday: autumnchat 23908, fletcher 23972, springtalk 48164 
+srun --partition=sleuths --reservation=lelasch --nodelist=autumnchat --cpus-per-task=$WORKERS --mem-per-cpu=1992 --gres gpu:2 -LXserver \
 --job-name=GammaVsMetCosts \
 matlab -nodisplay -r "parOES(${WORKERS}); quit"
 
 # the time command can track the cpu usage
-# srun --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=5120 --gres gpu:2 -LXserver \
+# srun --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=3072 --gres gpu:2 -LXserver \
 # time matlab -nodisplay -r "parOES(1); quit"
 
 # possible outcome of the time command:
@@ -24,6 +26,6 @@ matlab -nodisplay -r "parOES(${WORKERS}); quit"
 # 14424inputs+92808outputs (5major+1873105minor)pagefaults 0swaps
 
 # alternative cluster call (batch job)
-# SBATCH --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=5120 --gres gpu:2 -LXserver\
+# SBATCH --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=3072 --gres gpu:2 -LXserver\
 # --job-name=GammaVsMetCosts \
 # matlab -nodisplay -r "parOES(${WORKERS}); quit"
