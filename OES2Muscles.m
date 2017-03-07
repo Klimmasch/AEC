@@ -278,7 +278,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % intermediate testing during training
         rngState = rng; % store current state
         if ((testIt == 1) & find(testAt == t)) % have to use single & here, because the last statement is a scalar
-            testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 5]);
+            testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 6]);
             close all;
         end
         rng(rngState); % restore state after testing, to not mess up the experiment
@@ -593,7 +593,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     if (testIt == 1)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, experimentDirName, level)
         rngState = rng; % store current state
-        testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 5]);
+        testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 6]);
         rng(rngState); % restore state after testing, to not mess up the experiment
 
         % print the time again after the line output of the testing script

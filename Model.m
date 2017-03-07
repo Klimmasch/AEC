@@ -73,6 +73,7 @@ classdef Model < handle
         testResult7;
         vergenceAngleApproach;
         metCostsApproach;
+        musclePlaneResponse;
         testHist;           % history of testing performance over traintime
 
         % Image processing
@@ -208,6 +209,7 @@ classdef Model < handle
                 obj.testResult7 = [];
                 obj.vergenceAngleApproach = [];
                 obj.metCostsApproach = [];
+                obj.musclePlaneResponse = [];
                 % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
                 obj.testHist = zeros(length(obj.testAt), 6);
                 % insert modelAt0 entry

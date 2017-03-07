@@ -9,7 +9,8 @@
 %                           0 if renderer wasn't initialized yet
 % param folderName:         subfolder name of this testing instance, default: 'modelAtX', X = completed training # iteration
 % param level:              array of level numbers, i.e. which testing/plotting parts shall be executed
-%                           elem. [1, 5] (1: vergenceStartErrors, 2: reconstrErrCritic, 3: ObjDistvsFixDist, 4: approachings, 5: trajectory)
+%                           elem. [1, 6] (1: vergenceStartErrors, 2: reconstrErrCritic, 3: ObjDistvsFixDist, 4: approachings,
+%                           5: trajectory, 6: critics response of muscle plane)
 function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, folderName, level)
 
     % should the simulation time be measured?
@@ -113,6 +114,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     testResult5 = zeros(length(objRange) * 7 * nStim * model.testInterval, model.rlModel.CActor.output_dim * 2); % correlation between abs muscle activations and deltaMFs
     testResult6 = zeros(model.testInterval * 10, 2);
     testResult7 = zeros(length(objRange) * 7 * nStim, model.testInterval); % ALL single values for metCost
+    vergenceAngleApproach = []; % is defined further below after some parameters are set
+    metCostsApproach = [];
+    musclePlaneResponse = []; % is defined further below after some parameters are set
 
     % here, the images are safed that start at the maximal vergence errors (neg & pos) and that end up worse than they started
     % this tabular is going to be safed inside the models folder and
@@ -600,6 +604,106 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 memberChange = false;
             end
         end
+        
+        %% calculate response over the whole muscle plane for actor, critic and basis functions
+        if (~isempty(find(level == 6)))
+            % in the standard model, model.degreesIncRes(end,end) = model.degrees.results_deg(3,2)
+            usedRows = 3;
+            usedCols = 2;
+            
+            nStimuli = 5; % trade of for saving comp. time
+            resolution = 3; % choose 4 for a higher resolution of muscle commands, but increased computational time
+            
+            angles = interp2(model.degrees.results_deg(1:usedRows, 1:usedCols), resolution, 'spline');
+            scaleFacMR = ((usedRows - 1) / 10) / size(angles, 1);
+            scaleFacLR = ((usedCols - 1) / 10) / size(angles, 2);
+            
+            if resolution == 4
+                objDists = model.baseline ./ (2 * tand(angles(ceil(end/2) : 2 : end, end)));
+            else
+                objDists = model.baseline ./ (2 * tand(angles(ceil(end/2) : end, end)));
+            end
+            objDists(objDists < 0.5) = []; % erase values that are not trained
+            
+            [h, w] = size(angles);
+            nMeasurements = 4;
+            musclePlaneResponse = zeros(h, w, nMeasurements);
+            
+            for obj = 1 : length(objDists)
+                objDist = objDists(obj);
+                for stim = 1 : nStimuli
+                    for x = 1 : h
+                        for y = 1 : w
+                            %% setting up the muscles and the images
+                            med = x * scaleFacMR; % medial rectus activation
+                            lat = y * scaleFacLR; % lateral rectus activation
+
+                            command = [lat; med];
+                            angleNew = model.getAngle(command);
+
+                            model.refreshImagesNew(simulator, stim, angleNew, objDist, 3);
+
+                            for i = 1 : length(model.scModel)
+                                model.preprocessImage(i, 1);
+                                model.preprocessImage(i, 2);
+                                currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
+                            end
+
+                            %% feature vector generation, edit normalization if necessary
+                            [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
+
+                            if (model.normFeatVect == 0)
+                                if (model.rlModel.continuous == 1)
+                                    if (model.rlModel.CActor.output_dim == 1)
+                                        feature = [bfFeature; command(2) * model.lambdaMuscleFB];   % single muscle
+                                    else
+                                        feature = [bfFeature; command * model.lambdaMuscleFB];      % two muscles
+                                    end
+                                else
+                                    feature = bfFeature;
+                                end
+                            else
+                                if (model.rlModel.continuous == 1)
+                                    if (model.rlModel.CActor.output_dim == 1)
+                                        % z-transformed raw feature vector (no muscle feedback scaling)
+                                        feature = [bfFeature; command(2)];
+                                    else
+                                        % z-transformed raw feature vector (no muscle feedback scaling)
+                                        feature = [bfFeature; command];
+                                    end
+                                else
+                                    feature = bfFeature;
+                                end
+
+                                % z-transformed raw feature vector (no muscle feedback scaling)
+                                for i = 1 : length(feature)
+                                    feature(i) = model.onlineNormalize(model.trainedUntil, feature(i), i, 0);
+                                end
+                                % post normalization muscle feedback scaling
+                                feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+                            end
+                            % feature = [bfFeature; command];
+                            % for i = 1 : length(feature)
+                            %     feature(i) = model.onlineNormalize(t, feature(i), i, 1);
+                            % end
+                            % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
+                            
+                            if (model.rlModel.bias == 1)
+                                feature = [feature; 1];
+                            end
+
+                            %% extraction of critic and actor response
+                            relativeCommand = model.rlModel.act(feature);
+                            musclePlaneResponse(x, y, 1) = musclePlaneResponse(x, y, 1) + relativeCommand(1);
+                            musclePlaneResponse(x, y, 2) = musclePlaneResponse(x, y, 2) + relativeCommand(2);
+                            musclePlaneResponse(x, y, 3) = musclePlaneResponse(x, y, 3) + model.rlModel.CCritic.v_ji * feature;
+                            musclePlaneResponse(x, y, 4) = musclePlaneResponse(x, y, 4) + reward;
+                        end
+                    end
+                end
+            end
+            musclePlaneResponse = musclePlaneResponse ./ (length(objDists) * nStimuli); % forming the average
+        end
 
         if (measureTime == true)
             elapsedTime = toc;
@@ -619,6 +723,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             model.testResult7 = testResult7;
             model.vergenceAngleApproach = vergenceAngleApproach;
             model.metCostsApproach = metCostsApproach;
+            model.musclePlaneResponse = musclePlaneResponse;
             if (saveTestResults == 1)
                 save(strcat(imageSavePath, '/model'), 'model');
             end
@@ -638,6 +743,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 model.testResult7 = testResult7;
                 model.vergenceAngleApproach = vergenceAngleApproach;
                 model.metCostsApproach = metCostsApproach;
+                model.musclePlaneResponse = musclePlaneResponse;
                 if (saveTestResults == 1)
                     save(strcat(imageSavePath, '/model'), 'model');
                 end
@@ -1478,6 +1584,105 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         %% Generate muscle activation trajectories
         if (~isempty(find(level == 5)))
             model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(max(nStim, 40)), simulator, imageSavePath, folderName(9 : end), plotIt);
+        end
+        
+        %% plot responses over muscle plane
+        if (~isempty(find(level == 6)))
+            usedRows = 3;
+            usedCols = 2;
+            scaleFacMR = ((usedRows - 1) / 10) / size(model.musclePlaneResponse, 1);    % table scaling factors for backwards
+            scaleFacLR = ((usedCols - 1) / 10) / size(model.musclePlaneResponse, 2);
+
+            % zRange = [-0.5, 0];
+            [h, w, ~] = size(model.musclePlaneResponse);
+            [x, y] = meshgrid(1 : h, 1:w);
+            fig1 = figure;
+            
+            s1 = subplot(2, 2, 1); % critic sideView
+            % s1 = subplot(2, 2, [1, 3]);
+            surf(model.musclePlaneResponse(:, :, 3));
+            % title(sprintf('Critics Response at %d iterations', model.trainedUntil));
+            title('critic response');
+            view([-37.5, 30]);
+            axis 'tight';
+            % zlim(zRange);
+            zlabel('value');
+            xLabels = get(s1, 'XTickLabel');
+            yLabels = get(s1, 'YTickLabel');
+            set(s1, 'XTickLabel', num2str(linspace(0, 0.1, length(xLabels))', '%0.2f'));
+            set(s1, 'YTickLabel', num2str(linspace(0, 0.2, length(yLabels))', '%0.2f'));
+            xlabel('lr [%]');
+            ylabel('mr [%]');
+            
+            s2 = subplot(2, 2, 2); % critic top view
+            pcolor(model.musclePlaneResponse(:, :, 3));
+            hold on;
+            title('critic response');
+            % view(2);
+            axis 'tight';
+            xLabels = get(s2, 'XTickLabel');
+            yLabels = get(s2, 'YTickLabel');
+            set(s2, 'XTickLabel', num2str(linspace(0, 0.1, length(xLabels))', '%0.2f'));
+            set(s2, 'YTickLabel', num2str(linspace(0, 0.2, length(yLabels))', '%0.2f'));
+            xlabel('lr [%]');
+            ylabel('mr [%]');
+            colorbar();
+
+            objDists = [7.6434, 2.2482, 1.3110, 0.9218, 0.7087, 0.5742];
+            
+            for od = 1 : length(objDists)
+                objDist = objDists(od);
+                [lr, mr] = model.getAnglePoints(objDist, 0);
+                xpos = (lr * (size(model.musclePlaneResponse, 2) - 1) * (10 / (usedCols - 1))) + 1; % convert muscle activities to table entries
+                ypos = (mr * (size(model.musclePlaneResponse, 1) - 1) * (10 / (usedRows - 1))) + 1;
+                plot(xpos, ypos, 'color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', 0.1); %[0, 0.5882, 0]
+            end
+            
+            s3 = subplot(2, 2, 3);
+            surf(model.musclePlaneResponse(:, :, 4));
+            % title(sprintf('Critics Response at %d iterations', model.trainedUntil));
+            title('reconstruction errror');
+            view([-37.5, 30]);
+            axis 'tight';
+            % zlim(zRange);
+            zlabel('value');
+            xLabels = get(s3, 'XTickLabel');
+            yLabels = get(s3, 'YTickLabel');
+            set(s3, 'XTickLabel', num2str(linspace(0, 0.1, length(xLabels))', '%0.2f'));
+            set(s3, 'YTickLabel', num2str(linspace(0, 0.2, length(yLabels))', '%0.2f'));
+            xlabel('lr [%]');
+            ylabel('mr [%]');
+
+            s4 = subplot(2, 2, 4); % basis function response
+            pcolor(model.musclePlaneResponse(:, :, 4));
+            hold on;
+            title('reconstruction errror');
+            view(2);
+            axis 'tight';
+            xLabels = get(s4, 'XTickLabel');
+            yLabels = get(s4, 'YTickLabel');
+            set(s4, 'XTickLabel', num2str(linspace(0, 0.1, length(xLabels))', '%0.2f'));
+            set(s4, 'YTickLabel', num2str(linspace(0, 0.2, length(yLabels))', '%0.2f'));
+            xlabel('lr [%]');
+            ylabel('mr [%]');
+            colorbar();
+
+            objDists = [7.6434, 2.2482, 1.3110, 0.9218, 0.7087, 0.5742];
+
+            for od = 1 : length(objDists)
+                objDist = objDists(od);
+                [lr, mr] = model.getAnglePoints(objDist, 0);
+                xpos = (lr * (size(model.musclePlaneResponse, 2) - 1) * (10 / (usedCols - 1))) + 1; % convert muscle activities to table entries
+                ypos = (mr * (size(model.musclePlaneResponse, 1) - 1) * (10 / (usedRows - 1))) + 1;
+                plot(xpos, ypos, 'color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', .5); %[0, 0.5882, 0]
+            end
+
+
+            suptitle(sprintf('%d Iterations of Training', model.trainedUntil));
+            % saveas(fig1, sprintf('%s/overviewAt%06d.png', folder, index));
+            saveas(fig1, sprintf('%s/overviewAt%07d.png', imageSavePath, model.trainedUntil));
+                        
+            close(fig1);
         end
     end
 
