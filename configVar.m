@@ -10,7 +10,8 @@ function model = configVar(varParamArray)
 % Experiment parameters
 % ---------------------
 
-inputParams = varParamArray; % save input parameters to write into the Model
+% save parameter vector for documentation (model.varParamArray)
+inputParams = varParamArray;
 
 % stimulus file name
 [found, textureFile, varParamArray] = parseparam(varParamArray, 'textureFile');
@@ -21,7 +22,7 @@ end
 % training duration
 [found, trainTime, varParamArray] = parseparam(varParamArray, 'trainTime');
 if (~found)
-    trainTime = 1000;
+    trainTime = 1000000;
 end
 
 if (~isscalar(trainTime) || trainTime < 1)
@@ -262,13 +263,14 @@ end
 % metCostRange needs to be scaled accordingly
 metCostRange = metCostRange .* lambdaRec; % #hack
 
+% Metabolic costs decay factor
 if (length(metCostRange) == 1 || metCostRange(1) == metCostRange(2))
     metCostDec = 0; % no decay
 elseif (metCostRange(1) < metCostRange(2))
     error('It must hold metCostRange(1) >= metCostRange(2)');
 else
-    % metCostDec = -(log(2) * trainTime) / log(metCostRange(2) / metCostRange(1)); % metCost decay factor
-    metCostDec = metCostRange(1) - metCostRange(2);
+    % metCostDec = -(log(2) * trainTime) / log(metCostRange(2) / metCostRange(1));  % exponential decay factor
+    metCostDec = metCostRange(1) - metCostRange(2);                                 % linear decay factor
 end
 
 %%% muscle initialization / reset method
@@ -419,12 +421,14 @@ end
 if (~found)
     criticLRRange = [0.75];
 end
+
+% Critic learning rate decay factor
 if (length(criticLRRange) == 1 || criticLRRange(1) == criticLRRange(2))
     critLRDec = 0; % no variance decay
 elseif (criticLRRange(1) < criticLRRange(2))
     error('It must hold criticLRRange(1) >= criticLRRange(2)');
 else
-%     critLRDec = -(log(2) * trainTime) / log(criticLRRange(2) / criticLRRange(1)); % exponential decay factor
+    % critLRDec = -(log(2) * trainTime) / log(criticLRRange(2) / criticLRRange(1)); % exponential decay factor
     critLRDec = criticLRRange(1) - criticLRRange(2);                                % linear decay factor
 end
 
@@ -463,37 +467,41 @@ end
 if (~found)
     actorLRRange = [0.5, 0];
 end
+
+% Actor learning rate decay factor
 if (length(actorLRRange) == 1 || actorLRRange(1) == actorLRRange(2))
     actLRDec = 0; % no variance decay
 elseif (actorLRRange(1) < actorLRRange(2))
     error('It must hold actorLRRange(1) >= actorLRRange(2)');
 else
-%     actLRDec = -(log(2) * trainTime) / log(actorLRRange(2) / actorLRRange(1)); % exponential decay factor
+    % actLRDec = -(log(2) * trainTime) / log(actorLRRange(2) / actorLRRange(1)); % exponential decay factor
     actLRDec = actorLRRange(1) - actorLRRange(2);                                % linear decay factor
 end
 
-
 % Actor weight regularization via factorial downscaling
 % how it works: actor.wp_ji = (1 - (actor.regularizer * actor.learnRate)) * actor.wp_ji;
+% previously 1e-4 | 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
 [found, regularizer, varParamArray] = parseparam(varParamArray, 'regularizer');
 if (~found)
-    regularizer = 1e-5; % new: 1e-4 old: 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
+    regularizer = 1e-5;
 end
 
-% variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
+% Variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
 % corresponds to softMax temperature in discrete RL models
 [found, varianceRange, varParamArray] = parseparam(varParamArray, 'varianceRange');
 if (~found)
     varianceRange = [1e-5, 1e-5];
 end
+
+% Action variance decay factor
 if (length(varianceRange) == 1 || varianceRange(1) == varianceRange(2))
     % no variance decay
     varDec = 0;
 elseif (varianceRange(1) < varianceRange(2))
     error('It must hold varianceRange(1) >= varianceRange(2)');
 else
-    % varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % action variance decay factor
-    varDec = varianceRange(1) - varianceRange(2);
+    % varDec = -(log(2) * trainTime) / log(varianceRange(2) / varianceRange(1)); % exponential decay factor
+    varDec = varianceRange(1) - varianceRange(2);                                % linear decay factor
 end
 
 % Actor's number of neurons in the output layer and amount of eye muscles
@@ -502,7 +510,7 @@ if (~found)
     outputDim = 2;
 end
 
-% use a additional constant bias
+% Constant bias in input vector/feature vector (0 := off, 1 := on)
 [found, bias, varParamArray] = parseparam(varParamArray, 'bias');
 if (~found)
     bias = 0;
@@ -584,8 +592,8 @@ model = Model(PARAM);
 % -------------------------
 
 % Parses parameter vector and prunes it on successful find
-% @param paramVector:    parameter vector
-% @param param:          searched paramter name
+% @param paramVector:   parameter vector
+% @param param:         searched paramter name
 %
 % return found:         [0, 1] success flag
 % return val:           value of parameter
