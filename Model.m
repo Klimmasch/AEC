@@ -73,6 +73,7 @@ classdef Model < handle
         testResult7;
         vergenceAngleApproach;
         metCostsApproach;
+        musclePlaneResponse;
         testHist;           % history of testing performance over traintime
 
         % Image processing
@@ -186,23 +187,6 @@ classdef Model < handle
                 obj.lambdaMet_hist = zeros(obj.trainTime, 1);
                 obj.variance_hist = zeros(obj.trainTime, 1);
 
-                obj.responseResults = struct();
-                obj.testResult = [];
-                obj.testResult2 = [];
-                obj.testResult3 = [];
-                obj.testResult4 = [];
-                obj.testResult5 = [];
-                obj.testResult6 = [];
-                obj.testResult7 = [];
-                obj.vergenceAngleApproach = [];
-                obj.metCostsApproach = [];
-                % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
-                obj.testHist = zeros(length(obj.testAt), 6);
-                obj.testHist(1, :) = [1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517]; % insert modelAt0 entry
-                obj.simulatedTime = 0;
-                obj.trainedUntil = 0;
-                obj.notes = '';
-
                 % normalization of [recErrSignal, metCostSignal, rewardSignal]
                 % obj.currMean = zeros(1, 3);
                 % obj.currM2 = zeros(1, 3);
@@ -213,6 +197,31 @@ classdef Model < handle
                 obj.currMean = zeros(1, PARAM{3}{9}(1));
                 obj.currM2 = zeros(1, PARAM{3}{9}(1));
                 obj.desiredStdZT = PARAM{1}{27};
+                
+                % test results
+                obj.responseResults = struct();
+                obj.testResult = [];
+                obj.testResult2 = [];
+                obj.testResult3 = [];
+                obj.testResult4 = [];
+                obj.testResult5 = [];
+                obj.testResult6 = [];
+                obj.testResult7 = [];
+                obj.vergenceAngleApproach = [];
+                obj.metCostsApproach = [];
+                obj.musclePlaneResponse = [];
+                % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
+                obj.testHist = zeros(length(obj.testAt), 6);
+                % insert modelAt0 entry
+                % TODO: update for bias as well
+                if obj.normFeatVect == 0
+                    obj.testHist(1, :) = [1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517];
+                else
+                    obj.testHist(1, :) = [1.1557, 1.3355, 1.5078, 1.0812, 1.1689, 0.9552];
+                end
+                obj.simulatedTime = 0;
+                obj.trainedUntil = 0;
+                obj.notes = '';
 
                 %%% Generate image processing constants
                 obj.patchSize = PARAM{1}{15};
@@ -1609,8 +1618,8 @@ classdef Model < handle
                             end
 
                             %% bias analysis
-                            if (this.rlModel.bias == 1)
-                                feature = [feature; 1];
+                            if (this.rlModel.bias > 0)
+                                feature = [feature; this.rlModel.bias];
                             end
 
                             relativeCommand = this.rlModel.act(feature);    % generate change in muscle activity
@@ -1698,8 +1707,8 @@ classdef Model < handle
 
                         % plot iter 1-interval in differen color if numIters >= model.interval
                         if (numIters >= this.interval)
-                            hl1 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 1), [this.interval, 1]) ./ this.scaleFacLR + 1, ...
-                                       reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 2), [this.interval, 1]) ./ this.scaleFacMR + 1, ...
+                            hl1 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : (this.interval * 2), 1), [this.interval * 2, 1]) ./ this.scaleFacLR + 1, ...
+                                       reshape(trajectory(odIndex, vergErrIndex, stim, 1 : (this.interval * 2), 2), [this.interval * 2, 1]) ./ this.scaleFacMR + 1, ...
                                        '-or', 'LineWidth', 1, 'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
                         else
                             hl1 = [];

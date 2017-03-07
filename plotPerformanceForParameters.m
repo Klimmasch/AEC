@@ -102,7 +102,7 @@ function plotPerformanceForParameters(modelAt)
 
     % figName = 'steplength_actorLRvsRegul';
 
-    %%% steplength: actor LR vs regularizer (1 mio steps)
+    % %% steplength: actor LR vs regularizer (1 mio steps)
     % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul_1mio';
 
     % labelVar1 = 'Actor weight regularizer';
@@ -202,6 +202,75 @@ function plotPerformanceForParameters(modelAt)
 
     % figName = 'actorLR_vs_regul_norm_feat';
 
+    % parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_seed2';
+
+    % labelVar1 = 'Scaling of muscle feedback';
+    % labelVar2 = 'Feat. vect.\nstd. dev.';
+
+    % var1 = [0, 0.5, 1, 2]';
+    % var2 = flip([0.005, 0.0075, 0.01, 0.015, 0.02]');
+
+    % numberFormatVar1 = '%f';
+    % numberFormatVar2 = '%f';
+
+    % figName = 'lambdaMuscleFB_vs_desiredStdZT';
+
+    %%% actor LR vs variance
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsVariance_reg1e-5_1mio';
+
+    % labelVar1 = 'Actor LR [start, end]';
+    % labelVar2 = 'exploration var.';
+
+    % var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
+    % var2 = [[5e-5, 5e-5]; [5e-5, 0]; [1e-5, 1e-5]; [1e-5, 0]];
+
+    % numberFormatVar1 = '[%1.1f-%1.1f]';
+    % numberFormatVar2 = '[%1.0e-%1.0e]';
+
+    % figName = 'steplength_actorVsVariance_reg1e-5_1mio';
+
+    %%% critic learning rate versus critic discount factor
+    % parentFolder = '/home/klimmasch/projects/results/wobbling_gammaVsCriticLR_1mio_normFeat_flat_lambdaMF1';
+
+    % labelVar2 = 'Critic LR [start, end]';
+    % labelVar1 = 'Discount Factor';
+
+    % var2 = [[1, 1]; [1, 0]; [0.5, 0.5]; [0.5, 0]];
+    % var1 = [0.1; 0.3; 0.6; 0.9];
+
+    % numberFormatVar2 = '[%1.1f-%1.1f]';
+    % numberFormatVar1 = '[%1.1f]';
+
+    % figName = 'gammaVsCriticLR_1mio_normFeat_flat';
+
+    %% metabolic costs versus discount factor
+    % parentFolder = '/home/aecgroup/aecdata/Results/GammaVsMetCostsBiasFineGrain'; %/GammaVsMetCostsBias GammaVsMetCosts2
+
+    % labelVar2 = 'Metab. Costs';
+    % labelVar1 = 'Discount Factor';
+
+    % var2 = [[0]; [0.01]; [0.05]; [0.1]];
+    % var1 = [0.1; 0.3; 0.6; 0.9];
+
+    % numberFormatVar2 = '%1.2f';
+    % numberFormatVar1 = '%1.1f';
+
+    % figName = 'gammaVsMetCost';
+
+    %% metabolic costs versus discount factor: different parameters
+    parentFolder = '/home/aecgroup/aecdata/Results/GammaVsMetCostsBiasFineGrain'; %/GammaVsMetCostsBias GammaVsMetCosts2
+
+    labelVar2 = 'Metab. Costs';
+    labelVar1 = 'Discount Factor';
+
+    var2 = [[0]; [0.0017]; [0.0033]; [0.005]];
+    var1 = [0.01; 0.07; 0.1; 0.2];
+
+    numberFormatVar2 = '%1.4f';
+    numberFormatVar1 = '%1.2f';
+
+    figName = 'GammaVsMetCostsBiasFineGrain';
+
     % ------------------
     % Results extraction
     % ------------------
@@ -212,8 +281,8 @@ function plotPerformanceForParameters(modelAt)
     subExperiments = subExperiments(3 : end);       % exclude '.' and '..' directories
 
     if (~exist('modelAt') || isempty(modelAt))
-        modelAt = 2000000;
-        warning('Set modelAt = %d', modelAt);
+        modelAt = [2000000];
+        warning('Set modelAt = [%d]', modelAt);
     end
 
     for trainedUntil = 1 : length(modelAt)
@@ -268,8 +337,8 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
 
             %%% regularizer vs actor leaning range
-            % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
-            % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
+%             ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
+%             jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
             %%% actor LR vs critic LR
             ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
@@ -292,8 +361,8 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% actor LR vs weight init
-            % ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
-            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+%             ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
+%             jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% regularizer vs std in feature vector
             % ind = find(ismember(var2, model.desiredStdZT, 'rows'));
@@ -306,6 +375,10 @@ function plotPerformanceForParameters(modelAt)
             %%% actor regularizer vs. actor learning rate range
             % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
             % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
+
+            %%% criticLR vs gamma
+            ind = find(ismember(var2, model.metCostRange, 'rows'));
+            jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
 
             if isempty(ind) || isempty(jnd)
                 sprintf('%s \n was not included in the tabular', model.savePath)
@@ -343,8 +416,8 @@ function plotPerformanceForParameters(modelAt)
             %%% model.testResult5[n](abs(1), abs(2), rel(1), rel(2))
             startInd = find(mod(1 : length(model.testResult5), testInterval) == 1); %indizes of every first action during testing
             % results(ind, jnd, 9) = norm([model.testResult5(startInd, 3), model.testResult5(startInd, 4)], 2);
-            results(ind, jnd, 9) = sum(sqrt(sum(model.testResult5(startInd, 3:4)'.^2))); % or mean() ?
-            results(ind, jnd, 10) = sum(sqrt(sum(model.testResult5(:, 3:4)'.^2)));
+            results(ind, jnd, 9) = mean(sqrt(sum(model.testResult5(startInd, 3:4)'.^2))); % or sum?() ?
+            results(ind, jnd, 10) = mean(sqrt(sum(model.testResult5(:, 3:4)'.^2)));
 
             %%% approaching the axis bahaviour (aka. wobbling)
             %%% at first, take the mean vector of muscle activities after model verged
@@ -376,7 +449,8 @@ function plotPerformanceForParameters(modelAt)
 
         [x, y] = meshgrid(1 : length1, 1 : length2);
         titleStrings = {'RMSE', 'IQR*4', 'Median'};
-        resultsIter = {[1 : 3]; [4 : 6]; [9, 10, 13]; [7, 8]; [14, 17, 13]};
+        % resultsIter = {[1 : 3]; [4 : 6]; [9, 10, 13]; [7, 8]; [14, 17, 13]};
+        resultsIter = {[1 : 3]; [4 : 6]; [9, 10, 13]; [7, 8]; [14, 17, 1]};
 
         for figIter = 1 : length(resultsIter)
             if (figIter >= 3)
@@ -389,11 +463,15 @@ function plotPerformanceForParameters(modelAt)
 
             figure;
             for subfigIter = 1 : length(resultsIter{figIter})
-                subplot(length(resultsIter{figIter}), 1, subfigIter);
+                subplt = subplot(length(resultsIter{figIter}), 1, subfigIter);
                 colormap(colordata);
                 if (figIter == 1 && subfigIter == 3)
                     % apply color to abs values in median plot
                     imagesc(abs(results(:, :, resultsIter{figIter}(subfigIter))));
+                elseif (figIter == 5 && subfigIter == 3)
+                    colordata = createCM(3);
+                    colormap(subplt, colordata);
+                    imagesc(results(:, :, resultsIter{figIter}(subfigIter)));
                 else
                     imagesc(results(:, :, resultsIter{figIter}(subfigIter)));
                 end
@@ -408,7 +486,7 @@ function plotPerformanceForParameters(modelAt)
                 end
 
                 % special case: wobbling analysis
-                if (figIter == 3 && subfigIter == 3) || (figIter == 5 && subfigIter == 3)
+                if (figIter == 3 && subfigIter == 3)% || (figIter == 5 && subfigIter == 3)
                     % for wobbling, use the vectors as labels,
                     medVals = results(:, :, 11);
                     latVals = results(:, :, 12);
@@ -453,6 +531,10 @@ function plotPerformanceForParameters(modelAt)
                 %     error('Parameter range var1 has unsupported size of %d x %d.', size(var1));
                 % end
 
+
+                ylabel(sprintf(labelVar2));
+                colorbar();
+
                 if (figIter < 3)
                     title(titleStrings{subfigIter});
                 elseif figIter == 3
@@ -462,6 +544,7 @@ function plotPerformanceForParameters(modelAt)
                         title('Total Step Length');
                     elseif subfigIter == 3
                         title('Wobbling Effect');
+                        xlabel(sprintf(labelVar1));
                     end
                 elseif figIter == 4
                     if subfigIter == 1
@@ -470,6 +553,7 @@ function plotPerformanceForParameters(modelAt)
                                      ' + critic_{val}(verg_{Err} = 0.5)) / 2)|'));
                     elseif subfigIter == 2
                         title(sprintf('critic_{val} Niveau = |mean(critic_{val}(verg_{Err} = 0))|'));
+                        xlabel(sprintf(labelVar1));
                     end
                 elseif figIter == 5
                     if subfigIter == 1
@@ -477,13 +561,11 @@ function plotPerformanceForParameters(modelAt)
                     elseif subfigIter == 2
                         title('Reduction of Metabolic Costs (20^{th} step [%])');
                     elseif subfigIter == 3
-                        title('Wobbling Effect')
+                        % title('Wobbling Effect')
+                        title('RMSE of Vergence Error')
+                        xlabel(sprintf(labelVar1));
                     end
                 end
-
-                xlabel(sprintf(labelVar1));
-                ylabel(sprintf(labelVar2));
-                colorbar();
             end
 
             if (figIter == 1)
