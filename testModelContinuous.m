@@ -237,8 +237,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             end
                             
                             %% bias analysis
-                            if (this.rlModel.bias > 0)
-                                feature = [feature; this.rlModel.bias];
+                            if (model.rlModel.bias > 0)
+                                feature = [feature; model.rlModel.bias];
                             end
 
                             %%% Calculate metabolic costs
@@ -402,8 +402,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         end
                         
                         %% bias analysis
-                        if (this.rlModel.bias > 0)
-                            feature = [feature; this.rlModel.bias];
+                        if (model.rlModel.bias > 0)
+                            feature = [feature; model.rlModel.bias];
                         end
 
                         % Track reconstruction error and Critic's response
@@ -499,8 +499,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                     end
 
                     %% bias analysis
-                    if (this.rlModel.bias > 0)
-                        feature = [feature; this.rlModel.bias];
+                    if (model.rlModel.bias > 0)
+                        feature = [feature; model.rlModel.bias];
                     end
                         
                     %%% Action
@@ -688,8 +688,8 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             % end
                             % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
                             
-                            if (this.rlModel.bias > 0)
-                                feature = [feature; this.rlModel.bias];
+                            if (model.rlModel.bias > 0)
+                                feature = [feature; model.rlModel.bias];
                             end
 
                             %% extraction of critic and actor response

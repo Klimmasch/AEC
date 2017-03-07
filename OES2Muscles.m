@@ -402,8 +402,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             end
 
             %% bias analysis
-            if (this.rlModel.bias > 0)
-                feature = [feature; this.rlModel.bias];
+            if (model.rlModel.bias > 0)
+                feature = [feature; model.rlModel.bias];
             end
 
             %%% Calculate metabolic costs
