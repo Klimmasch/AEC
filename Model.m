@@ -186,6 +186,18 @@ classdef Model < handle
                 obj.lambdaMet_hist = zeros(obj.trainTime, 1);
                 obj.variance_hist = zeros(obj.trainTime, 1);
 
+                % normalization of [recErrSignal, metCostSignal, rewardSignal]
+                % obj.currMean = zeros(1, 3);
+                % obj.currM2 = zeros(1, 3);
+                % obj.desiredStdZT = PARAM{1}{26};
+
+                % normalization of nth entry in feature vector
+                obj.normFeatVect = PARAM{1}{26};
+                obj.currMean = zeros(1, PARAM{3}{9}(1));
+                obj.currM2 = zeros(1, PARAM{3}{9}(1));
+                obj.desiredStdZT = PARAM{1}{27};
+                
+                % test results
                 obj.responseResults = struct();
                 obj.testResult = [];
                 obj.testResult2 = [];
@@ -198,21 +210,16 @@ classdef Model < handle
                 obj.metCostsApproach = [];
                 % rmse(vergerr), mean(abs(vergErr)), std(abs(vergErr)), rmse(deltaMetCost), mean(abs(deltaMetCost)), std(abs(deltaMetCost))
                 obj.testHist = zeros(length(obj.testAt), 6);
-                obj.testHist(1, :) = [1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517]; % insert modelAt0 entry
+                % insert modelAt0 entry
+                % TODO: update for bias as well
+                if obj.normFeatVect == 0
+                    obj.testHist(1, :) = [1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517];
+                else
+                    obj.testHist(1, :) = [1.1557, 1.3355, 1.5078, 1.0812, 1.1689, 0.9552];
+                end
                 obj.simulatedTime = 0;
                 obj.trainedUntil = 0;
                 obj.notes = '';
-
-                % normalization of [recErrSignal, metCostSignal, rewardSignal]
-                % obj.currMean = zeros(1, 3);
-                % obj.currM2 = zeros(1, 3);
-                % obj.desiredStdZT = PARAM{1}{26};
-
-                % normalization of nth entry in feature vector
-                obj.normFeatVect = PARAM{1}{26};
-                obj.currMean = zeros(1, PARAM{3}{9}(1));
-                obj.currM2 = zeros(1, PARAM{3}{9}(1));
-                obj.desiredStdZT = PARAM{1}{27};
 
                 %%% Generate image processing constants
                 obj.patchSize = PARAM{1}{15};
