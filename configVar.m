@@ -510,7 +510,7 @@ if (~found)
     outputDim = 2;
 end
 
-% Constant bias in input vector/feature vector (0 := off, 1 := on)
+% Constant bias in input vector/feature vector (0 := off, >0 := take that value as bias)
 [found, bias, varParamArray] = parseparam(varParamArray, 'bias');
 if (~found)
     bias = 0;
@@ -526,7 +526,7 @@ if (~found)
         varianceRange = 1;
         outputDim = 1;                          % only one delta angle output in discrete models
     end
-    if (bias == 1)
+    if (bias > 0)
         inputDim = inputDim + 1;
     end
 end
