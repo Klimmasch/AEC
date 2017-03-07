@@ -1618,8 +1618,8 @@ classdef Model < handle
                             end
 
                             %% bias analysis
-                            if (this.rlModel.bias == 1)
-                                feature = [feature; 1];
+                            if (this.rlModel.bias > 0)
+                                feature = [feature; this.rlModel.bias];
                             end
 
                             relativeCommand = this.rlModel.act(feature);    % generate change in muscle activity
@@ -1707,8 +1707,8 @@ classdef Model < handle
 
                         % plot iter 1-interval in differen color if numIters >= model.interval
                         if (numIters >= this.interval)
-                            hl1 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 1), [this.interval, 1]) ./ this.scaleFacLR + 1, ...
-                                       reshape(trajectory(odIndex, vergErrIndex, stim, 1 : this.interval, 2), [this.interval, 1]) ./ this.scaleFacMR + 1, ...
+                            hl1 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : (this.interval * 2), 1), [this.interval * 2, 1]) ./ this.scaleFacLR + 1, ...
+                                       reshape(trajectory(odIndex, vergErrIndex, stim, 1 : (this.interval * 2), 2), [this.interval * 2, 1]) ./ this.scaleFacMR + 1, ...
                                        '-or', 'LineWidth', 1, 'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
                         else
                             hl1 = [];
