@@ -586,9 +586,6 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         warning('elapsedTime = %d, catched erroneous printout.', elapsedTime);
     end
 
-    % store simulated time
-    save(strcat(model.savePath, '/model'), 'model');
-
     %%% Final testing procedure
     if (testIt == 1)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, experimentDirName, level)
@@ -613,6 +610,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             model.allPlotSave([1 : 7]);
         end
     end
+
+    % store simulated time & testHist
+    save(strcat(model.savePath, '/model'), 'model');
 
     if ((clusterCall == 0) && (closeFigures == 1))
         close all;

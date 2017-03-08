@@ -197,7 +197,7 @@ classdef Model < handle
                 obj.currMean = zeros(1, PARAM{3}{9}(1));
                 obj.currM2 = zeros(1, PARAM{3}{9}(1));
                 obj.desiredStdZT = PARAM{1}{27};
-                
+
                 % test results
                 obj.responseResults = struct();
                 obj.testResult = [];
@@ -1169,159 +1169,160 @@ classdef Model < handle
 
             %% Testing performance as a function of traintime
             if (~isempty(find(level == 7)))
-                if ((~(isempty(this.testAt))) ...
-                    && (~(isempty(this.testHist))) ...
-                    && (this.testHist(1, 1) == 1.1593) ...
-                    && (size(this.testHist, 1) > 1)) ...
-                    && (this.testHist(end) ~= 0)
+                % if ((~(isempty(this.testAt))) ...
+                %     && (~(isempty(this.testHist))) ...
+                %     && (this.testHist(1, 1) == 1.1593) ...
+                %     && (size(this.testHist, 1) > 1)) ...
+                %     && (this.testHist(end) ~= 0)
 
                     % sort fields in ascending order
-                    [this.testAt, sortIndex] = sort(this.testAt);
-                     this.testHist = this.testHist(sortIndex, :);
+                    % [this.testAt, sortIndex] = sort(this.testAt);
+                    %  this.testHist = this.testHist(sortIndex, :);
 
-                    % RMSE vergErr
-                    figure;
-                    subplot(2, 2, 1);
-                    hold on;
-                    grid on;
-                    plot(this.testAt, this.testHist(:, 1), 'x-', 'LineWidth', 1.3);
+                % RMSE vergErr
+                figure;
+                subplot(2, 2, 1);
+                hold on;
+                grid on;
+                plot(this.testAt, this.testHist(:, 1), 'x-', 'LineWidth', 1.3);
 
-                    xlabel('Traintime', 'FontSize', 12);
-                    ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
+                xlabel('Traintime', 'FontSize', 12);
+                ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
 
-                    % mean, std vergErr
-                    subplot(2, 2, 2);
-                    hold on;
-                    grid on;
-                    [hl, hp] = boundedline(this.testAt, this.testHist(:, 2), this.testHist(:, 3), 'alpha');
+                % mean, std vergErr
+                subplot(2, 2, 2);
+                hold on;
+                grid on;
+                [hl, hp] = boundedline(this.testAt, this.testHist(:, 2), this.testHist(:, 3), 'alpha');
 
-                    hl.Marker = 'x';
-                    hl.MarkerSize = 5;
+                hl.Marker = 'x';
+                hl.MarkerSize = 5;
 
-                    hl.Color = [rand, rand, rand];
-                    hp.FaceColor = hl.Color;
-                    hl.LineWidth = 1.6;
+                hl.Color = [rand, rand, rand];
+                hp.FaceColor = hl.Color;
+                hl.LineWidth = 1.6;
 
-                    xlabel('Traintime', 'FontSize', 12);
-                    ylabel('|verg_{err}| [deg]', 'FontSize', 12);
+                xlabel('Traintime', 'FontSize', 12);
+                ylabel('|verg_{err}| [deg]', 'FontSize', 12);
 
-                    % RMSE deltaMetCost
-                    subplot(2, 2, 3);
-                    hold on;
-                    grid on;
-                    plot(this.testAt, this.testHist(:, 4), 'x-', 'LineWidth', 1.3);
+                % RMSE deltaMetCost
+                subplot(2, 2, 3);
+                hold on;
+                grid on;
+                plot(this.testAt, this.testHist(:, 4), 'x-', 'LineWidth', 1.3);
 
-                    xlabel('Traintime', 'FontSize', 12);
-                    ylabel('RMSE(|\Deltamc|)', 'FontSize', 12);
+                xlabel('Traintime', 'FontSize', 12);
+                ylabel('RMSE(|\Deltamc|)', 'FontSize', 12);
 
-                    % mean, std deltaMetCost
-                    subplot(2, 2, 4);
-                    hold on;
-                    grid on;
-                    [hl, hp] = boundedline(this.testAt, this.testHist(:, 5), this.testHist(:, 6), 'alpha');
+                % mean, std deltaMetCost
+                subplot(2, 2, 4);
+                hold on;
+                grid on;
+                [hl, hp] = boundedline(this.testAt, this.testHist(:, 5), this.testHist(:, 6), 'alpha');
 
-                    hl.Marker = 'x';
-                    hl.MarkerSize = 5;
+                hl.Marker = 'x';
+                hl.MarkerSize = 5;
 
-                    hl.Color = [rand, rand, rand];
-                    hp.FaceColor = hl.Color;
-                    hl.LineWidth = 1.6;
+                hl.Color = [rand, rand, rand];
+                hp.FaceColor = hl.Color;
+                hl.LineWidth = 1.6;
 
-                    xlabel('Traintime', 'FontSize', 12);
-                    ylabel('|\Deltamc| = |mc_{actual} - mc_{desired}|', 'FontSize', 12);
+                xlabel('Traintime', 'FontSize', 12);
+                ylabel('|\Deltamc| = |mc_{actual} - mc_{desired}|', 'FontSize', 12);
 
-                    % Subplot overall title
-                    suptitle('Test Performance vs. Traintime');
+                % Subplot overall title
+                suptitle('Test Performance vs. Traintime');
 
-                    plotpath = sprintf('%s/testPerformanceVsTraintime', this.savePath);
-                    saveas(gcf, plotpath, 'png');
-                else
-                    % try to update the model
-                    try
-                        % generate new model attributes
-                        model = this.copy();
+                plotpath = sprintf('%s/testPerformanceVsTraintime', this.savePath);
+                saveas(gcf, plotpath, 'png');
+                % else
+                %   % depricated backward ompatibility
+                %   % try to update the model
+                %     try
+                %         % generate new model attributes
+                %         model = this.copy();
 
-                        % set group path
-                        if (strcmp(model.savePath(1 : 10), '../results'))
-                            tmpStr = GetFullPath(model.savePath);
-                            tmpIndex = strfind(tmpStr, 'model');
-                            if (length(tmpIndex) == 1)
-                                model.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : end));
-                            else
-                                model.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : tmpIndex(2) - 2));
-                            end
-                        end
+                %         % set group path
+                %         if (strcmp(model.savePath(1 : 10), '../results'))
+                %             tmpStr = GetFullPath(model.savePath);
+                %             tmpIndex = strfind(tmpStr, 'model');
+                %             if (length(tmpIndex) == 1)
+                %                 model.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : end));
+                %             else
+                %                 model.savePath = strcat('/home/aecgroup/aecdata/Results/', tmpStr(tmpIndex(1) : tmpIndex(2) - 2));
+                %             end
+                %         end
 
-                        % Get a list of all files and folders in this folder
-                        files = dir(model.savePath);
-                        % Get a logical vector that tells which is a directory
-                        dirFlags = [files.isdir];
-                        % Extract only those that are directories.
-                        subFolders = files(dirFlags);
+                %         % Get a list of all files and folders in this folder
+                %         files = dir(model.savePath);
+                %         % Get a logical vector that tells which is a directory
+                %         dirFlags = [files.isdir];
+                %         % Extract only those that are directories.
+                %         subFolders = files(dirFlags);
 
-                        % generate testAt & testHist fields
-                        if (isempty(model.testAt))
-                            model.testAt = zeros(1, length(subFolders) - 2); % skip '.' and '..'
-                        end
-                        if (isempty(model.testHist))
-                            model.testHist = zeros(length(subFolders) - 2, 6); % skip '.' and '..'
-                        end
+                %         % generate testAt & testHist fields
+                %         if (isempty(model.testAt))
+                %             model.testAt = zeros(1, length(subFolders) - 2); % skip '.' and '..'
+                %         end
+                %         if (isempty(model.testHist))
+                %             model.testHist = zeros(length(subFolders) - 2, 6); % skip '.' and '..'
+                %         end
 
-                        % add modelAt0 entry
-                        if (str2num(subFolders(3).name(8 : end)) ~= 0)
-                            if (model.testAt(1) ~= 0)
-                                model.testAt = horzcat(0, model.testAt);
-                            end
+                %         % add modelAt0 entry
+                %         if (str2num(subFolders(3).name(8 : end)) ~= 0)
+                %             if (model.testAt(1) ~= 0)
+                %                 model.testAt = horzcat(0, model.testAt);
+                %             end
 
-                            if (model.testHist(1, 1 : 2) ~= [1.1593, 1.3440])
-                                model.testHist = vertcat([1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517], model.testHist);
-                            end
-                        end
+                %             if (model.testHist(1, 1 : 2) ~= [1.1593, 1.3440])
+                %                 model.testHist = vertcat([1.1593, 1.3440, 1.5243, 1.0736, 1.1527, 0.9517], model.testHist);
+                %             end
+                %         end
 
-                        % Extract all relevant data
-                        for k = 3 : length(subFolders) % skip '.' and '..'
-                            % load intermediate model objects
-                            tmpModel = load(strcat(model.savePath, '/', subFolders(k).name, '/model.mat'));
-                            tmpModel = tmpModel.model;
+                %         % Extract all relevant data
+                %         for k = 3 : length(subFolders) % skip '.' and '..'
+                %             % load intermediate model objects
+                %             tmpModel = load(strcat(model.savePath, '/', subFolders(k).name, '/model.mat'));
+                %             tmpModel = tmpModel.model;
 
-                            % get test iteration number
-                            model.testAt(k - 1) = str2num(subFolders(k).name(8 : end));
+                %             % get test iteration number
+                %             model.testAt(k - 1) = str2num(subFolders(k).name(8 : end));
 
-                            % check if testing procedure needs to be repeated
-                            % generate test history, assumes testInterval = 20
-                            testInterval = tmpModel.interval * 2;
-                            % testInterval = 200;
-                            if (isempty(tmpModel.testResult7))
-                                warning('testResult7 is empty in %s, please execute testModelContiuous again.', subFolders(k).name);
-                                model.testHist(k - 1, :) = [sqrt(mean(tmpModel.testResult3(:, testInterval) .^ 2)), ...
-                                                        mean(abs(tmpModel.testResult3(:, testInterval) .^ 2)), ...
-                                                        std(abs(tmpModel.testResult3(:, testInterval) .^ 2)), ...
-                                                        0, ...
-                                                        0, ...
-                                                        0];
-                            else
-                                model.testHist(k - 1, :) = [sqrt(mean(tmpModel.testResult3(:, testInterval) .^ 2)), ...
-                                                        mean(abs(tmpModel.testResult3(:, testInterval) .^ 2)), ...
-                                                        std(abs(tmpModel.testResult3(:, testInterval) .^ 2)), ...
-                                                        sqrt(mean(tmpModel.testResult7(:, testInterval) .^ 2)), ...
-                                                        mean(abs(tmpModel.testResult7(:, testInterval) .^ 2)), ...
-                                                        std(abs(tmpModel.testResult7(:, testInterval) .^ 2))];
-                            end
-                        end
+                %             % check if testing procedure needs to be repeated
+                %             % generate test history, assumes testInterval = 20
+                %             testInterval = tmpModel.interval * 2;
+                %             % testInterval = 200;
+                %             if (isempty(tmpModel.testResult7))
+                %                 warning('testResult7 is empty in %s, please execute testModelContiuous again.', subFolders(k).name);
+                %                 model.testHist(k - 1, :) = [sqrt(mean(tmpModel.testResult3(:, testInterval) .^ 2)), ...
+                %                                         mean(abs(tmpModel.testResult3(:, testInterval) .^ 2)), ...
+                %                                         std(abs(tmpModel.testResult3(:, testInterval) .^ 2)), ...
+                %                                         0, ...
+                %                                         0, ...
+                %                                         0];
+                %             else
+                %                 model.testHist(k - 1, :) = [sqrt(mean(tmpModel.testResult3(:, testInterval) .^ 2)), ...
+                %                                         mean(abs(tmpModel.testResult3(:, testInterval) .^ 2)), ...
+                %                                         std(abs(tmpModel.testResult3(:, testInterval) .^ 2)), ...
+                %                                         sqrt(mean(tmpModel.testResult7(:, testInterval) .^ 2)), ...
+                %                                         mean(abs(tmpModel.testResult7(:, testInterval) .^ 2)), ...
+                %                                         std(abs(tmpModel.testResult7(:, testInterval) .^ 2))];
+                %             end
+                %         end
 
-                        % sort fields in ascending order
-                        [model.testAt, sortIndex] = sort(model.testAt);
-                         model.testHist = model.testHist(sortIndex, :);
+                %         % sort fields in ascending order
+                %         [model.testAt, sortIndex] = sort(model.testAt);
+                %          model.testHist = model.testHist(sortIndex, :);
 
-                        % overwrite old model
-                        save(strcat(model.savePath, '/model'), 'model');
+                %         % overwrite old model
+                %         save(strcat(model.savePath, '/model'), 'model');
 
-                        % try to plot again
-                        model.allPlotSave(7);
-                    catch
-                        error('One or more file operations failed. Check path strings and directory items.');
-                    end
-                end
+                %         % try to plot again
+                %         model.allPlotSave(7);
+                %     catch
+                %         error('One or more file operations failed. Check path strings and directory items.');
+                %     end
+                % end
             end
         end
 
