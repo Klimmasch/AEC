@@ -46,7 +46,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(1);
+    testIt = uint8(0);
 
     %%% Amount of test stimuli
     nStimTest = 40;
@@ -193,7 +193,10 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         copyfile(strcat(class(model.rlModel.CCritic), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CActor), '.m'), model.savePath);
         copyfile('results.ods', model.savePath);
-        if ((model.rlModel.continuous == 1) && (testIt == 1))
+        % % out commented as hack for ICDL experiments
+        % TODO: please comment back in afterwards
+        % if ((model.rlModel.continuous == 1) && (testIt == 1))
+        if (model.rlModel.continuous == 1)
             copyfile('testModelContinuous.m', model.savePath);
         end
         if (clusterCall == 1)
@@ -280,12 +283,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 6]);
             close all;
         elseif find(model.testAt == t)
-            % temporary sollution for using less space in cluster calls
+            % temporary solution for using less space in cluster calls
             testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
             if ~ exist(strcat(testSavePath, '/model'), 'file')
                 mkdir(testSavePath);
                 save(strcat(testSavePath, '/model'), 'model');
-            end   
+            end
         end
         rng(rngState); % restore state after testing, to not mess up the experiment
 
@@ -605,6 +608,13 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
                 elapsedTime / 3600, elapsedTime / 60, elapsedTime, timeToTrain / elapsedTime)
         catch
             warning('elapsedTime = %d, catched erroneous printout.', elapsedTime);
+        end
+    else
+        % temporary solution for using less space in cluster calls
+        testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
+        if ~ exist(strcat(testSavePath, '/model'), 'file')
+            mkdir(testSavePath);
+            save(strcat(testSavePath, '/model'), 'model');
         end
     end
 
