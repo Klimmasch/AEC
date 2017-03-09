@@ -235,7 +235,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                                 % post normalization muscle feedback scaling
                                 feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
                             end
-                            
+
                             %% bias analysis
                             if (model.rlModel.bias > 0)
                                 feature = [feature; model.rlModel.bias];
@@ -400,7 +400,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             % post normalization muscle feedback scaling
                             feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
                         end
-                        
+
                         %% bias analysis
                         if (model.rlModel.bias > 0)
                             feature = [feature; model.rlModel.bias];
@@ -502,7 +502,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                     if (model.rlModel.bias > 0)
                         feature = [feature; model.rlModel.bias];
                     end
-                        
+
                     %%% Action
                     relativeCommand = model.rlModel.act(feature);
 
@@ -604,31 +604,31 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 memberChange = false;
             end
         end
-        
+
         %% calculate response over the whole muscle plane for actor, critic and basis functions
         if (~isempty(find(level == 6)))
             % in the standard model, model.degreesIncRes(end,end) = model.degrees.results_deg(3,2)
             usedRows = 3;
             usedCols = 2;
-            
+
             nStimuli = 5; % trade of for saving comp. time
             resolution = 3; % choose 4 for a higher resolution of muscle commands, but increased computational time
-            
+
             angles = interp2(model.degrees.results_deg(1:usedRows, 1:usedCols), resolution, 'spline');
             scaleFacMR = ((usedRows - 1) / 10) / size(angles, 1);
             scaleFacLR = ((usedCols - 1) / 10) / size(angles, 2);
-            
+
             if resolution == 4
                 objDists = model.baseline ./ (2 * tand(angles(ceil(end/2) : 2 : end, end)));
             else
                 objDists = model.baseline ./ (2 * tand(angles(ceil(end/2) : end, end)));
             end
             objDists(objDists < 0.5) = []; % erase values that are not trained
-            
+
             [h, w] = size(angles);
             nMeasurements = 4;
             musclePlaneResponse = zeros(h, w, nMeasurements);
-            
+
             for obj = 1 : length(objDists)
                 objDist = objDists(obj);
                 for stim = 1 : nStimuli
@@ -687,7 +687,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             %     feature(i) = model.onlineNormalize(t, feature(i), i, 1);
                             % end
                             % feature = [feature(1 : end - 2); feature(end - 1 : end) * model.lambdaMuscleFB];
-                            
+
                             if (model.rlModel.bias > 0)
                                 feature = [feature; model.rlModel.bias];
                             end
@@ -1585,7 +1585,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         if (~isempty(find(level == 5)))
             model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(max(nStim, 40)), simulator, imageSavePath, folderName(9 : end), plotIt);
         end
-        
+
         %% plot responses over muscle plane
         if (~isempty(find(level == 6)))
             usedRows = 3;
@@ -1597,7 +1597,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             [h, w, ~] = size(model.musclePlaneResponse);
             [x, y] = meshgrid(1 : h, 1:w);
             fig1 = figure;
-            
+
             s1 = subplot(2, 2, 1); % critic sideView
             % s1 = subplot(2, 2, [1, 3]);
             surf(model.musclePlaneResponse(:, :, 3));
@@ -1613,7 +1613,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             set(s1, 'YTickLabel', num2str(linspace(0, 0.2, length(yLabels))', '%0.2f'));
             xlabel('lr [%]');
             ylabel('mr [%]');
-            
+
             s2 = subplot(2, 2, 2); % critic top view
             pcolor(model.musclePlaneResponse(:, :, 3));
             hold on;
@@ -1629,7 +1629,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             colorbar();
 
             objDists = [7.6434, 2.2482, 1.3110, 0.9218, 0.7087, 0.5742];
-            
+
             for od = 1 : length(objDists)
                 objDist = objDists(od);
                 [lr, mr] = model.getAnglePoints(objDist, 0);
@@ -1637,7 +1637,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 ypos = (mr * (size(model.musclePlaneResponse, 1) - 1) * (10 / (usedRows - 1))) + 1;
                 plot(xpos, ypos, 'color', [0, 0, 0], 'LineStyle', '-', 'LineWidth', 0.1); %[0, 0.5882, 0]
             end
-            
+
             s3 = subplot(2, 2, 3);
             surf(model.musclePlaneResponse(:, :, 4));
             % title(sprintf('Critics Response at %d iterations', model.trainedUntil));
@@ -1681,7 +1681,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             suptitle(sprintf('%d Iterations of Training', model.trainedUntil));
             % saveas(fig1, sprintf('%s/overviewAt%06d.png', folder, index));
             saveas(fig1, sprintf('%s/overviewAt%07d.png', imageSavePath, model.trainedUntil));
-                        
+
             close(fig1);
         end
     end

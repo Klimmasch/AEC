@@ -17,19 +17,19 @@ function plotPerformanceForParameters(modelAt)
     % 8)    figure name
 
     %%% actor LR vs critic LR
-    % parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
+    parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
 
-    % labelVar1 = 'actor learning range';
-    % labelVar2 = 'critic learning range';
+    labelVar1 = 'actor learning range';
+    labelVar2 = 'critic learning range';
 
-    % var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-    % var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-    % var1 = flipud(var1); % setting the offspring to lower left hand corner
+    var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    var1 = flipud(var1); % setting the offspring to lower left hand corner
 
-    % numberFormatVar1 = '[%1.2f - %1.2f]';
-    % numberFormatVar2 = '[%1.2f - %1.2f]';
+    numberFormatVar1 = '[%1.2f - %1.2f]';
+    numberFormatVar2 = '[%1.2f - %1.2f]';
 
-    % figName = 'CriticLRActorLR';
+    figName = 'CriticLRActorLR';
 
     %%% regularizer vs actor leaning range
     % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
@@ -46,18 +46,18 @@ function plotPerformanceForParameters(modelAt)
     % figName = 'hiddenLayerRegulActorLRComparison';
 
     %%% discount factor vs interval
-%     parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources';
-% 
-%     labelVar1 = 'discount factor';
-%     labelVar2 = 'interval';
-% 
-%     var1 = [0.1; 0.3; 0.9];
-%     var2 = [10; 50; 100];
-% 
-%     numberFormatVar1 = '%1.1f';
-%     numberFormatVar2 = '%d';
-% 
-%     figName = 'DiscountVsInterval';
+    % parentFolder = '/home/aecgroup/aecdata/Results/Gamma_vs_Interval_fewerResources';
+
+    % labelVar1 = 'discount factor';
+    % labelVar2 = 'interval';
+
+    % var1 = [0.1; 0.3; 0.9];
+    % var2 = [10; 50; 100];
+
+    % numberFormatVar1 = '%1.1f';
+    % numberFormatVar2 = '%d';
+
+    % figName = 'DiscountVsInterval';
 
     %%% metabolic costs
     % parentFolder = '/home/klimmasch/projects/results/exploringMetCost';
@@ -89,76 +89,78 @@ function plotPerformanceForParameters(modelAt)
     % figName = 'varDecVsCritic';
 
     %%% steplength: actor LR vs regularizer (new)
-%     parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul';
-% 
-%     labelVar1 = 'Actor weight regularizer';
-%     labelVar2 = 'Actor LR [start, end]';
-% 
-%     var1 = [1e-4; 1e-5; 1e-6]; % regularizer
-%     var2 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]]; % actorLearningRange
-% 
-%     numberFormatVar1 = '%1.0e';
-%     numberFormatVar2 = '[%1.2f - %1.2f]';
-% 
-%     figName = 'steplength_actorLRvsRegul';
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul';
 
-    %%% steplength: actor LR vs regularizer (1 mio steps)
-%     parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul_1mio';
-% 
-%     labelVar1 = 'Actor weight regularizer';
-%     labelVar2 = 'Actor LR [start, end]';
-% 
-%     var1 = [1e-4; 1e-5; 1e-6]; % regularizer
-%     var2 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]]; % actorLearningRange
-% 
-%     numberFormatVar1 = '%1.0e';
-%     numberFormatVar2 = '[%1.2f - %1.2f]';
-% 
-%     figName = 'steplength_actorLRvsRegul_1mio';
+    % labelVar1 = 'Actor weight regularizer';
+    % labelVar2 = 'Actor LR [start, end]';
 
-    %%% steplength: actor LR vs variance range (regularizar: 1e-5 to increase stepwith further)
-%     parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsVariance_reg1e-5';
-% 
-%     labelVar1 = 'Actor LR [start, end]';
-%     labelVar2 = 'Variance Range  [start, end]';
-% 
-%     var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
-%     var2 = [[1e-4, 1e-4]; [1e-5, 1e-5]; [1e-4, 1e-6]; [1e-5, 1e-6]; [1e-4, 0]; [1e-5, 0]];
-% 
-%     numberFormatVar1 = '[%1.1f-%1.1f]';
-%     numberFormatVar2 = '[%1.0e-%1.0e]';
-% 
-%     figName = 'steplength_actorLRvsVar_reg1e-5';
+    % var1 = [1e-4; 1e-5; 1e-6]; % regularizer
+    % var2 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]]; % actorLearningRange
+
+    % numberFormatVar1 = '%1.0e';
+    % numberFormatVar2 = '[%1.2f - %1.2f]';
+
+    % figName = 'steplength_actorLRvsRegul';
+
+    % %% steplength: actor LR vs regularizer (1 mio steps)
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsRegul_1mio';
+
+    % labelVar1 = 'Actor weight regularizer';
+    % labelVar2 = 'Actor LR [start, end]';
+
+    % var1 = [1e-4; 1e-5; 1e-6]; % regularizer
+    % var2 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]]; % actorLearningRange
+
+    % numberFormatVar1 = '%1.0e';
+    % numberFormatVar2 = '[%1.2f - %1.2f]';
+
+    % figName = 'steplength_actorLRvsRegul_1mio';
+
+    %%% steplength: actor LR vs exploration variance range (regularizar: 1e-5 to increase stepwith further)
+    % parentFolder = '/home/aecgroup/aecdata/Results/actorLR_vs_varRange_norm_feat_mio';
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsVariance_reg1e-5';
+
+    % labelVar1 = 'Actor LR [start, end]';
+    % labelVar2 = 'Exploration var. [start, end]';
+
+    % var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
+    % var2 = [[1e-4, 1e-4]; [1e-5, 1e-5]; [1e-4, 1e-6]; [1e-5, 1e-6]; [1e-4, 0]; [1e-5, 0]];
+    % % var2 = [[5e-5, 5e-5]; [5e-5, 0]; [1e-5, 1e-5]; [1e-5, 0]];
+
+    % numberFormatVar1 = '[%1.1f-%1.1f]';
+    % numberFormatVar2 = '[%1.0e,%1.0e]';
+
+    % figName = 'actorLR_vs_explVarRange';
 
     %%% actor LR vs Weight initialization
-%     parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsWeightInit';
-% 
-%     labelVar1 = 'Actor LR [start, end]';
-%     labelVar2 = 'Weight Init [crit, hid, out]';
-% 
-%     var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
-%     var2 = [[1e-3, 6e-5, 2e-2]; [1e-2, 6e-5, 2e-2]; [1e-3, 1e-4, 2e-2]; [1e-3, 6e-5, 1e-1]; [1e-3, 1e-4, 1e-1]; [1e-2, 1e-4, 1e-1]];
-% 
-%     numberFormatVar1 = '[%1.1f-%1.1f]';
-%     numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
-% 
-%     figName = 'steplength_actorVsWeights';
+    % parentFolder = '/home/aecgroup/aecdata/Results/actorLR_vs_WeightInit';
+
+    % labelVar1 = 'Actor LR [start, end]';
+    % labelVar2 = 'Weight init. [crit, hid, out]';
+
+    % var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
+    % var2 = [[1e-3, 6e-5, 2e-2]; [1e-2, 6e-5, 2e-2]; [1e-3, 1e-4, 2e-2]; [1e-3, 6e-5, 1e-1]; [1e-3, 1e-4, 1e-1]; [1e-2, 1e-4, 1e-1]];
+
+    % numberFormatVar1 = '[%1.1f-%1.1f]';
+    % numberFormatVar2 = '[%1.0e,%1.0e,%1.0e]';
+
+    % figName = 'actorLR_vs_WeightInit';
 
     %%% regularizer vs desired standard deviation in feature vector
-    % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs desiredStdZT';
+    % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer_vs_desiredStdZT';
 
-    % labelVar1 = 'Regularizer';
-    % labelVar2 = 'Std. dev. in Feature Vector';
+    % labelVar1 = 'Actor regularizer';
+    % labelVar2 = 'Feat. vect.\nstd. dev.';
 
     % var1 = [5e-5, 1e-5, 5e-6, 1e-6]';
-    % var2 = [0.005, 0.01, 0.02, 0.04, 0.08]';
+    % var2 = flip([0.005, 0.01, 0.02, 0.04, 0.08]');
 
     % numberFormatVar1 = '%1.0e';
     % numberFormatVar2 = '%1.3f';
 
     % figName = 'regul_vs_stdInFeat';
 
-    %%% regularizer vs desired standard deviation in feature vector
+    %%% muscle feedback vs desired standard deviation in feature vector
     % parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_flat';
 
     % labelVar1 = 'scaling of muscle feedback';
@@ -173,64 +175,91 @@ function plotPerformanceForParameters(modelAt)
     % figName = 'muscleFB_vs_stdInFeat_flat';
 
     %%% muscle feddback vs desired std in feature vector
-%     parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_seed2';
-% 
-%     labelVar1 = 'Scaling of muscle feedback';
-%     labelVar2 = 'Feat. vect.\nstd. dev.';
-% 
-%     var1 = [0, 0.5, 1, 2]';
-%     var2 = flip([0.005, 0.0075, 0.01, 0.015, 0.02]');
-% 
-%     numberFormatVar1 = '%f';
-%     numberFormatVar2 = '%f';
-% 
-%     figName = 'lambdaMuscleFB_vs_desiredStdZT';
+    % parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_flat';
+
+    % labelVar1 = 'Scaling of muscle feedback';
+    % labelVar2 = 'Feat. vect.\nstd. dev.';
+
+    % var1 = [0, 0.5, 1, 2]';
+    % var2 = flip([0.005, 0.0075, 0.01, 0.015, 0.02]');
+
+    % numberFormatVar1 = '%f';
+    % numberFormatVar2 = '%f';
+
+    % figName = 'lambdaMuscleFB_vs_desiredStdZT';
+
+    %%% actor regularizer vs. actor learning rate range
+    % parentFolder = '/home/aecgroup/aecdata/Results/actorLR_vs_regul_norm_feat';
+
+    % labelVar1 = 'actor regularizer';
+    % labelVar2 = 'actor LR range';
+
+    % var1 = [1e-4; 1e-5; 1e-6];
+    % var2 = [[1,1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
+
+    % numberFormatVar1 = '%1.0e';
+    % numberFormatVar2 = '[%1.1f, %1.1f]';
+
+    % figName = 'actorLR_vs_regul_norm_feat';
+
+    % parentFolder = '/home/aecgroup/aecdata/Results/lambdaMuscleFB_vs_desiredStdZT_seed2';
+
+    % labelVar1 = 'Scaling of muscle feedback';
+    % labelVar2 = 'Feat. vect.\nstd. dev.';
+
+    % var1 = [0, 0.5, 1, 2]';
+    % var2 = flip([0.005, 0.0075, 0.01, 0.015, 0.02]');
+
+    % numberFormatVar1 = '%f';
+    % numberFormatVar2 = '%f';
+
+    % figName = 'lambdaMuscleFB_vs_desiredStdZT';
 
     %%% actor LR vs variance
-%     parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsVariance_reg1e-5_1mio';
-% 
-%     labelVar1 = 'Actor LR [start, end]';
-%     labelVar2 = 'exploration var.';
-% 
-%     var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
-%     var2 = [[5e-5, 5e-5]; [5e-5, 0]; [1e-5, 1e-5]; [1e-5, 0]];
-% 
-%     numberFormatVar1 = '[%1.1f-%1.1f]';
-%     numberFormatVar2 = '[%1.0e-%1.0e]';
-% 
-%     figName = 'steplength_actorVsVariance_reg1e-5_1mio';
+    % parentFolder = '/home/aecgroup/aecdata/Results/steplength_actorVsVariance_reg1e-5_1mio';
+
+    % labelVar1 = 'Actor LR [start, end]';
+    % labelVar2 = 'exploration var.';
+
+    % var1 = [[1, 1]; [0.5, 0.5]; [1, 0]; [0.5, 0]];
+    % var2 = [[5e-5, 5e-5]; [5e-5, 0]; [1e-5, 1e-5]; [1e-5, 0]];
+
+    % numberFormatVar1 = '[%1.1f-%1.1f]';
+    % numberFormatVar2 = '[%1.0e-%1.0e]';
+
+    % figName = 'steplength_actorVsVariance_reg1e-5_1mio';
 
     %%% critic learning rate versus critic discount factor
-%     parentFolder = '/home/klimmasch/projects/results/wobbling_gammaVsCriticLR_1mio_normFeat_flat_lambdaMF1';
-% 
-%     labelVar2 = 'Critic LR [start, end]';
-%     labelVar1 = 'Discount Factor';
-% 
-%     var2 = [[1, 1]; [1, 0]; [0.5, 0.5]; [0.5, 0]];
-%     var1 = [0.1; 0.3; 0.6; 0.9];
-% 
-%     numberFormatVar2 = '[%1.1f-%1.1f]';
-%     numberFormatVar1 = '[%1.1f]';
-% 
-%     figName = 'gammaVsCriticLR_1mio_normFeat_flat';
-    
+    % parentFolder = '/home/klimmasch/projects/results/wobbling_gammaVsCriticLR_1mio_normFeat_flat_lambdaMF1';
+
+    % labelVar2 = 'Critic LR [start, end]';
+    % labelVar1 = 'Discount Factor';
+
+    % var2 = [[1, 1]; [1, 0]; [0.5, 0.5]; [0.5, 0]];
+    % var1 = [0.1; 0.3; 0.6; 0.9];
+
+    % numberFormatVar2 = '[%1.1f-%1.1f]';
+    % numberFormatVar1 = '[%1.1f]';
+
+    % figName = 'gammaVsCriticLR_1mio_normFeat_flat';
+
     %% metabolic costs versus discount factor
-%     parentFolder = '/home/aecgroup/aecdata/Results/GammaVsMetCostsBiasFineGrain'; %/GammaVsMetCostsBias GammaVsMetCosts2
-%     
-%     labelVar2 = 'Metab. Costs';
-%     labelVar1 = 'Discount Factor';
-% 
-%     var2 = [[0]; [0.01]; [0.05]; [0.1]];
-%     var1 = [0.1; 0.3; 0.6; 0.9];
-% 
-%     numberFormatVar2 = '%1.2f';
-%     numberFormatVar1 = '%1.1f';
-% 
-%     figName = 'gammaVsMetCost';
+    % parentFolder = '/home/aecgroup/aecdata/Results/GammaVsMetCostsBiasFineGrain'; %/GammaVsMetCostsBias GammaVsMetCosts2
+
+    % labelVar2 = 'Metab. Costs';
+    % labelVar1 = 'Discount Factor';
+
+    % var2 = [[0]; [0.01]; [0.05]; [0.1]];
+    % var1 = [0.1; 0.3; 0.6; 0.9];
+
+    % numberFormatVar2 = '%1.2f';
+    % numberFormatVar1 = '%1.1f';
+
+    % figName = 'gammaVsMetCost';
 
     %% metabolic costs versus discount factor: different parameters
     parentFolder = '/home/aecgroup/aecdata/Results/GammaVsMetCostsBiasFineGrain'; %/GammaVsMetCostsBias GammaVsMetCosts2
-    
+
     labelVar2 = 'Metab. Costs';
     labelVar1 = 'Discount Factor';
 
@@ -278,10 +307,18 @@ function plotPerformanceForParameters(modelAt)
 
         for f = 1 : length(subExperiments)
             try
+                subFolder = sprintf('modelAt%d', modelAt(trainedUntil));
                 model = load(sprintf('%s/%s/%s/model.mat', parentFolder, subExperiments(f).name, subFolder));
             catch
                % catch case when (sub-)experiment started, but has no test results yet
+               warning('%s/%s/%s/model.mat\ncould not be loaded.', parentFolder, subExperiments(f).name, subFolder);
                continue;
+               % try
+               %     subFolder = sprintf('modelAt%d', 950000);
+               %     model = load(sprintf('%s/%s/%s/model.mat', parentFolder, subExperiments(f).name, subFolder));
+               %  catch
+               %      warning('subFolder = sprintf(modelAt, 950000) didnt work out');
+               %  end
             end
             model = model.model;
 
@@ -289,10 +326,10 @@ function plotPerformanceForParameters(modelAt)
             % testInterval = 200;
 
             % hack for some older simulations:
-            if length(model.rlModel.actorLearningRange) == 1
-                value = model.rlModel.actorLearningRange;
-                model.rlModel.actorLearningRange = [value, value];
-            end
+            % if length(model.rlModel.actorLearningRange) == 1
+            %     value = model.rlModel.actorLearningRange;
+            %     model.rlModel.actorLearningRange = [value, value];
+            % end
 
             %%% Extract indicies
             %%% actor exploration variance range
@@ -304,12 +341,12 @@ function plotPerformanceForParameters(modelAt)
 %             jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
             %%% actor LR vs critic LR
-            % ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
-            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+            ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
+            jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% discount factor vs interval
-%             ind = find(ismember(var2, model.interval, 'rows'));
-%             jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
+            % ind = find(ismember(var2, model.interval, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
 
             %%% regularizer vs metabolic costs
             % ind = find(ismember(var2, model.rlModel.CActor.regularizer, 'rows'));
@@ -319,9 +356,9 @@ function plotPerformanceForParameters(modelAt)
             % ind = find(ismember(var2, model.rlModel.CActor.varianceRange, 'rows'));
             % jnd = find(ismember(var1, model.rlModel.criticLearningRange, 'rows'));
 
-            %%% actor LR vs variance range
-%             ind = find(ismember(var2, model.rlModel.CActor.varianceRange, 'rows'));
-%             jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+            %%% actor LR vs exploration variance range
+            % ind = find(ismember(var2, model.rlModel.CActor.varianceRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% actor LR vs weight init
 %             ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
@@ -331,18 +368,18 @@ function plotPerformanceForParameters(modelAt)
             % ind = find(ismember(var2, model.desiredStdZT, 'rows'));
             % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
-            %%% lambda muscle feedback  vs std in feature vector
+            %%% lambda muscle feedback vs std in feature vector
             % ind = find(ismember(var2, model.desiredStdZT, 'rows'));
             % jnd = find(ismember(var1, model.lambdaMuscleFB, 'rows'));
-            
-            %%% criticLR vs gamma
-            % ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
-            % jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
-            
+
+            %%% actor regularizer vs. actor learning rate range
+            % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
+
             %%% criticLR vs gamma
             ind = find(ismember(var2, model.metCostRange, 'rows'));
             jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
-            
+
             if isempty(ind) || isempty(jnd)
                 sprintf('%s \n was not included in the tabular', model.savePath)
                 continue
@@ -494,10 +531,10 @@ function plotPerformanceForParameters(modelAt)
                 %     error('Parameter range var1 has unsupported size of %d x %d.', size(var1));
                 % end
 
-                
+
                 ylabel(sprintf(labelVar2));
                 colorbar();
-                
+
                 if (figIter < 3)
                     title(titleStrings{subfigIter});
                 elseif figIter == 3
@@ -520,9 +557,9 @@ function plotPerformanceForParameters(modelAt)
                     end
                 elseif figIter == 5
                     if subfigIter == 1
-                        title('Reduction of Vergence Error [1st step, 2nd step]');
+                        title('Reduction of Vergence Error (1^{st}, 2^{nd}, 20^{th} step [%])');
                     elseif subfigIter == 2
-                        title('Reduction of Metabolic Costs [last step]');
+                        title('Reduction of Metabolic Costs (20^{th} step [%])');
                     elseif subfigIter == 3
                         % title('Wobbling Effect')
                         title('RMSE of Vergence Error')
