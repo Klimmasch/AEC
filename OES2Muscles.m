@@ -279,13 +279,13 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         if ((testIt == 1) & find(model.testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 6]);
             close all;
-            
-            % dirty hack to enable running cluster jobs with less memory
-%             testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
-%             if ~ exist(strcat(testSavePath, '/model'), 'file')
-%                 mkdir(testSavePath);
-%                 save(strcat(testSavePath, '/model'), 'model');
-%             end                
+        elseif find(model.testAt == t)
+            % temporary sollution for using less space in cluster calls
+            testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
+            if ~ exist(strcat(testSavePath, '/model'), 'file')
+                mkdir(testSavePath);
+                save(strcat(testSavePath, '/model'), 'model');
+            end   
         end
         rng(rngState); % restore state after testing, to not mess up the experiment
 
