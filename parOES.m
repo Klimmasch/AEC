@@ -29,13 +29,13 @@ function parOES(nWorkers)
 
 % experimentDirName = 'Discount Factor vs Interval' % no ';' intended.
 
-% varNames = {'gamma', 'metCostRange'};
-% var1 = {0.1, 0.3, 0.6, 0.9};
-% var2 = {[0], [0.01], [0.05], [0.1]};
-% varDescr = {'gamma', 'metCost'};
-% numberFormatVar1 = '%1.1f';
-% numberFormatVar2 = '[%1.2f]';
-% experimentDirName = 'GammaVsMetCostsBiasFineGrain'
+varNames = {'gamma', 'metCostRange'};
+var1 = {0.1, 0.3, 0.6, 0.9};
+var2 = {[0], [0.01], [0.025], [0.05]};
+varDescr = {'gamma', 'metCost'};
+numberFormatVar1 = '%1.1f';
+numberFormatVar2 = '[%1.3f]';
+experimentDirName = 'GammaVsMetCostsBias0.02'
 
 % varNames = {'gamma', 'metCostRange'};
 % var1 = {0.01, 0.07, 0.1, 0.2};
