@@ -479,11 +479,18 @@ else
 end
 
 % Actor weight regularization via factorial downscaling
-% how it works: actor.wp_ji = (1 - (actor.regularizer * actor.learnRate)) * actor.wp_ji;
+% how it works: actor.wp_ji = (1 - (actor.actorRegularizer * actor.learnRate)) * actor.wp_ji;
 % previously 1e-4 | 1e-3 / actorLRRange(1); ensures a regularization factor of 1-1e-3 at the beginning of the simulation.
-[found, regularizer, varParamArray] = parseparam(varParamArray, 'regularizer');
+[found, actorRegularizer, varParamArray] = parseparam(varParamArray, 'actorRegularizer');
 if (~found)
-    regularizer = 1e-5;
+    actorRegularizer = 1e-5;
+end
+
+% critic weight regularization via factorial downscaling
+% works as in the actor
+[found, criticRegularizer, varParamArray] = parseparam(varParamArray, 'criticRegularizer');
+if (~found)
+    criticRegularizer = 0;
 end
 
 % Variance of action output, i.e. variance of Gaussian policy [training_start, training_end]
@@ -578,7 +585,7 @@ if (~found)
 end
 
 PARAMRL = {actionSpace, criticLRRange, alpha_n, actorLRRange, xi, gamma, varianceRange, lambda, dimensions, weight_range, ...
-           continuous, deltaVar, rl_eta, fiScale, rlFlavour, varDec, regularizer, critLRDec, actLRDec, bias};
+           continuous, deltaVar, rl_eta, fiScale, rlFlavour, varDec, actorRegularizer, critLRDec, actLRDec, bias, criticRegularizer};
 
 if (~isempty(varParamArray))
     error('varParamArray contains unrecognized elements, p.e. %s', varParamArray{1});
