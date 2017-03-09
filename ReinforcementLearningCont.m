@@ -31,7 +31,7 @@ classdef ReinforcementLearningCont < handle
                 case 0
                     %% CACLA
                     % criticParams = {obj.inputDim, obj.weight_range(1), obj.alpha_v, obj.gamma};
-                    criticParams = {PARAM{9}(1), obj.weight_range(1), obj.criticLearningRange(1), PARAM{6}};
+                    criticParams = {PARAM{9}(1), obj.weight_range(1), obj.criticLearningRange(1), PARAM{6}, PARAM{21}};
                     obj.CCritic = CACLACritic(criticParams);
                 case 1
                     %% CRG

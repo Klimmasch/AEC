@@ -41,7 +41,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
     % user handling
     if (isempty(level))
-        level = 1 : 5;
+        level = 1 : 6;
     elseif (level(1) < 1)
         error('level(1) = %d must be > 0!', level(1));
     end

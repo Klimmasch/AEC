@@ -26,6 +26,7 @@ function parOES(nWorkers)
 % varDescr = {'cDiscout', 'interval'};
 % numberFormatVar1 = '%1.1f';
 % numberFormatVar2 = '%d';
+
 % experimentDirName = 'Discount Factor vs Interval' % no ';' intended.
 
 varNames = {'gamma', 'metCostRange'};
@@ -58,11 +59,80 @@ experimentDirName = 'GammaVsMetCostsBias0.02'
 % varDescr = {'regul', 'actorLR'};
 % numberFormatVar1 = '%1.0e';
 % numberFormatVar2 = '[%1.2f-%1.2f]';
-% experimentDirName = 'actorLR_vs_regul_norm_feat' % no ';' intended.
+
+% experimentDirName = 'actorLR_vs_regul_norm_feat' % no ';' intended. 
 
 % varNames = {'criticLRRange', 'actorLRRange'};
 % var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
 % var2 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
+
+% var1Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+% var2Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
+
+% varDescr = {'CriticLR', 'ActorLR'};
+% numberFormatVar1 = '[%1.2f-%1.2f]';
+% numberFormatVar2 = '[%1.2f-%1.2f]';
+
+% experimentDirName = 'CriticLR vs ActorLR';
+
+% varNames = {'criticLRRange', 'varianceRange'};
+% var1 = {[1, 0], [0.75, 0.75]};
+% var2 = {[1e-4, 0], [5e-5, 0], [1e-5, 0], [5e-6, 0], [1e-4, 5e-6], [5e-5, 5e-6], [1e-5, 5e-6], [5e-6, 5e-6], [5e-5, 5e-5], [1e-5, 1e-5], [5e-6, 5e-6]};
+
+% varDescr = {'critic', 'varRange'};
+% numberFormatVar1 = '[%1.2f-%1.2f]';
+% numberFormatVar2 = '[%1.0e-%1.0e]';
+
+% experimentDirName = 'varDec_new' 
+
+% varNames = {'actorLRRange', 'varianceRange'};
+% var1 = {[1, 1], [0.5, 0.5], [1, 0], [0.5, 0]};
+% var2 = {[1e-4, 1e-4], [1e-5, 1e-5], [1e-4, 1e-6], [1e-5, 1e-6], [1e-4, 0], [1e-5, 0]};
+
+% varDescr = {'actor', 'varRange'};
+% numberFormatVar1 = '[%1.1f-%1.1f]';
+% numberFormatVar2 = '[%1.0e-%1.0e]';
+
+% experimentDirName = 'steplength_actorVsVariance_reg1e-5' 
+
+% varNames = {'actorLRRange', 'varianceRange'};
+% var1 = {[1, 1], [0.5, 0.5], [1, 0], [0.5, 0]};
+% % var2 = {[5e-5, 5e-5], [5e-5, 0],[1e-5, 1e-5], [1e-5, 0], [4e-5, 4e-5], [4e-5, 0],[3e-5, 3e-5], [3e-5, 0], [2e-5, 2e-5], [2e-5, 0]};
+% var2 = {[4e-5, 4e-5], [4e-5, 0],[3e-5, 3e-5], [3e-5, 0], [2e-5, 2e-5], [2e-5, 0], [0.5e-5, 0.5e-5], [0.5e-5, 0]};
+% varDescr = {'actor', 'varRange'};
+% numberFormatVar1 = '[%1.1f-%1.1f]';
+% numberFormatVar2 = '[%1.0e-%1.0e]';
+% 
+% experimentDirName = 'steplength_actorVsVariance_reg1e-5_1mio' 
+
+% varNames = {'criticLRRange', 'gamma'};
+% var1 = {[1, 1], [0.5, 0.5], [1, 0], [0.5, 0]};
+% var2 = {0.1, 0.3, 0.6, 0.9};
+% varDescr = {'actor', 'varRange'};
+% numberFormatVar1 = '[%1.1f-%1.1f]';
+% numberFormatVar2 = '[%1.1f]';
+
+% experimentDirName = 'wobbling_gammaVsCriticLR_1mio' 
+
+varNames = {'gamma', 'metCostRange'};
+var1 = {0.1, 0.3, 0.6, 0.9}; 
+% var2 = {[0], [0.01], [0.025], [0.05]};
+var2 = {[0], [0.01], [0.05], [0.1]};
+varDescr = {'gamma', 'metCost'};
+numberFormatVar1 = '%1.1f';
+numberFormatVar2 = '[%1.2f]';
+experimentDirName = 'GammaVsMetCosts_0,5mio'
+
+% varNames = {'criticLRRange', 'metCostRange'};
+% var1 = {[1, 1], [1, 0], [0.5, 0.5], [0.5, 0]}; 
+% % var2 = {[0], [0.01], [0.025], [0.05]};
+% var2 = {[0.025, 0.025], [0.025, 0], [0.05, 0.05], [0.05, 0], [0, 0]};
+% varDescr = {'critLR', 'metCost'};
+% numberFormatVar1 = '[%1.1f-%1.1f]';
+% numberFormatVar2 = '[%1.3f-%1.3f]';
+% % 12 runs: 1992 mb per cpu on autumnchat
+% experimentDirName = 'CritLRVsMetCosts_1mio'
+
 % var1Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
 % var2Descr = {'[1,1]', '[1,0]', '[0.75,0.75]', '[0.75,0]', '[0.5,0.5]', '[0.5,0]', '[0.25,0.25]', '[0.25,0]'};
 % varDescr = {'CriticLR', 'ActorLR'};
@@ -102,6 +172,7 @@ iter = 1;
 for i = 1 : length(var1)
     for j = 1 : length(var2)
         paramValues(iter, :) = {cell2mat(var1(i)), cell2mat(var2(j))};
+        % paramStrings(iter, :) = {cell2mat(var1Descr(i)), cell2mat(var2Descr(j))}; % temporary solution for not renaming all folders ...
         paramStrings(iter, :) = {num2str(var1{i}, numberFormatVar1), num2str(var2{j}, numberFormatVar2)};
         iter = iter + 1;
     end

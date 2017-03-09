@@ -40,8 +40,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% Execute intermediate test procedure during training
-    % testAt = [500000 : 500000 : trainTime];
-    testAt = [250000 : 250000 : trainTime];
+    % testAt = [500000 : 500000 : trainTime]; % contained in configVar from now on
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
@@ -70,7 +69,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
-    plotIt = [uint8(1), uint8(1)];
+    plotIt = [uint8(1), uint8(0)];
 
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
@@ -124,7 +123,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % model = config(textureFiles, trainTime, testAt, sparseCodingType);
 
         % for configVar, at first copy values from before ...
-        standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'testAt', testAt, 'sparseCodingType', sparseCodingType};
+        standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'sparseCodingType', sparseCodingType};
         % ... and then add those handled in the function call
 
         paramVector = [standardParams, inputParams];
@@ -277,9 +276,16 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     for iter1 = 1 : (timeToTrain / model.interval)
         % intermediate testing during training
         rngState = rng; % store current state
-        if ((testIt == 1) & find(testAt == t)) % have to use single & here, because the last statement is a scalar
+        if ((testIt == 1) & find(model.testAt == t)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 6]);
             close all;
+        elseif find(model.testAt == t)
+            % temporary sollution for using less space in cluster calls
+            testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
+            if ~ exist(strcat(testSavePath, '/model'), 'file')
+                mkdir(testSavePath);
+                save(strcat(testSavePath, '/model'), 'model');
+            end   
         end
         rng(rngState); % restore state after testing, to not mess up the experiment
 
@@ -604,7 +610,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
     % plot results
     if (plotIt(1) == 1)
-        if (isempty(testAt))
+        if (isempty(model.testAt))
             model.allPlotSave([1 : 6]); % no test procedure during training -> no testPerformanceVsTraintime plot
         else
             model.allPlotSave([1 : 7]);
