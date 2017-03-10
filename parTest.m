@@ -92,23 +92,23 @@ function parTest(folders, nWorkers, runParallel)
                 continue
             end
             
-            if model.trainedUntil == model.trainTime
-                model.allPlotSave(1:7);
-                close all;
-                sprintf('finisched plotting')
-            else
-                sprintf('skip testing')
-            end
+%             if model.trainedUntil == model.trainTime
+%                 model.allPlotSave(1:7);
+%                 close all;
+%                 sprintf('finisched plotting')
+%             else
+%                 sprintf('skip testing')
+%             end
             % sprintf('trainedUntil: %d', model.trainedUntil)
             % if ~exist(sprintf('%s/modelAt%d/muscleActivityTrajectory.png', model.savePath, model.trainedUntil), 'file') % if the last image from the test procedure does not exists ...
-            % if ~any(model.testHist(find(model.testAt == model.trainedUntil))) % test if according field in testHist is empty
-%             if isempty(model.testResult7)
-%                 sprintf('could not find test results in %s\n starting test procedure.', savePath)
-%                 testModelContinuous(model, nStim, 1, 1, 2, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 6]);
-%                 close all;
-%             else
-%                 sprintf('skip testing for\n%s', savePath)
-%             end
+%             if ~any(model.testHist(find(model.testAt == model.trainedUntil))) % test if according field in testHist is empty
+            if isempty(model.testResult7)
+                sprintf('could not find test results in %s\n starting test procedure.', savePath)
+                testModelContinuous(model, nStim, 1, 1, 2, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 6]);
+                close all;
+            else
+                sprintf('skip testing for\n%s', savePath)
+            end
         end
     end
 end
