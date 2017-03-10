@@ -60,7 +60,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     %%% New renderer
     if (isempty(simulator))
         % simulator = OpenEyeSim('create'); % stable renderer
-        simulator = OpenEyeSimV5('create'); % experimental renderer
+        simulator = OpenEyeSimV5('create'); % latest renderer
 
         if (reinitRenderer == 0)
             simulator.initRenderer();
@@ -76,6 +76,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
         for i = 1 : nStim
             simulator.add_texture(i, texture{i});
         end
+        sprintf('%d textures added to the testing simulator', nStim)
     end
 
     %%% creating a new directory if (folderName ~= '/.')

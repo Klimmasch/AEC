@@ -91,7 +91,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         if (~isempty(fullDir))
             learnedFile = strcat(absoluteDir, '/', fullDir.name, '/model.mat');
 
-            if (exist(learnedFile, 'file') == 2) % indicates being a file (7 == directory)
+            % if (exist(learnedFile, 'file') == 2) % indicates being a file (7 == directory)
+            if exist(learnedFile, 'file') % indicates being a file (7 == directory)
                 useLearnedFile = [1, 1];
             else
                 warning('%s folder already exists, but no model.mat file was found.\nThis experiment will be reset.', fullDir.name);
