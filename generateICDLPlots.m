@@ -114,35 +114,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure B
-    % vergence error [deg] & MC opt approach [%] @ testing vs. iteration step
-    % Total error
-    % totelErrorHandle = figure();
-    % hold on;
-    % grid on;
-    % b = boxplot(model.testResult3);
 
-    % % remove outliers
-    % outl = findobj(b,'tag','Outliers');
-    % set(outl, 'Visible', 'off');
-
-    % % rescale axis to whiskers + offset
-    % upWi = findobj(b, 'tag', 'Upper Whisker');
-    % lowWi = findobj(b, 'tag', 'Lower Whisker');
-    % axis([0, model.testInterval + 1, ...
-    %       min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
-    %       max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
-
-    % if (nStim > 0)
-    %     xlabel(sprintf('Iteration step (#stimuli=%d)', nStim), 'FontSize', 12);
-    % else
-    %     xlabel('Iteration step', 'FontSize', 12);
-    % end
-    % ylabel('Vergence Error [deg]', 'FontSize', 12);
-    % title(sprintf('Total Vergence Error over Trial at Testing\nMean = %.4f°, Median = %.4f°,\n4*IQR = %.4f, RMSE = %.4f° at %dth step', ...
-    %               mean(model.testResult3(:, model.testInterval)), median(model.testResult3(:, model.testInterval)), ...
-    %               iqr(model.testResult3(:, model.testInterval)) * 4, sqrt(mean(model.testResult3(:, model.testInterval) .^ 2)), model.testInterval));
-
-    %%%%%%%%%%%%%%%%%%%%
     figB = figure();
     hold on;
     grid on;
@@ -182,12 +154,15 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
     plotpath = sprintf('%s/totalVergErrMetCostsApproachVsTraintimeALL', savePath);
     saveas(figB, plotpath, 'png');
     % close(figB);
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
     figB2 = figure();
     hold on;
 
     steps = 3;              % show just first steps iterations & last iteration
-    colors = ['b', 'r'];    % [vergErr, metCosts]
+    colors = ['b', 'g'];    % [w/o metcosts, w/ metcosts] for boxes
+    captions = cell(1, 2);
+    captions{1} = 'w/o met. costs';
+    captions{2} = 'w/ met. costs';
 
     % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
     tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
@@ -199,13 +174,38 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
         idx(end + 1 : end + 2) = i : 20 : 2 * 20;
     end
     tmpMatrixVergErr = tmpMatrixVergErr(:, idx);
-    tmpMatrixVergErr = [tmpMatrixVergErr(:, 1 : 2 * steps), tmpMatrixVergErr(:, end - 3 : end)];
+    tmpMatrixVergErr = [tmpMatrixVergErr(:, 1 : 2 * steps), tmpMatrixVergErr(:, end - 1 : end)];
     tmpMatrixMetApp = tmpMatrixMetApp(:, idx);
-    tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 3 : end)];
+    tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
+
+    % not the right way to do it -> mixes all members of a group together
+    % groups = [1;1;2;2;3;3;4;4];
 
     sub1 = subplot(2, 1, 1);
-    boxHandl = boxplot(tmpMatrixVergErr);
+    % pos = [1 1.33 2 2.33 3 3.33 4 4.33];
+    pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
+    boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    tmpHandle = findobj(boxHandl, 'type', 'text');
+    set(tmpHandle, 'Interpreter', 'tex');
     grid minor;
+
+    subBoxHandl = findobj(gca,'Tag','Box');
+    % subBoxHandl = findobj(boxHandl,'Tag','Box');
+
+    boxesArray = findobj(boxHandl);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors(1);
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors(2);
+            end
+        end
+    end
 
     % remove outliers
     outl = findobj(boxHandl, 'tag', 'Outliers');
@@ -214,16 +214,36 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
     % rescale axis to whiskers + offset
     upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
     lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
-    axis([-inf, inf, ... %0, 4 * steps + 1, ...
+    axis([0.9, 2.8, ...
           min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
           max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    l = legend(subBoxHandl(1 : 2), captions);
+    l.FontSize = 7;
+    l.Orientation = 'horizontal';
+    l.Location = 'southoutside';
 
     xlabel('Iteration step', 'FontSize', 12);
     ylabel(sprintf('Vergence\nError [deg]'), 'FontSize', 12);
 
     sub2 = subplot(2, 1, 2);
-    boxHandl2 = boxplot(tmpMatrixMetApp);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
     grid minor;
+
+    boxesArray = findobj(boxHandl2);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors(1);
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors(2);
+            end
+        end
+    end
 
     % remove outliers
     outl = findobj(boxHandl2, 'tag', 'Outliers');
@@ -232,7 +252,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
     % rescale axis to whiskers + offset
     upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
     lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
-    axis([-inf, inf, ... %0, 4 * steps + 1, ...
+    axis([0.9, 2.8, ...
           min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
           max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
 
