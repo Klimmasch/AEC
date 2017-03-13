@@ -1,5 +1,5 @@
 % Generates results plots for ICDL conference publication 2017
-function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, testAtiter)
+function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simulator) %, testAtiter)
 
     try
         modelHandle = [load(strcat(modelWoMetCostsFullPath, '/model.mat')), ...
@@ -38,38 +38,50 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
 
     markerStyles = ['x', 'x'];  % [w/ metCosts, w/o metCosts]
     markerSizes = [5, 5];       % [vergErr, metCosts]
-    colors = ['b', 'r'];        % [vergErr, metCosts]
+    colors = {'b', 'r'};        % [vergErr, metCosts]
 
     for i = 1 : length(modelHandle)
-        % sort fields in ascending order
-        % [modelHandle(i).model.testAt, sortIndex] = sort(modelHandle(i).model.testAt);
-        %  modelHandle(i).model.testHist = modelHandle(i).model.testHist(sortIndex, :);
+        % %%% RMSE vergence error [deg] -> 1st y-axis
+        % % color trick -> black entries in legend
+        % if (i == 1)
+        %     axTmp = plot(modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
+        %                  'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
 
-        %%% RMSE vergence error [deg] -> 1st y-axis
+        %     plot(modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
+        %          'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
+        % else
+        %     axTmp = plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
+        %                  'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
+
+        %     plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
+        %          'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
+        % end
+        %%% Reduction of vergence error [median %] -> 1st y-axis
         % color trick -> black entries in legend
         if (i == 1)
-            axTmp = plot(modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
+            axTmp = plot(modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 2), ...
                          'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
 
-            plot(modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
-                 'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors(1), 'LineWidth', lineWidths(1));
+            plot(modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 2), ...
+                 'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
         else
-            axTmp = plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
+            axTmp = plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 2), ...
                          'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
 
-            plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
-                 'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors(1), 'LineWidth', lineWidths(1));
+            plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 2), ...
+                 'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
         end
 
         lineHandles(i) = axTmp;
 
         if (i == 1)
             ax1 = gca; % current axes
-            ax1.YColor = colors(1);
+            ax1.YColor = colors{1};
             ax1.XAxis.Label.String = 'Traintime';
             ax1.XAxis.Label.FontSize = 12;
             ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
-            ax1.YAxis.Label.String = 'RMSE(verg_{err}) [deg]';
+            % ax1.YAxis.Label.String = 'RMSE(verg_{err}) [deg]';
+            ax1.YAxis.Label.String = sprintf('Vergence Error\nw.r.t. Opt. median [%%]'); %'Reduction verg_{err} median [%]';
             ax1.YAxis.Label.FontSize = 12;
 
             ax2 = axes('Position', ax1.Position, ...
@@ -78,39 +90,75 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
         end
 
         %%% mean, std deltaMetCost -> 2nd y-axis
-        % TODO scale to %
-        [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 5), modelHandle(i).model.testHist(1 : end - adjust, 6), 'alpha');
+        % [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), ...
+        %                        modelHandle(i).model.testHist(1 : end - adjust, 5), ...
+        %                        modelHandle(i).model.testHist(1 : end - adjust, 6), 'alpha');
 
+        % median MCA [%] with iqr as shaded background area
+        % [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), ...
+        %                        100 - modelHandle(i).model.testHist(1 : end - adjust, 4), ...
+        %                        modelHandle(i).model.testHist(1 : end - adjust, 6) * 0.5, 'alpha');
+        % hl.LineStyle = 'none';
+        % hl.Color = colors{2};
+        % hp.FaceColor = colors{2};
+
+        % hl.Parent = ax2;
+        % hp.Parent = ax2;
+
+        % [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), ...
+        %                        modelHandle(i).model.testHist(1 : end - adjust, 5), ...
+        %                        modelHandle(i).model.testHist(1 : end - adjust, 6), 'transparency', 1);
+
+        % hl = plot(ax2, modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 5), ...
+        %           'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(2), 'Color', colors{2}, 'LineWidth', lineWidths(2));
+
+        % hl.Parent = ax2;
+        % hp.Parent = ax2;
+
+        % hl.Marker = markerStyles(i);
+        % hl.MarkerSize = markerSizes(2);
+
+        % hl.Color = colors{2};
+        % % hp.FaceColor = colors{2};
+        % hl.LineWidth = lineWidths(2);
+        % hl.LineStyle = lineStyles(i);
+        [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), ...
+                               100 - modelHandle(i).model.testHist(1 : end - adjust, 5), ...
+                               modelHandle(i).model.testHist(1 : end - adjust, 6) * 0.5, 'alpha');
         hl.Parent = ax2;
         hp.Parent = ax2;
 
         hl.Marker = markerStyles(i);
         hl.MarkerSize = markerSizes(2);
 
-        hl.Color = colors(2);
-        hp.FaceColor = colors(2);
+        hl.Color = colors{2};
+        hp.FaceColor = colors{2};
         hl.LineWidth = lineWidths(2);
         hl.LineStyle = lineStyles(i);
 
         if (i == 1)
             % |\DeltaMC_{opt}| = |MC_{actual} - MC_{optimal}| / |MC_{start} - MC_{optimal}|
-            ax2.YAxis.Label.String = '|\DeltaMC_{opt}| [%]';
+            % ax2.YAxis.Label.String = '|\DeltaMC_{opt}| [%]';
+            ax2.YAxis.Label.String = sprintf('Metabolic Costs\nw.r.t. Opt. median [%%]'); %'Reduction metabolic_{costs} median [%]';
             ax2.YAxis.Label.FontSize = 12;
-            ax2.YColor = colors(2);
+            ax2.YColor = colors{2};
+            ax2.YAxis.Label.Rotation = -90;
         end
     end
 
-    % ax1.YAxis.Limits = [0, inf];
-    ax2.YAxis.Limits = [0, inf];
+    ax1.YAxis.Limits = [-10, 110];
+    ax2.YAxis.Limits = [-10, 110];
 
     l = legend(lineHandles);
     l.Box = 'off';
     l.String{1} = 'w/o met. costs';
     l.String{2} = 'w/ met. costs';
 
-    plotpath = sprintf('%s/testPerformanceDMCVsTraintime', savePath);
+    % ax2.YAxis.Label.Position(1) = ax2.YAxis.Label.Position(1) * 1.5;
+
+    plotpath = sprintf('%s/FigA_testPerformanceDMCVsTraintime', savePath);
     saveas(figA, plotpath, 'png');
-    % close(figA);
+    close(figA);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure B
@@ -120,7 +168,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
     grid on;
 
     steps = 3;              % show just first steps iterations & last iteration
-    colors = ['b', 'r'];    % [vergErr, metCosts]
+    % colors = ['b', 'r'];    % [vergErr, metCosts]
 
     % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
     tmpMatrix = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3, ...
@@ -151,21 +199,23 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
     ylabel('Vergence Error [deg]', 'FontSize', 12);
     title(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
 
-    plotpath = sprintf('%s/totalVergErrMetCostsApproachVsTraintimeALL', savePath);
+    plotpath = sprintf('%s/FigB1_totalVergErrMetCostsApproachVsTraintimeALL', savePath);
     saveas(figB, plotpath, 'png');
-    % close(figB);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+    close(figB);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     figB2 = figure();
     hold on;
 
     steps = 3;              % show just first steps iterations & last iteration
-    colors = ['b', 'g'];    % [w/o metcosts, w/ metcosts] for boxes
+    colors = {'b', 'g'};    % [w/o metcosts, w/ metcosts] for boxes
     captions = cell(1, 2);
     captions{1} = 'w/o met. costs';
     captions{2} = 'w/ met. costs';
 
     % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
-    tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
+    % tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
+    tmpMatrixVergErr = horzcat(modelHandle(1).model.vergenceAngleApproach, modelHandle(2).model.vergenceAngleApproach);
     tmpMatrixMetApp = horzcat(modelHandle(1).model.metCostsApproach, modelHandle(2).model.metCostsApproach);
 
     % sort by iteration step
@@ -198,11 +248,11 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
         idx2(6 : 7) = [];
         if (mod(i, 2) == 1)
             for j = 1 : length(idx2)
-                boxesArray(idx2(j)).Color = colors(1);
+                boxesArray(idx2(j)).Color = colors{1};
             end
         else
             for j = 1 : length(idx2)
-                boxesArray(idx2(j)).Color = colors(2);
+                boxesArray(idx2(j)).Color = colors{2};
             end
         end
     end
@@ -218,13 +268,16 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
           min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
           max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
 
-    l = legend(subBoxHandl(1 : 2), captions);
-    l.FontSize = 7;
-    l.Orientation = 'horizontal';
-    l.Location = 'southoutside';
+    % xlabel('Iteration step', 'FontSize', 12);
+    % ylabel(sprintf('Vergence\nError [deg]'), 'FontSize', 12);
+    ylabel(sprintf('Vergence Error\nReduction [%%]'), 'FontSize', 12);
 
-    xlabel('Iteration step', 'FontSize', 12);
-    ylabel(sprintf('Vergence\nError [deg]'), 'FontSize', 12);
+    %% put ylabel right and rotate text
+    % set(sub1, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub1,'yaxislocation','left');
+    % set(lh,'position', p);
 
     sub2 = subplot(2, 1, 2);
     boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
@@ -236,11 +289,11 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
         idx2(6 : 7) = [];
         if (mod(i, 2) == 1)
             for j = 1 : length(idx2)
-                boxesArray(idx2(j)).Color = colors(1);
+                boxesArray(idx2(j)).Color = colors{1};
             end
         else
             for j = 1 : length(idx2)
-                boxesArray(idx2(j)).Color = colors(2);
+                boxesArray(idx2(j)).Color = colors{2};
             end
         end
     end
@@ -257,13 +310,367 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath) %, t
           max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
 
     xlabel('Iteration step', 'FontSize', 12);
-    ylabel(sprintf('Opt. Metabolic\nCosts Approach [%%]'), 'FontSize', 12);
+    % ylabel(sprintf('Opt. Metabolic\nCosts Approach [%%]'), 'FontSize', 12);
+    ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'FontSize', 12);
 
-    suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    %% put ylabel right and rotate text
+    % set(sub2, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub2, 'yaxislocation', 'left');
+    % set(lh, 'position', p);
 
-    plotpath = sprintf('%s/totalVergErrMetCostsApproachVsTraintimeSub2', savePath);
+    % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+
+    l = legend(subBoxHandl([2, 1]), captions);
+    l.FontSize = 7;
+    l.Orientation = 'horizontal';
+    l.Location = 'southoutside';
+
+    %% repositioning subfigures
+    sub1.Position(3 : 4) = sub2.Position(3 : 4);
+    % sub1.Position(2) = sub1.Position(2) * 0.95;
+    % sub2.Position(2) = sub2.Position(2) * 0.9;
+    l.Position(2) = l.Position(2) * 1.075;
+
+    plotpath = sprintf('%s/FigB2_totalVergErrMetCostsApproachVsTraintimeSub2', savePath);
     saveas(figB2, plotpath, 'png');
+    close(figB2);
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure C
     % muscleplain trajectories
+
+    % simulator check
+    % try
+    %     exist(simulator)
+    % catch
+    %     simulator = prepareSimulator([]);
+    % end
+
+    %%% Saturation function that keeps motor commands in [0, 1]
+    %   corresponding to the muscelActivity/metabolicCost tables
+    function [cmd] = checkCmd(cmd)
+        i0 = cmd < 0;
+        cmd(i0) = 0;
+        i1 = cmd > 1;
+        cmd(i1) = 1;
+    end
+
+    % preperation
+    rng(667);
+    objDist = [0.5, 6];
+    % startVergErr = [-2, 0, 2];
+    startVergErr = [-2, 2];
+    numIters = 20;
+    stimuliIndices = [1];
+
+    % colors{1} = 'w/o met. costs'
+    % colors{2} = 'w/  met. costs'
+    % colors{i} = {traj_line(1:10)_line, traj_line(1:10)_MarkerEdgeColor, traj_line(1:10)_MarkerFaceColor,
+    %              traj_line(11:20),  traj_line(1:10)_MarkerEdgeColor, traj_line(1:10)_MarkerFaceColor
+    %              end_fixation_MarkerEdgeColor, end_fixation_MarkerFaceColor}
+    %
+    % orange = [1, 94 / 255, 41 / 255],
+    % lightOrange = [1, 201 / 255, 41 / 255]
+    colors = {{colors{1}, 'k', colors{1}, [1, 201 / 255, 41 / 255], 'k', 'y'}, ...
+              {colors{2}, 'k', colors{2}, [1, 94 / 255, 41 / 255], 'k', 'm'}};
+
+    lineStyles = {'-', '-'};
+    markers = {'o', 'o'}; % {traj_line(1:10), end_fixation}
+
+    % if strcmp(initMethod, 'advanced')
+    %     initMethod = uint8(0);
+
+    % elseif strcmp(initMethod, 'fixed')
+    %     initMethod = uint8(1);
+    %     % hand-picked inits for muscles, used in initMethod 'random'
+    %     cmdInit = [[0.03; 0.16], [0.05; 0.12], [0.07; 0.12], [0.04; 0.08], [0.06; 0.06], [0.08; 0.06]];
+
+    % elseif strcmp(initMethod, 'simple')
+    %     initMethod = uint8(2);
+
+    % elseif strcmp(initMethod, 'perturbed')
+    %     initMethod = uint8(3);
+
+    % else
+    %     error('Muscle initialization method %s not supported.', initMethod);
+    % end
+    initMethod = uint8(0);
+    % hand-picked inits for muscles, used in initMethod 'random'
+    % cmdInit = [[0.03; 0.16], [0.05; 0.12], [0.07; 0.12], [0.04; 0.08], [0.06; 0.06], [0.08; 0.06]];
+    cmdInit = [[0.075; 0.12], [0.075; 0.12], [0.075; 0.12], [0.06; 0.1], [0.06; 0.1], [0.06; 0.1]];
+
+    nStimuli = length(stimuliIndices);
+    trajectory = zeros(length(objDist), length(startVergErr), nStimuli, numIters + 1, 2);
+    trajectory2 = zeros(length(objDist), length(startVergErr), nStimuli, numIters + 1, 2);
+
+    %% main loop
+    command = [0.07, 0.1];
+    % vergErrMax = 2;
+    % angleMin = (atand(modelHandle(1).model.baseline / (2 * modelHandle(1).model.objDistMax)) * 2) - vergErrMax; %angle for both eyes
+    % angleMax = (atand(modelHandle(1).model.baseline / (2 * modelHandle(1).model.objDistMin)) * 2) + vergErrMax;
+    angleMinT = 0;
+    angleMaxT = (atand(modelHandle(1).model.baseline / (2 * modelHandle(1).model.objDistMax)) * 2) + 6;
+
+    for odIndex = 1 : length(objDist)
+        angleDes = 2 * atand(modelHandle(1).model.baseline / (2 * objDist(odIndex)));
+
+        for stimIter = 1 : nStimuli
+            currentTexture = stimuliIndices(stimIter);
+
+            for vergErrIndex = 1 : length(startVergErr)
+                % muscle init
+                if (initMethod == 0)
+                    % catch negative/divergent vergence angle
+                    [command, angleNew] = modelHandle(1).model.getMFedood(objDist(odIndex), min(startVergErr(vergErrIndex), modelHandle(1).model.getVergErrMax(objDist(odIndex))));
+                elseif (initMethod == 1)
+                    command = cmdInit(:, stimIter);
+                    angleNew = modelHandle(1).model.getAngle(command);
+                elseif (initMethod == 2)
+                    [command, angleNew] = modelHandle(1).model.getMF2(objDist(odIndex), startVergErr(vergErrIndex));
+                end
+                trajectory(odIndex, vergErrIndex, stimIter, 1, :) = command;
+
+                for iter = 1 : numIters
+                    modelHandle(1).model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3);
+
+                    for i = 1 : length(modelHandle(1).model.scModel)
+                        modelHandle(1).model.preprocessImage(i, 1);
+                        modelHandle(1).model.preprocessImage(i, 2);
+                        currentView{i} = vertcat(modelHandle(1).model.patchesLeft{i}, modelHandle(1).model.patchesRight{i});
+                    end
+
+                    [bfFeature, ~, ~] = modelHandle(1).model.generateFR(currentView); % encode image patches
+
+                    if (modelHandle(1).model.normFeatVect == 0)
+                        %% Standard feature vector compilation:
+                        % append muscle activities to basis function vector
+                        feature = [bfFeature; command * modelHandle(1).model.lambdaMuscleFB];
+                    else
+                        %% Normalized feature vector:
+                        % z-transform raw feature vector (no muscle feedback scaling)
+                        feature = [bfFeature; command];
+                        for i = 1 : length(feature)
+                            feature(i) = modelHandle(1).model.onlineNormalize(modelHandle(1).model.trainedUntil, feature(i), i, 0);
+                        end
+                        feature = [feature(1 : end - 2); feature(end - 1 : end) * modelHandle(1).model.lambdaMuscleFB];
+                    end
+
+                    %% bias analysis
+                    if (modelHandle(1).model.rlModel.bias > 0)
+                        feature = [feature; modelHandle(1).model.rlModel.bias];
+                    end
+
+                    relativeCommand = modelHandle(1).model.rlModel.act(feature);    % generate change in muscle activity
+                    command = checkCmd(command + relativeCommand);  % calculate new muscle activities
+                    angleNew = modelHandle(1).model.getAngle(command) * 2;          % transform into angle
+
+                    trajectory(odIndex, vergErrIndex, stimIter, iter + 1, :) = command;
+                end
+            end
+        end
+    end
+
+    for odIndex = 1 : length(objDist)
+        angleDes = 2 * atand(modelHandle(2).model.baseline / (2 * objDist(odIndex)));
+
+        for stimIter = 1 : nStimuli
+            currentTexture = stimuliIndices(stimIter);
+
+            for vergErrIndex = 1 : length(startVergErr)
+                % muscle init
+                if (initMethod == 0)
+                    % catch negative/divergent vergence angle
+                    [command, angleNew] = modelHandle(2).model.getMFedood(objDist(odIndex), min(startVergErr(vergErrIndex), modelHandle(2).model.getVergErrMax(objDist(odIndex))));
+                elseif (initMethod == 1)
+                    command = cmdInit(:, stimIter);
+                    angleNew = modelHandle(2).model.getAngle(command);
+                elseif (initMethod == 2)
+                    [command, angleNew] = modelHandle(2).model.getMF2(objDist(odIndex), startVergErr(vergErrIndex));
+                end
+                trajectory2(odIndex, vergErrIndex, stimIter, 1, :) = command;
+
+                for iter = 1 : numIters
+                    modelHandle(2).model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3);
+
+                    for i = 1 : length(modelHandle(2).model.scModel)
+                        modelHandle(2).model.preprocessImage(i, 1);
+                        modelHandle(2).model.preprocessImage(i, 2);
+                        currentView{i} = vertcat(modelHandle(2).model.patchesLeft{i}, modelHandle(2).model.patchesRight{i});
+                    end
+
+                    [bfFeature, ~, ~] = modelHandle(2).model.generateFR(currentView); % encode image patches
+
+                    if (modelHandle(2).model.normFeatVect == 0)
+                        %% Standard feature vector compilation:
+                        % append muscle activities to basis function vector
+                        feature = [bfFeature; command * modelHandle(2).model.lambdaMuscleFB];
+                    else
+                        %% Normalized feature vector:
+                        % z-transform raw feature vector (no muscle feedback scaling)
+                        feature = [bfFeature; command];
+                        for i = 1 : length(feature)
+                            feature(i) = modelHandle(2).model.onlineNormalize(modelHandle(2).model.trainedUntil, feature(i), i, 0);
+                        end
+                        feature = [feature(1 : end - 2); feature(end - 1 : end) * modelHandle(2).model.lambdaMuscleFB];
+                    end
+
+                    %% bias analysis
+                    if (modelHandle(2).model.rlModel.bias > 0)
+                        feature = [feature; modelHandle(2).model.rlModel.bias];
+                    end
+
+                    relativeCommand = modelHandle(2).model.rlModel.act(feature);    % generate change in muscle activity
+                    command = checkCmd(command + relativeCommand);  % calculate new muscle activities
+                    angleNew = modelHandle(2).model.getAngle(command) * 2;          % transform into angle
+
+                    trajectory2(odIndex, vergErrIndex, stimIter, iter + 1, :) = command;
+                end
+            end
+        end
+    end
+
+    %% Plot results
+    figC = figure();
+    hold on;
+
+    title('Object Fixation Trajectories');
+
+    % pcHandle = pcolor(modelHandle(1).model.degreesIncRes); % use vergence degree as color dimension (background)
+    pcHandle = pcolor(modelHandle(1).model.metCostsIncRes);  % use metabolic costs as color dimension (background)
+    % shading interp;
+    set(pcHandle, 'EdgeColor', 'none');
+
+    % colormap(createCM(3));
+    cb = colorbar();
+    % cb.Label.String = 'vergence degree'; % use vergence degree as color dimension (background)
+    cb.Label.String = 'metabolic costs';   % use metabolic costs as color dimension (background)
+
+    ax = gca;
+    set(ax, 'Layer','top'); % bring axis to the front
+
+    ax.XTick = linspace(1, size(modelHandle(1).model.degreesIncRes, 2), 11);
+    ax.YTick = linspace(1, size(modelHandle(1).model.degreesIncRes, 1), 11);
+
+    ax.XTickLabel = strsplit(num2str(linspace(0, 10, 11)));
+    ax.YTickLabel = strsplit(num2str(linspace(0, 20, 11)));
+
+    axis([1, size(modelHandle(1).model.degreesIncRes, 2), 1, size(modelHandle(1).model.degreesIncRes, 1)]);
+    axPos = ax.Position;
+
+    % drow objects + offsets
+    for odIndex = 1 : length(objDist)
+        % draw +1 pixel offset in respect to desired vergence distance
+        [lateralDes, medialDes] = modelHandle(1).model.getAnglePoints(objDist(odIndex), 0.22);
+        plot(lateralDes ./ modelHandle(1).model.scaleFacLR, medialDes ./ modelHandle(1).model.scaleFacMR, ...
+             'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1.8);
+
+        % draw -1 pixel offset in respect to desired vergence distance
+        [lateralDes, medialDes] = modelHandle(1).model.getAnglePoints(objDist(odIndex), -0.22);
+        plot(lateralDes ./ modelHandle(1).model.scaleFacLR, medialDes ./ modelHandle(1).model.scaleFacMR, ...
+             'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1.8);
+
+        % draw a line of points into the plane that represent the desired vergence
+        [lateralDes, medialDes] = modelHandle(1).model.getAnglePoints(objDist(odIndex), 0);
+        plot(lateralDes ./ modelHandle(1).model.scaleFacLR, medialDes ./ modelHandle(1).model.scaleFacMR, ...
+             'color', [0.6510, 1.0000, 0.6588], 'LineWidth', 1.8);
+
+        % add corresponding distance value to desired vergence graph
+        text(lateralDes(end - ceil(length(lateralDes) / 10)) / modelHandle(1).model.scaleFacLR, ...
+             medialDes(end - ceil(length(medialDes) / 10)) / modelHandle(1).model.scaleFacMR, ...
+             sprintf('%3.1f m', objDist(odIndex)));
+    end
+
+    % draw trajectories
+    for odIndex = 1 : length(objDist)
+        for stim = 1 : length(stimuliIndices)
+            for vergErrIndex = 1 : length(startVergErr)
+                % first plot all
+                hl2 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ modelHandle(1).model.scaleFacLR + 1, ...
+                           reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ modelHandle(1).model.scaleFacMR + 1, ...
+                           'color', colors{1}{4}, 'LineWidth', 1); % 'LineStyle', lineStyles(i)
+
+                % plot iter 1-interval in differen color if numIters >= model.interval
+                if (numIters >= modelHandle(1).model.interval)
+                    hl1 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, 1 : (modelHandle(1).model.interval), 1), [modelHandle(1).model.interval, 1]) ./ modelHandle(1).model.scaleFacLR + 1, ...
+                               reshape(trajectory(odIndex, vergErrIndex, stim, 1 : (modelHandle(1).model.interval), 2), [modelHandle(1).model.interval, 1]) ./ modelHandle(1).model.scaleFacMR + 1, ...
+                               'Color', colors{1}{1}, 'LineStyle', lineStyles{1}, 'LineWidth', 1, 'Marker', markers{1}, 'MarkerEdgeColor', colors{1}{2}, 'MarkerFaceColor',  colors{1}{3}, 'MarkerSize', 4);
+                else
+                    hl1 = [];
+                end
+
+                % plot init point
+                % plot(trajectory(odIndex, vergErrIndex, stim, 1, 1) / modelHandle(1).model.scaleFacLR + 1, ...
+                %      trajectory(odIndex, vergErrIndex, stim, 1, 2) / modelHandle(1).model.scaleFacMR + 1, ...
+                %     'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
+
+                % plot destination point
+                hl3 = plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / modelHandle(1).model.scaleFacLR + 1, ...
+                           trajectory(odIndex, vergErrIndex, stim, end, 2) / modelHandle(1).model.scaleFacMR + 1, ...
+                           'LineWidth', 1, 'Marker', markers{2}, 'MarkerEdgeColor', colors{1}{5}, 'MarkerFaceColor',  colors{1}{6}, 'MarkerSize', 4);
+            end
+        end
+    end
+
+    for odIndex = 1 : length(objDist)
+        for stim = 1 : length(stimuliIndices)
+            for vergErrIndex = 1 : length(startVergErr)
+                % first plot all
+                hl5 = plot(reshape(trajectory2(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ modelHandle(2).model.scaleFacLR + 1, ...
+                           reshape(trajectory2(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ modelHandle(2).model.scaleFacMR + 1, ...
+                           'color', colors{2}{4}, 'LineWidth', 1); % 'LineStyle', lineStyles(i)
+
+                % plot iter 1-interval in differen color if numIters >= model.interval
+                if (numIters >= modelHandle(2).model.interval)
+                    hl4 = plot(reshape(trajectory2(odIndex, vergErrIndex, stim, 1 : (modelHandle(2).model.interval), 1), [modelHandle(2).model.interval, 1]) ./ modelHandle(2).model.scaleFacLR + 1, ...
+                               reshape(trajectory2(odIndex, vergErrIndex, stim, 1 : (modelHandle(2).model.interval), 2), [modelHandle(2).model.interval, 1]) ./ modelHandle(2).model.scaleFacMR + 1, ...
+                               'Color', colors{2}{1}, 'LineStyle', lineStyles{2}, 'LineWidth', 1, 'Marker', markers{1}, 'MarkerEdgeColor', colors{2}{2}, 'MarkerFaceColor',  colors{2}{3}, 'MarkerSize', 4);
+                else
+                    hl4 = [];
+                end
+
+                % plot init point
+                % plot(trajectory2(odIndex, vergErrIndex, stim, 1, 1) / modelHandle(2).model.scaleFacLR + 1, ...
+                %      trajectory2(odIndex, vergErrIndex, stim, 1, 2) / modelHandle(2).model.scaleFacMR + 1, ...
+                %     'MarkerEdgeColor','k', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
+
+                % plot destination point
+                hl6 = plot(trajectory2(odIndex, vergErrIndex, stim, end, 1) / modelHandle(2).model.scaleFacLR + 1, ...
+                           trajectory2(odIndex, vergErrIndex, stim, end, 2) / modelHandle(2).model.scaleFacMR + 1, ...
+                           'LineWidth', 1, 'Marker', markers{2}, 'MarkerEdgeColor', colors{2}{5}, 'MarkerFaceColor',  colors{2}{6}, 'MarkerSize', 4);
+            end
+        end
+    end
+
+    % just use last handle instanciation for legend
+    % hl1.DisplayName = sprintf('1..%dth  iteration', modelHandle(1).model.interval);
+    % hl2.DisplayName = sprintf('%d..%dth iteration', modelHandle(1).model.interval, numIters);
+    % hl3.DisplayName = 'end fixation w/o met. costs';
+
+    % hl4.DisplayName = sprintf('1..%dth  iteration', modelHandle(1).model.interval);
+    % hl5.DisplayName = sprintf('%d..%dth iteration', modelHandle(1).model.interval, numIters);
+    % hl6.DisplayName = 'end fixation w/  met. costs';
+
+    gKey = {sprintf('1..%dth  iteration', modelHandle(1).model.interval), ...
+            sprintf('%d..%dth iteration', modelHandle(1).model.interval, numIters), ...
+            'end fixation w/o met. costs', ...
+            sprintf('1..%dth  iteration', modelHandle(1).model.interval), ...
+            sprintf('%d..%dth iteration', modelHandle(1).model.interval, numIters), ...
+            'end fixation w/  met. costs'};
+
+    %% repositioning subfigures
+    ax.Position = axPos;
+    l = gridLegend([hl1, hl2, hl3, hl4, hl5, hl6], 3, gKey, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
+    % l.Box = 'off';
+
+    xlabel('lateral rectus activation [%]');
+    ylabel('medial rectus activation [%]');
+
+    l.Position(2) = l.Position(2) * 0.25;
+
+    plotpath = sprintf('%s/FigC_muscleActivityTrajectories', savePath);
+    saveas(figC, plotpath, 'png');
+    close(figC);
 end
