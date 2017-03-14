@@ -580,6 +580,31 @@ classdef Model < handle
 
             command = [mfLR; mfMR];
         end
+        
+        %%% Calculates muscle force for two muscles
+        %   drawn from all permitted mf(l, m) ^= f(objDist, desVergErr), where l, m >= 0
+        %   == get muscle force equally distributed over object distance 
+        %   BUT
+        function [command, angleInit] = getMFedoodD(this, objDist, desVergErr, Distance)
+            angleCorrect = 2 * atand(this.baseline / (2 * objDist));
+            angleInit = angleCorrect - desVergErr;
+
+            if Distance > 0.1
+                Distance = 0.1
+                sprintf('your Distance was too big ;) I set it to 0.1 ;-*')
+            end
+            % angleInit is the angle for both eyes, but degreesIncRes only
+            % contains angles for one eye
+            [xi, yi] = find(this.degreesIncRes <= (angleInit / 2) + this.degDiff & this.degreesIncRes >= (angleInit / 2) - this.degDiff);
+
+            i = find((yi .* this.scaleFacLR) >= Distance);
+
+            % transform indizes to muscle activities
+            mfMR = xi(i(1)) * this.scaleFacMR;
+            mfLR = yi(i(1)) * this.scaleFacLR;
+
+            command = [mfLR; mfMR];
+        end
 
         %%% Maps {objDist, desVergErr} -> {medialRectusActivations, lateralRectusActivations},
         %   i.e. calculates all muscle activity combinations corresponding to specified {objDist, desVergErr}
@@ -1187,7 +1212,8 @@ classdef Model < handle
                 plot(this.testAt, this.testHist(:, 1), 'x-', 'LineWidth', 1.3);
 
                 xlabel('Traintime', 'FontSize', 12);
-                ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
+                % ylabel('RMSE(verg_{err}) [deg]', 'FontSize', 12);
+                ylabel('Mean(Red. of VE [%])', 'FontSize', 12);
 
                 % mean, std vergErr
                 subplot(2, 2, 2);
@@ -1203,7 +1229,8 @@ classdef Model < handle
                 hl.LineWidth = 1.6;
 
                 xlabel('Traintime', 'FontSize', 12);
-                ylabel('|verg_{err}| [deg]', 'FontSize', 12);
+                % ylabel('|verg_{err}| [deg]', 'FontSize', 12);
+                ylabel('Median, IQR(Red. of VE [%])', 'FontSize', 12);
 
                 % RMSE deltaMetCost
                 subplot(2, 2, 3);
@@ -1212,7 +1239,8 @@ classdef Model < handle
                 plot(this.testAt, this.testHist(:, 4), 'x-', 'LineWidth', 1.3);
 
                 xlabel('Traintime', 'FontSize', 12);
-                ylabel('RMSE(|\Deltamc|)', 'FontSize', 12);
+                % ylabel('RMSE(|\Deltamc|)', 'FontSize', 12);
+                ylabel('Mean(Red. of MetCost [%])', 'FontSize', 12);
 
                 % mean, std deltaMetCost
                 subplot(2, 2, 4);
@@ -1228,7 +1256,8 @@ classdef Model < handle
                 hl.LineWidth = 1.6;
 
                 xlabel('Traintime', 'FontSize', 12);
-                ylabel('|\Deltamc| = |mc_{actual} - mc_{desired}|', 'FontSize', 12);
+                % ylabel('|\Deltamc| = |mc_{actual} - mc_{desired}|', 'FontSize', 12);
+                ylabel('Median, IQR(Red. of MC [%])', 'FontSize', 12);
 
                 % Subplot overall title
                 suptitle('Test Performance vs. Traintime');
