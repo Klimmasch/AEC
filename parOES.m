@@ -29,13 +29,13 @@ function parOES(nWorkers)
 
 % experimentDirName = 'Discount Factor vs Interval' % no ';' intended.
 
-varNames = {'gamma', 'metCostRange'};
-var1 = {0.1, 0.3, 0.6, 0.9};
-var2 = {[0], [0.01], [0.025], [0.05]};
-varDescr = {'gamma', 'metCost'};
-numberFormatVar1 = '%1.1f';
-numberFormatVar2 = '[%1.3f]';
-experimentDirName = 'GammaVsMetCostsBias0.02'
+% varNames = {'gamma', 'metCostRange'};
+% var1 = {0.1, 0.3, 0.6, 0.9};
+% var2 = {[0], [0.01], [0.025], [0.05]};
+% varDescr = {'gamma', 'metCost'};
+% numberFormatVar1 = '%1.1f';
+% numberFormatVar2 = '[%1.3f]';
+% experimentDirName = 'GammaVsMetCostsBias0.02'
 
 % varNames = {'gamma', 'metCostRange'};
 % var1 = {0.01, 0.07, 0.1, 0.2};
@@ -122,6 +122,7 @@ varDescr = {'gamma', 'metCost'};
 numberFormatVar1 = '%1.1f';
 numberFormatVar2 = '[%1.2f]';
 experimentDirName = 'GammaVsMetCosts_0,5mio'
+% experimentDirName = 'KillTheBugs'
 
 % varNames = {'criticLRRange', 'metCostRange'};
 % var1 = {[1, 1], [1, 0], [0.5, 0.5], [0.5, 0]}; 
@@ -159,7 +160,7 @@ experimentDirName = 'GammaVsMetCosts_0,5mio'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nIters = 1000000;               % number of iterations
-rSeed = 1;                      % random seed
+rSeeds = [1];                      % random seed
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%% staring here, the rest is done automatically and should - in gerneral - not be altered  %%%%%%%
@@ -197,11 +198,20 @@ end
 % simulator = prepareSimulator(textureFiles); % at first, we try to use a shared simulator for all threads
 
 %% main loop
-parfor ind = 1 : nParams
-    % sprintf('%s=[%4.2f,%4.2f], %s=[%4.2f,%4.2f]', varNames{1}, paramValues{ind, 1}(1), paramValues{ind, 1}(2), varNames{2}, paramValues{ind, 2}(1), paramValues{ind, 2}(2))
+if length(rSeeds) == 1
+    parfor ind = 1 : nParams
+        % sprintf('%s=[%4.2f,%4.2f], %s=[%4.2f,%4.2f]', varNames{1}, paramValues{ind, 1}(1), paramValues{ind, 1}(2), varNames{2}, paramValues{ind, 2}(1), paramValues{ind, 2}(2))
 
-    sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
-    OES2Muscles(nIters, rSeed, 1, ...
-                {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                experimentDirName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+        sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
+        OES2Muscles(nIters, rSeeds(1), 1, ...
+                    {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
+                    experimentDirName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+    end
+else
+    parfor ind = 1 : length(rSeeds)
+        sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
+        OES2Muscles(nIters, rSeeds(ind), 1, ...
+                    {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
+                    experimentDirName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+    end
 end

@@ -58,7 +58,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     end
 
     %%% New renderer
-    if (isempty(simulator))
+    if (isempty(simulator) && (nStim ~= 0))
         % simulator = OpenEyeSim('create'); % stable renderer
         simulator = OpenEyeSimV5('create'); % latest renderer
 
@@ -420,7 +420,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
         %% Object distance vs. Fixation distance
         if (~isempty(find(level == 3)))
-            if (verbose == 2)
+            if (verbose == 1)
                 sprintf('Level 3/4 Object distance vs. Fixation distance')
             end
 
@@ -434,7 +434,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
             tmpcnt = 1;
             for odIndex = 1 : length(testResult6) / model.testInterval
-                if (verbose == 1)
+                if (verbose == 2)
                     sprintf('Level 3/4 Test iteration = %d/%d', odIndex, length(testResult6) / model.testInterval)
                 end
 
@@ -531,7 +531,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
         %% Desired vergence angle and metabolic costs approach [%] vs. iteration
         if (~isempty(find(level == 4)))
-            if (verbose == 2)
+            if (verbose == 1)
                 sprintf('Level 4/4 Desired vergence angle and metabolic costs approach [%] vs. iteration')
             end
 
@@ -551,6 +551,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             metCostDesired = repelem(metCostDesired, 7 * nStim, 1);
 
             for trial = 1 : size(vergenceAngleApproach, 1)
+                if (verbose == 2)
+                    sprintf('Level 4/4 Test iteration = %d/%d', trial, size(vergenceAngleApproach, 1))
+                end
                 % starting point in muscle space
                 cmdStart = [testResult5(trial * model.testInterval - model.testInterval + 1, 1) - testResult5(trial * model.testInterval - model.testInterval + 1, 3); ...
                             testResult5(trial * model.testInterval - model.testInterval + 1, 2) - testResult5(trial * model.testInterval - model.testInterval + 1, 4)];
@@ -608,6 +611,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
         %% calculate response over the whole muscle plane for actor, critic and basis functions
         if (~isempty(find(level == 6)))
+            if (verbose == 1)
+                sprintf('Level 5/6 average responses over muscle plane')
+            end
             % in the standard model, model.degreesIncRes(end,end) = model.degrees.results_deg(3,2)
             usedRows = 3;
             usedCols = 2;
@@ -631,6 +637,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             musclePlaneResponse = zeros(h, w, nMeasurements);
 
             for obj = 1 : length(objDists)
+                if (verbose == 2)
+                    sprintf('Level 5/5 Test iteration = %d/%d', obj, length(objDists))
+                end
                 objDist = objDists(obj);
                 for stim = 1 : nStimuli
                     for x = 1 : h
@@ -1584,6 +1593,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
         %% Generate muscle activation trajectories
         if (~isempty(find(level == 5)))
+            if verbose
+                sprintf('generating trajectory ...')
+            end
             model.plotTrajectory([0.5, 6], [-2, 0, 2], 'advanced', 200, randi(max(nStim, 40)), simulator, imageSavePath, folderName(9 : end), plotIt);
         end
 
@@ -1793,6 +1805,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                        sqrt(mean(model.testResult7(:, model.testInterval) .^ 2)), ...
                        mean(abs(model.testResult7(:, model.testInterval) .^ 2)), ...
                        std(abs(model.testResult7(:, model.testInterval) .^ 2))];
+                   
+        if (saveTestResults == 1)
+            save(strcat(imageSavePath, '/model'), 'model');
+        end
     catch
         warning('Current model has no \"testHist\" field. Performance history will not be stored.');
     end
