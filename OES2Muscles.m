@@ -46,13 +46,13 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(0);
+    testIt = uint8(1);
 
     %%% Amount of test stimuli
     nStimTest = 40;
 
     % Save model every #saveInterval training iterations
-    saveInterval = ceil(trainTime / 20);
+    saveInterval = ceil(trainTime / 10);
     % saveInterval = trainTime;
 
     % Track the evolution of all basis functions of the respective sparse coders
@@ -281,14 +281,18 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % intermediate testing during training
         rngState = rng; % store current state
         if ((testIt == 1) & find(model.testAt == t)) % have to use single & here, because the last statement is a scalar
-            testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 6]);
-            close all;
+            if (t > 0)
+                testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
+                close all;
+            end
         elseif find(model.testAt == t)
-            % temporary solution for using less space in cluster calls
-            testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
-            if ~ exist(strcat(testSavePath, '/model'), 'file')
-                mkdir(testSavePath);
-                save(strcat(testSavePath, '/model'), 'model');
+            if (t > 0)
+                % temporary solution for using less space in cluster calls
+                testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
+                if ~ exist(strcat(testSavePath, '/model'), 'file')
+                    mkdir(testSavePath);
+                    save(strcat(testSavePath, '/model'), 'model');
+                end
             end
         end
         rng(rngState); % restore state after testing, to not mess up the experiment
@@ -600,7 +604,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     if (testIt == 1)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, experimentDirName, level)
         rngState = rng; % store current state
-        testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 6]);
+        testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
         rng(rngState); % restore state after testing, to not mess up the experiment
 
         % print the time again after the line output of the testing script
@@ -630,6 +634,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
     % store simulated time & testHist
     save(strcat(model.savePath, '/model'), 'model');
+    sprintf('Experiment %s finished and Model saved.', model.savePath)
 
     if ((clusterCall == 0) && (closeFigures == 1))
         close all;
