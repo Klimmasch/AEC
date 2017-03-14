@@ -46,7 +46,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % Whether the testing procedure shall be executed after training
     % testIt:   0 = don't do it
     %           1 = do it
-    testIt = uint8(0);
+    testIt = uint8(1);
 
     %%% Amount of test stimuli
     nStimTest = 40;
@@ -61,15 +61,15 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     %%% Sparse coding approach
     % sparseCodingType: 0 = non-homeostatic
     %                   1 = homeostatic
-    sparseCodingType = uint8(0);
-    sparseCodingTypeName = cellstr(['nonhomeo'; 'homeosSC']);
+    % sparseCodingType = uint8(0);
+    % sparseCodingTypeName = cellstr(['nonhomeo'; 'homeosSC']);
 
     %%% Plotting flag
     % Whether figures should be generated and saved
     % plotIt: [training, testing]
     %            0 = don't do it
     %            1 = do it
-    plotIt = [uint8(1), uint8(0)];
+    plotIt = [uint8(1), uint8(1)];
 
     %%% Whether figures should be closed after generation
     % closeFigures: 0 = don't do it
@@ -124,7 +124,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % model = config(textureFiles, trainTime, testAt, sparseCodingType);
 
         % for configVar, at first copy values from before ...
-        standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'sparseCodingType', sparseCodingType};
+        % standardParams = {'textureFile', textureFiles, 'trainTime', trainTime, 'sparseCodingType', sparseCodingType};
+        standardParams = {'trainTime', trainTime};
         % ... and then add those handled in the function call
 
         paramVector = [standardParams, inputParams];
@@ -159,11 +160,11 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             sprintf('Training procedure will be continued for %d iterations.', timeToTrain)
         end
     else
-        if (sparseCodingType > 0)
+        if (model.sparseCodingType > 0)
             modelName = sprintf('%s_%iiter_%s_%i_%s', ...
                                 datestr(now, 'yy-mm-dd'), ...
                                 trainTime, ...
-                                sparseCodingTypeName{sparseCodingType + 1}, ...
+                                sparseCodingTypeName{model.sparseCodingType + 1}, ...
                                 randomizationSeed, ...
                                 experimentName);
         else
@@ -280,10 +281,10 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     for iter1 = 1 : (timeToTrain / model.interval)
         % intermediate testing during training
         rngState = rng; % store current state
-        if ((testIt == 1) & find(model.testAt == t)) % have to use single & here, because the last statement is a scalar
+        if ((testIt == 1) & find(model.testAt == t) & (t > 0)) % have to use single & here, because the last statement is a scalar
             testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1 : 6]);
             close all;
-        elseif find(model.testAt == t)
+        elseif (find(model.testAt == t) & (t > 0))
             % temporary solution for using less space in cluster calls
             testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
             if ~ exist(strcat(testSavePath, '/model'), 'file')
@@ -473,7 +474,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % angleNew = getAngle2(command);
 
             %%% Save statistics
-            % compute desired vergence command, disparity and vergence error
+            % compute desitestModelred vergence command, disparity and vergence error
             fixDepth = (model.baseline / 2) / tand(angleNew / 2);       % fixation depth [m]
             anglerr = angleDes - angleNew;                              % vergence error [deg]
             % disparity = 2 * model.focalLength * tand(anglerr / 2);    % current disp [px]

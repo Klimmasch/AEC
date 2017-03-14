@@ -15,7 +15,7 @@ function parTest(folders, nWorkers, runParallel)
         subfolders = dir(sprintf('%s/*iter*', parent));
         
         for s = 1 : length(subfolders) % test folder tier
-            subfolder = subfolders(s)
+            subfolder = subfolders(s);
 
 %             if subfolder.isdir
 %                 testpaths{iter} = sprintf('%s/%s/model.mat', parent, subfolder.name);
@@ -42,7 +42,8 @@ function parTest(folders, nWorkers, runParallel)
             mPool = parpool(nWorkers);
         end
    
-        parfor tp = 1 : length(testpaths)
+        % parfor tp = 1 : length(testpaths)
+        for tp = 1 : length(testpaths)
             savePath = testpaths{tp}
             try
                 model = load(strcat(savePath));
@@ -54,28 +55,28 @@ function parTest(folders, nWorkers, runParallel)
             simulator = [];  % lets see if it works with the parallel pool like this
             % if ~exist(sprintf('%s/modelAt%d/muscleActivityTrajectory.png', model.savePath, model.trainedUntil), 'file') % if the last image from the test procedure does not exists ...
             % if ~any(model.testHist(find(model.testAt == model.trainedUntil))) % test if according field in testHist is empty
-            if isempty(model.testResult7)    
-                sprintf('could not find test results in %s\n starting test procedure.', savePath)
-                testModelContinuous(model, nStim, 1, 1, 1, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 6]);
+%             if isempty(model.testResult7)    
+%                 sprintf('could not find test results in %s\n starting test procedure.', savePath)
+%                 testModelContinuous(model, nStim, 1, 1, 1, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 6]);
 %                 testModelContinuous(model, 0, 1, 1, 1, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 4, 6]);
-%                 testModelContinuous(model, 0, 0, 1, 1, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3, 4, 6]); % only save testHist
-            else
-                sprintf('skip testing for\n%s', savePath)
-            end
+                testModelContinuous(model, 0, 1, 1, 1, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3, 4, 6]); % only save testHist
+%             else
+%                 sprintf('skip testing for\n%s', savePath)
+%             end
         end
         
     else
-        textureFile = 'Textures_mcgillManMade40.mat';
-        simulator = OpenEyeSimV5('create'); % latest renderer
+        % textureFile = 'Textures_mcgillManMade40.mat';
+        % simulator = OpenEyeSimV5('create'); % latest renderer
 
-        simulator.initRenderer();
+        % simulator.initRenderer();
 
-        texture = load(sprintf('config/%s', textureFile));
-        texture = texture.texture;
-        for i = 1 : nStim
-            simulator.add_texture(i, texture{i});
-        end
-        sprintf('%d textures added to the testing simulator', nStim)
+        % texture = load(sprintf('config/%s', textureFile));
+        % texture = texture.texture;
+        % for i = 1 : nStim
+        %     simulator.add_texture(i, texture{i});
+        % end
+        % sprintf('%d textures added to the testing simulator', nStim)
         
         for tp = 1 : length(testpaths)
             savePath = testpaths{tp}
@@ -87,10 +88,10 @@ function parTest(folders, nWorkers, runParallel)
             end
             model = model.model;
             
-            % nur fuer alex:
-            if model.trainedUntil ~= 500000
-                continue
-            end
+            % if model.rlModel.CCritic.gamma == 0.01
+%             if model.trainedUntil ~= model.trainTime
+%                 continue
+%             end
             
 %             if model.trainedUntil == model.trainTime
 %                 model.allPlotSave(1:7);
@@ -99,16 +100,18 @@ function parTest(folders, nWorkers, runParallel)
 %             else
 %                 sprintf('skip testing')
 %             end
+            testModelContinuous(model, 0, 1, 1, 1, [], 0, sprintf('modelAt%d', model.trainedUntil), [1, 3, 4, 6]);
             % sprintf('trainedUntil: %d', model.trainedUntil)
             % if ~exist(sprintf('%s/modelAt%d/muscleActivityTrajectory.png', model.savePath, model.trainedUntil), 'file') % if the last image from the test procedure does not exists ...
 %             if ~any(model.testHist(find(model.testAt == model.trainedUntil))) % test if according field in testHist is empty
-            if isempty(model.testResult7)
-                sprintf('could not find test results in %s\n starting test procedure.', savePath)
-                testModelContinuous(model, nStim, 1, 1, 2, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 6]);
-                close all;
-            else
-                sprintf('skip testing for\n%s', savePath)
-            end
+%             if isempty(model.testResult7)
+%                 sprintf('could not find test results in %s\n starting test procedure.', savePath)
+                % testModelContinuous(model, nStim, 1, 1, 2, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 6]);
+%                 close all;
+%             else
+%                 sprintf('skip testing for\n%s', savePath)
+%             end
+            close all
         end
     end
 end

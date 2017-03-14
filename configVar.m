@@ -524,6 +524,8 @@ if (~found)
 end
 
 % Critic's and Actor's number of neurons in the input layer (Small + Large scale + Muscle activities)
+% note: if you specify a bias and define the input dimension, remember to
+% add the bias to that!
 [found, inputDim, varParamArray] = parseparam(varParamArray, 'inputDim');
 if (~found)
     if (continuous == 1)
