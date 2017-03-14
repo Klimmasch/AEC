@@ -1812,7 +1812,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     catch
         warning('Current model has no \"testHist\" field. Performance history will not be stored.');
     end
-    sprintf('Testing procedure at iter = %s finished. Graph generation finished.', folderName(9 : end))
+    if (saveTestResults == 1)
+        save(strcat(imageSavePath, '/model'), 'model');
+    end
+    sprintf('Testing procedure at iter = %s finished. Graph generation finished. Model saved.', folderName(9 : end))
 end
 
 %this function generates anaglyphs of the large and small scale fovea and

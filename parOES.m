@@ -26,7 +26,6 @@ function parOES(nWorkers)
 % varDescr = {'cDiscout', 'interval'};
 % numberFormatVar1 = '%1.1f';
 % numberFormatVar2 = '%d';
-
 % experimentDirName = 'Discount Factor vs Interval' % no ';' intended.
 
 % varNames = {'gamma', 'metCostRange'};
@@ -60,7 +59,7 @@ function parOES(nWorkers)
 % numberFormatVar1 = '%1.0e';
 % numberFormatVar2 = '[%1.2f-%1.2f]';
 
-% experimentDirName = 'actorLR_vs_regul_norm_feat' % no ';' intended. 
+% experimentDirName = 'actorLR_vs_regul_norm_feat' % no ';' intended.
 
 % varNames = {'criticLRRange', 'actorLRRange'};
 % var1 = {[1, 1], [1, 0], [0.75, 0.75], [0.75, 0], [0.5, 0.5], [0.5, 0], [0.25, 0.25], [0.25, 0]};
@@ -83,7 +82,7 @@ function parOES(nWorkers)
 % numberFormatVar1 = '[%1.2f-%1.2f]';
 % numberFormatVar2 = '[%1.0e-%1.0e]';
 
-% experimentDirName = 'varDec_new' 
+% experimentDirName = 'varDec_new'
 
 % varNames = {'actorLRRange', 'varianceRange'};
 % var1 = {[1, 1], [0.5, 0.5], [1, 0], [0.5, 0]};
@@ -93,7 +92,7 @@ function parOES(nWorkers)
 % numberFormatVar1 = '[%1.1f-%1.1f]';
 % numberFormatVar2 = '[%1.0e-%1.0e]';
 
-% experimentDirName = 'steplength_actorVsVariance_reg1e-5' 
+% experimentDirName = 'steplength_actorVsVariance_reg1e-5'
 
 % varNames = {'actorLRRange', 'varianceRange'};
 % var1 = {[1, 1], [0.5, 0.5], [1, 0], [0.5, 0]};
@@ -102,8 +101,8 @@ function parOES(nWorkers)
 % varDescr = {'actor', 'varRange'};
 % numberFormatVar1 = '[%1.1f-%1.1f]';
 % numberFormatVar2 = '[%1.0e-%1.0e]';
-% 
-% experimentDirName = 'steplength_actorVsVariance_reg1e-5_1mio' 
+%
+% experimentDirName = 'steplength_actorVsVariance_reg1e-5_1mio'
 
 % varNames = {'criticLRRange', 'gamma'};
 % var1 = {[1, 1], [0.5, 0.5], [1, 0], [0.5, 0]};
@@ -112,20 +111,21 @@ function parOES(nWorkers)
 % numberFormatVar1 = '[%1.1f-%1.1f]';
 % numberFormatVar2 = '[%1.1f]';
 
-% experimentDirName = 'wobbling_gammaVsCriticLR_1mio' 
+% experimentDirName = 'wobbling_gammaVsCriticLR_1mio'
 
-varNames = {'gamma', 'metCostRange'};
-var1 = {0.1, 0.3, 0.6, 0.9}; 
-% var2 = {[0], [0.01], [0.025], [0.05]};
-var2 = {[0], [0.01], [0.05], [0.1]};
-varDescr = {'gamma', 'metCost'};
-numberFormatVar1 = '%1.1f';
-numberFormatVar2 = '[%1.2f]';
-experimentDirName = 'GammaVsMetCosts_0,5mio'
+% varNames = {'gamma', 'metCostRange'};
+% var1 = {0.1, 0.3, 0.6, 0.9}; 
+% % var2 = {[0], [0.01], [0.025], [0.05]};
+% var2 = {[0], [0.01], [0.05], [0.1]};
+% varDescr = {'gamma', 'metCost'};
+% numberFormatVar1 = '%1.1f';
+% numberFormatVar2 = '[%1.2f]';
+% experimentDirName = 'GammaVsMetCosts_0,5mio'
 % experimentDirName = 'KillTheBugs'
 
+
 % varNames = {'criticLRRange', 'metCostRange'};
-% var1 = {[1, 1], [1, 0], [0.5, 0.5], [0.5, 0]}; 
+% var1 = {[1, 1], [1, 0], [0.5, 0.5], [0.5, 0]};
 % % var2 = {[0], [0.01], [0.025], [0.05]};
 % var2 = {[0.025, 0.025], [0.025, 0], [0.05, 0.05], [0.05, 0], [0, 0]};
 % varDescr = {'critLR', 'metCost'};
@@ -156,6 +156,23 @@ experimentDirName = 'GammaVsMetCosts_0,5mio'
 % var2Descr = {'0.005', '0.0075', '0.01', '0.015', '0.02'};
 % varDescr = {'lambdaMuscleFB', 'desiredStdZT'};
 % experimentDirName = 'lambdaMuscleFB_vs_desiredStdZT_seed2';
+
+varNames = {'gamma', 'metCostRange'};
+var1 = {0.01, 0.05, 0.1};
+% var2 = {[0], [0.01], [0.03], [0.05]};
+var2 = {[0], [0.05], [0.075], [0.1]};
+varDescr = {'gamma', 'metCost'};
+numberFormatVar1 = '%1.2f';
+numberFormatVar2 = '[%1.3f]';
+experimentDirName = 'GammaVsMetCosts_FineGrainNoBias'
+
+% varNames = {'gamma', 'metCostRange'};
+% var1 = {0.01, 0.05, 0.1};
+% var2 = {[0], [0.01], [0.03], [0.05]};
+% varDescr = {'gamma', 'metCost'};
+% numberFormatVar1 = '%1.2f';
+% numberFormatVar2 = '[%1.2f]';
+% experimentDirName = 'GammaVsMetCosts_FineGrainBias2 % remember to add the bias below!!
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -7,7 +7,8 @@
 % @param stimulusSetName    name of stimulus set
 function generateTrainTestSets(stimFolder, nTestFiles, stimulusSetName)
 
-files = dir(sprintf('%s/*.bmp', stimFolder));
+% files = dir(sprintf('%s/*.bmp', stimFolder));
+files = dir(sprintf('%s/*.jpg', stimFolder));
 nFiles = length(files);
 
 % savety check
@@ -22,7 +23,7 @@ if (nTestFiles <= 0)
 %         texture{i} = sprintf('../aec/Textures/%s/%s', stimulusSetName, files(i).name);
         texture{i} = sprintf('%s/%s', stimFolder, files(i).name);
     end
-    save(sprintf('../config/Textures_%sAll.mat', stimulusSetName), 'texture');
+    save(sprintf('./config/Textures_%sAll.mat', stimulusSetName), 'texture');
     sprintf('Added %d files to the stimulus set', nFiles)
     return;
 end
@@ -39,7 +40,7 @@ for i = 1 : nTestFiles
 %     texture{i} = sprintf('../aec/Textures/%s/%s', stimulusSetName, shuffledFiles(i).name);
     texture{i} = sprintf('%s/%s', stimFolder, shuffledFiles(i).name);
 end
-save(sprintf('../config/Textures_%sTest.mat', stimulusSetName), 'texture');
+save(sprintf('./config/Textures_%sTest.mat', stimulusSetName), 'texture');
 
 % add remaining stimuli to training set
 texture = cell(nFiles - nTestFiles, 1);
@@ -49,7 +50,7 @@ for i = nTestFiles + 1 : nFiles
     texture{j} = sprintf('%s/%s', stimFolder, shuffledFiles(i).name);
     j = j + 1;
 end
-save(sprintf('../config/Textures_%sTrain.mat', stimulusSetName), 'texture');
+save(sprintf('./config/Textures_%sTrain.mat', stimulusSetName), 'texture');
 
 sprintf('Added %d files to the testing set and %d to the trainig set', nTestFiles, nFiles - nTestFiles)
 
