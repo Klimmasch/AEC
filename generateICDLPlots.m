@@ -1,13 +1,25 @@
 % Generates results plots for ICDL conference publication 2017
-function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simulator) %, testAtiter)
+function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simulator, modelAt)
 
+    % load given models
     try
         modelHandle = [load(strcat(modelWoMetCostsFullPath, '/model.mat')), ...
                        load(strcat(modelWMetCostsFullPath, '/model.mat'))];
+
+        if (modelHandle(1).model.metCostRange(1) ~= 0)
+            warning('model1 (w/o metCosts) from %s does have lambda_metCosts = %f.', ...
+                    modelWoMetCostsFullPath, modelHandle(1).model.metCostRange(1));
+        end
+
+        if (modelHandle(2).model.metCostRange(1) == 0)
+            warning('model2 (w/ metCosts) from %s does have lambda_metCosts = %f.', ...
+                    modelWoMetCostsFullPath, modelHandle(2).model.metCostRange(1));
+        end
     catch
         error('Model(s) could not be loaded.');
     end
 
+    % figure directory
     savePath = strcat('/home/aecgroup/aecdata/ICDLPlots', datestr(now, '/dd-mm-yy_HH:MM:SS'));
     mkdir(savePath);
 
@@ -15,24 +27,28 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     fileID = fopen(strcat(savePath, '/README.txt'), 'wt' );
     fprintf(fileID, 'model w/o MetCosts: %s\n', modelWoMetCostsFullPath);
     fprintf(fileID, 'model w/  MetCosts: %s\n', modelWMetCostsFullPath);
+    fprintf(fileID, 'modelAt: %s\n', modelAt);
     fclose(fileID);
 
     % in respect of old testHist(end) == 0 bug
-    adjust = 0;
+    adjust = [0, 0];
     for i = 1 : length(modelHandle)
-        if (modelHandle(i).model.testHist(end, 1) == 0)
-            adjust = 1;
+        j = 1;
+        for k = flip(2 : size(modelHandle(i).model.testHist, 1))
+            if (modelHandle(i).model.testHist(k, 1) == 0)
+                adjust(i) = j;
+                j = j + 1;
+            end
         end
+    end
+    if (any(adjust))
+        warning('testHist contains zero entries. %d of w/o and %d of w/ model.testHist entries will be discarded.', adjust(1), adjust(2));
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure A
     % RMSE vergence error [deg] & delta MC opt [%] @ testing vs. traintime
-    figA = figure();
-    hold on;
-    grid on;
-
-    lineHandles = [0, 0];       % [w/ metCosts, w/o metCosts]
+    lineHandles = [];           % [w/ metCosts, w/o metCosts]
     lineStyles = [':', '-'];    % [w/ metCosts, w/o metCosts]
     lineWidths = [1.3, 1.3];    % [vergErr, metCosts]
 
@@ -40,40 +56,94 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     markerSizes = [5, 5];       % [vergErr, metCosts]
     colors = {'b', 'r'};        % [vergErr, metCosts]
 
+    nTicks = 10;
+
+    objRange = [0.5, 1 : 6];
+    parentFolder = {modelWoMetCostsFullPath, modelWMetCostsFullPath};
+    tmpModelHandle = cell(length(parentFolder), length(modelAt));
+
+    % dataMatrix = {w/o[vergErrMatrix, metCostsMatrix], w/[vergErrMatrix, metCostsMatrix]}
+    % vergErrMatrix = metCostsMatrix = objDist * VSE/0° * nStim * testInterval x testAt
+    dataMatrix = {{zeros(1680, length(modelAt)), []}, {zeros(1680, length(modelAt)), []}};
+    at0Matrix = {{zeros(1680, 1), []}, {zeros(1680, 1), []}};
+    iqrLine = zeros(4, length(modelAt) + 1); % +modelAt0
+
+    % extract all relevant data from all sub-experiments
     for i = 1 : length(modelHandle)
-        % %%% RMSE vergence error [deg] -> 1st y-axis
-        % % color trick -> black entries in legend
-        % if (i == 1)
-        %     axTmp = plot(modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
-        %                  'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
+        for trainedUntil = 1 : length(modelAt)
+            try
+                subFolder = sprintf('modelAt%d', modelAt(trainedUntil));
+                tmpModelHandle{i, trainedUntil} = load(sprintf('%s/%s/model.mat', parentFolder{i}, subFolder));
+            catch
+               % catch case when (sub-)experiment started, but has no test results yet
+               warning('%s/%s/model.mat\ncould not be loaded.', parentFolder{i}, subFolder);
+               continue;
+            end
 
-        %     plot(modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
-        %          'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
-        % else
-        %     axTmp = plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
-        %                  'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
+            % fill data matrix & exclude VSA = 0° trials
+            nStim = size(tmpModelHandle{i, trainedUntil}.model.testResult3, 1) / (length(objRange) * 7);
+            currIdx = 1;
+            startInd = 1;
+            startInd0 = nStim * 3 + 1;
+            for j = 1 : length(objRange)
+                colSize1 = length(tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, tmpModelHandle{i, trainedUntil}.model.testInterval));
+                dataMatrix{i}{1}(currIdx : currIdx + colSize1 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, tmpModelHandle{i, trainedUntil}.model.testInterval);
+                currIdx = currIdx + colSize1;
+                endInd0 = startInd0 + nStim - 1;
+                startInd = endInd0 + 1;
+                startInd0 = endInd0 + nStim * 6 + 1;
+            end
+            % concatinate remainder
+            colSize2 = length(tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, tmpModelHandle{i, trainedUntil}.model.testInterval));
+            dataMatrix{i}{1}(currIdx : currIdx + colSize2 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, tmpModelHandle{i, trainedUntil}.model.testInterval);
 
-        %     plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), modelHandle(i).model.testHist(1 : end - adjust, 1), ...
-        %          'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
-        % end
-        %%% Reduction of vergence error [median %] -> 1st y-axis
-        % color trick -> black entries in legend
-        if (i == 1)
-            axTmp = plot(modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 2), ...
-                         'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
-
-            plot(modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 2), ...
-                 'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
-        else
-            axTmp = plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 2), ...
-                         'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
-
-            plot(ax1, modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 2), ...
-                 'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
+            % delta metCosts
+            dataMatrix{i}{2}(:, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult7(:, tmpModelHandle{i, trainedUntil}.model.testInterval);
         end
 
-        lineHandles(i) = axTmp;
+        % add modelAt0 entries
+        if (i == 1)
+            hm = load('/home/aecgroup/aecdata/Results/17-03-08_300000iter_1_newStandard_0,3Mio/modelAt0/model.mat');
+        end
 
+        % fill data matrix & exclude VSA = 0° trials
+        nStim = size(hm.model.testResult3, 1) / (length(objRange) * 7);
+        currIdx = 1;
+        startInd = 1;
+        startInd0 = nStim * 3 + 1;
+        for j = 1 : length(objRange)
+            colSize1 = length(hm.model.testResult3(startInd : startInd0 - 1, hm.model.testInterval));
+            at0Matrix{i}{1}(currIdx : currIdx + colSize1 - 1) = hm.model.testResult3(startInd : startInd0 - 1, hm.model.testInterval);
+            currIdx = currIdx + colSize1;
+            endInd0 = startInd0 + nStim - 1;
+            startInd = endInd0 + 1;
+            startInd0 = endInd0 + nStim * 6 + 1;
+        end
+        % concatinate remainder
+        colSize2 = length(hm.model.testResult3(startInd : end, hm.model.testInterval));
+        at0Matrix{i}{1}(currIdx : currIdx + colSize2 - 1) = hm.model.testResult3(startInd : end, hm.model.testInterval);
+
+        % delta metCosts
+        at0Matrix{i}{2} = hm.model.testResult7(:, hm.model.testInterval);
+
+        % concatinate both matricies
+        dataMatrix{i}{1} = horzcat(at0Matrix{i}{1}, dataMatrix{i}{1});
+        dataMatrix{i}{2} = horzcat(at0Matrix{i}{2}, dataMatrix{i}{2});
+
+        % extract IQR edge coordinates
+        tmpFig = figure();
+        boxHandle = boxplot(dataMatrix{i}{1});
+        upWi = findobj(boxHandle, 'tag', 'Upper Whisker');
+        lowWi = findobj(boxHandle, 'tag', 'Lower Whisker');
+        iqrLine(i * 2 - 1 : i * 2, :) = [arrayfun(@(x) x.YData(1), upWi)'; arrayfun(@(x) x.YData(1), lowWi)'];
+        close(tmpFig);
+    end
+
+    figA = figure();
+    hold on;
+    modelAt = horzcat(0, modelAt);
+
+    for i = 1 : length(modelHandle)
         if (i == 1)
             ax1 = gca; % current axes
             ax1.YColor = colors{1};
@@ -81,7 +151,8 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
             ax1.XAxis.Label.FontSize = 12;
             ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
             % ax1.YAxis.Label.String = 'RMSE(verg_{err}) [deg]';
-            ax1.YAxis.Label.String = sprintf('Vergence Error\nw.r.t. Opt. median [%%]'); %'Reduction verg_{err} median [%]';
+            % ax1.YAxis.Label.String = sprintf('Vergence Error\nw.r.t. Opt. median [%%]');
+            ax1.YAxis.Label.String = 'median(verg_{err}) [deg]';
             ax1.YAxis.Label.FontSize = 12;
 
             ax2 = axes('Position', ax1.Position, ...
@@ -89,31 +160,25 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
                        'Color', 'none');
         end
 
-        %%% mean, std deltaMetCost -> 2nd y-axis
-        % [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), ...
-        %                        modelHandle(i).model.testHist(1 : end - adjust, 5), ...
-        %                        modelHandle(i).model.testHist(1 : end - adjust, 6), 'alpha');
+        % fill area defined by upper & lower wihiskers
+        pl1 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
+                    colors{1}, 'LineStyle', 'none', 'FaceAlpha', 0.3);
+        pl1.Parent = ax1;
+        hold on;
 
-        % median MCA [%] with iqr as shaded background area
-        % [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), ...
-        %                        100 - modelHandle(i).model.testHist(1 : end - adjust, 4), ...
-        %                        modelHandle(i).model.testHist(1 : end - adjust, 6) * 0.5, 'alpha');
-        % hl.LineStyle = 'none';
-        % hl.Color = colors{2};
-        % hp.FaceColor = colors{2};
+        % color trick -> black entries in legend
+        hl1 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
+                     'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
 
-        % hl.Parent = ax2;
-        % hp.Parent = ax2;
+        hl2 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
+                      'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
 
-        % [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), ...
-        %                        modelHandle(i).model.testHist(1 : end - adjust, 5), ...
-        %                        modelHandle(i).model.testHist(1 : end - adjust, 6), 'transparency', 1);
+        lineHandles(end + 1) = hl1;
+        hold on;
 
-        % hl = plot(ax2, modelHandle(i).model.testAt(1 : end - adjust), 100 - modelHandle(i).model.testHist(1 : end - adjust, 5), ...
-        %           'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(2), 'Color', colors{2}, 'LineWidth', lineWidths(2));
-
-        % hl.Parent = ax2;
-        % hp.Parent = ax2;
+        hl3 = plot(ax2, modelAt, median(dataMatrix{i}{2}), ...
+                  'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(2), 'Color', colors{2}, 'LineWidth', lineWidths(2));
+        hold on;
 
         % hl.Marker = markerStyles(i);
         % hl.MarkerSize = markerSizes(2);
@@ -122,37 +187,31 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
         % % hp.FaceColor = colors{2};
         % hl.LineWidth = lineWidths(2);
         % hl.LineStyle = lineStyles(i);
-        [hl, hp] = boundedline(modelHandle(i).model.testAt(1 : end - adjust), ...
-                               100 - modelHandle(i).model.testHist(1 : end - adjust, 5), ...
-                               modelHandle(i).model.testHist(1 : end - adjust, 6) * 0.5, 'alpha');
-        hl.Parent = ax2;
-        hp.Parent = ax2;
-
-        hl.Marker = markerStyles(i);
-        hl.MarkerSize = markerSizes(2);
-
-        hl.Color = colors{2};
-        hp.FaceColor = colors{2};
-        hl.LineWidth = lineWidths(2);
-        hl.LineStyle = lineStyles(i);
 
         if (i == 1)
             % |\DeltaMC_{opt}| = |MC_{actual} - MC_{optimal}| / |MC_{start} - MC_{optimal}|
-            % ax2.YAxis.Label.String = '|\DeltaMC_{opt}| [%]';
-            ax2.YAxis.Label.String = sprintf('Metabolic Costs\nw.r.t. Opt. median [%%]'); %'Reduction metabolic_{costs} median [%]';
+            ax2.YAxis.Label.String = 'median(\Deltamet. costs) [???]';
             ax2.YAxis.Label.FontSize = 12;
             ax2.YColor = colors{2};
-            ax2.YAxis.Label.Rotation = -90;
+            % ax2.YAxis.Label.Rotation = -90;
+            ax2.YAxisLocation = 'right';
         end
     end
 
-    ax1.YAxis.Limits = [-10, 110];
-    ax2.YAxis.Limits = [-10, 110];
+    grid(ax1, 'on');
+    % ax1.YMinorGrid = 'on';
 
-    l = legend(lineHandles);
+    % ax1.YAxis.Limits = [-0.05, 0.1];
+    % ax2.YAxis.Limits = [-0.2, 1.1];
+
+    % set #nTicks ticks for y-axis
+    % set(ax1, 'YTick', round(linspace(ax1.YAxis.Limits(1), ax1.YAxis.Limits(2), nTicks - 2), 2));
+    % set(ax2, 'YTick', round(linspace(ax2.YAxis.Limits(1), ax2.YAxis.Limits(2), nTicks), 2));
+
+    gKey = {'w/o met. costs', 'w/  met. costs'};
+    l = gridLegend(lineHandles, 1, gKey, 'Location', 'southwest');
+        %, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
     l.Box = 'off';
-    l.String{1} = 'w/o met. costs';
-    l.String{2} = 'w/ met. costs';
 
     % ax2.YAxis.Label.Position(1) = ax2.YAxis.Label.Position(1) * 1.5;
 
@@ -162,48 +221,50 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure B
+    % all the data in a single plot
 
-    figB = figure();
-    hold on;
-    grid on;
+    % figB = figure();
+    % hold on;
+    % grid on;
 
-    steps = 3;              % show just first steps iterations & last iteration
-    % colors = ['b', 'r'];    % [vergErr, metCosts]
+    % steps = 3;              % show just first steps iterations & last iteration
+    % % colors = ['b', 'r'];    % [vergErr, metCosts]
 
-    % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
-    tmpMatrix = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3, ...
-                        modelHandle(1).model.metCostsApproach, modelHandle(2).model.metCostsApproach);
+    % % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
+    % tmpMatrix = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3, ...
+    %                     modelHandle(1).model.metCostsApproach, modelHandle(2).model.metCostsApproach);
 
-    % sort by iteration step
-    idx = [];
-    for (i = 1 : 20)
-        idx(end + 1 : end + 4) = i : 20 : 4 * 20;
-    end
-    tmpMatrix = tmpMatrix(:, idx);
-    tmpMatrix = [tmpMatrix(:, 1 : 4 * steps), tmpMatrix(:, end - 3 : end)];
+    % % sort by iteration step
+    % idx = [];
+    % for (i = 1 : 20)
+    %     idx(end + 1 : end + 4) = i : 20 : 4 * 20;
+    % end
+    % tmpMatrix = tmpMatrix(:, idx);
+    % tmpMatrix = [tmpMatrix(:, 1 : 4 * steps), tmpMatrix(:, end - 3 : end)];
 
-    boxHandl = boxplot(tmpMatrix);
+    % boxHandl = boxplot(tmpMatrix);
 
-    % remove outliers
-    outl = findobj(boxHandl, 'tag', 'Outliers');
-    set(outl, 'Visible', 'off');
+    % % remove outliers
+    % outl = findobj(boxHandl, 'tag', 'Outliers');
+    % set(outl, 'Visible', 'off');
 
-    % rescale axis to whiskers + offset
-    upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
-    lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
-    axis([-inf, inf, ... %0, 4 * steps + 1, ...
-          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
-          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+    % % rescale axis to whiskers + offset
+    % upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
+    % lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
+    % axis([-inf, inf, ... %0, 4 * steps + 1, ...
+    %       min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+    %       max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
 
-    xlabel('Iteration step', 'FontSize', 12);
-    ylabel('Vergence Error [deg]', 'FontSize', 12);
-    title(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    % xlabel('Iteration step', 'FontSize', 12);
+    % ylabel('Vergence Error [deg]', 'FontSize', 12);
+    % title(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
 
-    plotpath = sprintf('%s/FigB1_totalVergErrMetCostsApproachVsTraintimeALL', savePath);
-    saveas(figB, plotpath, 'png');
-    close(figB);
+    % plotpath = sprintf('%s/FigB1_totalVergErrMetCostsApproachVsTraintimeALL', savePath);
+    % saveas(figB, plotpath, 'png');
+    % close(figB);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % data separated into 2 subplots
     figB2 = figure();
     hold on;
 
@@ -227,9 +288,6 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     tmpMatrixVergErr = [tmpMatrixVergErr(:, 1 : 2 * steps), tmpMatrixVergErr(:, end - 1 : end)];
     tmpMatrixMetApp = tmpMatrixMetApp(:, idx);
     tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
-
-    % not the right way to do it -> mixes all members of a group together
-    % groups = [1;1;2;2;3;3;4;4];
 
     sub1 = subplot(2, 1, 1);
     % pos = [1 1.33 2 2.33 3 3.33 4 4.33];
@@ -343,11 +401,9 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % muscleplain trajectories
 
     % simulator check
-    % try
-    %     exist(simulator)
-    % catch
-    %     simulator = prepareSimulator([]);
-    % end
+    if (isempty(simulator))
+        simulator = prepareSimulator([]);
+    end
 
     %%% Saturation function that keeps motor commands in [0, 1]
     %   corresponding to the muscelActivity/metabolicCost tables
