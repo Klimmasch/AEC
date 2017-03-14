@@ -54,7 +54,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     markerStyles = ['x', 'x'];  % [w/ metCosts, w/o metCosts]
     markerSizes = [5, 5];       % [vergErr, metCosts]
-    colors = {'b', 'r'};        % [vergErr, metCosts]
+    colors = {'b', 'r', 'b', [0,1,128/255]};        % [vergErr, metCosts] [0.4784, 0.8941, 1.0000]
 
     nTicks = 10;
 
@@ -161,8 +161,13 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
         end
 
         % fill area defined by upper & lower wihiskers
-        pl1 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
-                    colors{1}, 'LineStyle', 'none', 'FaceAlpha', 0.3);
+        if (i == 1)
+            pl1 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
+                        colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.2);
+        else
+            pl1 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
+                    colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.3);
+        end
         pl1.Parent = ax1;
         hold on;
 
@@ -190,7 +195,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
         if (i == 1)
             % |\DeltaMC_{opt}| = |MC_{actual} - MC_{optimal}| / |MC_{start} - MC_{optimal}|
-            ax2.YAxis.Label.String = 'median(\Deltamet. costs) [???]';
+            ax2.YAxis.Label.String = 'median(\Deltamet. costs) [J]';
             ax2.YAxis.Label.FontSize = 12;
             ax2.YColor = colors{2};
             % ax2.YAxis.Label.Rotation = -90;
