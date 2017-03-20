@@ -23,14 +23,6 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     savePath = strcat('/home/aecgroup/aecdata/ICDLPlots', datestr(now, '/dd-mm-yy_HH:MM:SS'));
     mkdir(savePath);
 
-    % member models? III member!
-    % TODO: add into file: IQR & median of vergerr and metcosts @ 20th iteration
-    fileID = fopen(strcat(savePath, '/README.txt'), 'wt' );
-    fprintf(fileID, 'model w/o MetCosts: %s\n', modelWoMetCostsFullPath);
-    fprintf(fileID, 'model w/  MetCosts: %s\n', modelWMetCostsFullPath);
-    fprintf(fileID, 'modelAt: %s\n', modelAt);
-    fclose(fileID);
-
     % in respect of old testHist(end) == 0 bug
     adjust = [0, 0];
     for i = 1 : length(modelHandle)
@@ -66,6 +58,8 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % dataMatrix = {w/o[vergErrMatrix, metCostsMatrix], w/[vergErrMatrix, metCostsMatrix]}
     % vergErrMatrix = metCostsMatrix = objDist * VSE/0° * nStim * testInterval x testAt
     dataMatrix = {{zeros(1680, length(modelAt)), []}, {zeros(1680, length(modelAt)), []}};
+    dataMatrixEnd = {{zeros(1680, 20), []}, {zeros(1680, 20), []}}; % final values @ modelAt = 1mio & iter = [1, 20]
+
     at0Matrix = {{zeros(1680, 1), []}, {zeros(1680, 1), []}};
     iqrLine = zeros(4, length(modelAt) + 1); % +modelAt0
 
@@ -88,7 +82,16 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
             startInd0 = nStim * 3 + 1;
             for j = 1 : length(objRange)
                 colSize1 = length(tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, tmpModelHandle{i, trainedUntil}.model.testInterval));
-                dataMatrix{i}{1}(currIdx : currIdx + colSize1 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, tmpModelHandle{i, trainedUntil}.model.testInterval);
+                dataMatrix{i}{1}(currIdx : currIdx + colSize1 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, ...
+                                                                                                  tmpModelHandle{i, trainedUntil}.model.testInterval);
+
+                % end matrix creation
+                if (trainedUntil == length(modelAt))
+                    for k = 1 : 20
+                        dataMatrixEnd{i}{1}(currIdx : currIdx + colSize1 - 1, k) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, k);
+                    end
+                end
+
                 currIdx = currIdx + colSize1;
                 endInd0 = startInd0 + nStim - 1;
                 startInd = endInd0 + 1;
@@ -96,10 +99,19 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
             end
             % concatinate remainder
             colSize2 = length(tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, tmpModelHandle{i, trainedUntil}.model.testInterval));
-            dataMatrix{i}{1}(currIdx : currIdx + colSize2 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, tmpModelHandle{i, trainedUntil}.model.testInterval);
+            dataMatrix{i}{1}(currIdx : currIdx + colSize2 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, ...
+                                                                                              tmpModelHandle{i, trainedUntil}.model.testInterval);
 
             % delta metCosts
             dataMatrix{i}{2}(:, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult7(:, tmpModelHandle{i, trainedUntil}.model.testInterval);
+
+            % end matrix creation
+            if (trainedUntil == length(modelAt))
+                for k = 1 : 20
+                    dataMatrixEnd{i}{1}(currIdx : currIdx + colSize2 - 1, k) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, k);
+                end
+                dataMatrixEnd{i}{2} = tmpModelHandle{i, trainedUntil}.model.testResult7;
+            end
         end
 
         % add modelAt0 entries
@@ -136,7 +148,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
         boxHandle = boxplot(dataMatrix{i}{1});
         upWi = findobj(boxHandle, 'tag', 'Upper Whisker');
         lowWi = findobj(boxHandle, 'tag', 'Lower Whisker');
-        iqrLine(i * 2 - 1 : i * 2, :) = [arrayfun(@(x) x.YData(1), upWi)'; arrayfun(@(x) x.YData(1), lowWi)'];
+        iqrLine(i * 2 - 1 : i * 2, :) = [arrayfun(@(x) x.YData(1), upWi)'; arrayfun(@(x) x.YData(2), lowWi)'];
         close(tmpFig);
     end
 
@@ -214,7 +226,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     %     %, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
 
     lineHandles = [hl1, hp1, hl2, hp2];
-    gKey = {'w/o met. costs', 'IQR    ', ...
+    gKey = {'w/o met. costs', 'IQR', ...
             'w/  met. costs', 'IQR'};
 
     % l = gridLegend(lineHandles, 2, gKey, 'Location', 'southwest');
@@ -224,15 +236,50 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     % ax2.YAxis.Label.Position(1) = ax2.YAxis.Label.Position(1) * 1.5;
 
-    plotpath = sprintf('%s/FigA_testPerformanceDMCVsTraintime', savePath);
+    plotpath = sprintf('%s/FigA_VergErrMetCostsVsTraintime', savePath);
     saveas(figA, plotpath, 'png');
     close(figA);
+
+    % member models? III member!
+    % TODO: add into file: IQR & median of vergerr and metcosts @ 20th iteration
+    fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
+    fprintf(fileID, 'model w/o MetCosts: %s\n', modelWoMetCostsFullPath);
+    fprintf(fileID, 'model w/  MetCosts: %s\n\n', modelWMetCostsFullPath);
+
+    fprintf(fileID, '========================================================================================================\n');
+    fprintf(fileID, 'model w/o MetCosts\n');
+    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt));
+
+    fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{1}));
+    fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
+    fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{1}));
+    fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
+
+    fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{2}));
+    fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
+    fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{2}));
+    fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
+
+    fprintf(fileID, 'model w/ MetCosts\n');
+    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt));
+
+    fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{1}));
+    fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
+    fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{1}));
+    fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
+
+    fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{2}));
+    fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
+    fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{2}));
+    fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
+
+    fclose(fileID);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure B
     %% all the data in a single plot
 
-    % figB = figure();
+    % figB0 = figure();
     % hold on;
     % grid on;
 
@@ -268,13 +315,13 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % ylabel('Vergence Error [deg]', 'FontSize', 12);
     % title(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
 
-    % plotpath = sprintf('%s/FigB1_totalVergErrMetCostsApproachVsTraintimeALL', savePath);
-    % saveas(figB, plotpath, 'png');
-    % close(figB);
+    % plotpath = sprintf('%s/FigB0_VergErrMetCostsApproachVsTestIterALL', savePath);
+    % saveas(figB0, plotpath, 'png');
+    % close(figB0);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% data separated into 2 subplots
-    figB2 = figure();
+    figB1 = figure();
     hold on;
 
     steps = 3;              % show just first steps iterations & last iteration
@@ -299,7 +346,6 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
 
     sub1 = subplot(2, 1, 1);
-    % pos = [1 1.33 2 2.33 3 3.33 4 4.33];
     pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
     boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
     tmpHandle = findobj(boxHandl, 'type', 'text');
@@ -401,9 +447,293 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % sub2.Position(2) = sub2.Position(2) * 0.9;
     l.Position(2) = l.Position(2) * 1.075;
 
-    plotpath = sprintf('%s/FigB2_totalVergErrMetCostsApproachVsTraintimeSub2', savePath);
+    plotpath = sprintf('%s/FigB1_VergErrMetCostsApproachVsTestIter', savePath);
+    saveas(figB1, plotpath, 'png');
+    close(figB1);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % alternative data
+
+    figB2 = figure();
+    hold on;
+
+    steps = 3;              % show just first steps iterations & last iteration
+    colors = {[0, 100/255, 200/255], [0, 95/255, 0]};    % [w/o metcosts, w/ metcosts] for boxes
+    captions = cell(1, 2);
+    captions{1} = 'w/o met. costs';
+    captions{2} = 'w/ met. costs';
+
+    % % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
+    % % tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
+    tmpMatrixVergErr = horzcat(dataMatrixEnd{1}{1}, dataMatrixEnd{2}{1});
+    tmpMatrixMetApp = horzcat(dataMatrixEnd{1}{2}, dataMatrixEnd{2}{2});
+
+    % % sort by iteration step
+    idx = [];
+    for (i = 1 : 20)
+        idx(end + 1 : end + 2) = [i, i + 20];
+    end
+    tmpMatrixVergErr = tmpMatrixVergErr(:, idx);
+    tmpMatrixVergErr = [tmpMatrixVergErr(:, 1 : 2 * steps), tmpMatrixVergErr(:, end - 1 : end)];
+    tmpMatrixMetApp = tmpMatrixMetApp(:, idx);
+    tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
+
+    sub1 = subplot(2, 1, 1);
+    % pos = [1 1.33 2 2.33 3 3.33 4 4.33];
+    pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
+    boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    tmpHandle = findobj(boxHandl, 'type', 'text');
+    set(tmpHandle, 'Interpreter', 'tex');
+    grid minor;
+
+    subBoxHandl = findobj(gca,'Tag','Box');
+    % subBoxHandl = findobj(boxHandl,'Tag','Box');
+
+    boxesArray = findobj(boxHandl);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
+
+    % remove outliers
+    outl = findobj(boxHandl, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
+
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    ylabel('verg_{err} [deg]', 'FontSize', 12);
+
+    %% put ylabel right and rotate text
+    % set(sub1, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub1,'yaxislocation','left');
+    % set(lh,'position', p);
+
+    sub2 = subplot(2, 1, 2);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    grid minor;
+
+    boxesArray = findobj(boxHandl2);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
+
+    % remove outliers
+    outl = findobj(boxHandl2, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
+
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    xlabel('Iteration step', 'FontSize', 12);
+    ylabel('\Deltamet. costs [J]', 'FontSize', 12);
+
+    %% put ylabel right and rotate text
+    % set(sub2, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub2, 'yaxislocation', 'left');
+    % set(lh, 'position', p);
+
+    % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+
+    % l = legend(subBoxHandl([2, 1]), captions);
+    % l.FontSize = 7;
+    % l.Orientation = 'horizontal';
+    % l.Location = 'southoutside';
+
+    [l, objh, ~, ~] = legend(subBoxHandl([2, 1]), captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
+    set(objh, 'linewidth', 2);
+    l.Position(2) = 0.465;
+
+    %% repositioning subfigures
+    sub1.Position(3 : 4) = sub2.Position(3 : 4);
+    sub1.Position(2) = 0.6;
+
+    plotpath = sprintf('%s/FigB2_VergErrMetCostsVsTestIter', savePath);
     saveas(figB2, plotpath, 'png');
     close(figB2);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % combines plot
+
+    figB3 = figure();
+    hold on;
+
+    steps = 3;              % show just first steps iterations & last iteration
+    colors = {[0, 100/255, 200/255], [0, 95/255, 0]};    % [w/o metcosts, w/ metcosts] for boxes
+    captions = cell(1, 2);
+    captions{1} = 'w/o met. costs';
+    captions{2} = 'w/ met. costs';
+
+    % % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
+    % % tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
+    tmpMatrixVergErr = horzcat(dataMatrixEnd{1}{1}, dataMatrixEnd{2}{1});
+
+    % sort by iteration step
+    idx = [];
+    for (i = 1 : 20)
+        idx(end + 1 : end + 2) = [i, i + 20];
+    end
+    tmpMatrixVergErr = tmpMatrixVergErr(:, idx);
+    tmpMatrixVergErr = [tmpMatrixVergErr(:, 1 : 2 * steps), tmpMatrixVergErr(:, end - 1 : end)];
+
+    tmpMatrixMetApp = horzcat(modelHandle(1).model.metCostsApproach, modelHandle(2).model.metCostsApproach);
+
+    % sort by iteration step
+    idx = [];
+    for (i = 1 : 20)
+        idx(end + 1 : end + 2) = i : 20 : 2 * 20;
+    end
+    tmpMatrixMetApp = tmpMatrixMetApp(:, idx);
+    tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
+
+    sub1 = subplot(2, 1, 1);
+    % pos = [1 1.33 2 2.33 3 3.33 4 4.33];
+    pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
+    boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    tmpHandle = findobj(boxHandl, 'type', 'text');
+    set(tmpHandle, 'Interpreter', 'tex');
+    grid minor;
+
+    subBoxHandl = findobj(gca,'Tag','Box');
+    % subBoxHandl = findobj(boxHandl,'Tag','Box');
+
+    boxesArray = findobj(boxHandl);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
+
+    % remove outliers
+    outl = findobj(boxHandl, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
+
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    ylabel('verg_{err} [deg]', 'FontSize', 12);
+
+    %% put ylabel right and rotate text
+    % set(sub1, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub1,'yaxislocation','left');
+    % set(lh,'position', p);
+
+    sub2 = subplot(2, 1, 2);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    grid minor;
+
+    boxesArray = findobj(boxHandl2);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
+
+    % remove outliers
+    outl = findobj(boxHandl2, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
+
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    xlabel('Iteration step', 'FontSize', 12);
+    ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'FontSize', 12);
+
+    %% put ylabel right and rotate text
+    % set(sub2, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub2, 'yaxislocation', 'left');
+    % set(lh, 'position', p);
+
+    % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+
+    [l, objh, ~, ~] = legend(subBoxHandl([2, 1]), captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
+    set(objh, 'linewidth', 2);
+
+    %% repositioning subfigures
+    sub1.Position(3 : 4) = sub2.Position(3 : 4);
+    sub1.Position(2) = 0.6;
+    l.Position(2) = 0.465;
+
+    plotpath = sprintf('%s/FigB3_VergErrMetCostsVsTestIter', savePath);
+    saveas(figB3, plotpath, 'png');
+    close(figB3);
+
+    fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
+    fprintf(fileID, '========================================================================================================\n');
+    fprintf(fileID, 'testIter: %s %s\n\n', int2str([1, 1, 2, 2, 3, 3, 20, 20]), '= [w/o MetCosts, w/ MetCosts, w/o MetCosts, w/ MetCosts, ...]');
+
+    fprintf(fileID, 'figB3 vergErr median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixVergErr));
+    fprintf(fileID, 'figB3 vergErr iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixVergErr));
+    fprintf(fileID, 'figB3 vergErr mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixVergErr));
+    fprintf(fileID, 'figB3 vergErr std:\t%f %f %f %f %f %f %f %f\n\n', std(tmpMatrixVergErr));
+
+    fprintf(fileID, 'figB3 metCosts median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixMetApp));
+    fprintf(fileID, 'figB3 metCosts iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixMetApp));
+    fprintf(fileID, 'figB3 metCosts mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixMetApp));
+    fprintf(fileID, 'figB3 metCosts std:\t%f %f %f %f %f %f %f %f\n', std(tmpMatrixMetApp));
+
+    fclose(fileID);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure C
