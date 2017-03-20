@@ -592,10 +592,10 @@ function generateICDLPlotsAvg(simulator, modelAt)
     % hold on;
 
     % steps = 3;              % show just first steps iterations & last iteration
-    % colors = {[0, 100/255, 200/255], [0, 95/255, 0]};    % [w/o metcosts, w/ metcosts] for boxes
-    % captions = cell(1, 2);
-    % captions{1} = 'w/o met. costs';
-    % captions{2} = 'w/ met. costs';
+    colors = {[0, 100/255, 200/255], [0, 95/255, 0]};    % [w/o metcosts, w/ metcosts] for boxes
+    captions = cell(1, 2);
+    captions{1} = 'w/o met. costs';
+    captions{2} = 'w/ met. costs';
 
     % % % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
     % % % tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);

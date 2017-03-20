@@ -947,7 +947,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % shading interp;
     set(pcHandle, 'EdgeColor', 'none');
 
-    colormap(createCM(3) .* 0.96);
+    colormap(createCM(7));
     cb = colorbar();
     % cb.Label.String = 'vergence degree'; % use vergence degree as color dimension (background)
     cb.Label.String = 'metabolic costs [J]';   % use metabolic costs as color dimension (background)
@@ -971,12 +971,14 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
         % draw +1 pixel offset in respect to desired vergence distance
         [lateralDes, medialDes] = modelHandle(1).model.getAnglePoints(objDist(odIndex), 0.22);
         plot(lateralDes ./ modelHandle(1).model.scaleFacLR, medialDes ./ modelHandle(1).model.scaleFacMR, ...
-             'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1);%[0, 0.5882, 0]
+             'color', 'k', 'LineStyle', ':', 'LineWidth', 1);%[0, 0.5882, 0]
+             % 'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1);%[0, 0.5882, 0]
 
         % draw -1 pixel offset in respect to desired vergence distance
         [lateralDes, medialDes] = modelHandle(1).model.getAnglePoints(objDist(odIndex), -0.22);
         plot(lateralDes ./ modelHandle(1).model.scaleFacLR, medialDes ./ modelHandle(1).model.scaleFacMR, ...
-             'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1);%[0, 0.5882, 0]
+             'color', 'k', 'LineStyle', ':', 'LineWidth', 1);%[0, 0.5882, 0]
+             % 'color', [0, 0.5882, 0], 'LineStyle', ':', 'LineWidth', 1);%[0, 0.5882, 0]
 
         % draw a line of points into the plane that represent the desired vergence
         [lateralDes, medialDes] = modelHandle(1).model.getAnglePoints(objDist(odIndex), 0);

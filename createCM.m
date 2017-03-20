@@ -1552,7 +1552,7 @@ customColorMap6 = [
 190,0,0];
 
 % white -> grey := min -> max
-customColorMap7 = [round(linspace(1,128,256))', round(linspace(1,128,256))', round(linspace(1,128,256))'];
+customColorMap7 = [round(linspace(255,128,256))', round(linspace(255,128,256))', round(linspace(255,128,256))'];
 
 if (number == 1)
     customColorMap = customColorMap1 / 255;
