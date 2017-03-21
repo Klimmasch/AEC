@@ -580,10 +580,10 @@ classdef Model < handle
 
             command = [mfLR; mfMR];
         end
-        
+
         %%% Calculates muscle force for two muscles
         %   drawn from all permitted mf(l, m) ^= f(objDist, desVergErr), where l, m >= 0
-        %   == get muscle force equally distributed over object distance 
+        %   == get muscle force equally distributed over object distance
         %   BUT
         function [command, angleInit] = getMFedoodD(this, objDist, desVergErr, Distance)
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
@@ -621,8 +621,8 @@ classdef Model < handle
             mfLR = yi .* this.scaleFacLR;
         end
 
-        %%% Maps {medialRectusActivations, lateralRectusActivations} -> VergErr
-        %   i.e., maps muscle activity to angle (one eye)
+        %%% Maps {medialRectusActivations, lateralRectusActivations} -> vergence angle (single eye)
+        %   i.e. maps muscle activity to angle (one eye)
         function angle = getAngle(this, command)
             cmd = (command * 10) + 1;                                               % scale commands to table entries
             angle = interp2(this.degrees.results_deg, cmd(1), cmd(2), 'spline');    % interpolate in table by cubic splines
@@ -1585,7 +1585,7 @@ classdef Model < handle
                             end
                         elseif (initMethod == 1)
                             command = cmdInit(:, stimIter);
-                            angleNew = this.getAngle(command);
+                            angleNew = this.getAngle(command) * 2;
                         elseif (initMethod == 2)
                             [command, angleNew] = this.getMF2(objDist(odIndex), startVergErr(vergErrIndex));
                         elseif (initMethod == 3)
