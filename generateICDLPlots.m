@@ -1,5 +1,27 @@
 % Generates results plots for ICDL conference publication 2017
-function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simulator, modelAt)
+function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simulator)
+
+    modelAt1 = [200000 : 200000 : 1000000];
+    modelAt2 = modelAt1;
+
+    % check modelAt
+    checked = false;
+    while (~checked)
+        if (exist(sprintf('%s/%s', modelWoMetCostsFullPath, sprintf('modelAt%d', modelAt1(1))), 'dir') == 7)
+            if (exist(sprintf('%s/%s', modelWMetCostsFullPath, sprintf('modelAt%d', modelAt2(1))), 'dir') == 7)
+                checked = true;
+            elseif (modelAt2(1) == 250000)
+                error('modelWMetCosts could not be checked.');
+            else
+                modelAt2 = [250000 : 250000 : 1000000];
+            end
+        elseif (modelAt1(1) == 250000)
+            error('modelWoMetCosts could not be checked.');
+        else
+            modelAt1 = [250000 : 250000 : 1000000];
+        end
+    end
+    testPoints = {modelAt1, modelAt2};
 
     % load given models
     try
@@ -53,26 +75,24 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     objRange = [0.5, 1 : 6];
     parentFolder = {modelWoMetCostsFullPath, modelWMetCostsFullPath};
-    tmpModelHandle = cell(length(parentFolder), length(modelAt));
+    tmpModelHandle = cell(length(parentFolder), max(length(modelAt1), length(modelAt2)));
 
     % dataMatrix = {w/o[vergErrMatrix, metCostsMatrix], w/[vergErrMatrix, metCostsMatrix]}
     % vergErrMatrix = metCostsMatrix = objDist * VSE/0° * nStim * testInterval x testAt
-    dataMatrix = {{zeros(1680, length(modelAt)), []}, {zeros(1680, length(modelAt)), []}};
+    dataMatrix = {{zeros(1680, length(modelAt1)), []}, {zeros(1680, length(modelAt2)), []}};
     dataMatrixEnd = {{zeros(1680, 20), []}, {zeros(1680, 20), []}}; % final values @ modelAt = 1mio & iter = [1, 20]
 
     at0Matrix = {{zeros(1680, 1), []}, {zeros(1680, 1), []}};
-    iqrLine = zeros(4, length(modelAt) + 1); % +modelAt0
+    iqrLine = zeros(4, max(length(modelAt1), length(modelAt2)) + 1); % +modelAt0
 
     % extract all relevant data from all sub-experiments
     for i = 1 : length(modelHandle)
-        for trainedUntil = 1 : length(modelAt)
+        for trainedUntil = 1 : length(testPoints{i})
             try
-                subFolder = sprintf('modelAt%d', modelAt(trainedUntil));
+                subFolder = sprintf('modelAt%d', testPoints{i}(trainedUntil));
                 tmpModelHandle{i, trainedUntil} = load(sprintf('%s/%s/model.mat', parentFolder{i}, subFolder));
             catch
-               % catch case when (sub-)experiment started, but has no test results yet
-               warning('%s/%s/model.mat\ncould not be loaded.', parentFolder{i}, subFolder);
-               continue;
+                error('%s/%s/model.mat\ncould not be loaded.', parentFolder{i}, subFolder);
             end
 
             % fill data matrix & exclude VSA = 0° trials
@@ -86,7 +106,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
                                                                                                   tmpModelHandle{i, trainedUntil}.model.testInterval);
 
                 % end matrix creation
-                if (trainedUntil == length(modelAt))
+                if (trainedUntil == length(testPoints{i}))
                     for k = 1 : 20
                         dataMatrixEnd{i}{1}(currIdx : currIdx + colSize1 - 1, k) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, k);
                     end
@@ -106,7 +126,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
             dataMatrix{i}{2}(:, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult7(:, tmpModelHandle{i, trainedUntil}.model.testInterval);
 
             % end matrix creation
-            if (trainedUntil == length(modelAt))
+            if (trainedUntil == length(testPoints{i}))
                 for k = 1 : 20
                     dataMatrixEnd{i}{1}(currIdx : currIdx + colSize2 - 1, k) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, k);
                 end
@@ -148,13 +168,16 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
         boxHandle = boxplot(dataMatrix{i}{1});
         upWi = findobj(boxHandle, 'tag', 'Upper Whisker');
         lowWi = findobj(boxHandle, 'tag', 'Lower Whisker');
-        iqrLine(i * 2 - 1 : i * 2, :) = [arrayfun(@(x) x.YData(1), upWi)'; arrayfun(@(x) x.YData(2), lowWi)'];
+        tmp = [arrayfun(@(x) x.YData(1), upWi)'; arrayfun(@(x) x.YData(2), lowWi)'];
+        iqrLine(i * 2 - 1 : i * 2, 1 : length(tmp)) = tmp;
         close(tmpFig);
     end
 
     figA = figure();
     hold on;
-    modelAt = horzcat(0, modelAt);
+    modelAt1 = horzcat(0, modelAt1);
+    modelAt2 = horzcat(0, modelAt2);
+    testPoints = {modelAt1, modelAt2};
 
     for i = 1 : length(modelHandle)
         if (i == 1)
@@ -175,29 +198,29 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
         % fill area defined by upper & lower IQR bounds
         if (i == 1)
-            hp1 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
+            hp1 = patch([testPoints{i}, flip(testPoints{i})], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
                         colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.2);
             hp1.Parent = ax1;
 
             % color trick -> black entries in legend
-            hl1 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
+            hl1 = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
                          'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
         else
-            hp2 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
+            hp2 = patch([testPoints{i}, flip(testPoints{i})], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
                         colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.3);
             hp2.Parent = ax1;
 
             % color trick -> black entries in legend
-            hl2 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
+            hl2 = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
                          'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
         end
         hold on;
 
-        hl3 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
+        hl3 = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
                       'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
         hold on;
 
-        hl4 = plot(ax2, modelAt, median(dataMatrix{i}{2}), ...
+        hl4 = plot(ax2, testPoints{i}, median(dataMatrix{i}{2}), ...
                   'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(2), 'Color', colors{2}, 'LineWidth', lineWidths(2));
         hold on;
 
@@ -248,30 +271,54 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     fprintf(fileID, '========================================================================================================\n');
     fprintf(fileID, 'model w/o MetCosts\n');
-    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt));
+    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt1));
 
-    fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{1}));
-    fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
-    fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{1}));
-    fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
+    if (length(modelAt1) == 6)
+        fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
 
-    fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{2}));
-    fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
-    fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{2}));
-    fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
+    else
+        fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f\n', median(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f\n', mean(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
+
+        fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f\n', median(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f\n', mean(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
+    end
 
     fprintf(fileID, 'model w/ MetCosts\n');
-    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt));
+    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt2));
 
-    fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{1}));
-    fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
-    fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{1}));
-    fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
+    if (length(modelAt2) == 6)
+        fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
 
-    fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{2}));
-    fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
-    fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{2}));
-    fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
+    else
+        fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f\n', median(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f\n', mean(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
+
+        fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f\n', median(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f\n', mean(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
+    end
 
     fclose(fileID);
 
