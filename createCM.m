@@ -1554,6 +1554,41 @@ customColorMap6 = [
 % white -> grey := min -> max
 customColorMap7 = [round(linspace(255,128,256))', round(linspace(255,128,256))', round(linspace(255,128,256))'];
 
+% custom color map with discrete values, please specify as you wish
+customColorMap8 = zeros(256, 3);
+colors = [
+%     [0, 255, 0];    % green
+%     [0, 0, 255];    % blue
+%     [255, 0, 0];    % red
+%     [255, 255, 0];  % yellow
+%     [0, 255, 255];  % turquois
+%     [255, 0, 255];  % magenta
+%     [255,255,255];  % white
+%     [0,0,0];        % black
+%     [128,128,128];  % gray
+    [0, 255, 0];        % green
+    [85, 255, 0];
+    [170, 255, 0];
+    [255, 255, 0];      % over yellow
+    [255, 170, 0];
+    [255, 85, 0];
+    [255, 0, 0];        % to red
+    ]; 
+nCols = size(colors, 1);
+binSize = floor(256 / nCols);
+% distribute colors over bins
+for i = 1 : nCols
+    for j = 1 : binSize
+        customColorMap8(((i - 1) * binSize) + j, :) = colors(i, :);
+    end
+end
+% fill leftovers
+reminder = 256 - (binSize * nCols);
+if reminder > 0
+    customColorMap8((end - reminder + 1) : end, :) = repmat(colors(end, :), reminder, 1);
+end
+
+
 if (number == 1)
     customColorMap = customColorMap1 / 255;
 elseif (number == 2)
@@ -1568,4 +1603,6 @@ elseif (number == 6)
     customColorMap = customColorMap6 / 255;
 elseif (number == 7)
     customColorMap = customColorMap7 / 255;
+elseif (number == 8)
+    customColorMap = customColorMap8 / 255;
 end
