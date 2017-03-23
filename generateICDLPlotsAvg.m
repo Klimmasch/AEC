@@ -145,128 +145,128 @@ function generateICDLPlotsAvg(simulator, modelAt)
         close(tmpFig);
     end
 
-    % figA = figure();
-    % hold on;
-    % modelAt = horzcat(0, modelAt);
+    figA = figure();
+    hold on;
+    modelAt = horzcat(0, modelAt);
 
-    % for i = 1 : size(modelHandle, 2)
-    %     if (i == 1)
-    %         ax1 = gca; % current axes
-    %         ax1.YColor = colors{1};
-    %         ax1.XAxis.Label.String = 'Traintime';
-    %         ax1.XAxis.Label.FontSize = 12;
-    %         ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
-    %         % ax1.YAxis.Label.String = 'RMSE(verg_{err}) [deg]';
-    %         % ax1.YAxis.Label.String = sprintf('Vergence Error\nw.r.t. Opt. median [%%]');
-    %         ax1.YAxis.Label.String = 'median(verg_{err}) [deg]';
-    %         ax1.YAxis.Label.FontSize = 12;
+    for i = 1 : size(modelHandle, 2)
+        if (i == 1)
+            ax1 = gca; % current axes
+            ax1.YColor = colors{1};
+            ax1.XAxis.Label.String = 'Traintime';
+            ax1.XAxis.Label.FontSize = 12;
+            ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
+            % ax1.YAxis.Label.String = 'RMSE(verg_{err}) [deg]';
+            % ax1.YAxis.Label.String = sprintf('Vergence Error\nw.r.t. Opt. median [%%]');
+            ax1.YAxis.Label.String = 'median(verg_{err}) [deg]';
+            ax1.YAxis.Label.FontSize = 12;
 
-    %         ax2 = axes('Position', ax1.Position, ...
-    %                    'YAxisLocation', 'right', ...
-    %                    'Color', 'none');
-    %     end
+            ax2 = axes('Position', ax1.Position, ...
+                       'YAxisLocation', 'right', ...
+                       'Color', 'none');
+        end
 
-    %     % fill area defined by upper & lower IQR bounds
-    %     if (i == 1)
-    %         hp1 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
-    %                     colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.2);
-    %         hp1.Parent = ax1;
+        % fill area defined by upper & lower IQR bounds
+        if (i == 1)
+            hp1 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
+                        colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.2);
+            hp1.Parent = ax1;
 
-    %         % color trick -> black entries in legend
-    %         hl1 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
-    %                      'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
-    %     else
-    %         hp2 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
-    %                     colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.3);
-    %         hp2.Parent = ax1;
+            % color trick -> black entries in legend
+            hl1 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
+                         'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
+        else
+            hp2 = patch([modelAt, flip(modelAt)], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
+                        colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.3);
+            hp2.Parent = ax1;
 
-    %         % color trick -> black entries in legend
-    %         hl2 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
-    %                      'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
-    %     end
-    %     hold on;
+            % color trick -> black entries in legend
+            hl2 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
+                         'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
+        end
+        hold on;
 
-    %     hl3 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
-    %                   'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
-    %     hold on;
+        hl3 = plot(ax1, modelAt, median(dataMatrix{i}{1}), ...
+                      'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
+        hold on;
 
-    %     hl4 = plot(ax2, modelAt, median(dataMatrix{i}{2}), ...
-    %               'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(2), 'Color', colors{2}, 'LineWidth', lineWidths(2));
-    %     hold on;
+        hl4 = plot(ax2, modelAt, median(dataMatrix{i}{2}), ...
+                  'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(2), 'Color', colors{2}, 'LineWidth', lineWidths(2));
+        hold on;
 
-    %     if (i == 1)
-    %         % |\DeltaMC_{opt}| = |MC_{actual} - MC_{optimal}| / |MC_{start} - MC_{optimal}|
-    %         ax2.YAxis.Label.String = 'median(\Deltamet. costs) [J]';
-    %         ax2.YAxis.Label.FontSize = 12;
-    %         ax2.YColor = colors{2};
-    %         % ax2.YAxis.Label.Rotation = -90;
-    %         ax2.YAxisLocation = 'right';
-    %     end
-    % end
+        if (i == 1)
+            % |\DeltaMC_{opt}| = |MC_{actual} - MC_{optimal}| / |MC_{start} - MC_{optimal}|
+            ax2.YAxis.Label.String = 'median(\Deltamet. costs) [J]';
+            ax2.YAxis.Label.FontSize = 12;
+            ax2.YColor = colors{2};
+            % ax2.YAxis.Label.Rotation = -90;
+            ax2.YAxisLocation = 'right';
+        end
+    end
 
-    % grid(ax1, 'on');
-    % % ax1.YMinorGrid = 'on';
+    grid(ax1, 'on');
+    % ax1.YMinorGrid = 'on';
 
-    % % ax1.YAxis.Limits = [-0.05, 0.1];
-    % % ax2.YAxis.Limits = [-0.2, 1.1];
+    % ax1.YAxis.Limits = [-0.05, 0.1];
+    % ax2.YAxis.Limits = [-0.2, 1.1];
 
-    % % set #nTicks ticks for y-axis
-    % % set(ax1, 'YTick', round(linspace(ax1.YAxis.Limits(1), ax1.YAxis.Limits(2), nTicks - 2), 2));
-    % % set(ax2, 'YTick', round(linspace(ax2.YAxis.Limits(1), ax2.YAxis.Limits(2), nTicks), 2));
+    % set #nTicks ticks for y-axis
+    % set(ax1, 'YTick', round(linspace(ax1.YAxis.Limits(1), ax1.YAxis.Limits(2), nTicks - 2), 2));
+    % set(ax2, 'YTick', round(linspace(ax2.YAxis.Limits(1), ax2.YAxis.Limits(2), nTicks), 2));
 
-    % % gKey = {'w/o met. costs', 'w/  met. costs'};
-    % % l = gridLegend(lineHandles, 1, gKey, 'Location', 'southwest');
-    % %     %, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
-
-    % lineHandles = [hl1, hp1, hl2, hp2];
-    % gKey = {'w/o met. costs', 'IQR', ...
-    %         'w/  met. costs', 'IQR'};
-
-    % % l = gridLegend(lineHandles, 2, gKey, 'Location', 'southwest');
+    % gKey = {'w/o met. costs', 'w/  met. costs'};
+    % l = gridLegend(lineHandles, 1, gKey, 'Location', 'southwest');
     %     %, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
-    % l = legend(lineHandles, gKey, 'Orientation', 'horizontal', 'Location', 'south');
-    % % l.Box = 'off';
 
-    % % ax2.YAxis.Label.Position(1) = ax2.YAxis.Label.Position(1) * 1.5;
+    lineHandles = [hl1, hp1, hl2, hp2];
+    gKey = {'w/o met. costs', 'IQR', ...
+            'w/  met. costs', 'IQR'};
 
-    % plotpath = sprintf('%s/FigA_VergErrMetCostsVsTraintime', savePath);
-    % saveas(figA, plotpath, 'png');
-    % close(figA);
+    % l = gridLegend(lineHandles, 2, gKey, 'Location', 'southwest');
+        %, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
+    l = legend(lineHandles, gKey, 'Orientation', 'horizontal', 'Location', 'south');
+    % l.Box = 'off';
 
-    % % member models? III member!
-    % % TODO: add into file: IQR & median of vergerr and metcosts @ 20th iteration
-    % fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
-    % fprintf(fileID, 'model w/o MetCosts: %s\n', modelHandle(1, 1).model.savePath);
-    % fprintf(fileID, 'model w/  MetCosts: %s\n\n', modelHandle(1, 2).model.savePath);
+    % ax2.YAxis.Label.Position(1) = ax2.YAxis.Label.Position(1) * 1.5;
 
-    % fprintf(fileID, '========================================================================================================\n');
-    % fprintf(fileID, 'model w/o MetCosts\n');
-    % fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt));
+    plotpath = sprintf('%s/FigA_VergErrMetCostsVsTraintime', savePath);
+    saveas(figA, plotpath, 'png');
+    close(figA);
 
-    % fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{1}));
-    % fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
-    % fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{1}));
-    % fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
+    % member models? III member!
+    % TODO: add into file: IQR & median of vergerr and metcosts @ 20th iteration
+    fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
+    fprintf(fileID, 'model w/o MetCosts: %s\n', modelHandle(1, 1).model.savePath);
+    fprintf(fileID, 'model w/  MetCosts: %s\n\n', modelHandle(1, 2).model.savePath);
 
-    % fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{2}));
-    % fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
-    % fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{2}));
-    % fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
+    fprintf(fileID, '========================================================================================================\n');
+    fprintf(fileID, 'model w/o MetCosts\n');
+    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt));
 
-    % fprintf(fileID, 'model w/ MetCosts\n');
-    % fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt));
+    fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{1}));
+    fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
+    fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{1}));
+    fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
 
-    % fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{1}));
-    % fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
-    % fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{1}));
-    % fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
+    fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{2}));
+    fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
+    fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{2}));
+    fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
 
-    % fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{2}));
-    % fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
-    % fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{2}));
-    % fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
+    fprintf(fileID, 'model w/ MetCosts\n');
+    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt));
 
-    % fclose(fileID);
+    fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{1}));
+    fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
+    fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{1}));
+    fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
+
+    fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{2}));
+    fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
+    fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{2}));
+    fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
+
+    fclose(fileID);
 
     % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % %%% Figure B
@@ -585,160 +585,159 @@ function generateICDLPlotsAvg(simulator, modelAt)
     % saveas(figB2, plotpath, 'png');
     % close(figB2);
 
-    % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % % combines plot
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % combines plot
 
-    % figB3 = figure();
-    % hold on;
+    figB3 = figure();
+    hold on;
 
-    % steps = 3;              % show just first steps iterations & last iteration
-    colors = {[0, 100/255, 200/255], [0, 95/255, 0]};    % [w/o metcosts, w/ metcosts] for boxes
+    steps = 3;                                          % show just first steps iterations & last iteration
+    colors = {[0, 100/255, 200/255], [0, 95/255, 0]};   % [w/o metcosts, w/ metcosts] for boxes
     captions = cell(1, 2);
     captions{1} = 'w/o met. costs';
     captions{2} = 'w/ met. costs';
 
-    % % % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
-    % % % tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
-    % tmpMatrixVergErr = horzcat(dataMatrixEnd{1}{1}, dataMatrixEnd{2}{1});
+    % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
+    % tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
+    tmpMatrixVergErr = horzcat(dataMatrixEnd{1}{1}, dataMatrixEnd{2}{1});
 
-    % % sort by iteration step
-    % idx = [];
-    % for (i = 1 : 20)
-    %     idx(end + 1 : end + 2) = [i, i + 20];
-    % end
-    % tmpMatrixVergErr = tmpMatrixVergErr(:, idx);
-    % tmpMatrixVergErr = [tmpMatrixVergErr(:, 1 : 2 * steps), tmpMatrixVergErr(:, end - 1 : end)];
+    % sort by iteration step
+    idx = [];
+    for (i = 1 : 20)
+        idx(end + 1 : end + 2) = [i, i + 20];
+    end
+    tmpMatrixVergErr = tmpMatrixVergErr(:, idx);
+    tmpMatrixVergErr = [tmpMatrixVergErr(:, 1 : 2 * steps), tmpMatrixVergErr(:, end - 1 : end)];
 
-    % tmpMatrixMetApp = vertcat(horzcat(modelHandle(1, 1).model.metCostsApproach, modelHandle(1, 2).model.metCostsApproach), ...
-    %                           horzcat(modelHandle(2, 1).model.metCostsApproach, modelHandle(2, 2).model.metCostsApproach), ...
-    %                           horzcat(modelHandle(3, 1).model.metCostsApproach, modelHandle(3, 2).model.metCostsApproach), ...
-    %                           horzcat(modelHandle(4, 1).model.metCostsApproach, modelHandle(4, 2).model.metCostsApproach), ...
-    %                           horzcat(modelHandle(5, 1).model.metCostsApproach, modelHandle(5, 2).model.metCostsApproach));
+    tmpMatrixMetApp = vertcat(horzcat(modelHandle(1, 1).model.metCostsApproach, modelHandle(1, 2).model.metCostsApproach), ...
+                              horzcat(modelHandle(2, 1).model.metCostsApproach, modelHandle(2, 2).model.metCostsApproach), ...
+                              horzcat(modelHandle(3, 1).model.metCostsApproach, modelHandle(3, 2).model.metCostsApproach), ...
+                              horzcat(modelHandle(4, 1).model.metCostsApproach, modelHandle(4, 2).model.metCostsApproach), ...
+                              horzcat(modelHandle(5, 1).model.metCostsApproach, modelHandle(5, 2).model.metCostsApproach));
 
-    % % sort by iteration step
-    % idx = [];
-    % for (i = 1 : 20)
-    %     idx(end + 1 : end + 2) = i : 20 : 2 * 20;
-    % end
-    % tmpMatrixMetApp = tmpMatrixMetApp(:, idx);
-    % tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
+    % sort by iteration step
+    idx = [];
+    for (i = 1 : 20)
+        idx(end + 1 : end + 2) = i : 20 : 2 * 20;
+    end
+    tmpMatrixMetApp = tmpMatrixMetApp(:, idx);
+    tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
 
-    % sub1 = subplot(2, 1, 1);
-    % % pos = [1 1.33 2 2.33 3 3.33 4 4.33];
-    % pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
-    % boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
-    % tmpHandle = findobj(boxHandl, 'type', 'text');
-    % set(tmpHandle, 'Interpreter', 'tex');
-    % grid minor;
+    sub1 = subplot(2, 1, 1);
+    pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
+    boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    tmpHandle = findobj(boxHandl, 'type', 'text');
+    set(tmpHandle, 'Interpreter', 'tex');
+    grid minor;
 
-    % subBoxHandl = findobj(gca,'Tag','Box');
-    % % subBoxHandl = findobj(boxHandl,'Tag','Box');
+    subBoxHandl = findobj(gca,'Tag','Box');
+    % subBoxHandl = findobj(boxHandl,'Tag','Box');
 
-    % boxesArray = findobj(boxHandl);
-    % for i = 1 : size(tmpMatrixVergErr, 2)
-    %     idx2 = (1 : 7) + (i - 1) * 7;
-    %     idx2(6 : 7) = [];
-    %     if (mod(i, 2) == 1)
-    %         for j = 1 : length(idx2)
-    %             boxesArray(idx2(j)).Color = colors{1};
-    %         end
-    %     else
-    %         for j = 1 : length(idx2)
-    %             boxesArray(idx2(j)).Color = colors{2};
-    %         end
-    %     end
-    % end
+    boxesArray = findobj(boxHandl);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
 
-    % % remove outliers
-    % outl = findobj(boxHandl, 'tag', 'Outliers');
-    % set(outl, 'Visible', 'off');
+    % remove outliers
+    outl = findobj(boxHandl, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
 
-    % % rescale axis to whiskers + offset
-    % upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
-    % lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
-    % axis([0.9, 2.8, ...
-    %       min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
-    %       max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
 
-    % ylabel('verg_{err} [deg]', 'FontSize', 12);
+    ylabel('verg_{err} [deg]', 'FontSize', 12);
 
-    % %% put ylabel right and rotate text
-    % % set(sub1, 'yaxislocation', 'right');
-    % % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
-    % % p = get(lh, 'position');
-    % % set(sub1,'yaxislocation','left');
-    % % set(lh,'position', p);
+    %% put ylabel right and rotate text
+    % set(sub1, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub1,'yaxislocation','left');
+    % set(lh,'position', p);
 
-    % sub2 = subplot(2, 1, 2);
-    % boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
-    % grid minor;
+    sub2 = subplot(2, 1, 2);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    grid minor;
 
-    % boxesArray = findobj(boxHandl2);
-    % for i = 1 : size(tmpMatrixVergErr, 2)
-    %     idx2 = (1 : 7) + (i - 1) * 7;
-    %     idx2(6 : 7) = [];
-    %     if (mod(i, 2) == 1)
-    %         for j = 1 : length(idx2)
-    %             boxesArray(idx2(j)).Color = colors{1};
-    %         end
-    %     else
-    %         for j = 1 : length(idx2)
-    %             boxesArray(idx2(j)).Color = colors{2};
-    %         end
-    %     end
-    % end
+    boxesArray = findobj(boxHandl2);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
 
-    % % remove outliers
-    % outl = findobj(boxHandl2, 'tag', 'Outliers');
-    % set(outl, 'Visible', 'off');
+    % remove outliers
+    outl = findobj(boxHandl2, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
 
-    % % rescale axis to whiskers + offset
-    % upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
-    % lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
-    % axis([0.9, 2.8, ...
-    %       min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
-    %       max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
 
-    % xlabel('Iteration step', 'FontSize', 12);
-    % ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'FontSize', 12);
+    xlabel('Iteration step', 'FontSize', 12);
+    ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'FontSize', 12);
 
-    % %% put ylabel right and rotate text
-    % % set(sub2, 'yaxislocation', 'right');
-    % % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
-    % % p = get(lh, 'position');
-    % % set(sub2, 'yaxislocation', 'left');
-    % % set(lh, 'position', p);
+    %% put ylabel right and rotate text
+    % set(sub2, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub2, 'yaxislocation', 'left');
+    % set(lh, 'position', p);
 
-    % % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
-    % suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+    % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
 
-    % [l, objh, ~, ~] = legend(subBoxHandl([2, 1]), captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
-    % set(objh, 'linewidth', 2);
+    [l, objh, ~, ~] = legend(subBoxHandl([2, 1]), captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
+    set(objh, 'linewidth', 2);
 
-    % %% repositioning subfigures
-    % sub1.Position(3 : 4) = sub2.Position(3 : 4);
-    % sub1.Position(2) = 0.6;
-    % l.Position(2) = 0.465;
+    %% repositioning subfigures
+    sub1.Position(3 : 4) = sub2.Position(3 : 4);
+    sub1.Position(2) = 0.6;
+    l.Position(2) = 0.465;
 
-    % plotpath = sprintf('%s/FigB3_VergErrMetCostsVsTestIter', savePath);
-    % saveas(figB3, plotpath, 'png');
-    % close(figB3);
+    plotpath = sprintf('%s/FigB3_VergErrMetCostsVsTestIter', savePath);
+    saveas(figB3, plotpath, 'png');
+    close(figB3);
 
-    % fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
-    % fprintf(fileID, '========================================================================================================\n');
-    % fprintf(fileID, 'testIter: %s %s\n\n', int2str([1, 1, 2, 2, 3, 3, 20, 20]), '= [w/o MetCosts, w/ MetCosts, w/o MetCosts, w/ MetCosts, ...]');
+    fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
+    fprintf(fileID, '========================================================================================================\n');
+    fprintf(fileID, 'testIter: %s %s\n\n', int2str([1, 1, 2, 2, 3, 3, 20, 20]), '= [w/o MetCosts, w/ MetCosts, w/o MetCosts, w/ MetCosts, ...]');
 
-    % fprintf(fileID, 'figB3 vergErr median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixVergErr));
-    % fprintf(fileID, 'figB3 vergErr iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixVergErr));
-    % fprintf(fileID, 'figB3 vergErr mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixVergErr));
-    % fprintf(fileID, 'figB3 vergErr std:\t%f %f %f %f %f %f %f %f\n\n', std(tmpMatrixVergErr));
+    fprintf(fileID, 'figB3 vergErr median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixVergErr));
+    fprintf(fileID, 'figB3 vergErr iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixVergErr));
+    fprintf(fileID, 'figB3 vergErr mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixVergErr));
+    fprintf(fileID, 'figB3 vergErr std:\t%f %f %f %f %f %f %f %f\n\n', std(tmpMatrixVergErr));
 
-    % fprintf(fileID, 'figB3 metCosts median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixMetApp));
-    % fprintf(fileID, 'figB3 metCosts iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixMetApp));
-    % fprintf(fileID, 'figB3 metCosts mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixMetApp));
-    % fprintf(fileID, 'figB3 metCosts std:\t%f %f %f %f %f %f %f %f\n', std(tmpMatrixMetApp));
+    fprintf(fileID, 'figB3 metCosts median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixMetApp));
+    fprintf(fileID, 'figB3 metCosts iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixMetApp));
+    fprintf(fileID, 'figB3 metCosts mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixMetApp));
+    fprintf(fileID, 'figB3 metCosts std:\t%f %f %f %f %f %f %f %f\n', std(tmpMatrixMetApp));
 
-    % fclose(fileID);
+    fclose(fileID);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure C

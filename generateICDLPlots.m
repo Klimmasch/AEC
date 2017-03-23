@@ -835,6 +835,8 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     tmpMatrixVergErr = horzcat(dataMatrixEnd{1}{1}, dataMatrixEnd{2}{1});
     tmpMatrixVergErr = abs(tmpMatrixVergErr);
 
+    iqrLine2 = zeros(4, 4);
+
     % sort by iteration step
     idx = [];
     for (i = 1 : 20)
@@ -884,7 +886,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     % rescale axis to whiskers + offset
     upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
-    % lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
+    lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
 
     tmpMinY = round(max(arrayfun(@(x) x.YData(2), upWi)) * -0.11, 1);
     tmpMaxY = round(max(arrayfun(@(x) x.YData(2), upWi)) * 1.1, 1);
@@ -893,6 +895,13 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     set(gca, 'Ytick', linspace(tmpMinY, tmpMaxY, 6));
 
     ylabel('|verg_{err}| [deg]', 'FontSize', 12);
+
+    % store values for FigB5
+    tmp = [arrayfun(@(x) x.YData(1), upWi)'; arrayfun(@(x) x.YData(2), lowWi)'];
+    iqrLine2(1, :) = tmp(1, 1 : 2 : end);
+    iqrLine2(2, :) = tmp(2, 1 : 2 : end);
+    iqrLine2(3, :) = tmp(1, 2 : 2 : end);
+    iqrLine2(4, :) = tmp(2, 2 : 2 : end);
 
     %% put ylabel right and rotate text
     % set(sub1, 'yaxislocation', 'right');
@@ -977,6 +986,147 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     fprintf(fileID, 'figB4 metCosts std:\t%f %f %f %f %f %f %f %f\n\n', std(tmpMatrixMetApp));
 
     fclose(fileID);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % combines plot
+
+    figB5 = figure();
+    hold on;
+
+    steps = 3;                                          % show just first steps iterations & last iteration
+    colors = {[0, 100/255, 200/255], [0, 95/255, 0]};   % [w/o metcosts, w/ metcosts] for boxes
+    captions = {'w/o met. costs', 'w/ met. costs'};
+    alphas = {0.2, 0.3};
+    xVal = 1 : 4;
+
+    objHandels = {};
+
+    sub1 = subplot(2, 1, 1);
+    pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
+    % boxHandl = boxplot(tmpMatrixVergErr, 'positions', pos);
+    % tmpHandle = findobj(boxHandl, 'type', 'text');
+    % set(tmpHandle, 'Interpreter', 'tex');
+    grid minor;
+
+    % fill area defined by upper & lower IQR bounds
+    objHandels{end + 1} = patch([xVal, flip(xVal)], [iqrLine2(1, xVal), flip(iqrLine2(2, xVal))], ...
+                                colors{1}, 'LineStyle', 'none', 'LineWidth', 2, 'FaceAlpha', alphas{1});
+    hold on;
+
+    % median(|verg_{err}|) [deg]
+    objHandels{end + 1} = plot(sub1, xVal, median(tmpMatrixVergErr(:, 1 : 2 : end)), ...
+                               'Color', colors{1});
+    hold on;
+
+    objHandels{end + 1} = patch([1 : 4, flip(1 : 4)], [iqrLine2(3, 1 : 4), flip(iqrLine2(4, 1 : 4))], ...
+                                colors{2}, 'LineStyle', 'none', 'LineWidth', 2, 'FaceAlpha', alphas{2});
+    hold on;
+
+    objHandels{end + 1} = plot(sub1, xVal, median(tmpMatrixVergErr(:, 2 : 2 : end)), ...
+                               'Color', colors{2});
+    hold on;
+
+    % subBoxHandl = findobj(gca,'Tag','Box');
+    % % subBoxHandl = findobj(boxHandl,'Tag','Box');
+
+    % boxesArray = findobj(boxHandl);
+    % for i = 1 : size(tmpMatrixVergErr, 2)
+    %     idx2 = (1 : 7) + (i - 1) * 7;
+    %     idx2(6 : 7) = [];
+    %     if (mod(i, 2) == 1)
+    %         for j = 1 : length(idx2)
+    %             boxesArray(idx2(j)).Color = colors{1};
+    %         end
+    %     else
+    %         for j = 1 : length(idx2)
+    %             boxesArray(idx2(j)).Color = colors{2};
+    %         end
+    %     end
+    % end
+
+    % % remove outliers
+    % outl = findobj(boxHandl, 'tag', 'Outliers');
+    % set(outl, 'Visible', 'off');
+
+    % % rescale axis to whiskers + offset
+    % upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
+    % lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
+
+    % tmpMinY = round(max(arrayfun(@(x) x.YData(2), upWi)) * -0.11, 1);
+    % tmpMaxY = round(max(arrayfun(@(x) x.YData(2), upWi)) * 1.1, 1);
+
+    % axis([0.9, 2.8, tmpMinY, tmpMaxY]);
+    % set(gca, 'Ytick', linspace(tmpMinY, tmpMaxY, 6));
+
+    ylabel('|verg_{err}| [deg]', 'FontSize', 12);
+
+    %% put ylabel right and rotate text
+    % set(sub1, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub1,'yaxislocation','left');
+    % set(lh,'position', p);
+
+    sub2 = subplot(2, 1, 2);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'positions', pos);
+    grid minor;
+
+    boxesArray = findobj(boxHandl2);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
+
+    % remove outliers
+    outl = findobj(boxHandl2, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
+
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    % manually adjust XTicks
+    % sub1.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub1.XTickLabel = {'1','','2','','3','', '20'};
+    sub2.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub2.XTickLabel = {'1','2','3', '20'};
+
+    xlabel('Iteration step', 'FontSize', 12);
+    ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'FontSize', 12);
+
+    %% put ylabel right and rotate text
+    % set(sub2, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub2, 'yaxislocation', 'left');
+    % set(lh, 'position', p);
+
+    % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+
+    [l, objh, ~, ~] = legend([objHandels{2}, objHandels{4}], captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
+    set(objh, 'linewidth', 2);
+
+    %% repositioning subfigures
+    sub1.Position(3 : 4) = sub2.Position(3 : 4);
+    sub1.Position(2) = 0.6;
+    l.Position(2) = 0.465;
+
+    plotpath = sprintf('%s/FigB5_VergErrMetCostsVsTestIter', savePath);
+    saveas(figB5, plotpath, 'png');
+    close(figB5);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure C
