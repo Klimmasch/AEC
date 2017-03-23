@@ -1,6 +1,9 @@
 % Generates results plots for ICDL conference publication 2017
 function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simulator)
 
+    % dataVergErr := {0 = median(vergerr), 1 = median(abs(vergerr))}
+    dataVergErr = 1;
+
     modelAt1 = [200000 : 200000 : 1000000];
     modelAt2 = modelAt1;
 
@@ -63,13 +66,25 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure A
     % RMSE vergence error [deg] & delta MC opt [%] @ testing vs. traintime
-    % lineHandles = [];                               % [w/ metCosts, w/o metCosts]
+    objHandels = {};
     lineStyles = [':', '-'];                        % [w/ metCosts, w/o metCosts]
     lineWidths = [1.3, 1.3];                        % [vergErr, metCosts]
 
     markerStyles = ['x', 'x'];                      % [w/ metCosts, w/o metCosts]
     markerSizes = [5, 5];                           % [vergErr, metCosts]
-    colors = {'b', 'r', 'b', [0, 1, 128/255]};      % median[vergErr, metCosts] IQR_patches[w/ metCosts, w/o metCosts]
+
+    % median vergErr    [w/o metcosts, w/ metcosts]
+    % median metCosts   [w/o metcosts, w/ metcosts]
+    % IQR_patches       [w/o metCosts, w/ metCosts]
+    colors = {[0, 100/255, 200/255], [0, 95/255, 0], ...
+              'k', 'k', ...
+              [0, 100/255, 200/255], [0, 1, 128/255]};
+
+    % colors = {'b', 'b', ...
+    %           'r', 'r', ...
+    %           'b', [0, 1, 128/255]};
+
+    alphas = {0.2, 0.3};
 
     nTicks = 10;
 
@@ -163,6 +178,10 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
         dataMatrix{i}{1} = horzcat(at0Matrix{i}{1}, dataMatrix{i}{1});
         dataMatrix{i}{2} = horzcat(at0Matrix{i}{2}, dataMatrix{i}{2});
 
+        if (dataVergErr == 1)
+            dataMatrix{i}{1} = abs(dataMatrix{i}{1});
+        end
+
         % extract IQR edge coordinates
         tmpFig = figure();
         boxHandle = boxplot(dataMatrix{i}{1});
@@ -186,9 +205,13 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
             ax1.XAxis.Label.String = 'Traintime';
             ax1.XAxis.Label.FontSize = 12;
             ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
-            % ax1.YAxis.Label.String = 'RMSE(verg_{err}) [deg]';
-            % ax1.YAxis.Label.String = sprintf('Vergence Error\nw.r.t. Opt. median [%%]');
-            ax1.YAxis.Label.String = 'median(verg_{err}) [deg]';
+            if (dataVergErr == 0)
+                ax1.YAxis.Label.String = 'median(verg_{err}) [deg]';
+            elseif (dataVergErr == 1)
+                ax1.YAxis.Label.String = 'median(|verg_{err}|) [deg]';
+            else
+                error('dataVergErr = %d is not supported.', dataVergErr);
+            end
             ax1.YAxis.Label.FontSize = 12;
 
             ax2 = axes('Position', ax1.Position, ...
@@ -197,38 +220,26 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
         end
 
         % fill area defined by upper & lower IQR bounds
-        if (i == 1)
-            hp1 = patch([testPoints{i}, flip(testPoints{i})], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
-                        colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.2);
-            hp1.Parent = ax1;
-
-            % color trick -> black entries in legend
-            hl1 = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
-                         'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
-        else
-            hp2 = patch([testPoints{i}, flip(testPoints{i})], [iqrLine(i * 2 - 1, :), flip(iqrLine(i * 2, :))], ...
-                        colors{3 + i - 1}, 'LineStyle', 'none', 'FaceAlpha', 0.3);
-            hp2.Parent = ax1;
-
-            % color trick -> black entries in legend
-            hl2 = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
-                         'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', 'k', 'LineWidth', lineWidths(1));
-        end
+        objHandels{end + 1} = patch([testPoints{i}, flip(testPoints{i})], [iqrLine(i * 2 - 1, 1 : length(testPoints{i})), flip(iqrLine(i * 2, 1 : length(testPoints{i})))], ...
+                                  colors{i + 4}, 'LineStyle', 'none', 'FaceAlpha', alphas{i});
+        objHandels{end}.Parent = ax1;
         hold on;
 
-        hl3 = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
-                      'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1}, 'LineWidth', lineWidths(1));
+        % median(|verg_{err}|) [deg]
+        objHandels{end + 1} = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
+                                     'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(1), 'Color', colors{1 + i - 1}, 'LineWidth', lineWidths(1));
         hold on;
 
-        hl4 = plot(ax2, testPoints{i}, median(dataMatrix{i}{2}), ...
-                  'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(2), 'Color', colors{2}, 'LineWidth', lineWidths(2));
+        % median(\Delta met. costs) [W]
+        objHandels{end + 1} = plot(ax2, testPoints{i}, median(dataMatrix{i}{2}), ...
+                                   'LineStyle', lineStyles(i), 'Marker', markerStyles(i), 'MarkerSize', markerSizes(2), 'Color', colors{3 + i - 1}, 'LineWidth', lineWidths(2));
         hold on;
 
         if (i == 1)
             % |\DeltaMC_{opt}| = |MC_{actual} - MC_{optimal}| / |MC_{start} - MC_{optimal}|
-            ax2.YAxis.Label.String = 'median(\Deltamet. costs) [J]';
+            ax2.YAxis.Label.String = 'median(\Deltamet. costs) [W]';
             ax2.YAxis.Label.FontSize = 12;
-            ax2.YColor = colors{2};
+            ax2.YColor = colors{3};
             % ax2.YAxis.Label.Rotation = -90;
             ax2.YAxisLocation = 'right';
         end
@@ -237,24 +248,37 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     grid(ax1, 'on');
     % ax1.YMinorGrid = 'on';
 
-    % ax1.YAxis.Limits = [-0.05, 0.1];
-    % ax2.YAxis.Limits = [-0.2, 1.1];
+    % ax1.YAxis.Limits = [-0.05, 1.5];
+    % ax2.YAxis.Limits = [-0.1, 1];
 
     % set #nTicks ticks for y-axis
     % set(ax1, 'YTick', round(linspace(ax1.YAxis.Limits(1), ax1.YAxis.Limits(2), nTicks - 2), 2));
     % set(ax2, 'YTick', round(linspace(ax2.YAxis.Limits(1), ax2.YAxis.Limits(2), nTicks), 2));
 
-    % gKey = {'w/o met. costs', 'w/  met. costs'};
-    % l = gridLegend(lineHandles, 1, gKey, 'Location', 'southwest');
-    %     %, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
+    %% align both y-axis to zero
+    ratio = ax2.YAxis.Limits(1) / ax2.YAxis.Limits(2);
+    if ax1.YAxis.Limits(2) * ratio < ax1.YAxis.Limits(1)
+        ax1.YAxis.Limits = [ax1.YAxis.Limits(2) * ratio, ax1.YAxis.Limits(2)];
+    else
+        set(gca,'Ylim',[yliml(1) yliml(1)/ratio])
+        ax1.YAxis.Limits = [ax1.YAxis.Limits(1), ax1.YAxis.Limits(1) / ratio];
+    end
 
-    lineHandles = [hl1, hp1, hl2, hp2];
+    % realign plot order
+    uistack(objHandels{1},'bottom');
+    uistack(objHandels{4},'bottom');
+    uistack(objHandels{2},'top');
+    uistack(objHandels{5},'top');
+
+    lineHandles = [objHandels{2}, objHandels{1}, objHandels{5}, objHandels{4}];
     gKey = {'w/o met. costs', 'IQR', ...
             'w/  met. costs', 'IQR'};
 
     % l = gridLegend(lineHandles, 2, gKey, 'Location', 'southwest');
         %, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
-    l = legend(lineHandles, gKey, 'Orientation', 'horizontal', 'Location', 'south');
+    % l = legend(lineHandles, gKey, 'Orientation', 'horizontal', 'Location', 'south');
+    l = legend(lineHandles, gKey, 'Location', 'east');
+    l.Position(2) = 0.6;
     % l.Box = 'off';
 
     % ax2.YAxis.Label.Position(1) = ax2.YAxis.Label.Position(1) * 1.5;
@@ -394,7 +418,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     sub1 = subplot(2, 1, 1);
     pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
-    boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    boxHandl = boxplot(tmpMatrixVergErr, 'positions', pos);
     tmpHandle = findobj(boxHandl, 'type', 'text');
     set(tmpHandle, 'Interpreter', 'tex');
     grid minor;
@@ -440,7 +464,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % set(lh,'position', p);
 
     sub2 = subplot(2, 1, 2);
-    boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'positions', pos);
     grid minor;
 
     boxesArray = findobj(boxHandl2);
@@ -468,6 +492,12 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     axis([0.9, 2.8, ...
           min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
           max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    % manually adjust XTicks
+    sub1.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub1.XTickLabel = {'1','2','3', '20'};
+    sub2.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub2.XTickLabel = {'1','2','3', '20'};
 
     xlabel('Iteration step', 'FontSize', 12);
     % ylabel(sprintf('Opt. Metabolic\nCosts Approach [%%]'), 'FontSize', 12);
@@ -526,9 +556,8 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
 
     sub1 = subplot(2, 1, 1);
-    % pos = [1 1.33 2 2.33 3 3.33 4 4.33];
     pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
-    boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    boxHandl = boxplot(tmpMatrixVergErr, 'positions', pos);
     tmpHandle = findobj(boxHandl, 'type', 'text');
     set(tmpHandle, 'Interpreter', 'tex');
     grid minor;
@@ -572,7 +601,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % set(lh,'position', p);
 
     sub2 = subplot(2, 1, 2);
-    boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'positions', pos);
     grid minor;
 
     boxesArray = findobj(boxHandl2);
@@ -601,8 +630,14 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
           min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
           max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
 
+    % manually adjust XTicks
+    sub1.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub1.XTickLabel = {'1','2','3', '20'};
+    sub2.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub2.XTickLabel = {'1','2','3', '20'};
+
     xlabel('Iteration step', 'FontSize', 12);
-    ylabel('\Deltamet. costs [J]', 'FontSize', 12);
+    ylabel('\Deltamet. costs [W]', 'FontSize', 12);
 
     %% put ylabel right and rotate text
     % set(sub2, 'yaxislocation', 'right');
@@ -639,9 +674,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     steps = 3;              % show just first steps iterations & last iteration
     colors = {[0, 100/255, 200/255], [0, 95/255, 0]};    % [w/o metcosts, w/ metcosts] for boxes
-    captions = cell(1, 2);
-    captions{1} = 'w/o met. costs';
-    captions{2} = 'w/ met. costs';
+    captions = {'w/o met. costs', 'w/ met. costs'};
 
     % % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
     % % tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
@@ -666,9 +699,8 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
 
     sub1 = subplot(2, 1, 1);
-    % pos = [1 1.33 2 2.33 3 3.33 4 4.33];
     pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
-    boxHandl = boxplot(tmpMatrixVergErr, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    boxHandl = boxplot(tmpMatrixVergErr, 'positions', pos);
     tmpHandle = findobj(boxHandl, 'type', 'text');
     set(tmpHandle, 'Interpreter', 'tex');
     grid minor;
@@ -712,7 +744,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % set(lh,'position', p);
 
     sub2 = subplot(2, 1, 2);
-    boxHandl2 = boxplot(tmpMatrixMetApp, 'labels', {'1','','2','','3','','20',''}, 'positions', pos);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'positions', pos);
     grid minor;
 
     boxesArray = findobj(boxHandl2);
@@ -740,6 +772,12 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     axis([0.9, 2.8, ...
           min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
           max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    % manually adjust XTicks
+    sub1.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub1.XTickLabel = {'1','2','3', '20'};
+    sub2.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub2.XTickLabel = {'1','2','3', '20'};
 
     xlabel('Iteration step', 'FontSize', 12);
     ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'FontSize', 12);
@@ -778,7 +816,165 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     fprintf(fileID, 'figB3 metCosts median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixMetApp));
     fprintf(fileID, 'figB3 metCosts iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixMetApp));
     fprintf(fileID, 'figB3 metCosts mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixMetApp));
-    fprintf(fileID, 'figB3 metCosts std:\t%f %f %f %f %f %f %f %f\n', std(tmpMatrixMetApp));
+    fprintf(fileID, 'figB3 metCosts std:\t%f %f %f %f %f %f %f %f\n\n', std(tmpMatrixMetApp));
+
+    fclose(fileID);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % combines plot
+
+    figB4 = figure();
+    hold on;
+
+    steps = 3;                                          % show just first steps iterations & last iteration
+    colors = {[0, 100/255, 200/255], [0, 95/255, 0]};   % [w/o metcosts, w/ metcosts] for boxes
+    captions = {'w/o met. costs', 'w/ met. costs'};
+
+    % % tmpMatrix = [vergErr_woMetCosts, vergErr_wMetCosts, metCostsApproach_woMetCosts, metCostsApproach_wMetCosts]
+    % % tmpMatrixVergErr = horzcat(modelHandle(1).model.testResult3, modelHandle(2).model.testResult3);
+    tmpMatrixVergErr = horzcat(dataMatrixEnd{1}{1}, dataMatrixEnd{2}{1});
+    tmpMatrixVergErr = abs(tmpMatrixVergErr);
+
+    % sort by iteration step
+    idx = [];
+    for (i = 1 : 20)
+        idx(end + 1 : end + 2) = [i, i + 20];
+    end
+    tmpMatrixVergErr = tmpMatrixVergErr(:, idx);
+    tmpMatrixVergErr = [tmpMatrixVergErr(:, 1 : 2 * steps), tmpMatrixVergErr(:, end - 1 : end)];
+
+    tmpMatrixMetApp = horzcat(modelHandle(1).model.metCostsApproach, modelHandle(2).model.metCostsApproach);
+
+    % sort by iteration step
+    idx = [];
+    for (i = 1 : 20)
+        idx(end + 1 : end + 2) = i : 20 : 2 * 20;
+    end
+    tmpMatrixMetApp = tmpMatrixMetApp(:, idx);
+    tmpMatrixMetApp = [tmpMatrixMetApp(:, 1 : 2 * steps), tmpMatrixMetApp(:, end - 1 : end)];
+
+    sub1 = subplot(2, 1, 1);
+    pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
+    boxHandl = boxplot(tmpMatrixVergErr, 'positions', pos);
+    tmpHandle = findobj(boxHandl, 'type', 'text');
+    set(tmpHandle, 'Interpreter', 'tex');
+    grid minor;
+
+    subBoxHandl = findobj(gca,'Tag','Box');
+    % subBoxHandl = findobj(boxHandl,'Tag','Box');
+
+    boxesArray = findobj(boxHandl);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
+
+    % remove outliers
+    outl = findobj(boxHandl, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
+
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl, 'tag', 'Upper Whisker');
+    % lowWi = findobj(boxHandl, 'tag', 'Lower Whisker');
+
+    tmpMinY = round(max(arrayfun(@(x) x.YData(2), upWi)) * -0.11, 1);
+    tmpMaxY = round(max(arrayfun(@(x) x.YData(2), upWi)) * 1.1, 1);
+
+    axis([0.9, 2.8, tmpMinY, tmpMaxY]);
+    set(gca, 'Ytick', linspace(tmpMinY, tmpMaxY, 6));
+
+    ylabel('|verg_{err}| [deg]', 'FontSize', 12);
+
+    %% put ylabel right and rotate text
+    % set(sub1, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub1,'yaxislocation','left');
+    % set(lh,'position', p);
+
+    sub2 = subplot(2, 1, 2);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'positions', pos);
+    grid minor;
+
+    boxesArray = findobj(boxHandl2);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
+
+    % remove outliers
+    outl = findobj(boxHandl2, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
+
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+
+    % manually adjust XTicks
+    sub1.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub1.XTickLabel = {'1','2','3', '20'};
+    sub2.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub2.XTickLabel = {'1','2','3', '20'};
+
+    xlabel('Iteration step', 'FontSize', 12);
+    ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'FontSize', 12);
+
+    %% put ylabel right and rotate text
+    % set(sub2, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('Metabolic Costs\nReduction [%%]'), 'rot', -90, 'FontSize', 12);
+    % p = get(lh, 'position');
+    % set(sub2, 'yaxislocation', 'left');
+    % set(lh, 'position', p);
+
+    % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+
+    [l, objh, ~, ~] = legend(subBoxHandl([2, 1]), captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
+    set(objh, 'linewidth', 2);
+
+    %% repositioning subfigures
+    sub1.Position(3 : 4) = sub2.Position(3 : 4);
+    sub1.Position(2) = 0.6;
+    l.Position(2) = 0.465;
+
+    plotpath = sprintf('%s/FigB4_VergErrMetCostsVsTestIter', savePath);
+    saveas(figB4, plotpath, 'png');
+    close(figB4);
+
+    fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
+    fprintf(fileID, '========================================================================================================\n');
+    fprintf(fileID, 'testIter: %s %s\n\n', int2str([1, 1, 2, 2, 3, 3, 20, 20]), '= [w/o MetCosts, w/ MetCosts, w/o MetCosts, w/ MetCosts, ...]');
+
+    fprintf(fileID, 'figB4 vergErr median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixVergErr));
+    fprintf(fileID, 'figB4 vergErr iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixVergErr));
+    fprintf(fileID, 'figB4 vergErr mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixVergErr));
+    fprintf(fileID, 'figB4 vergErr std:\t%f %f %f %f %f %f %f %f\n\n', std(tmpMatrixVergErr));
+
+    fprintf(fileID, 'figB4 metCosts median:\t%f %f %f %f %f %f %f %f\n', median(tmpMatrixMetApp));
+    fprintf(fileID, 'figB4 metCosts iqr:\t%f %f %f %f %f %f %f %f\n', iqr(tmpMatrixMetApp));
+    fprintf(fileID, 'figB4 metCosts mean:\t%f %f %f %f %f %f %f %f\n', mean(tmpMatrixMetApp));
+    fprintf(fileID, 'figB4 metCosts std:\t%f %f %f %f %f %f %f %f\n\n', std(tmpMatrixMetApp));
 
     fclose(fileID);
 
@@ -971,21 +1167,34 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % colors{i} = {traj_line(1:10)_line, traj_line(1:10)_MarkerEdgeColor, traj_line(1:10)_MarkerFaceColor,
     %              traj_line(11:20),  traj_line(1:10)_MarkerEdgeColor, traj_line(1:10)_MarkerFaceColor
     %              end_fixation_MarkerEdgeColor, end_fixation_MarkerFaceColor}
-    %
-    % orange = [1, 94 / 255, 41 / 255],
-    % lightOrange = [1, 201 / 255, 41 / 255]
-    colors = {{colors{1}, colors{1}, colors{1}, [1, 201 / 255, 41 / 255], 'k', 'y'}, ...
-              {colors{2}, colors{2}, colors{2}, [1, 94 / 255, 41 / 255], 'k', 'm'}};
-              % {[0, 95/255, 0], [0, 95/255, 0], [0, 95/255, 0], [1, 94 / 255, 41 / 255], 'k', 'm'}};
+    % colors = {{colors{1}, colors{1}, colors{1}, [1, 201 / 255, 41 / 255], 'k', 'y'}, ...
+    %           {colors{2}, colors{2}, colors{2}, [1, 94 / 255, 41 / 255], 'k', 'm'}};
+
+    % white end points
+    % colors = {{[70 / 255, 160 / 255, 255 / 255], [70 / 255, 160 / 255, 255 / 255], [70 / 255, 160 / 255, 255 / 255], [1, 201 / 255, 41 / 255], 'k', [1, 1, 1]}, ...
+    %           {[0, 200/255, 0], [0, 200/255, 0], [0, 200/255, 0], [1, 94 / 255, 41 / 255], 'k', [1, 1, 1]}};
+
+    % dark end points
+    % colors = {{[70 / 255, 160 / 255, 255 / 255], [70 / 255, 160 / 255, 255 / 255], [70 / 255, 160 / 255, 255 / 255], [1, 201 / 255, 41 / 255], 'k', [0, 100/255, 200/255]}, ...
+    %           {[0, 200/255, 0], [0, 200/255, 0], [0, 200/255, 0], [1, 94 / 255, 41 / 255], 'k', [0, 95/255, 0]}};
+
+    % colors = {{[70 / 255, 160 / 255, 255 / 255], [70 / 255, 160 / 255, 255 / 255], [70 / 255, 160 / 255, 255 / 255], [1, 201 / 255, 41 / 255], 'k', [0, 100/255, 200/255]}, ...
+    %           {[0, 173/255, 87 / 255], [0, 173/255, 87 / 255], [0, 173/255, 87 / 255], [1, 94 / 255, 41 / 255], 'k', [0, 95/255, 0]}};
+
+    colors = {{[46 / 255, 147 / 255, 255 / 255], [46 / 255, 147 / 255, 255 / 255], [46 / 255, 147 / 255, 255 / 255], [1, 201 / 255, 41 / 255], 'k', [0, 110/255, 200/255]}, ...
+              {[0, 173/255, 87 / 255], [0, 173/255, 87 / 255], [0, 173/255, 87 / 255], [1, 94 / 255, 41 / 255], 'k', [0, 110/255, 0]}};
 
     lineStyles = {'-', '-'};
     % markers = {'o', 'o'}; % {traj_line(1:10), end_fixation}
     markers = {'*', 'o'};
+    % w/o met. costs: [line, end_point]
+    % w/  met. costs: [line, end_point]
+    markersizes = {3, 5, 3, 5};
 
     figC = figure('OuterPosition', [100, 100, 600, 600]);
     hold on;
 
-    title('Object Fixation Trajectories');
+    % title('Object Fixation Trajectories');
     xlabel('lateral rectus activation [%]');
     ylabel('medial rectus activation [%]');
 
@@ -997,7 +1206,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     colormap(createCM(7));
     cb = colorbar();
     % cb.Label.String = 'vergence degree'; % use vergence degree as color dimension (background)
-    cb.Label.String = 'metabolic costs [J]';   % use metabolic costs as color dimension (background)
+    cb.Label.String = 'metabolic costs [W]';   % use metabolic costs as color dimension (background)
 
     ax = gca;
     set(ax, 'Layer','top'); % bring axis to the front
@@ -1048,7 +1257,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
                 hl2 = plot(reshape(trajectory(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ modelHandle(1).model.scaleFacLR + 1, ...
                            reshape(trajectory(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ modelHandle(1).model.scaleFacMR + 1, ...
                            'Color', colors{1}{1}, 'LineStyle', lineStyles{1}, 'LineWidth', 2.1, ...%1
-                           'Marker', markers{1}, 'MarkerEdgeColor', colors{1}{2}, 'MarkerFaceColor',  colors{1}{3}, 'MarkerSize', 3);%4
+                           'Marker', markers{1}, 'MarkerEdgeColor', colors{1}{2}, 'MarkerFaceColor',  colors{1}{3}, 'MarkerSize', markersizes{1});%4
 
                 % % plot iter 1-interval in differen color if numIters >= model.interval
                 % if (numIters >= modelHandle(1).model.interval)
@@ -1067,7 +1276,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
                 % plot destination point
                 hl3 = plot(trajectory(odIndex, vergErrIndex, stim, end, 1) / modelHandle(1).model.scaleFacLR + 1, ...
                            trajectory(odIndex, vergErrIndex, stim, end, 2) / modelHandle(1).model.scaleFacMR + 1, ...
-                           'LineStyle', 'none', 'Marker', markers{2}, 'MarkerEdgeColor', colors{1}{5}, 'MarkerFaceColor',  colors{1}{6}, 'MarkerSize', 4);%'LineWidth', 1, 'Marker', markers{2}, 'MarkerEdgeColor', colors{1}{5}, 'MarkerFaceColor',  colors{1}{6}, 'MarkerSize', 4);
+                           'LineStyle', 'none', 'Marker', markers{2}, 'MarkerEdgeColor', colors{1}{5}, 'MarkerFaceColor',  colors{1}{6}, 'MarkerSize', markersizes{2});%'LineWidth', 1, 'Marker', markers{2}, 'MarkerEdgeColor', colors{1}{5}, 'MarkerFaceColor',  colors{1}{6}, 'MarkerSize', 4);
             end
         end
     end
@@ -1079,7 +1288,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
                 hl5 = plot(reshape(trajectory2(odIndex, vergErrIndex, stim, :, 1), [numIters + 1, 1]) ./ modelHandle(2).model.scaleFacLR + 1, ...
                            reshape(trajectory2(odIndex, vergErrIndex, stim, :, 2), [numIters + 1, 1]) ./ modelHandle(2).model.scaleFacMR + 1, ...
                            'Color', colors{2}{1}, 'LineStyle', lineStyles{2}, 'LineWidth', 2.1, ...%1
-                           'Marker', markers{1}, 'MarkerEdgeColor', colors{2}{2}, 'MarkerFaceColor',  colors{2}{3}, 'MarkerSize', 3);%4
+                           'Marker', markers{1}, 'MarkerEdgeColor', colors{2}{2}, 'MarkerFaceColor',  colors{2}{3}, 'MarkerSize', markersizes{3});%4
 
                 % % plot iter 1-interval in differen color if numIters >= model.interval
                 % if (numIters >= modelHandle(2).model.interval)
@@ -1098,10 +1307,14 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
                 % plot destination point
                 hl6 = plot(trajectory2(odIndex, vergErrIndex, stim, end, 1) / modelHandle(2).model.scaleFacLR + 1, ...
                            trajectory2(odIndex, vergErrIndex, stim, end, 2) / modelHandle(2).model.scaleFacMR + 1, ...
-                           'LineStyle', 'none', 'Marker', markers{2}, 'MarkerEdgeColor', colors{2}{5}, 'MarkerFaceColor',  colors{2}{6}, 'MarkerSize', 4);%'LineWidth', 1, 'Marker', markers{2}, 'MarkerEdgeColor', colors{2}{5}, 'MarkerFaceColor',  colors{2}{6}, 'MarkerSize', 4);
+                           'LineStyle', 'none', 'Marker', markers{2}, 'MarkerEdgeColor', colors{2}{5}, 'MarkerFaceColor',  colors{2}{6}, 'MarkerSize', markersizes{4});%'LineWidth', 1, 'Marker', markers{2}, 'MarkerEdgeColor', colors{2}{5}, 'MarkerFaceColor',  colors{2}{6}, 'MarkerSize', 4);
             end
         end
     end
+
+    % realign plot order
+    uistack(hl3,'top');
+    uistack(hl6,'top');
 
     % gKey = {sprintf('1..%dth  iteration', modelHandle(1).model.interval), ...
     %         sprintf('%d..%dth iteration', modelHandle(1).model.interval, numIters), ...
@@ -1110,10 +1323,13 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     %         sprintf('%d..%dth iteration', modelHandle(1).model.interval, numIters), ...
     %         'end fixation w/  met. costs'};
 
-    gKey = {sprintf('0th..%dth iteration', numIters), ...
-            'end fixation  \bfw/o met. costs', ...
-            sprintf('0th..%dth iteration', numIters), ...
-            'end fixation  \bfw/   met. costs'};
+    % gKey = {sprintf('0th..%dth iteration', numIters), ...
+    %         'end fixation  \bfw/o met. costs', ...
+    %         sprintf('0th..%dth iteration', numIters), ...
+    %         'end fixation  \bfw/   met. costs'};
+
+    gKey = {strcat(sprintf('0th..%dth iteration', numIters), ' \bfw/o met. costs'),
+            strcat(sprintf('0th..%dth iteration', numIters), ' \bfw/   met. costs')};
 
     % hDummy1 = plot(NaN, NaN, 'LineStyle', 'none');
     % hDummy2 = plot(NaN, NaN, 'LineStyle', 'none');
@@ -1126,7 +1342,8 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     %         'end fixation', ...
     %         '\bfw/   met. costs'};
 
-    l = gridLegend([hl2, hl3, hl5, hl6], 2, gKey, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
+    l = gridLegend([hl2, hl5], 1, gKey, 'Location', 'northwest', 'Fontsize', 8);
+    % l = gridLegend([hl2, hl3, hl5, hl6], 2, gKey, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
     % l = gridLegend([hl2, hl3, hDummy1, hl5, hl6, hDummy2], 3, gKey, 'Orientation', 'Horizontal', 'Location', 'southoutside', 'Fontsize', 8);
     % l.Box = 'off';
 
@@ -1144,8 +1361,8 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     % manual positioning
     ax.Position = [0.085, 0.2, 0.75, 0.75];
-    l.Position(1) = 0.15;
-    l.Position(2) = 0.04;
+    % l.Position(1) = 0.15;
+    % l.Position(2) = 0.04;
 
     % set(figC,'PaperPositionMode','auto'); % keep aspect ratio
     plotpath = sprintf('%s/FigC_muscleActivityTrajectories', savePath);
