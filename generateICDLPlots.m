@@ -204,7 +204,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
             ax1.YColor = colors{1};
             ax1.XAxis.Label.String = 'Traintime';
             ax1.XAxis.Label.FontSize = 12;
-            ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
+            % ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
             if (dataVergErr == 0)
                 ax1.YAxis.Label.String = 'median(verg_{err}) [deg]';
             elseif (dataVergErr == 1)
@@ -511,7 +511,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % set(lh, 'position', p);
 
     % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
-    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+    % suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
 
     l = legend(subBoxHandl([2, 1]), captions);
     l.FontSize = 7;
@@ -647,7 +647,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % set(lh, 'position', p);
 
     % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
-    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+    % suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
 
     % l = legend(subBoxHandl([2, 1]), captions);
     % l.FontSize = 7;
@@ -790,7 +790,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % set(lh, 'position', p);
 
     % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
-    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+    % suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
 
     [l, objh, ~, ~] = legend(subBoxHandl([2, 1]), captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
     set(objh, 'linewidth', 2);
@@ -957,7 +957,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % set(lh, 'position', p);
 
     % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
-    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+    % suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
 
     [l, objh, ~, ~] = legend(subBoxHandl([2, 1]), captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
     set(objh, 'linewidth', 2);
@@ -1114,7 +1114,7 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % set(lh, 'position', p);
 
     % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
-    suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+    % suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
 
     [l, objh, ~, ~] = legend([objHandels{2}, objHandels{4}], captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
     set(objh, 'linewidth', 2);
