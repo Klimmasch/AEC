@@ -17,19 +17,19 @@ function plotPerformanceForParameters(modelAt)
     % 8)    figure name
 
     %%% actor LR vs critic LR
-    parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
+    % parentFolder = '/home/aecgroup/aecdata/Results/CriticLR vs ActorLR';
 
-    labelVar1 = 'actor learning range';
-    labelVar2 = 'critic learning range';
+    % labelVar1 = 'actor learning range';
+    % labelVar2 = 'critic learning range';
 
-    var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-    var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
-    var1 = flipud(var1); % setting the offspring to lower left hand corner
+    % var1 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    % var2 = [[1, 1]; [1, 0]; [0.75, 0.75]; [0.75, 0]; [0.5, 0.5]; [0.5, 0]; [0.25, 0.25]; [0.25, 0]];
+    % var1 = flipud(var1); % setting the offspring to lower left hand corner
 
-    numberFormatVar1 = '[%1.2f - %1.2f]';
-    numberFormatVar2 = '[%1.2f - %1.2f]';
+    % numberFormatVar1 = '[%1.2f - %1.2f]';
+    % numberFormatVar2 = '[%1.2f - %1.2f]';
 
-    figName = 'CriticLRActorLR';
+    % figName = 'CriticLRActorLR';
 
     %%% regularizer vs actor leaning range
     % parentFolder = '/home/aecgroup/aecdata/Results/Regularizer vs Actor Learning Rate';
@@ -258,18 +258,32 @@ function plotPerformanceForParameters(modelAt)
     % figName = 'gammaVsMetCost';
 
     %% metabolic costs versus discount factor: different parameters
-    parentFolder = '/home/aecgroup/aecdata/Results/GammaVsMetCostsBiasFineGrain'; %/GammaVsMetCostsBias GammaVsMetCosts2
+    parentFolder = '/home/aecgroup/aecdata/Results/GammaVsMetCosts_FineGrain21'; %/GammaVsMetCostsBias GammaVsMetCosts2
 
     labelVar2 = 'Metab. Costs';
     labelVar1 = 'Discount Factor';
 
-    var2 = [[0]; [0.0017]; [0.0033]; [0.005]];
-    var1 = [0.01; 0.07; 0.1; 0.2];
+    var2 = [[0]; [0.05]; [0.075]; [0.1]];
+    var1 = [0.01; 0.05; 0.1];
 
-    numberFormatVar2 = '%1.4f';
+    numberFormatVar2 = '%1.3f';
     numberFormatVar1 = '%1.2f';
 
-    figName = 'GammaVsMetCostsBiasFineGrain';
+    figName = 'GammaVsMetCostsBiasFineGrain21';
+
+    %% metabolic costs versus discount factor: different parameters
+    % parentFolder = '/home/aecgroup/aecdata/Results/GammaVsMetCostsBias0.02'; %/GammaVsMetCostsBias GammaVsMetCosts2
+
+    % labelVar2 = 'Metab. Costs';
+    % labelVar1 = 'Discount Factor';
+
+    % var2 = [[0]; [0.01]; [0.025]; [0.05]];
+    % var1 = [0.1; 0.3; 0.6; 0.9];
+
+    % numberFormatVar2 = '%1.3f';
+    % numberFormatVar1 = '%1.1f';
+
+    % figName = 'GammaVsMetCosts_Bias002';
 
     % ------------------
     % Results extraction
@@ -337,12 +351,12 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(var2 == model.rlModel.CActor.varianceRange(2));
 
             %%% regularizer vs actor leaning range
-%             ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
-%             jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
+            % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
             %%% actor LR vs critic LR
-            ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
-            jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+            % ind = find(ismember(var2, model.rlModel.criticLearningRange, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% discount factor vs interval
             % ind = find(ismember(var2, model.interval, 'rows'));
@@ -361,8 +375,8 @@ function plotPerformanceForParameters(modelAt)
             % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% actor LR vs weight init
-%             ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
-%             jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
+            % ind = find(ismember(var2, model.rlModel.weight_range, 'rows'));
+            % jnd = find(ismember(var1, model.rlModel.actorLearningRange, 'rows'));
 
             %%% regularizer vs std in feature vector
             % ind = find(ismember(var2, model.desiredStdZT, 'rows'));
@@ -376,7 +390,7 @@ function plotPerformanceForParameters(modelAt)
             % ind = find(ismember(var2, model.rlModel.actorLearningRange, 'rows'));
             % jnd = find(ismember(var1, model.rlModel.CActor.regularizer, 'rows'));
 
-            %%% criticLR vs gamma
+            %%% gamma vs. metCosts
             ind = find(ismember(var2, model.metCostRange, 'rows'));
             jnd = find(ismember(var1, model.rlModel.CCritic.gamma, 'rows'));
 
@@ -566,6 +580,7 @@ function plotPerformanceForParameters(modelAt)
                         xlabel(sprintf(labelVar1));
                     end
                 end
+                xlabel(sprintf(labelVar1));
             end
 
             if (figIter == 1)
