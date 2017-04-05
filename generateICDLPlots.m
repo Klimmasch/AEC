@@ -4,8 +4,8 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
     % dataVergErr := {0 = median(vergerr), 1 = median(abs(vergerr))}
     dataVergErr = 1;
 
-    % modelAt1 = [200000 : 200000 : 1000000];
-    modelAt1 = [50000 : 50000 : 200000, 300000 : 100000 : 1000000];
+    modelAt1 = [200000 : 200000 : 1000000];
+    % modelAt1 = [50000 : 50000 : 200000, 300000 : 100000 : 1000000];
     modelAt2 = modelAt1;
 
     % check modelAt
@@ -1450,8 +1450,9 @@ function generateICDLPlots(modelWoMetCostsFullPath, modelWMetCostsFullPath, simu
 
     % gKey = {strcat(sprintf('0th..%dth iteration', numIters), ' \bfw/o met. costs'),
     %         strcat(sprintf('0th..%dth iteration', numIters), ' \bfw/   met. costs')};
-    gKey = {strcat(sprintf('0th..%dth iteration', numIters), ' M'),
-            strcat(sprintf('0th..%dth iteration', numIters), ' M_{C}')};
+    % gKey = {strcat(sprintf('0th..%dth iteration', numIters), ' M'),
+    %         strcat(sprintf('0th..%dth iteration', numIters), ' M_{C}')};
+    gKey = {' M_{ }', 'M_{C}'};
 
     % hDummy1 = plot(NaN, NaN, 'LineStyle', 'none');
     % hDummy2 = plot(NaN, NaN, 'LineStyle', 'none');
