@@ -264,6 +264,7 @@ classdef Model < handle
                 %%% Preparing Functions
                 % getMF functions
 
+                % interpolation tables, each for a _single_ eye
                 obj.degrees = load('Degrees.mat');              % f(medial_rectus_activiation, medial_rectus_activiation) = vergence_angle table 'results_deg'
                 % obj.degrees = load('DegreesFlatter.mat');
                 % obj.degrees = load('DegreesFlatInverted.mat');
@@ -288,7 +289,7 @@ classdef Model < handle
                 obj.scaleFacLR = ((usedCols - 1) / 10) / size(obj.degreesIncRes, 2);	% calculation of table_index -> muscle inervation
 
                 % increased resolution of metCosts table
-                obj.metCostsIncRes = interp2(obj.metCosts.results(1 : usedRows, 1 : usedCols), resFactor);
+                obj.metCostsIncRes = interp2(obj.metCosts.results(1 : usedRows, 1 : usedCols), resFactor, 'spline');
 %                 obj.metCostsIncRes = interp2(obj.metCosts.results(end - usedRows + 1 : end, end - usedCols + 1 : end), resFactor);
 
                 % muscle function :=  mf(vergence_angle) = muscle force [single muscle]
@@ -591,7 +592,7 @@ classdef Model < handle
 
             if Distance > 0.1
                 Distance = 0.1
-                sprintf('your Distance was too big ;) I set it to 0.1 ;-*')
+                warning('your Distance was too big ;) I set it to 0.1 ;-*');
             end
             % angleInit is the angle for both eyes, but degreesIncRes only
             % contains angles for one eye
@@ -1677,7 +1678,7 @@ classdef Model < handle
             end
 
             % pcHandle = pcolor(this.degreesIncRes); % use vergence degree as color dimension (background)
-            pcHandle = pcolor(this.metCostsIncRes);  % use metabolic costs as color dimension (background)
+            pcHandle = pcolor(this.metCostsIncRes .* 2);  % use metabolic costs as color dimension (background)
             % shading interp;
             set(pcHandle, 'EdgeColor', 'none');
 
