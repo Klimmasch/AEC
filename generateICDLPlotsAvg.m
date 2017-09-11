@@ -7,8 +7,8 @@ function generateICDLPlotsAvg(simulator)
     %% TODO: implement flexible modelAt
     modelAt1 = [250000 : 250000 : 1000000];
     modelAt2 = [200000 : 200000 : 1000000];
-    % modelAt1 = [50000 : 50000 : 200000, 300000 : 100000 : 1000000];
-    % modelAt2 = modelAt1;
+    modelAt1 = [50000 : 50000 : 200000, 300000 : 100000 : 1000000];
+    modelAt2 = modelAt1;
 
     % check modelAt
     checked = false;
@@ -31,12 +31,12 @@ function generateICDLPlotsAvg(simulator)
 
     % load given models
     try
-        % modelHandle = [load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_8_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_8_gamma_0.3_metCost_[0.035]', '/model.mat')); ...
-        %                load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_9_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_9_gamma_0.3_metCost_[0.035]', '/model.mat')); ...
-        %                load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_10_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_10_gamma_0.3_metCost_[0.035]', '/model.mat')); ...
-        %                load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_11_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_11_gamma_0.3_metCost_[0.035]', '/model.mat')); ...
-        %                load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_12_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_12_gamma_0.3_metCost_[0.035]', '/model.mat'))];
-        modelHandle = [load(strcat('/home/aecgroup/aecdata/Results/GammaVsMetCosts_FinerGrainBias002/17-03-09_1000000iter_1_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/GammaVsMetCosts_FinerGrainBias002/17-03-17_1000000iter_3_gamma_0.3_metCost_[0.035]', '/model.mat'))];
+        modelHandle = [load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_8_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_8_gamma_0.3_metCost_[0.035]', '/model.mat')); ...
+                       load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_9_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_9_gamma_0.3_metCost_[0.035]', '/model.mat')); ...
+                       load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_10_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_10_gamma_0.3_metCost_[0.035]', '/model.mat')); ...
+                       load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_11_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_11_gamma_0.3_metCost_[0.035]', '/model.mat')); ...
+                       load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_12_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_12_gamma_0.3_metCost_[0.035]', '/model.mat'))];
+%         modelHandle = [load(strcat('/home/aecgroup/aecdata/Results/GammaVsMetCosts_FinerGrainBias002/17-03-09_1000000iter_1_gamma_0.3_metCost_[0.000]', '/model.mat')), load(strcat('/home/aecgroup/aecdata/Results/GammaVsMetCosts_FinerGrainBias002/17-03-17_1000000iter_3_gamma_0.3_metCost_[0.035]', '/model.mat'))];
     catch
         error('Model(s) could not be loaded.');
     end
@@ -60,301 +60,301 @@ function generateICDLPlotsAvg(simulator)
         warning('testHist contains zero entries. %d of w/o and %d of w/ model.testHist entries will be discarded.', adjust(1), adjust(2));
     end
 
-    % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % %%% Figure A
-    % % RMSE vergence error [deg] & delta MC opt [%] @ testing vs. traintime
-    % objHandels = {};
-    % lineStyles = {'-', '--'};                       % [left y-axis, right y-axis]
-    % lineWidths = [2, 2];                            % [vergErr, metCosts]
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% Figure A
+    % RMSE vergence error [deg] & delta MC opt [%] @ testing vs. traintime
+    objHandels = {};
+    lineStyles = {'-', '--'};                       % [left y-axis, right y-axis]
+    lineWidths = [2, 2];                            % [vergErr, metCosts]
     fontSizes = [12];                               % global font size for axis labels, axis ticks and legends
 
-    % markerStyles = ['x', 'o'];                      % [left y-axis, right y-axis]
-    % markerSizes = [5, 5];                           % [vergErr, metCosts]
+    markerStyles = ['x', 'o'];                      % [left y-axis, right y-axis]
+    markerSizes = [5, 5];                           % [vergErr, metCosts]
 
-    % % median vergErr    [w/o metcosts, w/ metcosts]
-    % % median metCosts   [w/o metcosts, w/ metcosts]
-    % % IQR_patches       [w/o metCosts, w/ metCosts]
-    % colors = {[0, 100/255, 200/255], [0, 95/255, 0], ...
-    %           [0, 100/255, 200/255], [0, 95/255, 0], ...
-    %           [0, 100/255, 200/255], [0, 1, 128/255]};
+    % median vergErr    [w/o metcosts, w/ metcosts]
+    % median metCosts   [w/o metcosts, w/ metcosts]
+    % IQR_patches       [w/o metCosts, w/ metCosts]
+    colors = {[0, 100/255, 200/255], [0, 95/255, 0], ...
+              [0, 100/255, 200/255], [0, 95/255, 0], ...
+              [0, 100/255, 200/255], [0, 1, 128/255]};
 
-    % alphas = {0.2, 0.3};
+    alphas = {0.2, 0.3};
 
-    % nTicks = 10;
+    nTicks = 10;
 
-    % objRange = [0.5, 1 : 6];
-    % tmpModelHandle = cell(2, max(length(modelAt1), length(modelAt2)));
+    objRange = [0.5, 1 : 6];
+    tmpModelHandle = cell(2, max(length(modelAt1), length(modelAt2)));
 
-    % % dataMatrix = {w/o[vergErrMatrix, metCostsMatrix], w/[vergErrMatrix, metCostsMatrix]}
-    % % vergErrMatrix = metCostsMatrix = objDist * VSE/0° * nStim * testInterval x testAt
-    % dataMatrix = {{zeros(1680 * size(modelHandle, 1), length(modelAt1)), []}, {zeros(1680 * size(modelHandle, 1), length(modelAt2)), []}};
-    % dataMatrixEnd = {{zeros(1680 * size(modelHandle, 1), 20), []}, {zeros(1680 * size(modelHandle, 1), 20), []}}; % final values @ modelAt = 1mio & iter = [1, 20]
+    % dataMatrix = {w/o[vergErrMatrix, metCostsMatrix], w/[vergErrMatrix, metCostsMatrix]}
+    % vergErrMatrix = metCostsMatrix = objDist * VSE/0° * nStim * testInterval x testAt
+    dataMatrix = {{zeros(1680 * size(modelHandle, 1), length(modelAt1)), []}, {zeros(1680 * size(modelHandle, 1), length(modelAt2)), []}};
+    dataMatrixEnd = {{zeros(1680 * size(modelHandle, 1), 20), []}, {zeros(1680 * size(modelHandle, 1), 20), []}}; % final values @ modelAt = 1mio & iter = [1, 20]
 
-    % at0Matrix = {{zeros(1680, 1), []}, {zeros(1680, 1), []}};
-    % iqrLine = zeros(4, max(length(modelAt1), length(modelAt2)) + 1); % +modelAt0
+    at0Matrix = {{zeros(1680, 1), []}, {zeros(1680, 1), []}};
+    iqrLine = zeros(4, max(length(modelAt1), length(modelAt2)) + 1); % +modelAt0
 
-    % % extract all relevant data from all sub-experiments
-    % for i = 1 : size(modelHandle, 2)
-    %     for seedIter = 1 : size(modelHandle, 1)
-    %         for trainedUntil = 1 : length(testPoints{i})
-    %             try
-    %                 subFolder = sprintf('modelAt%d', testPoints{i}(trainedUntil));
-    %                 tmpModelHandle{i, trainedUntil} = load(sprintf('%s/%s/model.mat', modelHandle(seedIter, i).model.savePath, subFolder));
-    %             catch
-    %                 % catch case when (sub-)experiment started, but has no test results yet
-    %                 error('%s/%s/model.mat\ncould not be loaded.', modelHandle(seedIter, i).model.savePath, subFolder);
-    %             end
+    % extract all relevant data from all sub-experiments
+    for i = 1 : size(modelHandle, 2)
+        for seedIter = 1 : size(modelHandle, 1)
+            for trainedUntil = 1 : length(testPoints{i})
+                try
+                    subFolder = sprintf('modelAt%d', testPoints{i}(trainedUntil));
+                    tmpModelHandle{i, trainedUntil} = load(sprintf('%s/%s/model.mat', modelHandle(seedIter, i).model.savePath, subFolder));
+                catch
+                    % catch case when (sub-)experiment started, but has no test results yet
+                    error('%s/%s/model.mat\ncould not be loaded.', modelHandle(seedIter, i).model.savePath, subFolder);
+                end
 
-    %             % fill data matrix & exclude VSA = 0° trials
-    %             nStim = size(tmpModelHandle{i, trainedUntil}.model.testResult3, 1) / (length(objRange) * 7);
-    %             currIdx = 1 + 1680 * (seedIter - 1);
-    %             startInd = 1;
-    %             startInd0 = nStim * 3 + 1;
-    %             for j = 1 : length(objRange)
-    %                 colSize1 = length(tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, tmpModelHandle{i, trainedUntil}.model.testInterval));
-    %                 dataMatrix{i}{1}(currIdx : currIdx + colSize1 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, ...
-    %                                                                                                   tmpModelHandle{i, trainedUntil}.model.testInterval);
+                % fill data matrix & exclude VSA = 0° trials
+                nStim = size(tmpModelHandle{i, trainedUntil}.model.testResult3, 1) / (length(objRange) * 7);
+                currIdx = 1 + 1680 * (seedIter - 1);
+                startInd = 1;
+                startInd0 = nStim * 3 + 1;
+                for j = 1 : length(objRange)
+                    colSize1 = length(tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, tmpModelHandle{i, trainedUntil}.model.testInterval));
+                    dataMatrix{i}{1}(currIdx : currIdx + colSize1 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, ...
+                                                                                                      tmpModelHandle{i, trainedUntil}.model.testInterval);
 
-    %                 % end matrix creation
-    %                 if (trainedUntil == length(testPoints{i}))
-    %                     for k = 1 : 20
-    %                         dataMatrixEnd{i}{1}(currIdx : currIdx + colSize1 - 1, k) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, k);
-    %                     end
-    %                 end
+                    % end matrix creation
+                    if (trainedUntil == length(testPoints{i}))
+                        for k = 1 : 20
+                            dataMatrixEnd{i}{1}(currIdx : currIdx + colSize1 - 1, k) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : startInd0 - 1, k);
+                        end
+                    end
 
-    %                 currIdx = currIdx + colSize1;
-    %                 endInd0 = startInd0 + nStim - 1;
-    %                 startInd = endInd0 + 1;
-    %                 startInd0 = endInd0 + nStim * 6 + 1;
-    %             end
-    %             % concatinate remainder
-    %             colSize2 = length(tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, tmpModelHandle{i, trainedUntil}.model.testInterval));
-    %             dataMatrix{i}{1}(currIdx : currIdx + colSize2 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, ...
-    %                                                                                               tmpModelHandle{i, trainedUntil}.model.testInterval);
+                    currIdx = currIdx + colSize1;
+                    endInd0 = startInd0 + nStim - 1;
+                    startInd = endInd0 + 1;
+                    startInd0 = endInd0 + nStim * 6 + 1;
+                end
+                % concatinate remainder
+                colSize2 = length(tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, tmpModelHandle{i, trainedUntil}.model.testInterval));
+                dataMatrix{i}{1}(currIdx : currIdx + colSize2 - 1, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, ...
+                                                                                                  tmpModelHandle{i, trainedUntil}.model.testInterval);
 
-    %             % delta metCosts
-    %             dataMatrix{i}{2}(1 + 1960 * (seedIter - 1) : 1960 * seedIter, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult7(:, tmpModelHandle{i, trainedUntil}.model.testInterval);
+                % delta metCosts
+                dataMatrix{i}{2}(1 + 1960 * (seedIter - 1) : 1960 * seedIter, trainedUntil) = tmpModelHandle{i, trainedUntil}.model.testResult7(:, tmpModelHandle{i, trainedUntil}.model.testInterval);
 
-    %             % end matrix creation
-    %             if (trainedUntil == length(testPoints{i}))
-    %                 for k = 1 : 20
-    %                     dataMatrixEnd{i}{1}(currIdx : currIdx + colSize2 - 1, k) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, k);
-    %                 end
-    %                 dataMatrixEnd{i}{2}(1 + 1960 * (seedIter - 1) : 1960 * seedIter, :) = tmpModelHandle{i, trainedUntil}.model.testResult7;
-    %             end
-    %         end
-    %     end
+                % end matrix creation
+                if (trainedUntil == length(testPoints{i}))
+                    for k = 1 : 20
+                        dataMatrixEnd{i}{1}(currIdx : currIdx + colSize2 - 1, k) = tmpModelHandle{i, trainedUntil}.model.testResult3(startInd : end, k);
+                    end
+                    dataMatrixEnd{i}{2}(1 + 1960 * (seedIter - 1) : 1960 * seedIter, :) = tmpModelHandle{i, trainedUntil}.model.testResult7;
+                end
+            end
+        end
 
-    %     % add modelAt0 entries
-    %     if (i == 1) && (length(testPoints{i}) == 4)
-    %         hm = load('/home/aecgroup/aecdata/Results/17-03-08_300000iter_1_newStandard_0,3Mio/modelAt0/model.mat');
-    %     elseif (length(testPoints{i}) == 12)
-    %         if (i == 1)
-    %             hm = load('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_8_gamma_0.3_metCost_[0.000]/modelAt0/model.mat');
-    %         else
-    %             hm = load('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_8_gamma_0.3_metCost_[0.035]/modelAt0/model.mat');
-    %         end
-    %     end
+        % add modelAt0 entries
+        if (i == 1) && (length(testPoints{i}) == 4)
+            hm = load('/home/aecgroup/aecdata/Results/17-03-08_300000iter_1_newStandard_0,3Mio/modelAt0/model.mat');
+        elseif (length(testPoints{i}) == 12)
+            if (i == 1)
+                hm = load('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_8_gamma_0.3_metCost_[0.000]/modelAt0/model.mat');
+            else
+                hm = load('/home/aecgroup/aecdata/Results/BiasedBmsfX5NewTest/17-03-23_1000000iter_8_gamma_0.3_metCost_[0.035]/modelAt0/model.mat');
+            end
+        end
 
-    %     % fill data matrix & exclude VSA = 0° trials
-    %     nStim = size(hm.model.testResult3, 1) / (length(objRange) * 7);
-    %     currIdx = 1;
-    %     startInd = 1;
-    %     startInd0 = nStim * 3 + 1;
-    %     for j = 1 : length(objRange)
-    %         colSize1 = length(hm.model.testResult3(startInd : startInd0 - 1, hm.model.testInterval));
-    %         at0Matrix{i}{1}(currIdx : currIdx + colSize1 - 1) = hm.model.testResult3(startInd : startInd0 - 1, hm.model.testInterval);
-    %         currIdx = currIdx + colSize1;
-    %         endInd0 = startInd0 + nStim - 1;
-    %         startInd = endInd0 + 1;
-    %         startInd0 = endInd0 + nStim * 6 + 1;
-    %     end
-    %     % concatinate remainder
-    %     colSize2 = length(hm.model.testResult3(startInd : end, hm.model.testInterval));
-    %     at0Matrix{i}{1}(currIdx : currIdx + colSize2 - 1) = hm.model.testResult3(startInd : end, hm.model.testInterval);
+        % fill data matrix & exclude VSA = 0° trials
+        nStim = size(hm.model.testResult3, 1) / (length(objRange) * 7);
+        currIdx = 1;
+        startInd = 1;
+        startInd0 = nStim * 3 + 1;
+        for j = 1 : length(objRange)
+            colSize1 = length(hm.model.testResult3(startInd : startInd0 - 1, hm.model.testInterval));
+            at0Matrix{i}{1}(currIdx : currIdx + colSize1 - 1) = hm.model.testResult3(startInd : startInd0 - 1, hm.model.testInterval);
+            currIdx = currIdx + colSize1;
+            endInd0 = startInd0 + nStim - 1;
+            startInd = endInd0 + 1;
+            startInd0 = endInd0 + nStim * 6 + 1;
+        end
+        % concatinate remainder
+        colSize2 = length(hm.model.testResult3(startInd : end, hm.model.testInterval));
+        at0Matrix{i}{1}(currIdx : currIdx + colSize2 - 1) = hm.model.testResult3(startInd : end, hm.model.testInterval);
 
-    %     % delta metCosts
-    %     at0Matrix{i}{2} = hm.model.testResult7(:, hm.model.testInterval);
+        % delta metCosts
+        at0Matrix{i}{2} = hm.model.testResult7(:, hm.model.testInterval);
 
-    %     % concatinate both matricies
-    %     dataMatrix{i}{1} = horzcat(repmat(at0Matrix{i}{1}, [size(modelHandle, 1), 1]), dataMatrix{i}{1});
-    %     dataMatrix{i}{2} = horzcat(repmat(at0Matrix{i}{2}, [size(modelHandle, 1), 1]), dataMatrix{i}{2});
+        % concatinate both matricies
+        dataMatrix{i}{1} = horzcat(repmat(at0Matrix{i}{1}, [size(modelHandle, 1), 1]), dataMatrix{i}{1});
+        dataMatrix{i}{2} = horzcat(repmat(at0Matrix{i}{2}, [size(modelHandle, 1), 1]), dataMatrix{i}{2});
 
-    %     if (dataVergErr == 1)
-    %         dataMatrix{i}{1} = abs(dataMatrix{i}{1});
-    %     end
+        if (dataVergErr == 1)
+            dataMatrix{i}{1} = abs(dataMatrix{i}{1});
+        end
 
-    %     % extract IQR edge coordinates
-    %     tmpFig = figure();
-    %     boxHandle = boxplot(dataMatrix{i}{1});
-    %     upWi = findobj(boxHandle, 'tag', 'Upper Whisker');
-    %     lowWi = findobj(boxHandle, 'tag', 'Lower Whisker');
-    %     iqrLine(i * 2 - 1 : i * 2, :) = [arrayfun(@(x) x.YData(1), upWi)'; arrayfun(@(x) x.YData(2), lowWi)'];
-    %     close(tmpFig);
-    % end
+        % extract IQR edge coordinates
+        tmpFig = figure();
+        boxHandle = boxplot(dataMatrix{i}{1});
+        upWi = findobj(boxHandle, 'tag', 'Upper Whisker');
+        lowWi = findobj(boxHandle, 'tag', 'Lower Whisker');
+        iqrLine(i * 2 - 1 : i * 2, :) = [arrayfun(@(x) x.YData(1), upWi)'; arrayfun(@(x) x.YData(2), lowWi)'];
+        close(tmpFig);
+    end
 
-    % % plot
-    % figA = figure();
-    % hold on;
-    % modelAt1 = horzcat(0, modelAt1);
-    % modelAt2 = horzcat(0, modelAt2);
-    % testPoints = {modelAt1, modelAt2};
+    % plot
+    figA = figure();
+    hold on;
+    modelAt1 = horzcat(0, modelAt1);
+    modelAt2 = horzcat(0, modelAt2);
+    testPoints = {modelAt1, modelAt2};
 
-    % for i = 1 : size(modelHandle, 2)
-    %     if (i == 1)
-    %         ax1 = gca; % current axes
-    %         % ax1.YColor = colors{1};
-    %         ax1.XAxis.Label.String = 'Traintime';
-    %         ax1.XAxis.Label.FontSize = fontSizes(1);
-    %         % ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
-    %         if (dataVergErr == 0)
-    %             % ax1.YAxis.Label.String = 'median(\Delta\gamma) [deg]';
-    %             ax1.YAxis.Label.String = '|\Delta\gamma| [deg]';
-    %         elseif (dataVergErr == 1)
-    %             % ax1.YAxis.Label.String = 'median(|\Delta\gamma|) [deg]';
-    %             ax1.YAxis.Label.String = '|\Delta\gamma| [deg]';
-    %         else
-    %             error('dataVergErr = %d is not supported.', dataVergErr);
-    %         end
-    %         ax1.YAxis.Label.FontSize = fontSizes(1);
+    for i = 1 : size(modelHandle, 2)
+        if (i == 1)
+            ax1 = gca; % current axes
+            % ax1.YColor = colors{1};
+            ax1.XAxis.Label.String = 'Traintime';
+            ax1.XAxis.Label.FontSize = fontSizes(1);
+            % ax1.Title.String = 'Test Performance & Metabolic Costs vs. Traintime';
+            if (dataVergErr == 0)
+                % ax1.YAxis.Label.String = 'median(\Delta\gamma) [deg]';
+                ax1.YAxis.Label.String = '|\Delta\gamma| [deg]';
+            elseif (dataVergErr == 1)
+                % ax1.YAxis.Label.String = 'median(|\Delta\gamma|) [deg]';
+                ax1.YAxis.Label.String = '|\Delta\gamma| [deg]';
+            else
+                error('dataVergErr = %d is not supported.', dataVergErr);
+            end
+            ax1.YAxis.Label.FontSize = fontSizes(1);
 
-    %         ax2 = axes('Position', ax1.Position, ...
-    %                    'YAxisLocation', 'right', ...
-    %                    'Color', 'none');
-    %     end
+            ax2 = axes('Position', ax1.Position, ...
+                       'YAxisLocation', 'right', ...
+                       'Color', 'none');
+        end
 
-    %     % fill area defined by upper & lower IQR bounds
-    %     objHandels{end + 1} = patch([testPoints{i}, flip(testPoints{i})], ...
-    %                                 [iqrLine(i * 2 - 1, 1 : length(testPoints{i})), flip(iqrLine(i * 2, 1 : length(testPoints{i})))], ...
-    %                                 colors{i + 4}, 'LineStyle', 'none', 'FaceAlpha', alphas{i});
-    %     objHandels{end}.Parent = ax1;
-    %     hold on;
+        % fill area defined by upper & lower IQR bounds
+        objHandels{end + 1} = patch([testPoints{i}, flip(testPoints{i})], ...
+                                    [iqrLine(i * 2 - 1, 1 : length(testPoints{i})), flip(iqrLine(i * 2, 1 : length(testPoints{i})))], ...
+                                    colors{i + 4}, 'LineStyle', 'none', 'FaceAlpha', alphas{i});
+        objHandels{end}.Parent = ax1;
+        hold on;
 
-    %     % median(|verg_{err}|) [deg]
-    %     objHandels{end + 1} = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
-    %                                'LineStyle', lineStyles{1}, ...
-    %                                'Marker', markerStyles(1), 'MarkerSize', markerSizes(1), ...
-    %                                'Color', colors{1 + i - 1}, 'LineWidth', lineWidths(1));
-    %     hold on;
+        % median(|verg_{err}|) [deg]
+        objHandels{end + 1} = plot(ax1, testPoints{i}, median(dataMatrix{i}{1}), ...
+                                   'LineStyle', lineStyles{1}, ...
+                                   'Marker', markerStyles(1), 'MarkerSize', markerSizes(1), ...
+                                   'Color', colors{1 + i - 1}, 'LineWidth', lineWidths(1));
+        hold on;
 
-    %     % median(\Delta C^{met}) [W]
-    %     objHandels{end + 1} = plot(ax2, testPoints{i}, median(dataMatrix{i}{2}), ...
-    %                                'LineStyle', lineStyles{2}, ...
-    %                                'Marker', markerStyles(2), 'MarkerSize', markerSizes(2), ...
-    %                                'MarkerEdgeColor', colors{i}, 'MarkerFaceColor', colors{i}, ...
-    %                                'Color', colors{3 + i - 1}, 'LineWidth', lineWidths(2));
-    %     hold on;
+        % median(\Delta C^{met}) [W]
+        objHandels{end + 1} = plot(ax2, testPoints{i}, median(dataMatrix{i}{2}), ...
+                                   'LineStyle', lineStyles{2}, ...
+                                   'Marker', markerStyles(2), 'MarkerSize', markerSizes(2), ...
+                                   'MarkerEdgeColor', colors{i}, 'MarkerFaceColor', colors{i}, ...
+                                   'Color', colors{3 + i - 1}, 'LineWidth', lineWidths(2));
+        hold on;
 
-    %     if (i == 1)
-    %         % |\DeltaMC_{opt}| = |MC_{actual} - MC_{optimal}| / |MC_{start} - MC_{optimal}|
-    %         ax2.YAxis.Label.String = '\DeltaC [W]';
-    %         ax2.YAxis.Label.FontSize = fontSizes(1);
-    %         % ax2.YColor = colors{3};
-    %         % ax2.YAxis.Label.Rotation = -90;
-    %         ax2.YAxisLocation = 'right';
-    %     end
-    % end
+        if (i == 1)
+            % |\DeltaMC_{opt}| = |MC_{actual} - MC_{optimal}| / |MC_{start} - MC_{optimal}|
+            ax2.YAxis.Label.String = '\DeltaC [W]';
+            ax2.YAxis.Label.FontSize = fontSizes(1);
+            % ax2.YColor = colors{3};
+            % ax2.YAxis.Label.Rotation = -90;
+            ax2.YAxisLocation = 'right';
+        end
+    end
 
-    % % grid(ax1, 'on');
-    % % ax1.YMinorGrid = 'on';
+    % grid(ax1, 'on');
+    % ax1.YMinorGrid = 'on';
 
-    % ax1.YAxis.Limits = [-0.1, 2.5];
-    % ax2.YAxis.Limits = [-0.1, 1.2];
+    ax1.YAxis.Limits = [-0.1, 2.5];
+    ax2.YAxis.Limits = [-0.1, 1.2];
 
-    % % set #nTicks ticks for y-axis
-    % % set(ax1, 'YTick', round(linspace(ax1.YAxis.Limits(1), ax1.YAxis.Limits(2), nTicks - 2), 2));
-    % % set(ax2, 'YTick', round(linspace(ax2.YAxis.Limits(1), ax2.YAxis.Limits(2), nTicks), 2));
+    % set #nTicks ticks for y-axis
+    % set(ax1, 'YTick', round(linspace(ax1.YAxis.Limits(1), ax1.YAxis.Limits(2), nTicks - 2), 2));
+    % set(ax2, 'YTick', round(linspace(ax2.YAxis.Limits(1), ax2.YAxis.Limits(2), nTicks), 2));
 
-    % %% align both y-axis to zero
-    % ratio = ax2.YAxis.Limits(1) / ax2.YAxis.Limits(2);
-    % if ax1.YAxis.Limits(2) * ratio < ax1.YAxis.Limits(1)
-    %     ax1.YAxis.Limits = [ax1.YAxis.Limits(2) * ratio, ax1.YAxis.Limits(2)];
-    % else
-    %     ax1.YAxis.Limits = [ax1.YAxis.Limits(1), ax1.YAxis.Limits(1) / ratio];
-    % end
+    %% align both y-axis to zero
+    ratio = ax2.YAxis.Limits(1) / ax2.YAxis.Limits(2);
+    if ax1.YAxis.Limits(2) * ratio < ax1.YAxis.Limits(1)
+        ax1.YAxis.Limits = [ax1.YAxis.Limits(2) * ratio, ax1.YAxis.Limits(2)];
+    else
+        ax1.YAxis.Limits = [ax1.YAxis.Limits(1), ax1.YAxis.Limits(1) / ratio];
+    end
 
-    % % realign plot order
-    % uistack(objHandels{1},'bottom');
-    % uistack(objHandels{4},'bottom');
-    % uistack(objHandels{2},'top');
-    % uistack(objHandels{5},'top');
+    % realign plot order
+    uistack(objHandels{1},'bottom');
+    uistack(objHandels{4},'bottom');
+    uistack(objHandels{2},'top');
+    uistack(objHandels{5},'top');
 
-    % % lineHandles = [objHandels{2}, objHandels{1}, objHandels{3}, objHandels{5}, objHandels{4}, objHandels{6}];
-    % % gKey = {'M_{ } median(|\Delta\gamma|)', 'M_{ } IQR', 'M_{ } median(\DeltaC)', ...
-    % %         'M_{C} median(|\Delta\gamma|)', 'M_{C} IQR', 'M_{C} median(\DeltaC)'};
-    % lineHandles = [objHandels{2}, objHandels{3}, objHandels{5}, objHandels{6}];
-    % gKey = {'M_{ } |\Delta\gamma|', 'M_{ } \DeltaC', ...
-    %         'M_{C} |\Delta\gamma|', 'M_{C} \DeltaC'};
+    % lineHandles = [objHandels{2}, objHandels{1}, objHandels{3}, objHandels{5}, objHandels{4}, objHandels{6}];
+    % gKey = {'M_{ } median(|\Delta\gamma|)', 'M_{ } IQR', 'M_{ } median(\DeltaC)', ...
+    %         'M_{C} median(|\Delta\gamma|)', 'M_{C} IQR', 'M_{C} median(\DeltaC)'};
+    lineHandles = [objHandels{2}, objHandels{3}, objHandels{5}, objHandels{6}];
+    gKey = {'M_{ } |\Delta\gamma|', 'M_{ } \DeltaC', ...
+            'M_{C} |\Delta\gamma|', 'M_{C} \DeltaC'};
 
 
-    % l = legend(lineHandles, gKey, 'Location', 'east');
-    % l.FontSize = fontSizes(1);
-    % l.Position(2) = 0.4;
-    % l.Box = 'off';
+    l = legend(lineHandles, gKey, 'Location', 'east');
+    l.FontSize = fontSizes(1);
+    l.Position(2) = 0.4;
+    l.Box = 'off';
 
-    % % ax2.YAxis.Label.Position(1) = ax2.YAxis.Label.Position(1) * 1.5;
+    % ax2.YAxis.Label.Position(1) = ax2.YAxis.Label.Position(1) * 1.5;
 
-    % plotpath = sprintf('%s/FigA_VergErrMetCostsVsTraintime', savePath);
-    % saveas(figA, plotpath, 'png');
-    % close(figA);
+    plotpath = sprintf('%s/FigA_VergErrMetCostsVsTraintime', savePath);
+    saveas(figA, plotpath, 'png');
+    close(figA);
 
-    % % member models? III member!
-    % fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
-    % fprintf(fileID, 'model w/o MetCosts: %s\n', modelHandle(1, 1).model.savePath);
-    % fprintf(fileID, 'model w/  MetCosts: %s\n\n', modelHandle(1, 2).model.savePath);
+    % member models? III member!
+    fileID = fopen(strcat(savePath, '/README.txt'), 'at' );
+    fprintf(fileID, 'model w/o MetCosts: %s\n', modelHandle(1, 1).model.savePath);
+    fprintf(fileID, 'model w/  MetCosts: %s\n\n', modelHandle(1, 2).model.savePath);
 
-    % fprintf(fileID, '========================================================================================================\n');
-    % fprintf(fileID, 'model w/o MetCosts\n');
-    % fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt1));
+    fprintf(fileID, '========================================================================================================\n');
+    fprintf(fileID, 'model w/o MetCosts\n');
+    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt1));
 
-    % if (length(modelAt1) == 6)
-    %     fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{1}));
-    %     fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
-    %     fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{1}));
-    %     fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
+    if (length(modelAt1) == 6)
+        fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
 
-    %     fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{2}));
-    %     fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
-    %     fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{2}));
-    %     fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
-    % else
-    %     fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f\n', median(dataMatrix{1}{1}));
-    %     fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
-    %     fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f\n', mean(dataMatrix{1}{1}));
-    %     fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
+    else
+        fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f\n', median(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f\n', mean(dataMatrix{1}{1}));
+        fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f\n\n', std(dataMatrix{1}{1}));
 
-    %     fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f\n', median(dataMatrix{1}{2}));
-    %     fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
-    %     fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f\n', mean(dataMatrix{1}{2}));
-    %     fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
-    % end
+        fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f\n', median(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f\n', mean(dataMatrix{1}{2}));
+        fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f\n\n', std(dataMatrix{1}{2}));
+    end
 
-    % fprintf(fileID, 'model w/ MetCosts\n');
-    % fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt2));
+    fprintf(fileID, 'model w/ MetCosts\n');
+    fprintf(fileID, 'modelAt: %s\n\n', int2str(modelAt2));
 
-    % if (length(modelAt2) == 6)
-    %     fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{1}));
-    %     fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
-    %     fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{1}));
-    %     fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
+    if (length(modelAt2) == 6)
+        fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
 
-    %     fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{2}));
-    %     fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
-    %     fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{2}));
-    %     fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
-    % else
-    %     fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f\n', median(dataMatrix{2}{1}));
-    %     fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
-    %     fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f\n', mean(dataMatrix{2}{1}));
-    %     fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f %f\n', median(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f %f\n', mean(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
+    else
+        fprintf(fileID, 'figA vergErr median:\t%f %f %f %f %f\n', median(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr mean:\t%f %f %f %f %f\n', mean(dataMatrix{2}{1}));
+        fprintf(fileID, 'figA vergErr std:\t%f %f %f %f %f\n\n', std(dataMatrix{2}{1}));
 
-    %     fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f\n', median(dataMatrix{2}{2}));
-    %     fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
-    %     fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f\n', mean(dataMatrix{2}{2}));
-    %     fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
-    % end
+        fprintf(fileID, 'figA metCosts median:\t%f %f %f %f %f\n', median(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts iqr:\t%f %f %f %f %f\n', iqr(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts mean:\t%f %f %f %f %f\n', mean(dataMatrix{2}{2}));
+        fprintf(fileID, 'figA metCosts std:\t%f %f %f %f %f\n\n', std(dataMatrix{2}{2}));
+    end
 
-    % fclose(fileID);
+    fclose(fileID);
 
     % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % %%% Figure B
@@ -835,7 +835,7 @@ function generateICDLPlotsAvg(simulator)
     % tmpMatrixVergErr = horzcat(dataMatrixEnd{1}{1}, dataMatrixEnd{2}{1});
     % tmpMatrixVergErr = abs(tmpMatrixVergErr);
 
-    % iqrLine2 = zeros(4, 4);
+    iqrLine2 = zeros(4, 4);
 
     % % sort by iteration step
     % idx = [];
@@ -1009,112 +1009,112 @@ function generateICDLPlotsAvg(simulator)
 
     % fclose(fileID);
 
-    % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % figB5 = figure();
-    % hold on;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    figB5 = figure();
+    hold on;
 
-    % steps = 3;                        % show just first steps iterations & last iteration
-    % colors = colors(1 : 2);
-    % % colors{1} = colors{1} .* 0.9;
-    % % colors{2} = colors{2} .* 0.9;
-    % captions = {'M_{ }', 'M_{C}'};
-    % alphas = {0.2, 0.3};
-    % xVal = 1 : 4;
+    steps = 3;                        % show just first steps iterations & last iteration
+    colors = colors(1 : 2);
+    % colors{1} = colors{1} .* 0.9;
+    % colors{2} = colors{2} .* 0.9;
+    captions = {'M_{ }', 'M_{C}'};
+    alphas = {0.2, 0.3};
+    xVal = 1 : 4;
 
-    % objHandels = {};
+    objHandels = {};
 
-    % sub1 = subplot(2, 1, 1);
-    % pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
-    % grid minor;
+    sub1 = subplot(2, 1, 1);
+    pos = [1 1.2 1.5 1.7 2 2.2 2.5 2.7];
+    grid minor;
 
-    % % fill area defined by upper & lower IQR bounds
-    % objHandels{end + 1} = patch([xVal, flip(xVal)], [iqrLine2(1, xVal), flip(iqrLine2(2, xVal))], ...
-    %                             colors{1}, 'LineStyle', 'none', 'LineWidth', 2, 'FaceAlpha', alphas{1});
-    % hold on;
+    % fill area defined by upper & lower IQR bounds
+    objHandels{end + 1} = patch([xVal, flip(xVal)], [iqrLine2(1, xVal), flip(iqrLine2(2, xVal))], ...
+                                colors{1}, 'LineStyle', 'none', 'LineWidth', 2, 'FaceAlpha', alphas{1});
+    hold on;
 
-    % % median(|verg_{err}|) [deg]
-    % objHandels{end + 1} = plot(sub1, xVal, median(tmpMatrixVergErr(:, 1 : 2 : end)), ...
-    %                            'Color', colors{1});
-    % hold on;
+    % median(|verg_{err}|) [deg]
+    objHandels{end + 1} = plot(sub1, xVal, median(tmpMatrixVergErr(:, 1 : 2 : end)), ...
+                               'Color', colors{1});
+    hold on;
 
-    % objHandels{end + 1} = patch([1 : 4, flip(1 : 4)], [iqrLine2(3, 1 : 4), flip(iqrLine2(4, 1 : 4))], ...
-    %                             colors{2}, 'LineStyle', 'none', 'LineWidth', 2, 'FaceAlpha', alphas{2});
-    % hold on;
+    objHandels{end + 1} = patch([1 : 4, flip(1 : 4)], [iqrLine2(3, 1 : 4), flip(iqrLine2(4, 1 : 4))], ...
+                                colors{2}, 'LineStyle', 'none', 'LineWidth', 2, 'FaceAlpha', alphas{2});
+    hold on;
 
-    % objHandels{end + 1} = plot(sub1, xVal, median(tmpMatrixVergErr(:, 2 : 2 : end)), ...
-    %                            'Color', colors{2});
-    % hold on;
-    % ylabel('|\Delta\gamma| [deg]', 'FontSize', fontSizes(1));
+    objHandels{end + 1} = plot(sub1, xVal, median(tmpMatrixVergErr(:, 2 : 2 : end)), ...
+                               'Color', colors{2});
+    hold on;
+    ylabel('|\Delta\gamma| [deg]', 'FontSize', fontSizes(1));
 
-    % %% put ylabel right and rotate text
-    % % set(sub1, 'yaxislocation', 'right');
-    % % lh = ylabel(sprintf('C^{met}_{reduction} [%%]'), 'rot', -90, 'FontSize', fontSizes(1));
-    % % p = get(lh, 'position');
-    % % set(sub1,'yaxislocation','left');
-    % % set(lh,'position', p);
+    %% put ylabel right and rotate text
+    % set(sub1, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('C^{met}_{reduction} [%%]'), 'rot', -90, 'FontSize', fontSizes(1));
+    % p = get(lh, 'position');
+    % set(sub1,'yaxislocation','left');
+    % set(lh,'position', p);
 
-    % sub2 = subplot(2, 1, 2);
-    % boxHandl2 = boxplot(tmpMatrixMetApp, 'positions', pos);
-    % grid minor;
+    sub2 = subplot(2, 1, 2);
+    boxHandl2 = boxplot(tmpMatrixMetApp, 'positions', pos);
+    grid minor;
 
-    % boxesArray = findobj(boxHandl2);
-    % for i = 1 : size(tmpMatrixVergErr, 2)
-    %     idx2 = (1 : 7) + (i - 1) * 7;
-    %     idx2(6 : 7) = [];
-    %     if (mod(i, 2) == 1)
-    %         for j = 1 : length(idx2)
-    %             boxesArray(idx2(j)).Color = colors{1};
-    %         end
-    %     else
-    %         for j = 1 : length(idx2)
-    %             boxesArray(idx2(j)).Color = colors{2};
-    %         end
-    %     end
-    % end
+    boxesArray = findobj(boxHandl2);
+    for i = 1 : size(tmpMatrixVergErr, 2)
+        idx2 = (1 : 7) + (i - 1) * 7;
+        idx2(6 : 7) = [];
+        if (mod(i, 2) == 1)
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{1};
+            end
+        else
+            for j = 1 : length(idx2)
+                boxesArray(idx2(j)).Color = colors{2};
+            end
+        end
+    end
 
-    % % remove outliers
-    % outl = findobj(boxHandl2, 'tag', 'Outliers');
-    % set(outl, 'Visible', 'off');
+    % remove outliers
+    outl = findobj(boxHandl2, 'tag', 'Outliers');
+    set(outl, 'Visible', 'off');
 
-    % % rescale axis to whiskers + offset
-    % upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
-    % lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
-    % axis([0.9, 2.8, ...
-    %       min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
-    %       max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+    % rescale axis to whiskers + offset
+    upWi = findobj(boxHandl2, 'tag', 'Upper Whisker');
+    lowWi = findobj(boxHandl2, 'tag', 'Lower Whisker');
+    axis([0.9, 2.8, ...
+          min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+          max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
 
-    % % manually adjust XTicks
-    % % sub1.XTick = [1.1, 1.6, 2.1, 2.6];
-    % sub1.XTickLabel = {'1','','2','','3','', '20'};
-    % sub2.XTick = [1.1, 1.6, 2.1, 2.6];
-    % sub2.XTickLabel = {'1','2','3', '20'};
+    % manually adjust XTicks
+    % sub1.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub1.XTickLabel = {'1','','2','','3','', '20'};
+    sub2.XTick = [1.1, 1.6, 2.1, 2.6];
+    sub2.XTickLabel = {'1','2','3', '20'};
 
-    % xlabel('Iteration step', 'FontSize', fontSizes(1));
-    % ylabel(sprintf('c [%%]'), 'FontSize', fontSizes(1));
+    xlabel('Iteration step', 'FontSize', fontSizes(1));
+    ylabel(sprintf('c [%%]'), 'FontSize', fontSizes(1));
 
-    % %% put ylabel right and rotate text
-    % % set(sub2, 'yaxislocation', 'right');
-    % % lh = ylabel(sprintf('C^{met}_{reduction} [%%]'), 'rot', -90, 'FontSize', fontSizes(1));
-    % % p = get(lh, 'position');
-    % % set(sub2, 'yaxislocation', 'left');
-    % % set(lh, 'position', p);
+    %% put ylabel right and rotate text
+    % set(sub2, 'yaxislocation', 'right');
+    % lh = ylabel(sprintf('C^{met}_{reduction} [%%]'), 'rot', -90, 'FontSize', fontSizes(1));
+    % p = get(lh, 'position');
+    % set(sub2, 'yaxislocation', 'left');
+    % set(lh, 'position', p);
 
-    % % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
-    % % suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
+    % suptitle(sprintf('Total Vergence Error & Metabolic Costs Approach\nvs. Trial at Testing'));
+    % suptitle(sprintf('Reduction of Vergence Error & Metabolic Costs\nvs. Iteration at Testing'));
 
-    % [l, objh, ~, ~] = legend([objHandels{2}, objHandels{4}], captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
-    % set(objh, 'linewidth', 2);
-    % objh(3).Color = colors{1} / 0.9;
-    % objh(5).Color = colors{2} / 0.9;
+    [l, objh, ~, ~] = legend([objHandels{2}, objHandels{4}], captions, 'Orientation', 'horizontal', 'Location', 'southoutside');
+    set(objh, 'linewidth', 2);
+    objh(3).Color = colors{1} / 0.9;
+    objh(5).Color = colors{2} / 0.9;
 
-    % %% repositioning subfigures
-    % sub1.Position(3 : 4) = sub2.Position(3 : 4);
-    % sub1.Position(2) = 0.65;
-    % l.Position(2) = 0.5;
+    %% repositioning subfigures
+    sub1.Position(3 : 4) = sub2.Position(3 : 4);
+    sub1.Position(2) = 0.65;
+    l.Position(2) = 0.5;
 
-    % plotpath = sprintf('%s/FigB5_VergErrMetCostsVsTestIter', savePath);
-    % saveas(figB5, plotpath, 'png');
-    % close(figB5);
+    plotpath = sprintf('%s/FigB5_VergErrMetCostsVsTestIter', savePath);
+    saveas(figB5, plotpath, 'png');
+    close(figB5);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% Figure C
