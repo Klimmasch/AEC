@@ -520,7 +520,7 @@ end
 % Constant bias in input vector/feature vector (0 := off, >0 := take that value as bias)
 [found, bias, varParamArray] = parseparam(varParamArray, 'bias');
 if (~found)
-    bias = 0;
+    bias = desiredStdZT; % 0 before, 0.02 in curr. approach
 end
 
 % Critic's and Actor's number of neurons in the input layer (Small + Large scale + Muscle activities)
