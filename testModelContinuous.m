@@ -778,7 +778,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 grid on;
                 grid minor;
                 for vseIndex = 1 : size(model.testResult, 2)
-                    errorbar(0 : model.testInterval, model.testResult(odIndex, vseIndex, 1 : model.testInterval + 1), model.testResult(odIndex, vseIndex, model.testInterval + 2 : 2 * model.testInterval + 2), ...
+                    errorbar(0 : model.testInterval, squeeze(model.testResult(odIndex, vseIndex, 1 : model.testInterval + 1)), squeeze(model.testResult(odIndex, vseIndex, model.testInterval + 2 : 2 * model.testInterval + 2)), ...
                              'color', [rand, rand, rand], 'LineWidth', 1.3);
                 end
                 axis([-1, model.testInterval + 1, -inf, inf]);
@@ -1254,7 +1254,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             tmpStd = std(tmpMatrix, 0, 1, 'omitnan');
             % tmpStd(isnan(tmpStd)) = [];
 
-            [hl, hp] = boundedline(vseRange, tmpMean, tmpStd, 'alpha');
+            % [hl, hp] = boundedline(vseRange, tmpMean, tmpStd, 'alpha');
 
             % hl.Marker = '*';
             % hl.MarkerSize = 2.5;
@@ -1291,10 +1291,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 tmpStd = std(model.testResult4(odIndex, :, 1 : 2 + length(model.scModel) : end), 0, 3, 'omitnan');
                 tmpStd(isnan(tmpStd)) = [];
 
-                [hl, hp] = boundedline(vseRange, ...
-                                       tmpMean, ...
-                                       tmpStd, ...
-                                       'alpha');
+                % [hl, hp] = boundedline(vseRange, ...
+                %                        tmpMean, ...
+                %                        tmpStd, ...
+                %                        'alpha');
 
                 % hl.Marker = '*';
                 % hl.MarkerSize = 2.5;
