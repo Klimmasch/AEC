@@ -23,10 +23,12 @@ classdef SparseCoding2 < handle
             obj.temperature = PARAM(5);
             obj.sizeBatch = PARAM(6);
 
-            obj.basis = rand(obj.basisSize, obj.nBasis) - 0.5;
-            obj.basis = obj.basis * diag(1 ./ sqrt(sum(obj.basis .* obj.basis)));
-            tmpNorm = ones(obj.basisSize, 1) * sqrt(sum(obj.basis .* obj.basis, 1));
-            obj.basis = obj.basis ./ tmpNorm;
+            % obj.basis = rand(obj.basisSize, obj.nBasis) - 0.5;
+            % obj.basis = obj.basis * diag(1 ./ sqrt(sum(obj.basis .* obj.basis)));
+            % tmpNorm = ones(obj.basisSize, 1) * sqrt(sum(obj.basis .* obj.basis, 1));
+            % obj.basis = obj.basis ./ tmpNorm;
+
+            obj.basis = BaseGenerator(0, 0, sqrt(PARAM(3)/2), PARAM(1));
             obj.basisHist = [];
 
             obj.currentCoef = zeros(obj.nBasis, obj.sizeBatch);     %288x81
