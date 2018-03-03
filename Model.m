@@ -195,7 +195,7 @@ classdef Model < handle
                 % normalization of nth entry in feature vector
                 obj.normFeatVect = PARAM{1}{26};
                 obj.currMean = zeros(1, PARAM{3}{9}(1));
-                obj.currM2 = zeros(1, PARAM{3}{9}(1));
+                obj.currM2 = ones(1, PARAM{3}{9}(1)); % formerly zeros
                 obj.desiredStdZT = PARAM{1}{27};
 
                 % test results
@@ -1367,7 +1367,8 @@ classdef Model < handle
             textColor = 'yellow';
 
             scaleImages = cell(numberScales);
-
+            mkdir(sprintf('%s/movies/', this.savePath));
+            
             for scale = 1 : numberScales
                 % Downsampling Large
                 imgLeft = this.imgGrayLeft(:);
@@ -1492,6 +1493,14 @@ classdef Model < handle
             % saveas(fig, sprintf('%s/anaglyph.png', this.savePath), 'png');
             saveas(fig, sprintf('%s/movies/anaglyphs%03d.png', this.savePath, identifier), 'png');
             fig.delete();
+        end
+        %%% Saturation function that keeps motor commands in [0, 1]
+        %   corresponding to the muscelActivity/metabolicCost tables
+        function [cmd] = checkCmd(this, cmd)
+            i0 = cmd < 0;
+            cmd(i0) = 0;
+            i1 = cmd > 1;
+            cmd(i1) = 1;
         end
 
         %%% Creates a movement trajectory from the given paramters and plots it
