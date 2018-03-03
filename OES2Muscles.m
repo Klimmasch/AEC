@@ -12,7 +12,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % Initialize random number generator with given seed
     rng(randomizationSeed);
 
-    % useLearnedFile(1):    0 = don't do it
+    % useLearnedFile(1):    0 = don`t do it
     %                       1 = use previously learned policy specified in learnedFile
     % useLearnedFile(2):    0 = retrain with same/new parameters
     %                       1 = complete/continue training
@@ -31,7 +31,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % textureFile = 'Textures_mcgillFruitsAll.mat';             % McGill fruits database
     % textureFile = 'Textures_mcgillFoliageTrain(jpg).mat';     % McGill foliage database
     % textureFile = 'Textures_vanHaterenTrain.mat';             % vanHateren database
-    % textureFile = 'Textures_celine.mat';                      % Celine's images
+    % textureFile = 'Textures_celine.mat';                      % Celine`s images
 
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
@@ -44,7 +44,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
     %%% Testing flag
     % Whether the testing procedure shall be executed after training
-    % testIt:   0 = don't do it
+    % testIt:   0 = don`t do it
     %           1 = do it
     testIt = uint8(1);
 
@@ -67,21 +67,21 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     %%% Plotting flag
     % Whether figures should be generated and saved
     % plotIt: [training, testing]
-    %            0 = don't do it
+    %            0 = don`t do it
     %            1 = do it
     plotIt = [uint8(1), uint8(1)];
 
     %%% Whether figures should be closed after generation
-    % closeFigures: 0 = don't do it
+    % closeFigures: 0 = don`t do it
     %               1 = do it
     closeFigures = uint8(1); % maybe necessary to use 0 when running headless
 
     % check whether given (cluster) job can/shall be continued
     % if (clusterCall == 1)
         if (isempty(experimentDirName))
-            absoluteDir = '/home/aecgroup/aecdata/Results';
+            absoluteDir = '/home/aecgroup/aecdata/Results/SAB2018/';
         else
-            absoluteDir = strcat('/home/aecgroup/aecdata/Results/', experimentDirName);
+            absoluteDir = strcat('/home/aecgroup/aecdata/Results/SAB2018/', experimentDirName);
         end
 
         fullDir = dir(sprintf('%s/*%s*', absoluteDir, experimentName));
@@ -177,10 +177,10 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
         if (~isempty(experimentDirName))
             % folder = sprintf('../results/%s/', experimentDirName);                       % local destination
-            folder = sprintf('/home/aecgroup/aecdata/Results/%s/', experimentDirName);     % group folder destination
+            folder = sprintf('/home/aecgroup/aecdata/Results/SAB2018/%s/', experimentDirName);     % group folder destination
         else
             % folder = '../results/';                       % local destination
-            folder = '/home/aecgroup/aecdata/Results/';     % group folder destination
+            folder = '/home/aecgroup/aecdata/Results/SAB2018/';     % group folder destination
         end
 
         mkdir(folder, modelName);
