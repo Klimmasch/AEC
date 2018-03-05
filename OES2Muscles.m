@@ -36,7 +36,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+%     textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
 
     %%% Execute intermediate test procedure during training
@@ -257,15 +257,6 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         sprintf('Starting the simulation now ...')
     end
 
-    %%% Saturation function that keeps motor commands in [0, 1]
-    %   corresponding to the muscelActivity/metabolicCost tables
-    function cmd = checkCmd(cmd)
-        i0 = cmd < 0;
-        cmd(i0) = 0;
-        i1 = cmd > 1;
-        cmd(i1) = 1;
-    end
-
     %% these parameters can be put in the model:
     % vergErrMax = 0;
     % angleMin = (atand(model.baseline / (2 * model.objDistMax)) * 2) - vergErrMax; %angle for both eyes
@@ -276,6 +267,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     %%% Main execution loop
     t = model.trainedUntil; % this is zero in newly initiated model
     command = [0; 0]; %[0.1; 0.1];
+    relativeCommand = [0; 0];
     % rewardFunction_prev = 0;
     elapsedTime = 0;
     for iter1 = 1 : (timeToTrain / model.interval)
@@ -337,7 +329,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             while dummy
                 [relativeCommand(1, 1), relativeCommand(2, 1)] = pol2cart(rand(1) * pi * 2, rand(1) * rangeMax);
                 command = command + relativeCommand;
-                command = checkCmd(command);
+                command = model.checkCmd(command);
                 angleNew = model.getAngle(command) * 2;
 
                 if (angleNew > angleMin) && (angleNew < angleMax)
@@ -368,6 +360,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % figure; histogram(angles); title('angles');
         % figure; histogram(dists); title('distances');
 
+        randForLeftFilt = rand(1,1);
+        randForRightFilt = rand(1,1);
+        
         for iter2 = 1 : model.interval
             % if mod(t, 500) == 0
                 % if mod(t, 100000) == 0
@@ -384,11 +379,17 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % refreshImages(currentTexture, angleNew / 2, objDist, 3); % stable renderer
             model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3); % experimental renderer
 
-            %% Generate & save the anaglyph picture
-            % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
-            % imwrite(imfuse(model.imgGrayLeft, model.imgGrayRight, 'falsecolor'), sprintf('%s/anaglyph.png', model.savePath)); %this one works for all tested matlab
-            % more advanced functions that generated the anaglyphs of the foveal views
-            % generateAnaglyphs(imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS, model.savePath);
+            %% change left and right images to simulate altered rearing conditions
+            if ~isempty(model.filterLeft)
+                if randForLeftFilt < model.filterLeftProb
+                    model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft);
+                end
+            end
+            if ~isempty(model.filterRight)
+                if randForRightFilt < model.filterRightProb
+                    model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight);
+                end
+            end
 
             %% Image patch generation
             for i = 1 : length(model.scModel)
@@ -401,7 +402,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             [bfFeature, reward, recErrorArray] = model.generateFR(currentView);
 
             %%% Feedback
-            % Generate RL model's input feature vector by
+            % Generate RL model`s input feature vector by
             % basis function feature vector & total muscle command concatination
 
             if (model.normFeatVect == 0)
@@ -469,9 +470,17 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % generate delta of muscle activations
             relativeCommand = model.rlModel.stepTrain(feature, rewardFunction, (iter2 > 1));
 
+            %% Generate & save the anaglyph picture
+            % anaglyph = stereoAnaglyph(imgGrayLeft, imgGrayRight); % only for matlab 2015 or newer
+            % imwrite(imfuse(model.imgGrayLeft, model.imgGrayRight, 'falsecolor'), sprintf('%s/anaglyph.png', model.savePath)); %this one works for all tested matlab
+            % more advanced functions that generated the anaglyphs of the foveal views
+            % usage: generateAnaglyphs(this, identifier, markScales, infos, imgNumber)
+            % infos = {t, objDist, 0, angleDes, angleNew, command', relativeCommand', reward(:), recErrorArray};
+            % model.generateAnaglyphs(t, 1, infos, '');
+            
             % apply the change in muscle activations
             command = command + relativeCommand;    % two muscles
-            command = checkCmd(command);            % restrain motor commands to [0, 1]
+            command = model.checkCmd(command);            % restrain motor commands to [0, 1]
 
             % calculate resulting angle which is used for both eyes
             angleNew = model.getAngle(command) * 2;

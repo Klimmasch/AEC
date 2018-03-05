@@ -32,7 +32,7 @@ end
 % points in time of intermediate test procedure during training
 [found, testAt, varParamArray] = parseparam(varParamArray, 'testAt');
 if (~found)
-    testAt = [200000 : 200000 : trainTime];
+    testAt = [500000 : 500000 : trainTime];
 end
 
 % sparse coding type
@@ -308,14 +308,60 @@ if (desiredStdZT <= 0)
     error('desiredStdZT must be a scalar in ]0, inf[');
 end
 
+%%% filters for left and right images to simulate altered rearing conditions
+%   and the probabilities at which they should occur.
+%   Leave empty if no filters should be applied.
+[found, filterLeft, varParamArray] = parseparam(varParamArray, 'filterLeft');
+if (~found)
+    filterLeft = [];
+end
+if filterLeft == 1
+    filterLeft = orientedGaussian(9,9,0.1);
+elseif filterLeft == 2
+    filterLeft = orientedGaussian(9,0.1,9);
+elseif filterLeft == 3
+    filterLeft = orientedGaussian(240,240,240);
+elseif filterLeft == 4
+    filterLeft = orientedGaussian(17,17,0.1);
+elseif filterLeft == 5
+    filterLeft = orientedGaussian(17,0.1,17);
+end
+
+[found, filterLeftProb, varParamArray] = parseparam(varParamArray, 'filterLeftProb');
+if (~found)
+    filterLeftProb = 0;
+end
+
+[found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
+if (~found)
+    filterRight = [];
+end
+if filterRight == 1
+    filterRight = orientedGaussian(9,9,0.1);
+elseif filterRight == 2
+    filterRight = orientedGaussian(9,0.1,9);
+elseif filterRight == 3
+    filterRight = orientedGaussian(240,240,240);
+elseif filterRight == 4
+    filterRight = orientedGaussian(17,17,0.1);
+elseif filterRight == 5
+    filterRight = orientedGaussian(17,0.1,17);
+end
+
+[found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
+if (~found)
+    filterRightProb = 0;
+end
+
 PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
-              initMethod, inputParams, normFeatVect, desiredStdZT, testInterval};
+              initMethod, inputParams, normFeatVect, desiredStdZT, testInterval, ...
+              filterLeft, filterLeftProb, filterRight, filterRightProb};
 
 % ------------------------
-% Sparce Coding parameters
+% Sparse Coding parameters
 % ------------------------
 
 % Scales := [coarse, less_coarse, ..., fine], i.e. [peripheral vision, ..., central vision]
@@ -511,7 +557,7 @@ else
     varDec = varianceRange(1) - varianceRange(2);                                % linear decay factor
 end
 
-% Actor's number of neurons in the output layer and amount of eye muscles
+% Actor`s number of neurons in the output layer and amount of eye muscles
 [found, outputDim, varParamArray] = parseparam(varParamArray, 'outputDim');
 if (~found)
     outputDim = 2;
@@ -523,7 +569,7 @@ if (~found)
     bias = desiredStdZT; % 0 before, 0.02 in curr. approach
 end
 
-% Critic's and Actor's number of neurons in the input layer (Small + Large scale + Muscle activities)
+% Critic`s and Actor`s number of neurons in the input layer (Small + Large scale + Muscle activities)
 % note: if you specify a bias and define the input dimension, remember to
 % add the bias to that!
 [found, inputDim, varParamArray] = parseparam(varParamArray, 'inputDim');
@@ -540,7 +586,7 @@ if (~found)
     end
 end
 
-% Actor's number of neurons in the hidden layer
+% Actor`s number of neurons in the hidden layer
 [found, hiddenDim, varParamArray] = parseparam(varParamArray, 'hiddenDim');
 if (~found)
     hiddenDim = 50;
@@ -560,7 +606,7 @@ if (~found)
                     1 / (hiddenDim * outputDim)];       % linear [1/inputDim, 1/inputDim, -]
 end
 
-% Actor's reguralization factor
+% Actor`s reguralization factor
 % origin 0.01
 % TODO: DEPRICATED because it became obsolet, cleanup needed
 [found, lambda, varParamArray] = parseparam(varParamArray, 'lambda');

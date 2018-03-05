@@ -8,7 +8,7 @@ classdef Model < handle
         objDistMin;         % object distance to eyes [m]
         objDistMax;
         muscleInitMin;      % minimal initial muscle innervation
-        muscleInitMax;      % maximal --"--
+        muscleInitMax;      % maximal initial muscle innervation
         interval;           % period of eye stimulus change at training
         testInterval;       % period of eye stimulus change at testing
         desiredAngleMin;    % min/max desired vergence angle
@@ -109,6 +109,11 @@ classdef Model < handle
         imgGrayLeft;
         imgGrayRight;
 
+        filterLeft;     % convolution filter for the left and right images
+        filterRight;
+        filterLeftProb; % probabilities for the application of the according filter
+        filterRightProb;
+
         normFeatVect;   % keep(0) or normalize(1) feature fector by z-transform
         currMean;       % approximations for online signal normalization
         currM2;
@@ -147,6 +152,11 @@ classdef Model < handle
                 obj.fixDistMin = PARAM{1}{19};
                 obj.fixDistMax = PARAM{1}{20};
                 obj.initMethod = PARAM{1}{24};
+
+                obj.filterLeft = PARAM{1}{29};
+                obj.filterRight = PARAM{1}{31};
+                obj.filterLeftProb = PARAM{1}{30};
+                obj.filterRightProb = PARAM{1}{32};
 
                 % single eye
                 obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
@@ -240,7 +250,7 @@ classdef Model < handle
 
                 %%% Create SC models
                 obj.scModel = {};
-                PARAM{2}{end + 1} = [cellfun('length', obj.columnInd)]; % append image batch size's 2nd dimensions
+                PARAM{2}{end + 1} = [cellfun('length', obj.columnInd)]; % append image batch size`s 2nd dimensions
                 if (obj.sparseCodingType == 0)
                     for i = 1 : length(PARAM{2}{1})
                         % pick respective parameters from PARAM cell array for ith SC model constructor
@@ -1361,20 +1371,25 @@ classdef Model < handle
         function generateAnaglyphs(this, identifier, markScales, infos, imgNumber)
 
             numberScales = length(this.scModel);
-
+            imgOrigSize = [240, 320];
+            
             % defining colors in the image: (from larges to smallest scale)
             scalingColors = {'blue', 'red', 'green'};
             textColor = 'yellow';
 
             scaleImages = cell(numberScales);
-            mkdir(sprintf('%s/movies/', this.savePath));
-            
+            if ~isdir(sprintf('%s/movies/', this.savePath))
+                mkdir(sprintf('%s/movies/', this.savePath));
+            end
+
             for scale = 1 : numberScales
                 % Downsampling Large
-                imgLeft = this.imgGrayLeft(:);
-                imgLeft = reshape(imgLeft, size(this.imgGrayLeft));
-                imgRight = this.imgGrayRight(:);
-                imgRight = reshape(imgRight, size(this.imgGrayRight));
+%                 imgLeft = this.imgGrayLeft(:);
+%                 imgLeft = reshape(imgLeft, size(this.imgGrayLeft));
+%                 imgRight = this.imgGrayRight(:);
+%                 imgRight = reshape(imgRight, size(this.imgGrayRight));
+                imgLeft = this.imgGrayLeft(end/2+1 - 120 : end/2 + 120, end/2+1 - 160 : end/2 + 160);
+                imgRight = this.imgGrayRight(end/2+1 - 120 : end/2 + 120, end/2+1 - 160 : end/2 + 160);
 
                 for ds = 1 : log2(this.dsRatio(scale))
                     imgLeft = impyramid(imgLeft, 'reduce');
@@ -1402,7 +1417,7 @@ classdef Model < handle
             end
 
             % imwrite(anaglyph, [savePath '/anaglyph.png']);
-            anaglyph = imfuse(this.imgGrayLeft, this.imgGrayRight, 'falsecolor');
+            anaglyph = imfuse(this.imgGrayLeft(end/2+1 - 120 : end/2 + 120, end/2+1 - 160 : end/2 + 160), this.imgGrayRight(end/2+1 - 120 : end/2 + 120, end/2+1 - 160 : end/2 + 160), 'falsecolor');
             [h, w, ~] = size(anaglyph);
 
             if (markScales)
@@ -1455,15 +1470,15 @@ classdef Model < handle
             yPos = [10, 10, 20, 230, 220, 230, 190, 200, 220];
             imName = strsplit(imgNumber, '/');
             imName = imName{end};
-            insert = {sprintf(''), ... %sprintf('Image: \t%s', imName)
+            insert = {  sprintf(''), ... %sprintf('Image: \t%s', imName), ...
                         sprintf('Object distance: %.2f', infos{2}), ...
-                        sprintf(''), ... %sprintf('Fixation depth:   \t%.2f', angleFix), ...
+                        sprintf('Fixation depth:   \t%.2f', angleFix), ...
                         sprintf('Vergence Error: %.3f', infos{4} - infos{5}), ... %sprintf('Vergence Error:          \t%.3f', infos{4} - infos{5})
                         sprintf(''), ... %sprintf('Start Vergence Error: \t%.3f', infos{3}), ...
                         sprintf(''), ... %sprintf('Iteration: \t%d', infos{1}), ...
                         sprintf(''), ... %sprintf('Muscle Activation:    \t%.5f,  \t%.5f', infos{6}(1), infos{6}(2)), ...
                         sprintf(''), ... %sprintf('Relative Command: \t%.5f,  \t%.5f', infos{7}(1), infos{7}(2)), ...
-                        sprintf(''), ... %sprintf('Reward: \t%.3f', infos{8}), ...
+                        sprintf('Reward: \t%.3f', infos{8}), ...
                         };
 
             fig = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
