@@ -10,28 +10,10 @@ then
     WORKERS=$1
 fi
 
-#### standard cluster call --mem-per-cpu=5120
-srun --partition=sleuths --nodelist=vane --cpus-per-task=$WORKERS --mem-per-cpu=5120 --gres gpu:2 -LXserver \
---job-name=FGnoB \
+#### standard cluster call --mem-per-cpu=5120, possible nodes: vane, fletcher, autumnchat, springtalk ( --nodelist=vane), mem-per-cpu for >1mio iters: 5120
+srun --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=5120 --gres gpu:2 -LXserver \
+--job-name=MD \
 matlab -nodisplay -r "parOES(${WORKERS}); quit"
-
-# use --mem-per-cpu=5120 for runs with traintime > 1 mio --reservation=lelasch --mem-per-cpu=3072,
-# available until next friday: autumnchat 23908, fletcher 23972, springtalk 48164
-
-### autumnchat
-# srun --partition=sleuths --reservation=lelasch --nodelist=autumnchat --cpus-per-task=$WORKERS --mem-per-cpu=1494 --gres gpu:2 -LXserver \
-# --job-name=GammaVsMetCosts \
-# matlab -nodisplay -r "parOES(${WORKERS}); quit"
-
-### fletcher
-# srun --partition=sleuths --reservation=lelasch --nodelist=fletcher --cpus-per-task=$WORKERS --mem-per-cpu=1498 --gres gpu:2 -LXserver \
-# --job-name=GammaVsMetCostsBias002 \
-# matlab -nodisplay -r "parOES(${WORKERS}); quit"
-
-### springtalk
-# srun --partition=sleuths --reservation=lelasch --nodelist=springtalk --cpus-per-task=$WORKERS --mem-per-cpu=3010 --gres gpu:2 -LXserver \
-# --job-name=GammaVsMetCostsBias002 \
-# matlab -nodisplay -r "parOES(${WORKERS}); quit"
 
 # the time command can track the cpu usage
 # srun --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=3072 --gres gpu:2 -LXserver \

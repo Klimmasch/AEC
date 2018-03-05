@@ -157,14 +157,23 @@ function parOES(nWorkers)
 % varDescr = {'lambdaMuscleFB', 'desiredStdZT'};
 % experimentDirName = 'lambdaMuscleFB_vs_desiredStdZT_seed2';
 
-varNames = {'gamma', 'metCostRange'};
-var1 = {0.01, 0.05, 0.1};
-% var2 = {[0], [0.01], [0.03], [0.05]};
-var2 = {[0], [0.05], [0.075], [0.1]};
-varDescr = {'gamma', 'metCost'};
-numberFormatVar1 = '%1.2f';
-numberFormatVar2 = '[%1.3f]';
-experimentDirName = 'GammaVsMetCosts_FineGrainNoBias'
+% varNames = {'gamma', 'metCostRange'};
+% var1 = {0.01, 0.05, 0.1};
+% % var2 = {[0], [0.01], [0.03], [0.05]};
+% var2 = {[0], [0.05], [0.075], [0.1]};
+% varDescr = {'gamma', 'metCost'};
+% numberFormatVar1 = '%1.2f';
+% numberFormatVar2 = '[%1.3f]';
+% experimentDirName = 'GammaVsMetCosts_FineGrainNoBias'
+
+varNames = {'filterRight', 'filterRightProb'};
+var1 = {3};
+%var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
+var2 = {0.25, 0.5, 0.75, 0.9, 1};
+varDescr = {'filtRight', 'frProb'};
+numberFormatVar1 = '%d';
+numberFormatVar2 = '%1.2f';
+experimentDirName = 'monocularDeprivation_diffProbs'
 
 % varNames = {'gamma', 'metCostRange'};
 % var1 = {0.01, 0.05, 0.1};
