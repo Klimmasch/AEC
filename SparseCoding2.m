@@ -10,6 +10,7 @@ classdef SparseCoding2 < handle
         currentCoef;    % current coeffient matrix
         currentError;   % current reconstruction error
         sizeBatch;      % image batch size's 2nd dimension
+        selectedBasis;  % indicates for each basis how often it has been selected
     end
 
     methods
@@ -17,6 +18,7 @@ classdef SparseCoding2 < handle
         % PARAM = [nBasis, nBasisUsed, basisSize, eta, temperature, sizeBatch]
         function obj = SparseCoding2(PARAM)
             obj.nBasis = PARAM(1);
+            obj.selectedBasis = zeros(PARAM(1),1);
             obj.nBasisUsed = PARAM(2);
             obj.basisSize = PARAM(3);
             obj.eta = PARAM(4);
@@ -99,6 +101,13 @@ classdef SparseCoding2 < handle
             deltaBases = this.currentError * this.currentCoef' / size(this.currentError, 2);
             this.basis = this.basis + this.eta * deltaBases;
             this.basis = bsxfun(@rdivide, this.basis, sqrt(sum(this.basis .^ 2)));
+            
+            % also update the selected basis functions
+            usedBasis = zeros(size(this.currentCoef));
+            usedBasis(find(this.currentCoef)) = 1;
+            usedBasis = sum(usedBasis, 2);
+            this.selectedBasis = this.selectedBasis + usedBasis;
+            this.selectedBasis = this.selectedBasis ./ sum(this.selectedBasis);
         end
 
         %%% Track the evolution of all basis functions over time
