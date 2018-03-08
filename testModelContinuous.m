@@ -189,6 +189,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             % refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);                    % stable renderer
                             model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3);  % experimental renderer
 
+                            %% change left and right images to simulate altered rearing conditions
+                            if ~isempty(model.filterLeft)
+                                if randForLeftFilt < model.filterLeftProb
+                                    % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
+                                    % sligthly faster version
+                                    model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
+                                end
+                            end
+                            if ~isempty(model.filterRight)
+                                if randForRightFilt < model.filterRightProb
+                                    % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
+                                    % slightly faster version
+                                    model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
+                                end
+                            end
+
                             % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
 
                             % Image patch generation
@@ -357,6 +373,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         currentTexture = stimulusIndex;                                         % experimental renderer
                         model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3);
 
+                        %% change left and right images to simulate altered rearing conditions
+                        if ~isempty(model.filterLeft)
+                            if randForLeftFilt < model.filterLeftProb
+                                % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
+                                % sligthly faster version
+                                model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
+                            end
+                        end
+                        if ~isempty(model.filterRight)
+                            if randForRightFilt < model.filterRightProb
+                                % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
+                                % slightly faster version
+                                model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
+                            end
+                        end
+
                         % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
                         % generateAnaglyphs(imageSavePath, imgGrayLeft, imgGrayRight, dsRatioL, dsRatioS, foveaL, foveaS);
 
@@ -456,6 +488,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
                 for iter = 1 : model.testInterval
                     model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange2(odIndex), 3);
+
+                    %% change left and right images to simulate altered rearing conditions
+                    if ~isempty(model.filterLeft)
+                        if randForLeftFilt < model.filterLeftProb
+                            % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
+                            % sligthly faster version
+                            model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
+                        end
+                    end
+                    if ~isempty(model.filterRight)
+                        if randForRightFilt < model.filterRightProb
+                            % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
+                            % slightly faster version
+                            model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
+                        end
+                    end
 
                     % Image patch generation
                     for i = 1 : length(model.scModel)
@@ -652,6 +700,22 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             angleNew = model.getAngle(command);
 
                             model.refreshImagesNew(simulator, stim, angleNew, objDist, 3);
+
+                            %% change left and right images to simulate altered rearing conditions
+                            if ~isempty(model.filterLeft)
+                                if randForLeftFilt < model.filterLeftProb
+                                    % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
+                                    % sligthly faster version
+                                    model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
+                                end
+                            end
+                            if ~isempty(model.filterRight)
+                                if randForRightFilt < model.filterRightProb
+                                    % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
+                                    % slightly faster version
+                                    model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
+                                end
+                            end
 
                             for i = 1 : length(model.scModel)
                                 model.preprocessImage(i, 1);
