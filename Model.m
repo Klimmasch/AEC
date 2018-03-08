@@ -1638,6 +1638,22 @@ classdef Model < handle
                         for iter = 1 : numIters
                             this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3);
 
+                            %% change left and right images to simulate altered rearing conditions
+                            if ~isempty(model.filterLeft)
+                                if randForLeftFilt < model.filterLeftProb
+                                    % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
+                                    % sligthly faster version
+                                    model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
+                                end
+                            end
+                            if ~isempty(model.filterRight)
+                                if randForRightFilt < model.filterRightProb
+                                    % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
+                                    % slightly faster version
+                                    model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
+                                end
+                            end
+
                             % show anaglyphs for quit performance check
                             if (plotAnaglyphs && ((iter == 1) || (iter == numIters)))
                                 subplot(length(objDist) * length(startVergErr) * nStimuli, 2, figIter);
@@ -1807,7 +1823,9 @@ classdef Model < handle
 
         %%% This methods displays the current binocular basis functions of the model.
         %   If the history of basis functions was saved, their development is displayed.
-        function displayBasis(this, savePlot)
+        %   pathExtension lets you specify another subfolder or name
+        %   extension for the saved image.
+        function displayBasis(this, savePlot, pathExtension)
             % r = 16; c = 18; %how to arrange the basis in rows and cols
             r = 20;
 
@@ -1858,7 +1876,7 @@ classdef Model < handle
             end
 
             if savePlot
-                saveas(h, sprintf('%s/basisFunctions.png', this.savePath), 'png');
+                saveas(h, sprintf('%s/%sbasisFunctions.png', this.savePath, pathExtension), 'png');
             end
         end
     end
