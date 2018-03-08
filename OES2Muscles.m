@@ -194,6 +194,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         copyfile(strcat(class(model.rlModel), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CCritic), '.m'), model.savePath);
         copyfile(strcat(class(model.rlModel.CActor), '.m'), model.savePath);
+        copyfile(strcat(class(model.scModel{1}), '.m'), model.savePath);
         copyfile('results.ods', model.savePath);
         % % out commented as hack for ICDL experiments
         % TODO: please comment back in afterwards
@@ -276,17 +277,18 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         if ((testIt == 1) & find(model.testAt == t)) % have to use single & here, because the last statement is a scalar
             if (t > 0)
                 testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
+                model.displayBasis(1, sprintf('modelAt%d/', t));
                 close all;
             end
         elseif find(model.testAt == t)
-            if (t > 0)
+            % if (t > 0)
                 % temporary solution for using less space in cluster calls
                 testSavePath = sprintf('%s/modelAt%d', model.savePath, t);
                 if ~ exist(strcat(testSavePath, '/model'), 'file')
                     mkdir(testSavePath);
                     save(strcat(testSavePath, '/model'), 'model');
                 end
-            end
+            % end
         end
         rng(rngState); % restore state after testing, to not mess up the experiment
 
@@ -382,12 +384,16 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             %% change left and right images to simulate altered rearing conditions
             if ~isempty(model.filterLeft)
                 if randForLeftFilt < model.filterLeftProb
-                    model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft);
+                    % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
+                    % sligthly faster version
+                    model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
                 end
             end
             if ~isempty(model.filterRight)
                 if randForRightFilt < model.filterRightProb
-                    model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight);
+                    % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
+                    % slightly faster version
+                    model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
                 end
             end
 
@@ -615,6 +621,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, experimentDirName, level)
         rngState = rng; % store current state
         testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
+        model.displayBasis(1, sprintf('modelAt%d/', t));
         rng(rngState); % restore state after testing, to not mess up the experiment
 
         % print the time again after the line output of the testing script

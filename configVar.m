@@ -22,7 +22,9 @@ end
 % training duration
 [found, trainTime, varParamArray] = parseparam(varParamArray, 'trainTime');
 if (~found)
-    trainTime = 1000000;
+    % trainTime = 1000000;
+    trainTime = 300000; % for training without metCosts
+
 end
 
 if (~isscalar(trainTime) || trainTime < 1)
@@ -32,7 +34,9 @@ end
 % points in time of intermediate test procedure during training
 [found, testAt, varParamArray] = parseparam(varParamArray, 'testAt');
 if (~found)
-    testAt = [500000 : 500000 : trainTime];
+    % testAt = [250000 : 250000 : trainTime];
+    % testAt = [500000 : 500000 : trainTime];
+    testAt = [100000 : 100000 : trainTime]; % for training without metCosts
 end
 
 % sparse coding type
@@ -316,20 +320,38 @@ if (~found)
     filterLeft = [];
 end
 if filterLeft == 1
-    filterLeft = orientedGaussian(9,9,0.1);
+    % filterLeft = orientedGaussian(9,9,0.1); % leaves only vertical edges
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(9,9,0.1); % leaves only vertical edges
 elseif filterLeft == 2
-    filterLeft = orientedGaussian(9,0.1,9);
+    % filterLeft = orientedGaussian(9,0.1,9); % leaves only horizontal edges
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(9,0.1,9);
 elseif filterLeft == 3
-    filterLeft = orientedGaussian(240,240,240);
+    %filterLeft = orientedGaussian(240,240,240); % blurrs the whole image (monocular deprivation)
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,240,240);
 elseif filterLeft == 4
-    filterLeft = orientedGaussian(17,17,0.1);
+    %filterLeft = orientedGaussian(17,17,0.1);
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(17,17,0.1);
 elseif filterLeft == 5
-    filterLeft = orientedGaussian(17,0.1,17);
+    %filterLeft = orientedGaussian(17,0.1,17);
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(17,0.1,17);
+elseif filterLeft == 6
+    % filterLeft = orientedGaussian(33,33,0.1);
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,33,0.1); % only verticals
+elseif filterLeft == 7
+    % filterLeft = orientedGaussian(33,0.1,33);
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,33); % only horizontals
 end
 
 [found, filterLeftProb, varParamArray] = parseparam(varParamArray, 'filterLeftProb');
 if (~found)
-    filterLeftProb = 0;
+    filterLeftProb = 1;
 end
 
 [found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
@@ -337,20 +359,38 @@ if (~found)
     filterRight = [];
 end
 if filterRight == 1
-    filterRight = orientedGaussian(9,9,0.1);
+    % filterRight = orientedGaussian(9,9,0.1);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(9,9,0.1);
 elseif filterRight == 2
-    filterRight = orientedGaussian(9,0.1,9);
+    % filterRight = orientedGaussian(9,0.1,9);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(9,0.1,9);
 elseif filterRight == 3
-    filterRight = orientedGaussian(240,240,240);
+    % filterRight = orientedGaussian(240,240,240);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,240,240);
 elseif filterRight == 4
-    filterRight = orientedGaussian(17,17,0.1);
+    % filterRight = orientedGaussian(17,17,0.1);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(17,17,0.1);
 elseif filterRight == 5
-    filterRight = orientedGaussian(17,0.1,17);
+    % filterRight = orientedGaussian(17,0.1,17);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(17,0.1,17);
+elseif filterRight == 6
+    % filterRight = orientedGaussian(33,33,0.1);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,33,0.1);
+elseif filterRight == 7
+    % filterRight = orientedGaussian(33,0.1,33);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,0.1,33);
 end
 
 [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
 if (~found)
-    filterRightProb = 0;
+    filterRightProb = 1;
 end
 
 PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
