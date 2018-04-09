@@ -106,7 +106,7 @@ classdef SparseCoding2 < handle
             usedBasis = zeros(size(this.currentCoef));
             usedBasis(find(this.currentCoef)) = 1;
             usedBasis = sum(usedBasis, 2);
-            this.selectedBasis = this.selectedBasis + usedBasis;
+            this.selectedBasis = this.selectedBasis + (usedBasis ./ sum(usedBasis));
             this.selectedBasis = this.selectedBasis ./ sum(this.selectedBasis);
         end
 

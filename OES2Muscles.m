@@ -278,6 +278,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             if (t > 0)
                 testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
                 model.displayBasis(1, sprintf('modelAt%d/', t));
+                model.displaySelectedBasis([2,5], 1, sprintf('modelAt%d/', t));
                 close all;
             end
         elseif find(model.testAt == t)
@@ -287,6 +288,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
                 if ~ exist(strcat(testSavePath, '/model'), 'file')
                     mkdir(testSavePath);
                     save(strcat(testSavePath, '/model'), 'model');
+                    model.displayBasis(1, sprintf('modelAt%d/', t));
+                    model.displaySelectedBasis([2,5], 1, sprintf('modelAt%d/', t));
+                    close all;
                 end
             % end
         end
@@ -622,6 +626,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         rngState = rng; % store current state
         testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
         model.displayBasis(1, sprintf('modelAt%d/', t));
+        model.displaySelectedBasis([2,5], 1, sprintf('modelAt%d/', t));
         rng(rngState); % restore state after testing, to not mess up the experiment
 
         % print the time again after the line output of the testing script
