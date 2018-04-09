@@ -347,6 +347,9 @@ elseif filterLeft == 7
     % filterLeft = orientedGaussian(33,0.1,33);
     filterLeft = {};
     [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,33); % only horizontals
+elseif filterLeft == 8
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,0.1); % for reproducing the normal case
 end
 
 [found, filterLeftProb, varParamArray] = parseparam(varParamArray, 'filterLeftProb');
@@ -386,6 +389,9 @@ elseif filterRight == 7
     % filterRight = orientedGaussian(33,0.1,33);
     filterRight = {};
     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,0.1,33);
+elseif filterRight == 8
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,0.1,0.1);
 end
 
 [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
