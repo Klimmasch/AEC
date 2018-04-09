@@ -1,5 +1,5 @@
 
-
+%'monocularDeprivation_diffProbs_local_s'
 function parTest(folders, nWorkers, runParallel)
 
 %     folders = {'GammaVsMetCosts_0,5mio'}; % cluster run tier
@@ -11,8 +11,10 @@ function parTest(folders, nWorkers, runParallel)
     
     for k = 1 : length(folders) % single run tier
         folder = folders{k};
-        parent = strcat('/home/aecgroup/aecdata/Results/', folder);
-        subfolders = dir(sprintf('%s/*iter*', parent));
+        parent = strcat('/home/aecgroup/aecdata/Results/SAB2018/', folder);
+        subfolders = dir(sprintf('%s/*iter_4_*', parent));
+        % parent = strcat('/home/aecgroup/aecdata/Results/', folder);
+        % subfolders = dir(sprintf('%s/*iter*', parent));
         
         for s = 1 : length(subfolders) % test folder tier
             subfolder = subfolders(s);
@@ -21,7 +23,8 @@ function parTest(folders, nWorkers, runParallel)
 %                 testpaths{iter} = sprintf('%s/%s/model.mat', parent, subfolder.name);
 %                 iter = iter + 1;
 %             end
-            testfolders = dir(sprintf('%s/%s/*modelAt*',parent, subfolder.name));
+            testfolders = dir(sprintf('%s/%s/*modelAt*0',parent, subfolder.name));
+            % testfolders = dir(sprintf('%s/%s/*modelAt*',parent, subfolder.name));
             
             for t = 1 : length(testfolders)
                 testfolder = testfolders(t);
@@ -31,7 +34,7 @@ function parTest(folders, nWorkers, runParallel)
         end
     end
 
-%     testpaths% = fliplr(testpaths); % change order to run on different nodes
+    testpaths = fliplr(testpaths); % change order to run on different nodes
     
     if runParallel
         myCluster = parcluster('local');
@@ -66,17 +69,17 @@ function parTest(folders, nWorkers, runParallel)
         end
         
     else
-        % textureFile = 'Textures_mcgillManMade40.mat';
-        % simulator = OpenEyeSimV5('create'); % latest renderer
+        textureFile = 'Textures_mcgillManMade40.mat';
+        simulator = OpenEyeSimV5('create'); % latest renderer
 
-        % simulator.initRenderer();
+        simulator.initRenderer();
 
-        % texture = load(sprintf('config/%s', textureFile));
-        % texture = texture.texture;
-        % for i = 1 : nStim
-        %     simulator.add_texture(i, texture{i});
-        % end
-        % sprintf('%d textures added to the testing simulator', nStim)
+        texture = load(sprintf('config/%s', textureFile));
+        texture = texture.texture;
+        for i = 1 : nStim
+            simulator.add_texture(i, texture{i});
+        end
+        sprintf('%d textures added to the testing simulator', nStim)
         
         for tp = 1 : length(testpaths)
             savePath = testpaths{tp}
@@ -100,7 +103,9 @@ function parTest(folders, nWorkers, runParallel)
 %             else
 %                 sprintf('skip testing')
 %             end
-            testModelContinuous(model, 0, 1, 1, 1, [], 0, sprintf('modelAt%d', model.trainedUntil), [1, 3, 4, 6]);
+            testModelContinuous(model, 40, 1, 1, 1, simulator, 0, sprintf('modelAt%d_trainInpt', model.trainedUntil), [1, 3, 4, 6]);
+            % testModelContinuous_explore(model, 40, 1, 1, 1, simulator, 0, sprintf('modelAt%d+expl', model.trainedUntil), [1, 3, 4, 6]);
+            
             % sprintf('trainedUntil: %d', model.trainedUntil)
             % if ~exist(sprintf('%s/modelAt%d/muscleActivityTrajectory.png', model.savePath, model.trainedUntil), 'file') % if the last image from the test procedure does not exists ...
 %             if ~any(model.testHist(find(model.testAt == model.trainedUntil))) % test if according field in testHist is empty

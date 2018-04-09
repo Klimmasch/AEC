@@ -183,7 +183,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
                         % Uniform muscle activation distribution for two muscles
                         [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex));
-
+                        randForLeftFilt = rand(1,1);
+                         randForRightFilt = rand(1,1);
+                         
                         for iter = 2 : model.testInterval + 1
                             % update stimuli
                             % refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);                    % stable renderer
@@ -191,18 +193,18 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
                             %% change left and right images to simulate altered rearing conditions
                             if ~isempty(model.filterLeft)
-                                if randForLeftFilt < model.filterLeftProb
+                                % if randForLeftFilt < model.filterLeftProb
                                     % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
                                     % sligthly faster version
                                     model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
-                                end
+                                % end
                             end
                             if ~isempty(model.filterRight)
-                                if randForRightFilt < model.filterRightProb
+                                % if randForRightFilt < model.filterRightProb
                                     % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
                                     % slightly faster version
                                     model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
-                                end
+                                % end
                             end
 
                             % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
@@ -366,6 +368,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                     % Uniform muscle activation distribution for two muscles
                     [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex));
 
+                    % randForLeftFilt = rand(1,1);
+                    % randForRightFilt = rand(1,1);
+
                     for stimulusIndex = 1 : nStim
                         % update stimuli
                         % currentTexture = texture{stimulusIndex};                              % stable renderer
@@ -375,18 +380,18 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
                         %% change left and right images to simulate altered rearing conditions
                         if ~isempty(model.filterLeft)
-                            if randForLeftFilt < model.filterLeftProb
+                            % if randForLeftFilt < model.filterLeftProb
                                 % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
                                 % sligthly faster version
                                 model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
-                            end
+                            % end
                         end
                         if ~isempty(model.filterRight)
-                            if randForRightFilt < model.filterRightProb
+                            % if randForRightFilt < model.filterRightProb
                                 % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
                                 % slightly faster version
                                 model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
-                            end
+                            % end
                         end
 
                         % imwrite(imfuse(imgGrayLeft, imgGrayRight, 'falsecolor'), [imageSavePath '/anaglyph.png']);
@@ -485,24 +490,26 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 % [command, angleNew] = model.getMFedood(objRange2(odIndex), vseRange(randi(length(vseRange))));
 
                 currentTexture = randi(nStim);
+                randForLeftFilt = rand(1,1);
+                randForRightFilt = rand(1,1);
 
                 for iter = 1 : model.testInterval
                     model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange2(odIndex), 3);
 
                     %% change left and right images to simulate altered rearing conditions
                     if ~isempty(model.filterLeft)
-                        if randForLeftFilt < model.filterLeftProb
+                        % if randForLeftFilt < model.filterLeftProb
                             % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
                             % sligthly faster version
                             model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
-                        end
+                        % end
                     end
                     if ~isempty(model.filterRight)
-                        if randForRightFilt < model.filterRightProb
+                        % if randForRightFilt < model.filterRightProb
                             % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
                             % slightly faster version
                             model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
-                        end
+                        % end
                     end
 
                     % Image patch generation
@@ -703,18 +710,18 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
 
                             %% change left and right images to simulate altered rearing conditions
                             if ~isempty(model.filterLeft)
-                                if randForLeftFilt < model.filterLeftProb
+                                % if randForLeftFilt < model.filterLeftProb
                                     % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
                                     % sligthly faster version
                                     model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
-                                end
+                                % end
                             end
                             if ~isempty(model.filterRight)
-                                if randForRightFilt < model.filterRightProb
+                                % if randForRightFilt < model.filterRightProb
                                     % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
                                     % slightly faster version
                                     model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
-                                end
+                                % end
                             end
 
                             for i = 1 : length(model.scModel)
