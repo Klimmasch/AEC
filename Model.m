@@ -1368,6 +1368,9 @@ classdef Model < handle
 
         %%% Generates anaglyphs of the large and small scale fovea and
         %   one of the two unpreprocessed gray scale images
+        %   If you desire the save images to have the same size, open a new
+        %   figure before starting this script with
+        %   figure('Position', [0, 0, 960, 640])
         function generateAnaglyphs(this, identifier, markScales, infos, imgNumber)
 
             numberScales = length(this.scModel);
@@ -1481,11 +1484,11 @@ classdef Model < handle
                         sprintf('Reward: \t%.3f', infos{8}), ...
                         };
 
-            fig = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
+%             fig = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
             % subplot(2,3,[1,2,4,5]);
             % title(sprintf('Object distance: %d,\titeration: %d,\tvergence error: %d', infos(1), infos(2), infos(3)));
             subplot('Position', [0.05, 0.12, 0.6, 0.8]);
-            imshow(anaglyph);
+            imshow(anaglyph, 'initialMagnification', 'fit');
             text(xPos, yPos, insert, 'color', textColor); % these numbers resemble white, but white will appear black after saving ;P
             % text(10, 20, num2str(size(anaglyph)), 'color', 'yellow'); %[1-eps, 1-eps, 1-eps]
             % title('Anaglyph');
@@ -1506,8 +1509,8 @@ classdef Model < handle
                 text(0.03, 0.1, descr, 'color', textColor, 'Units', 'normalized')
             end
             % saveas(fig, sprintf('%s/anaglyph.png', this.savePath), 'png');
-            saveas(fig, sprintf('%s/movies/anaglyphs%03d.png', this.savePath, identifier), 'png');
-            fig.delete();
+            saveas(gcf, sprintf('%s/movies/anaglyphs%03d.png', this.savePath, identifier), 'png');
+%             fig.delete();
         end
         %%% Saturation function that keeps motor commands in [0, 1]
         %   corresponding to the muscelActivity/metabolicCost tables
@@ -1623,7 +1626,7 @@ classdef Model < handle
                                 [relativeCommand(1, 1), relativeCommand(2, 1)] = pol2cart(rand(1) * pi * 2, rand(1) * rangeMax);
                                 command = command + relativeCommand;
                                 command = checkCmd(command);
-                                angleNew = model.getAngle(command) * 2;
+                                angleNew = this.getAngle(command) * 2;
 
                                 if (angleNew > angleMinT) && (angleNew < angleMaxT)
                                     dummy = false;
@@ -1639,19 +1642,15 @@ classdef Model < handle
                             this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3);
 
                             %% change left and right images to simulate altered rearing conditions
-                            if ~isempty(model.filterLeft)
-                                if randForLeftFilt < model.filterLeftProb
+                            if ~isempty(this.filterLeft)
                                     % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
                                     % sligthly faster version
-                                    model.imgGrayLeft = conv2(model.filterLeft{1}, model.filterLeft{2}, model.imgGrayLeft, 'same');
-                                end
+                                    this.imgGrayLeft = conv2(this.filterLeft{1}, this.filterLeft{2}, this.imgGrayLeft, 'same');
                             end
-                            if ~isempty(model.filterRight)
-                                if randForRightFilt < model.filterRightProb
+                            if ~isempty(this.filterRight)
                                     % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
                                     % slightly faster version
-                                    model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
-                                end
+                                    this.imgGrayRight = conv2(this.filterRight{1}, this.filterRight{2}, this.imgGrayRight, 'same');
                             end
 
                             % show anaglyphs for quit performance check
@@ -1878,6 +1877,51 @@ classdef Model < handle
             if savePlot
                 saveas(h, sprintf('%s/%sbasisFunctions.png', this.savePath, pathExtension), 'png');
             end
+        end
+        
+        % displays the most selected basis functions defined by shape
+        % usage: displaySelectedBasis([2, 5], '10mostSelBFs')
+        function displaySelectedBasis(this, shape, savePlot, pathExtension)
+            r = 20;
+
+            number = shape(1) * shape(2);
+            numScales = length(this.scModel);
+
+            [~, inds] = sort(this.scModel{1}.selectedBasis, 'descend');
+            inds = inds(1:number);
+            
+            h = figure(1);
+            % scrsz = get(0,'ScreenSize');
+            % set(h,'Position',[scrsz(1) scrsz(2) scrsz(3) scrsz(4)]);
+
+            % loop over scales
+            for s = 1:numScales
+                % sort basis according to left energy norm
+                endBasis = this.scModel{s}.basis(:, inds);
+                % leftEnergy = abs(sum(endBasis.^2)-0.5);
+                % [~,I] = sort(leftEnergy);
+
+                subplot(1,numScales,s);
+                % [di,num] = size(basisTrack{s,1});
+                [di,num] = size(endBasis);
+
+                fun1 = @(blc_struct) padarray(padarray(reshape(permute(padarray(reshape(blc_struct.data, sqrt(di / 2), ...
+                         sqrt(di / 2), 2), [1, 1], 'pre'), [1, 3, 2]), (sqrt(di / 2) + 1) * 2, sqrt(di / 2) + 1), [1, 1], ...
+                         'post') - 1, [1 1], 'pre') + 1;
+
+                B = reshape(endBasis,di*shape(1),shape(2));
+                B = B/max(max(abs(B))) + 0.5;
+                C = padarray(padarray(blockproc(B,[di,1],fun1)-1,[1 1],'post')+1,[2,2]);
+                imshow(C);
+                % title(sprintf('%d most often selected Basis functions\n at %d%% of training\n(scale %d)', number, ceil((this.trainedUntil / this.trainTime) * 100), s))
+                title(sprintf('%d most often selected\nBasis functions\n(scale %d)', number, s))
+                % title(num2str(this.trainTime*0.1*(j-1)));
+            end
+
+            if savePlot
+                saveas(h, sprintf('%s/%s%dmostSelBFs.png', this.savePath, pathExtension, number), 'png');
+            end
+            
         end
     end
 end
