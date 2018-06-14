@@ -38,6 +38,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % per convention, the testing images are given in the first entry!!
 %     textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
+%     textureFiles = {'40RandomDots.mat', '100img_80pcMCGill_20pcRandomDots.mat'};
+%     textureFiles = {'40RandomDots.mat', '100RandomDots.mat'};
 
     %%% Execute intermediate test procedure during training
     % testAt = [500000 : 500000 : trainTime]; % contained in configVar from now on
