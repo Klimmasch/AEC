@@ -22,9 +22,8 @@ end
 % training duration
 [found, trainTime, varParamArray] = parseparam(varParamArray, 'trainTime');
 if (~found)
-    % trainTime = 1000000;
-    trainTime = 300000; % for training without metCosts
-
+    trainTime = 1000000;
+    % trainTime = 300000; % for training without metCosts
 end
 
 if (~isscalar(trainTime) || trainTime < 1)
@@ -34,9 +33,9 @@ end
 % points in time of intermediate test procedure during training
 [found, testAt, varParamArray] = parseparam(varParamArray, 'testAt');
 if (~found)
-    % testAt = [250000 : 250000 : trainTime];
+    testAt = [250000 : 250000 : trainTime];
     % testAt = [500000 : 500000 : trainTime];
-    testAt = [100000 : 100000 : trainTime]; % for training without metCosts
+    % testAt = [100000 : 100000 : trainTime]; % for training without metCosts
 end
 
 % sparse coding type
@@ -73,7 +72,7 @@ if (~isscalar(testInterval) || testInterval < 2)
     error('testInterval must be scalar >= 2');
 end
 
-%%% Image processing constants
+%%% Image processing variables
 
 % patch size [pixel] of one basis functon, i.e. "receptive field" size | origin 8
 [found, patchSize, varParamArray] = parseparam(varParamArray, 'patchSize');
@@ -142,6 +141,11 @@ end
 
 if (length(dsRatio) > 1 && (length(overlap) ~= length(dsRatio) - 1))
     error('For usage of #%d scales overlap needs to have length %d.', length(dsRatio) - 1);
+end
+
+[found, whitening, varParamArray] = parseparam(varParamArray, 'whitening');
+if (~found)
+    whitening = 0;
 end
 
 %%% Camera parameters
@@ -350,6 +354,36 @@ elseif filterLeft == 7
 elseif filterLeft == 8
     filterLeft = {};
     [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,0.1); % for reproducing the normal case
+elseif filterLeft == 9
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.2,0.2); % for reproducing the normal case
+elseif filterLeft == 10
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.5,0.5); % for reproducing the normal case
+elseif filterLeft == 11
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,1,1); % for reproducing the normal case
+elseif filterLeft == 12
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,2,2); % for reproducing the normal case
+elseif filterLeft == 13
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,5,5); % for reproducing the normal case
+elseif filterLeft == 14
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,1,1); % for reproducing the normal case
+elseif filterLeft == 15
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,5,5); % for reproducing the normal case
+elseif filterLeft == 16
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,10,10); % for reproducing the normal case
+elseif filterLeft == 17
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,50,50); % for reproducing the normal case
+elseif filterLeft == 18
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,100,100); % for reproducing the normal case
 end
 
 [found, filterLeftProb, varParamArray] = parseparam(varParamArray, 'filterLeftProb');
@@ -357,54 +391,73 @@ if (~found)
     filterLeftProb = 1;
 end
 
+% just a workaround to test multiple different same filters for left and
+% right eyes
+% filterRight = filterLeft;
+% filterRightProb = filterLeftProb;
+
 [found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
 if (~found)
-    filterRight = [];
-end
-if filterRight == 1
-    % filterRight = orientedGaussian(9,9,0.1);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(9,9,0.1);
-elseif filterRight == 2
-    % filterRight = orientedGaussian(9,0.1,9);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(9,0.1,9);
+    filterRight = filterLeft;
 elseif filterRight == 3
     % filterRight = orientedGaussian(240,240,240);
     filterRight = {};
     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,240,240);
-elseif filterRight == 4
-    % filterRight = orientedGaussian(17,17,0.1);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(17,17,0.1);
-elseif filterRight == 5
-    % filterRight = orientedGaussian(17,0.1,17);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(17,0.1,17);
-elseif filterRight == 6
-    % filterRight = orientedGaussian(33,33,0.1);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,33,0.1);
-elseif filterRight == 7
-    % filterRight = orientedGaussian(33,0.1,33);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,0.1,33);
-elseif filterRight == 8
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,0.1,0.1);
 end
-
 [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
 if (~found)
-    filterRightProb = 1;
+    filterRightProb = filterLeftProb;
 end
+
+% [found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
+% if (~found)
+%     filterRight = [];
+% end
+% if filterRight == 1
+%     % filterRight = orientedGaussian(9,9,0.1);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(9,9,0.1);
+% elseif filterRight == 2
+%     % filterRight = orientedGaussian(9,0.1,9);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(9,0.1,9);
+% elseif filterRight == 3
+%     % filterRight = orientedGaussian(240,240,240);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,240,240);
+% elseif filterRight == 4
+%     % filterRight = orientedGaussian(17,17,0.1);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(17,17,0.1);
+% elseif filterRight == 5
+%     % filterRight = orientedGaussian(17,0.1,17);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(17,0.1,17);
+% elseif filterRight == 6
+%     % filterRight = orientedGaussian(33,33,0.1);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,33,0.1);
+% elseif filterRight == 7
+%     % filterRight = orientedGaussian(33,0.1,33);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,0.1,33);
+% elseif filterRight == 8
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,0.1,0.1);
+% end
+% 
+% [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
+% if (~found)
+%     filterRightProb = 1;
+% end
 
 PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
               initMethod, inputParams, normFeatVect, desiredStdZT, testInterval, ...
-              filterLeft, filterLeftProb, filterRight, filterRightProb};
+              filterLeft, filterLeftProb, filterRight, filterRightProb, ...
+              whitening};
 
 % ------------------------
 % Sparse Coding parameters
