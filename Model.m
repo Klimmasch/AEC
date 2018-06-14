@@ -118,7 +118,7 @@ classdef Model < handle
         currMean;       % approximations for online signal normalization
         currM2;
         desiredStdZT;   % desired standard deviation of each z-transformed variable
-        
+
         whitening;      % should the images be whitened
     end
 
@@ -159,7 +159,7 @@ classdef Model < handle
                 obj.filterRight = PARAM{1}{31};
                 obj.filterLeftProb = PARAM{1}{30};
                 obj.filterRightProb = PARAM{1}{32};
-                
+
                 obj.whitening = PARAM{1}{33};
 
                 % single eye
@@ -450,7 +450,7 @@ classdef Model < handle
                 img = real(ifft2(If.*fftshift(filt')));
                 % img = imagew;
             end
-            
+
             % down scale image
             for k = 1 : log2(this.dsRatio(scScale))
                 img = impyramid(img, 'reduce');
@@ -738,8 +738,33 @@ classdef Model < handle
             this.imgGrayRight = 0.2989 * this.imgRawRight(:, :, 1) + 0.5870 * this.imgRawRight(:, :, 2) + 0.1140 * this.imgRawRight(:, :, 3);
         end
 
+        %%% Calculate binocularity indizes, plot them and save the figure as specified
+        function plotBinocularity(this, scale, savePath)
+            leftBasis = this.scModel{scale}.basis(1:end/2, :);
+            rightBasis = this.scModel{scale}.basis(end/2+1:end, :);
+
+            binocularity = (sqrt(sum(leftBasis.^2)) - sqrt(sum(rightBasis.^2))) ./ (sqrt(sum(leftBasis.^2)) + sqrt(sum(rightBasis.^2)));
+            binocularity = -binocularity;
+            binocularity = squeeze(binocularity(1, :));
+
+            bins = [-1, -0.85, -0.5, -0.15, 0.15, 0.5, 0.85, 1];
+            [N, ~] = histcounts(binocularity, bins);
+            
+            h = figure;
+            bar((N./sum(N))*100, 1);
+            grid on;
+            xlabel('Binocularity');
+            ylabel('Percentage of Bases [%]');
+            xlim([0.5 7.5]);
+            ylim([0 100]);
+            title(sprintf('Scale %d', scale));
+            
+            saveas(h, [savePath, '/binocularity.png']);
+            
+        end
+
         %%% Plot all gathered performance data and save graphs
-        %   param level:    # of plot elem range [1, 7]
+        %   param level:    # of plot elem range [1, 8]
         function allPlotSave(this, level)
 
             % only take the last value before the image/texture is changed
@@ -1382,6 +1407,12 @@ classdef Model < handle
                 %     end
                 % end
             end
+            
+            if (~isempty(find(level == 8)))
+                for s = 1:length(this.scModel)
+                    this.plotBinocularity(s, this.savePath);
+                end
+            end
         end
 
         %%% Generates anaglyphs of the large and small scale fovea and
@@ -1395,7 +1426,7 @@ classdef Model < handle
 
             numberScales = length(this.scModel);
             imgOrigSize = [240, 320];
-            
+
             % defining colors in the image: (from larges to smallest scale)
             scalingColors = {'blue', 'red', 'green'};
             textColor = 'yellow';
@@ -1900,7 +1931,7 @@ classdef Model < handle
                 saveas(h, sprintf('%s/%sbasisFunctions.png', this.savePath, pathExtension), 'png');
             end
         end
-        
+
         % displays the most selected basis functions defined by shape
         % usage: displaySelectedBasis([2, 5], '10mostSelBFs')
         function displaySelectedBasis(this, shape, savePlot, pathExtension)
@@ -1911,7 +1942,7 @@ classdef Model < handle
 
             [~, inds] = sort(this.scModel{1}.selectedBasis, 'descend');
             inds = inds(1:number);
-            
+
             h = figure(1);
             % scrsz = get(0,'ScreenSize');
             % set(h,'Position',[scrsz(1) scrsz(2) scrsz(3) scrsz(4)]);
@@ -1943,7 +1974,7 @@ classdef Model < handle
             if savePlot
                 saveas(h, sprintf('%s/%s%dmostSelBFs.png', this.savePath, pathExtension, number), 'png');
             end
-            
+
         end
     end
 end
