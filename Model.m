@@ -118,6 +118,8 @@ classdef Model < handle
         currMean;       % approximations for online signal normalization
         currM2;
         desiredStdZT;   % desired standard deviation of each z-transformed variable
+        
+        whitening;      % should the images be whitened
     end
 
     methods
@@ -157,6 +159,8 @@ classdef Model < handle
                 obj.filterRight = PARAM{1}{31};
                 obj.filterLeftProb = PARAM{1}{30};
                 obj.filterRightProb = PARAM{1}{32};
+                
+                obj.whitening = PARAM{1}{33};
 
                 % single eye
                 obj.desiredAngleMin = atand(obj.baseline / (2 * obj.objDistMax));
@@ -433,6 +437,20 @@ classdef Model < handle
                 img = this.imgGrayRight;
             end
 
+            % whitening with a constant filter
+            if this.whitening
+                % N = size(img, 1);
+                [n, m] = size(img);
+                % [fx, fy] = meshgrid(-N/2 : N/2-1, -N/2 : N/2-1);
+                [fx, fy] = meshgrid(-n/2 : n/2-1, -m/2 : m/2-1);
+                rho = sqrt(fx.*fx + fy.*fy);
+                f_0 = 0.4*n;
+                filt = rho.*exp(-(rho/f_0).^4);
+                If = fft2(img);
+                img = real(ifft2(If.*fftshift(filt')));
+                % img = imagew;
+            end
+            
             % down scale image
             for k = 1 : log2(this.dsRatio(scScale))
                 img = impyramid(img, 'reduce');
@@ -1371,7 +1389,9 @@ classdef Model < handle
         %   If you desire the save images to have the same size, open a new
         %   figure before starting this script with
         %   figure('Position', [0, 0, 960, 640])
-        function generateAnaglyphs(this, identifier, markScales, infos, imgNumber)
+        %   After generating all images, create a video with
+        %   avconv -r 10 -i anaglyphs%3d.png -b:v 1000k video.mp4
+        function generateAnaglyphs(this, identifier, markScales, infos, imgNumber, saveTag)
 
             numberScales = length(this.scModel);
             imgOrigSize = [240, 320];
@@ -1379,6 +1399,7 @@ classdef Model < handle
             % defining colors in the image: (from larges to smallest scale)
             scalingColors = {'blue', 'red', 'green'};
             textColor = 'yellow';
+            % textColor = 'green';
 
             scaleImages = cell(numberScales);
             if ~isdir(sprintf('%s/movies/', this.savePath))
@@ -1469,7 +1490,8 @@ classdef Model < handle
             %             sprintf('Reward: \t%.3f', infos{7})};
 
             angleFix = this.baseline / (2 * tand(infos{5} / 2));
-            xPos = [10, 220, 220, 10, 10, 260, 10, 10, 240]; %display in headful modus: [10, 200, 10, 10, 260, 10, 10]
+            % xPos = [10, 220, 220, 10, 10, 260, 10, 10, 240]; %display in headful modus: [10, 200, 10, 10, 260, 10, 10]
+            xPos = [10, 220, 220, 10, 10, 260, 10, 10, 10];
             yPos = [10, 10, 20, 230, 220, 230, 190, 200, 220];
             imName = strsplit(imgNumber, '/');
             imName = imName{end};
@@ -1479,8 +1501,8 @@ classdef Model < handle
                         sprintf('Vergence Error: %.3f', infos{4} - infos{5}), ... %sprintf('Vergence Error:          \t%.3f', infos{4} - infos{5})
                         sprintf(''), ... %sprintf('Start Vergence Error: \t%.3f', infos{3}), ...
                         sprintf(''), ... %sprintf('Iteration: \t%d', infos{1}), ...
-                        sprintf(''), ... %sprintf('Muscle Activation:    \t%.5f,  \t%.5f', infos{6}(1), infos{6}(2)), ...
-                        sprintf(''), ... %sprintf('Relative Command: \t%.5f,  \t%.5f', infos{7}(1), infos{7}(2)), ...
+                        sprintf('Muscle Activation:    \t%.5f,  \t%.5f', infos{6}(1), infos{6}(2)), ...
+                        sprintf('Relative Command: \t%.5f,  \t%.5f', infos{7}(1), infos{7}(2)), ...
                         sprintf('Reward: \t%.3f', infos{8}), ...
                         };
 
@@ -1509,7 +1531,7 @@ classdef Model < handle
                 text(0.03, 0.1, descr, 'color', textColor, 'Units', 'normalized')
             end
             % saveas(fig, sprintf('%s/anaglyph.png', this.savePath), 'png');
-            saveas(gcf, sprintf('%s/movies/anaglyphs%03d.png', this.savePath, identifier), 'png');
+            saveas(gcf, sprintf('%s/movies/anaglyphs%s_%03d.png', this.savePath, saveTag, identifier), 'png');
 %             fig.delete();
         end
         %%% Saturation function that keeps motor commands in [0, 1]
