@@ -12,7 +12,7 @@ fi
 
 #### standard cluster call --mem-per-cpu=5120, possible nodes: vane, fletcher, autumnchat, springtalk ( --nodelist=vane), mem-per-cpu for >1mio iters: 5120
 srun --partition=sleuths --cpus-per-task=$WORKERS --mem-per-cpu=5120 --gres gpu:2 -LXserver \
---job-name=MD \
+--job-name=blur \
 matlab -nodisplay -r "parOES(${WORKERS}); quit"
 
 # the time command can track the cpu usage

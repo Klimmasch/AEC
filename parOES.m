@@ -166,19 +166,32 @@ function parOES(nWorkers)
 % numberFormatVar2 = '[%1.3f]';
 % experimentDirName = 'GammaVsMetCosts_FineGrainNoBias'
 
-varNames = {'filterRight', 'filterRightProb'};
-var1 = {3};
+% varNames = {'filterLeft', 'filterLeftProb'};
+% % var1 = {8, 9, 10, 11, 12, 13};
+% var1 = {13, 12, 11, 10, 9, 8};
+% % var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
+% var2 = {1};
+% varDescr = {'filtL', 'filtLProb'};
+% numberFormatVar1 = '%d';
+% numberFormatVar2 = '%d';
+% experimentDirName = 'uniformBlurrInput'
+
+varNames = {'filterLeft', 'filterLeftProb'};
+% var1 = {8, 9, 10, 11, 12, 13};
+var1 = {[], 14, 15, 16, 17, 18};
+var1 = fliplr(var1);
 % var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
-var2 = {1, 0.9, 0.5, 0.75, 0.25, 0.1};
-varDescr = {'filtRight', 'frProb'};
+var2 = {1};
+varDescr = {'filtL', 'filtLProb'};
 numberFormatVar1 = '%d';
-numberFormatVar2 = '%1.2f';
-experimentDirName = 'monocularDeprivation_diffProbs'
+numberFormatVar2 = '%d';
+experimentDirName = 'uniformBlurrInput'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nIters = 1000000;               % number of iterations
-rSeeds = [1];                      % random seed
+% rSeeds = [18, 14]               % random seeds
+rSeeds = [14]               % random seeds
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%% staring here, the rest is done automatically and should - in gerneral - not be altered  %%%%%%%
@@ -218,18 +231,22 @@ end
 %% main loop
 if length(rSeeds) == 1
     parfor ind = 1 : nParams
+    % for ind = 1 : nParams
         % sprintf('%s=[%4.2f,%4.2f], %s=[%4.2f,%4.2f]', varNames{1}, paramValues{ind, 1}(1), paramValues{ind, 1}(2), varNames{2}, paramValues{ind, 2}(1), paramValues{ind, 2}(2))
 
         sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
         OES2Muscles(nIters, rSeeds(1), 1, ...
                     {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                    experimentDirName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+                    experimentDirName, sprintf('%s_%s_%s_%s_seed%d', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}, rSeeds(1)));
     end
 else
-    parfor ind = 1 : length(rSeeds)
-        sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
-        OES2Muscles(nIters, rSeeds(ind), 1, ...
-                    {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                    experimentDirName, sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}));
+    for ind1 = 1 : length(rSeeds)
+        parfor ind2 = 1 : nParams
+        % for ind2 = 1 : length(rSeeds)    
+            sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind2, 1}, varDescr{2}, paramStrings{ind2, 2})
+            OES2Muscles(nIters, rSeeds(ind1), 1, ...
+                        {varNames{1}, paramValues{ind2, 1}, varNames{2}, paramValues{ind2, 2}}, ...
+                        experimentDirName, sprintf('%s_%s_%s_%s_seed%d', varDescr{1}, paramStrings{ind2, 1}, varDescr{2}, paramStrings{ind2, 2}, rSeeds(ind1)));
+        end
     end
 end
