@@ -650,9 +650,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % plot results
     if (plotIt(1) == 1)
         if (isempty(model.testAt))
-            model.allPlotSave([1 : 6]); % no test procedure during training -> no testPerformanceVsTraintime plot
+            model.allPlotSave([1 : 6, 8]); % no test procedure during training -> no testPerformanceVsTraintime plot
         else
-            model.allPlotSave([1 : 7]);
+            model.allPlotSave([1 : 8]);
         end
     end
 
