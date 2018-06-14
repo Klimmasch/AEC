@@ -22,8 +22,8 @@ end
 % training duration
 [found, trainTime, varParamArray] = parseparam(varParamArray, 'trainTime');
 if (~found)
-    trainTime = 1000000;
-    % trainTime = 300000; % for training without metCosts
+    trainTime = 500000;
+    % trainTime = 1000000; % for training with metabolic costs 
 end
 
 if (~isscalar(trainTime) || trainTime < 1)
@@ -445,7 +445,7 @@ end
 %     filterRight = {};
 %     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(33,0.1,0.1);
 % end
-% 
+%
 % [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
 % if (~found)
 %     filterRightProb = 1;
