@@ -1413,6 +1413,73 @@ classdef Model < handle
                     this.plotBinocularity(s, this.savePath);
                 end
             end
+            
+            % Fit Gabors to BFs and plot histogram of orientations and
+            % disparities
+            if (~isempty(find(level == 9)))
+                
+                % Thresfold used to exculde gabor fits with high residual
+                % error
+                Threshold = 0.2;
+                
+                for s = 1:length(this.scModel)
+                    
+                    name = strcat(this.savePath, "/scModel", num2str(this.scModel));
+                    
+                    for eye = 1:3
+                       name_orientation_plot = strcat(name, "eyes", eye);
+                       
+                       [Fitted_Gabor_Filter_Parameters, Error] = Gabor_Fitting_for_Basis(this.scModel{s}.basis, eye);
+
+                       % Save fit parameters and errors
+                       save(name_orientation_plot, 'Fitted_Gabor_Filter_Parameters', 'Error')
+                       
+                       % Exclude fits with high error 
+                       idx = find(Resnorm_Set < Threshold);
+                       
+                       % Plot histogram of disparities, only for both eyes
+                       if eye == 1
+                           hh = figure;
+                           bins_disp = -8:1:8;
+                           
+                           res = [];
+                           for i=1:length(idx)
+                               res(end+1) = (Parameter_Set(i,3)/(2*pi)*cos(Parameter_Set(i,2)))*(Parameter_Set(i,5)-Parameter_Set(i,6));
+                           end
+                           
+                           [N, X] = histcounts(res,bins_disp);
+                           bar(X, (N./sum(N))*100, 1);
+                           grid on;
+                           xlabel('\theta [deg]')
+                           ylabel('Percentage of Bases [%]')
+                           xlim([-8.5 8.5]);
+                           ylim([0 50]);
+                           set(gca,'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
+                           set(findall(hh,'type','text'),'FontSize',18,'fontWeight','bold'); %,'FontName','Courier')
+                           text(0, 80, strcat("N = ", num2str(length(idx))), 'FontSize', 15,'fontWeight','bold');
+                           saveas(hh, strcat(strcat(name, "_disparities"), '.png'),'png');
+                       end
+                       
+                       % Histogram of Thetas
+                       h = figure;
+                       bins = 0:15:165;% Centers of the bins. Bin centred around 0 deg and bin centred around 180 deg corresponds 
+                       % to same orientation (vertical)
+                       
+                       [N, X] = histcounts(mod(Parameter_Set(idx,2)*180/pi+7.5, 180)-7.5,bins);
+                       bar(X, (N./sum(N))*100, 1);
+                       grid on;
+                       xlabel('\theta [deg]');
+                       ylabel('Percentage of Bases [%]');
+                       xticks([0, 45, 90, 135]);
+                       xlim([-7.5 172.5]);
+                       ylim([0 50]);
+                       set(gca,'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
+                       set(findall(h,'type','text'),'FontSize',18,'fontWeight','bold'); %,'FontName','Courier')
+                       text(0, 80, strcat("N = ", num2str(length(idx))), 'FontSize', 15,'fontWeight','bold');
+                       saveas(h, strcat(strcat(name_orientation_plot, "_orientations"), '.png'),'png');    
+                    end  
+                end        
+            end
         end
 
         %%% Generates anaglyphs of the large and small scale fovea and
