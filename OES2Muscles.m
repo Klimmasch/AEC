@@ -36,10 +36,11 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % for the new renderer, all textures to be used during training and
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
-%     textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
+    % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
     textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
-%     textureFiles = {'40RandomDots.mat', '100img_80pcMCGill_20pcRandomDots.mat'};
-%     textureFiles = {'40RandomDots.mat', '100RandomDots.mat'};
+    % textureFiles = {'40RandomDots.mat', '100img_80pcMCGill_20pcRandomDots.mat'};
+    % textureFiles = {'40RandomDots.mat', '100RandomDots.mat'};
+    % textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_HH_small.mat'};
 
     %%% Execute intermediate test procedure during training
     % testAt = [500000 : 500000 : trainTime]; % contained in configVar from now on
@@ -370,7 +371,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
         randForLeftFilt = rand(1,1);
         randForRightFilt = rand(1,1);
-        
+
         for iter2 = 1 : model.interval
             % if mod(t, 500) == 0
                 % if mod(t, 100000) == 0
@@ -489,7 +490,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % usage: generateAnaglyphs(this, identifier, markScales, infos, imgNumber)
             % infos = {t, objDist, 0, angleDes, angleNew, command', relativeCommand', reward(:), recErrorArray};
             % model.generateAnaglyphs(t, 1, infos, '');
-            
+
             % apply the change in muscle activations
             command = command + relativeCommand;    % two muscles
             command = model.checkCmd(command);            % restrain motor commands to [0, 1]
