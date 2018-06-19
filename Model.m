@@ -1440,43 +1440,43 @@ classdef Model < handle
                        % Plot histogram of disparities, only for both eyes
                        if eye == 1
                            hh = figure;
-                           bins_disp = -8:1:8;
+                           bins_disp = -8.5:1:8.5;
 
                            res = [];
                            for i=1:length(idx)
                                res(end+1) = (Fitted_Gabor_Filter_Parameters(i,3)/(2*pi)*cos(Fitted_Gabor_Filter_Parameters(i,2)))*(Fitted_Gabor_Filter_Parameters(i,5)-Fitted_Gabor_Filter_Parameters(i,6));
                            end
 
-                           [N, X] = histcounts(res,bins_disp);
-%                            bar(X, (N./sum(N))*100, 1); %WTF IVAN
-                           bar(X(1:end-1), (N./sum(N))*100, 1);
+                           N = histcounts(res, bins_disp);
+                           bar(bins_disp(1:end-1)+0.5, (N./sum(N))*100, 1);
                            grid on;
                            xlabel('\theta [deg]')
                            ylabel('Percentage of Bases [%]')
                            xlim([-8.5 8.5]);
-                           ylim([0 50]);
-                           set(gca,'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
-                           set(findall(hh,'type','text'),'FontSize',18,'fontWeight','bold'); %,'FontName','Courier')
-                           text(0, 80, strcat("N = ", num2str(length(idx))), 'FontSize', 15,'fontWeight','bold');
+                           xticks([-8:1:8]);
+                           ylim([0 60]);
+                           set(gca,'FontSize',12,'fontWeight','bold'); %,'FontName','Courier')
+                           set(findall(hh,'type','text'),'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
+                           text(5, 50, strcat("N = ", num2str(length(idx))), 'FontSize', 12,'fontWeight','bold');
                            saveas(hh, strcat(strcat(name, "_disparities"), '.png'),'png');
                        end
 
                        % Histogram of Thetas
                        h = figure;
-                       bins = 0:15:165;% Centers of the bins. Bin centred around 0 deg and bin centred around 180 deg corresponds
+                       bins = -7.5:15:172.5 %0:15:165;% Edges of the bins. Bin centred around 0 deg and bin centred around 180 deg corresponds
                        % to same orientation (vertical)
 
-                       [N, X] = histcounts(mod(Fitted_Gabor_Filter_Parameters(idx,2)*180/pi+7.5, 180)-7.5,bins);
-                       bar(X(1:end-1), (N./sum(N))*100, 1); %% WTF IVAN
+                       N = histcounts(mod(Fitted_Gabor_Filter_Parameters(idx,2)*180/pi+7.5, 180)-7.5,bins);
+                       bar(bins(1:end-1)+7.5, (N./sum(N))*100, 1);
                        grid on;
                        xlabel('\theta [deg]');
                        ylabel('Percentage of Bases [%]');
                        xticks([0, 45, 90, 135]);
                        xlim([-7.5 172.5]);
                        ylim([0 50]);
-                       set(gca,'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
-                       set(findall(h,'type','text'),'FontSize',18,'fontWeight','bold'); %,'FontName','Courier')
-                       text(0, 80, strcat("N = ", num2str(length(idx))), 'FontSize', 15,'fontWeight','bold');
+                       set(gca,'FontSize',12,'fontWeight','bold'); %,'FontName','Courier')
+                       set(findall(h,'type','text'),'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
+                       text(140, 45, strcat("N = ", num2str(length(idx))), 'FontSize', 12,'fontWeight','bold');
                        saveas(h, strcat(name_orientation_plot, "_orientations", '.png'),'png');
                     end
                 end
