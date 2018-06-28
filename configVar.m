@@ -23,7 +23,7 @@ end
 [found, trainTime, varParamArray] = parseparam(varParamArray, 'trainTime');
 if (~found)
     trainTime = 500000;
-    % trainTime = 1000000; % for training with metabolic costs 
+    % trainTime = 1000000; % for training with metabolic costs
 end
 
 if (~isscalar(trainTime) || trainTime < 1)
@@ -399,10 +399,21 @@ end
 [found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
 if (~found)
     filterRight = filterLeft;
-elseif filterRight == 3
+elseif filterRight == 1
+    % filterRight = orientedGaussian(240,240,240);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,33,33);
+    % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
+elseif filterRight == 2
     % filterRight = orientedGaussian(240,240,240);
     filterRight = {};
     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,240,240);
+    % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
+elseif filterRight == 3
+    % filterRight = orientedGaussian(240,240,240);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
+    % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
 end
 [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
 if (~found)

@@ -1463,7 +1463,7 @@ classdef Model < handle
 
                        % Histogram of Thetas
                        h = figure;
-                       bins = -7.5:15:172.5 %0:15:165;% Edges of the bins. Bin centred around 0 deg and bin centred around 180 deg corresponds
+                       bins = -7.5:15:172.5; %0:15:165;% Edges of the bins. Bin centred around 0 deg and bin centred around 180 deg corresponds
                        % to same orientation (vertical)
 
                        N = histcounts(mod(Fitted_Gabor_Filter_Parameters(idx,2)*180/pi+7.5, 180)-7.5,bins);
