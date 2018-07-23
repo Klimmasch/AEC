@@ -114,7 +114,7 @@ function parOES(nWorkers)
 % experimentDirName = 'wobbling_gammaVsCriticLR_1mio'
 
 % varNames = {'gamma', 'metCostRange'};
-% var1 = {0.1, 0.3, 0.6, 0.9}; 
+% var1 = {0.1, 0.3, 0.6, 0.9};
 % % var2 = {[0], [0.01], [0.025], [0.05]};
 % var2 = {[0], [0.01], [0.05], [0.1]};
 % varDescr = {'gamma', 'metCost'};
@@ -176,22 +176,47 @@ function parOES(nWorkers)
 % numberFormatVar2 = '%d';
 % experimentDirName = 'uniformBlurrInput'
 
-varNames = {'filterLeft', 'filterLeftProb'};
+% varNames = {'filterLeft', 'filterLeftProb'};
+% % var1 = {8, 9, 10, 11, 12, 13};
+% var1 = {8, 19, 20, 21, 22};
+% var1 = fliplr(var1);
+% % var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
+% var2 = {1};
+% varDescr = {'filtBoth', 'prob'};
+% numberFormatVar1 = '%d';
+% numberFormatVar2 = '%d';
+% experimentDirName = 'edgeDeprivNew'
+
+% varNames = {'filterRight', 'filterRightProb'};
+% % var1 = {8, 9, 10, 11, 12, 13};
+% var1 = {2};
+% var2 = {0, 1};
+% varDescr = {'MDfilterR', 'filtProb'};
+% numberFormatVar1 = '%d';
+% numberFormatVar2 = '%d';
+% experimentDirName = 'disp+verg_influence'
+%
+% globalParams = {'objDistMin', 3, 'objDistMax', 3, 'fixDistMin', 3, 'fixDistMax', 3, ...
+%  'initMethod', 1, 'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0]};
+% globalName = 'OD3_initMet1_ALR0_Var0_weights0_'
+
+varNames = {'initMethod', 'lapSig'};
 % var1 = {8, 9, 10, 11, 12, 13};
-var1 = {[], 14, 15, 16, 17, 18};
-var1 = fliplr(var1);
-% var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
-var2 = {1};
-varDescr = {'filtL', 'filtLProb'};
+var1 = {4};
+var2 = {0, 0.22, 0.5, 1, 2};
+varDescr = {'initMethod', 'lapSigma'};
 numberFormatVar1 = '%d';
-numberFormatVar2 = '%d';
-experimentDirName = 'uniformBlurrInput'
+numberFormatVar2 = '%0.2f';
+experimentDirName = 'laplacianPolicy'
+
+globalParams = {'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0]};
+globalName = 'noLearning_'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-nIters = 1000000;               % number of iterations
-% rSeeds = [18, 14]               % random seeds
-rSeeds = [14]               % random seeds
+nIters = 500000;               % number of iterations
+% rSeeds = [2, 3, 4]     % random seeds
+rSeeds = [4, 3, 2]       % random seeds
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%% staring here, the rest is done automatically and should - in gerneral - not be altered  %%%%%%%
@@ -236,17 +261,17 @@ if length(rSeeds) == 1
 
         sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2})
         OES2Muscles(nIters, rSeeds(1), 1, ...
-                    {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}}, ...
-                    experimentDirName, sprintf('%s_%s_%s_%s_seed%d', varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}, rSeeds(1)));
+                    {varNames{1}, paramValues{ind, 1}, varNames{2}, paramValues{ind, 2}, globalParams{:}}, ...
+                    experimentDirName, sprintf('%s%s_%s_%s_%s_seed%d', globalName, varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}, rSeeds(1)));
     end
 else
     for ind1 = 1 : length(rSeeds)
         parfor ind2 = 1 : nParams
-        % for ind2 = 1 : length(rSeeds)    
+        % for ind2 = 1 : length(rSeeds)
             sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind2, 1}, varDescr{2}, paramStrings{ind2, 2})
             OES2Muscles(nIters, rSeeds(ind1), 1, ...
-                        {varNames{1}, paramValues{ind2, 1}, varNames{2}, paramValues{ind2, 2}}, ...
-                        experimentDirName, sprintf('%s_%s_%s_%s_seed%d', varDescr{1}, paramStrings{ind2, 1}, varDescr{2}, paramStrings{ind2, 2}, rSeeds(ind1)));
+                        {varNames{1}, paramValues{ind2, 1}, varNames{2}, paramValues{ind2, 2}, globalParams{:}}, ...
+                        experimentDirName, sprintf('%s%s_%s_%s_%s_seed%d', globalName, varDescr{1}, paramStrings{ind2, 1}, varDescr{2}, paramStrings{ind2, 2}, rSeeds(ind1)));
         end
     end
 end

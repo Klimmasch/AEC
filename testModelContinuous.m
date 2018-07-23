@@ -1288,7 +1288,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 yb = linspace(min(model.testResult5(:, 4)), max(model.testResult5(:, 4)), size(histHandle, 1));
 
                 pcHandle = pcolor(xb, yb, histHandle);
-                axis([xb(1), xb(end), yb(1), yb(end)]);
+                try
+                    axis([xb(1), xb(end), yb(1), yb(end)]);
+                catch
+                    sprintf('Axis at delta muscle correlation plot have not been set.')
+                end
                 shading interp;
                 set(pcHandle, 'EdgeColor', 'none');
 
@@ -1619,9 +1623,13 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             % rescale axis to whiskers + offset
             upWi = findobj(b, 'tag', 'Upper Whisker');
             lowWi = findobj(b, 'tag', 'Lower Whisker');
-            axis([0, model.testInterval + 1, ...
-                  min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
-                  max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+            try
+                axis([0, model.testInterval + 1, ...
+                      min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+                      max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+            catch 
+                sprintf('Axis at desired verg err approach have not be set.')
+            end
 
             xlabel('Iteration step', 'FontSize', 12);
             ylabel('Vergence Angle Approach [%]', 'FontSize', 12);
@@ -1651,9 +1659,13 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             % rescale axis to whiskers + offset
             upWi = findobj(b, 'tag', 'Upper Whisker');
             lowWi = findobj(b, 'tag', 'Lower Whisker');
-            axis([0, model.testInterval + 1, ...
-                  min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
-                  max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+            try
+                axis([0, model.testInterval + 1, ...
+                      min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
+                      max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
+            catch
+                sprintf('Axis at desired met costs approach have not be set.')
+            end
 
             xlabel('Iteration step', 'FontSize', 12);
             ylabel('Metabolic Costs Approach [%]', 'FontSize', 12);

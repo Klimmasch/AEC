@@ -29,6 +29,7 @@ classdef Model < handle
         testAt;             % at which iteration steps online testing is performed
         inputParams;        % non-default parameter vector used to generate model with configVar
         initMethod;         % string identifying the initialization of muscle commands
+        lapSig;             % for drawing laplacian distributed disparities
 
         sparseCodingType;   % type of sparse coding
 
@@ -154,6 +155,7 @@ classdef Model < handle
                 obj.fixDistMin = PARAM{1}{19};
                 obj.fixDistMax = PARAM{1}{20};
                 obj.initMethod = PARAM{1}{24};
+                obj.lapSig = PARAM{1}{34};
 
                 obj.filterLeft = PARAM{1}{29};
                 obj.filterRight = PARAM{1}{31};
@@ -282,7 +284,7 @@ classdef Model < handle
                 obj.degrees = load('Degrees.mat');              % f(medial_rectus_activiation, medial_rectus_activiation) = vergence_angle table 'results_deg'
                 % obj.degrees = load('DegreesFlatter.mat');
                 % obj.degrees = load('DegreesFlatInverted.mat');
-%                 obj.degrees = load('DegreesFlatRotated.mat');
+                % obj.degrees = load('DegreesFlatRotated.mat');
                 obj.metCosts = load('MetabolicCosts.mat');      % f(medial_rectus_activiation, medial_rectus_activiation) = metabolic_cost table 'results'
 
                 % factor by which the resolution of the tabular should be increased
@@ -566,8 +568,8 @@ classdef Model < handle
         %%% Calculates muscle force for two muscles
         %   the activation of one muscle is always 0.
         %
-        %   return mf:        [lateralRectusActivation; medialRectusActivation]
-        %          angleInit: desired init angle for given vergence error [deg]
+        %   mf:        [lateralRectusActivation; medialRectusActivation]
+        %   angleInit: desired init angle for given vergence error [deg]
         function [mf, angleInit] = getMF2(this, objDist, desVergErr)
             % correct vergence angle for given object distance
             angleCorrect = 2 * atand(this.baseline / (2 * objDist));
@@ -575,15 +577,22 @@ classdef Model < handle
             angleInit = angleCorrect - desVergErr;
             % look up index of angleInit
             if (angleInit >= this.mfunctionMR(1, 1))
-%             if (angleInit < this.mfunctionMR(1, 1))   % for rotated tabular
-                indAngleInit = find(this.mfunctionMR(:, 1) <= angleInit + this.dAngleMR & this.mfunctionMR(:, 1) >= angleInit - this.dAngleMR);
-                mf = this.mfunctionMR(indAngleInit, 2);
-                mf = [0; mf(ceil(length(mf) / 2))]; % take middle entry
+                if angleInit > this.mfunctionMR(end,1)
+                    mf = [0; this.mfunction(end,1)];
+                else
+                    indAngleInit = find(this.mfunctionMR(:, 1) <= angleInit + this.dAngleMR & this.mfunctionMR(:, 1) >= angleInit - this.dAngleMR);
+                    mf = this.mfunctionMR(indAngleInit, 2); 
+                    mf = [0; mf(ceil(length(mf) / 2))]; % take middle entry
+                end
             else
                 % if objDist not fixateable with medial rectus, use lateral rectus
-                indAngleInit = find(this.mfunctionLR(:, 1) <= angleInit + this.dAngleLR & this.mfunctionLR(:, 1) >= angleInit - this.dAngleLR);
-                mf = this.mfunctionLR(indAngleInit, 2);
-                mf = [mf(ceil(length(mf) / 2)); 0]; % take middle entry
+                if angleInit < this.mfunctionLR(end, 1)
+                    mf = [this.mfunction(end,1), 0];
+                else
+                    indAngleInit = find(this.mfunctionLR(:, 1) <= angleInit + this.dAngleLR & this.mfunctionLR(:, 1) >= angleInit - this.dAngleLR);
+                    mf = this.mfunctionLR(indAngleInit, 2);
+                    mf = [mf(ceil(length(mf) / 2)); 0]; % take middle entry
+                end
             end
         end
 
@@ -925,10 +934,11 @@ classdef Model < handle
 
                         hl1.Color = [rand, rand, rand];
                         hp1.FaceColor = hl1.Color;
-                        axis([windowSize * 2, length(cmd_hist_sma(:, 1)), ...
-                              min(cmd_hist_sma(windowSize * 2 : end, 1) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
-                              max(cmd_hist_sma(windowSize * 2 : end, 1) + tmpSTD(windowSize * 2 : end)) * 1.1]);
-
+                        try
+                            axis([windowSize * 2, length(cmd_hist_sma(:, 1)), ...
+                                  min(cmd_hist_sma(windowSize * 2 : end, 1) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
+                                  max(cmd_hist_sma(windowSize * 2 : end, 1) + tmpSTD(windowSize * 2 : end)) * 1.1]);
+                        end
                         xlabel('Iteration #', 'FontSize', 8);
                         ylabel(sprintf('Total Muscle\nCommands [%%]'), 'FontSize', 12);
                         title('Lateral Rectus', 'fontweight','normal');
@@ -946,9 +956,11 @@ classdef Model < handle
 
                         hl2.Color = [rand, rand, rand];
                         hp2.FaceColor = hl2.Color;
-                        axis([windowSize2 * 2, length(relCmd_hist_sma(:, 1)), ...
-                              min(relCmd_hist_sma(windowSize2 * 2 : end, 1) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
-                              max(relCmd_hist_sma(windowSize2 * 2 : end, 1) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
+                        try
+                            axis([windowSize2 * 2, length(relCmd_hist_sma(:, 1)), ...
+                                  min(relCmd_hist_sma(windowSize2 * 2 : end, 1) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
+                                  max(relCmd_hist_sma(windowSize2 * 2 : end, 1) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
+                        end
 
                         xlabel('Iteration #', 'FontSize', 8);
                         ylabel(strcat('\Delta', sprintf('Muscle\nCommands [%%]')), 'FontSize', 12);
@@ -967,10 +979,12 @@ classdef Model < handle
 
                         hl3.Color = [rand, rand, rand];
                         hp3.FaceColor = hl3.Color;
-                        axis([windowSize * 2, length(cmd_hist_sma(:, 2)), ...
-                              min(cmd_hist_sma(windowSize * 2 : end, 2) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
-                              max(cmd_hist_sma(windowSize * 2 : end, 2) + tmpSTD(windowSize * 2 : end)) * 1.1]);
-
+                        try
+                            axis([windowSize * 2, length(cmd_hist_sma(:, 2)), ...
+                                  min(cmd_hist_sma(windowSize * 2 : end, 2) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
+                                  max(cmd_hist_sma(windowSize * 2 : end, 2) + tmpSTD(windowSize * 2 : end)) * 1.1]);
+                        end
+                        
                         xlabel('Iteration #', 'FontSize', 8);
                         % ylabel('Value', 'FontSize', 12);
                         % set(gca,'yaxislocation','right');
@@ -989,10 +1003,11 @@ classdef Model < handle
 
                         hl4.Color = [rand, rand, rand];
                         hp4.FaceColor = hl4.Color;
-                        axis([windowSize2 * 2, length(relCmd_hist_sma(:, 2)), ...
-                              min(relCmd_hist_sma(windowSize2 * 2 : end, 2) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
-                              max(relCmd_hist_sma(windowSize2 * 2 : end, 2) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
-
+                        try
+                            axis([windowSize2 * 2, length(relCmd_hist_sma(:, 2)), ...
+                                  min(relCmd_hist_sma(windowSize2 * 2 : end, 2) - tmpSTD(windowSize2 * 2 : end)) * 1.1, ...
+                                  max(relCmd_hist_sma(windowSize2 * 2 : end, 2) + tmpSTD(windowSize2 * 2 : end)) * 1.1]);
+                        end
                         xlabel('Iteration #', 'FontSize', 8);
                         % ylabel('Value', 'FontSize', 12);
                         % set(gca,'yaxislocation','right');
@@ -1010,10 +1025,12 @@ classdef Model < handle
 
                         hl5.Color = [rand, rand, rand];
                         hp5.FaceColor = hl5.Color;
-                        axis([windowSize3 * 2, length(metCost_hist_sma), ...
-                              min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.95, ...
-                              max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.05]);
-
+                        try
+                            axis([windowSize3 * 2, length(metCost_hist_sma), ...
+                                  min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.95, ...
+                                  max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.05]);
+                        end
+                        
                         xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 8);
                         ylabel('Value', 'FontSize', 12);
                         title('Metabolic Costs', 'FontSize', 14, 'FontWeight','normal');
@@ -1148,7 +1165,9 @@ classdef Model < handle
                         title(strcat('\Delta Muscle Commands (training)', sprintf('\nCorrelation = %1.2e at last %d iterations', corrl, tmpOffset)));
 
                         pcHandle = pcolor(xb, yb, histHandle);
-                        axis([xb(1), xb(end), yb(1), yb(end)]);
+                        try
+                            axis([xb(1), xb(end), yb(1), yb(end)]);
+                        end
                         shading interp;
                         set(pcHandle, 'EdgeColor', 'none');
 
@@ -1454,7 +1473,7 @@ classdef Model < handle
                            ylabel('Percentage of Bases [%]')
                            xlim([-8.5 8.5]);
                            xticks([-8:1:8]);
-                           ylim([0 60]);
+                           % ylim([0 60]);
                            set(gca,'FontSize',12,'fontWeight','bold'); %,'FontName','Courier')
                            set(findall(hh,'type','text'),'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
                            text(5, 50, strcat("N = ", num2str(length(idx))), 'FontSize', 12,'fontWeight','bold');

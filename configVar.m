@@ -188,7 +188,7 @@ end
 
 [found, fixDistMax, varParamArray] = parseparam(varParamArray, 'fixDistMax');
 if (~found)
-    fixDistMax = 6; % 3.2219 for objDistMax = 2m
+    fixDistMax = 10; % 3.2219 for objDistMax = 2m
 end
 
 % Muscle initialization [%]: correspond now to the minimum and maximum distance
@@ -290,10 +290,17 @@ end
 %                     a point from all possible mucle commands that fixate this distance
 % 3 ('perturbed')   : take the last command and add a random vector with radius
 %                     uniformly drawn from [0, 0.02] (max 2 % muscle activity for both muscles)
+% 4 ('laplacian')   : draw fixation distances that produce laplacian distributed disparities
 %%%
 [found, initMethod, varParamArray] = parseparam(varParamArray, 'initMethod');
 if (~found)
     initMethod = 2;
+end
+
+[found, lapSig, varParamArray] = parseparam(varParamArray, 'lapSig');
+if (~found)
+    lapSig = 1;     % if initMethod == 4, this produces disparities mostly between -2 and 2 deg
+    % lapSig = 0.5;   % mostly between [-1, 1]
 end
 
 % Keep(0) or normalize(1) feature fector by z-transform
@@ -322,8 +329,7 @@ end
 [found, filterLeft, varParamArray] = parseparam(varParamArray, 'filterLeft');
 if (~found)
     filterLeft = [];
-end
-if filterLeft == 1
+elseif filterLeft == 1
     % filterLeft = orientedGaussian(9,9,0.1); % leaves only vertical edges
     filterLeft = {};
     [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(9,9,0.1); % leaves only vertical edges
@@ -353,37 +359,53 @@ elseif filterLeft == 7
     [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,33); % only horizontals
 elseif filterLeft == 8
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,0.1); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,0.1);
 elseif filterLeft == 9
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.2,0.2); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.2,0.2);
 elseif filterLeft == 10
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.5,0.5); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.5,0.5);
 elseif filterLeft == 11
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,1,1); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,1,1);
 elseif filterLeft == 12
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,2,2); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,2,2);
 elseif filterLeft == 13
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,5,5); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,5,5);
 elseif filterLeft == 14
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,1,1); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,1,1);
 elseif filterLeft == 15
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,5,5); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,5,5);
 elseif filterLeft == 16
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,10,10); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,10,10);
 elseif filterLeft == 17
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,50,50); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,50,50);
 elseif filterLeft == 18
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,100,100); % for reproducing the normal case
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,100,100);
+elseif filterLeft == 19
+    % filterLeft = orientedGaussian(33,0.1,33);
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,0.1,33); % only horizontals
+elseif filterLeft == 20
+    % filterLeft = orientedGaussian(33,0.1,33);
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,0.1,100); % only horizontals
+elseif filterLeft == 21
+    % filterLeft = orientedGaussian(33,0.1,33);
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,0.1,240); % only horizontals
+elseif filterLeft == 22
+    % filterLeft = orientedGaussian(33,0.1,33);
+    filterLeft = {};
+    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,0.1,1000); % only horizontals
 end
 
 [found, filterLeftProb, varParamArray] = parseparam(varParamArray, 'filterLeftProb');
@@ -468,7 +490,7 @@ PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, bas
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
               initMethod, inputParams, normFeatVect, desiredStdZT, testInterval, ...
               filterLeft, filterLeftProb, filterRight, filterRightProb, ...
-              whitening};
+              whitening, lapSig};
 
 % ------------------------
 % Sparse Coding parameters
