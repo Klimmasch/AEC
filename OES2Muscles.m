@@ -46,10 +46,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % testAt = [500000 : 500000 : trainTime]; % contained in configVar from now on
 
     %%% Testing flag
-    % Whether the testing procedure shall be executed after training
-    % testIt:   0 = don`t do it
-    %           1 = do it
-    testIt = uint8(1);
+    % Whether the testing procedure shall be executed during / after training
+    testDuring = uint8(0);
+    testAfter = uint8(1);
 
     %%% Amount of test stimuli
     nStimTest = 40;
@@ -266,7 +265,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % angleMin = (atand(model.baseline / (2 * model.objDistMax)) * 2) - vergErrMax; %angle for both eyes
     % angleMax = (atand(model.baseline / (2 * model.objDistMin)) * 2) + vergErrMax;
     angleMin = 0;                                                           % corresponds to parallel looking eyes
-    angleMax = (atand(model.baseline / (2 * model.objDistMax)) * 2) + 5;    % corr. to maximal obj dist but still in the large scale patches
+    angleMax = (atand(model.baseline / (2 * model.objDistMin)) * 2) + 5;    % corr. to maximal obj dist but still in the large scale patches
 
     %%% Main execution loop
     t = model.trainedUntil; % this is zero in newly initiated model
@@ -277,7 +276,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     for iter1 = 1 : (timeToTrain / model.interval)
         % intermediate testing during training
         rngState = rng; % store current state
-        if ((testIt == 1) & find(model.testAt == t)) % have to use single & here, because the last statement is a scalar
+        if ((testDuring == 1) & find(model.testAt == t)) % have to use single & here, because the last statement is a scalar
             if (t > 0)
                 testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
                 model.displayBasis(1, sprintf('modelAt%d/', t));
@@ -311,45 +310,44 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         angleDes = 2 * atand(model.baseline / (2 * objDist));   % desired vergence [deg]
 
         %% Initialize muscle activities depending on init method
-        if model.initMethod < 3
-            if model.initMethod < 1
-                % initMethod = 0: completely random muscle commands
+        switch model.initMethod
+            case 0 % completely random muscle commands
                 command = rand(2, 1) .* [0.1; 0.2];
                 angleNew = model.getAngle(command) * 2;
-            else
-                % Uniform object fixation distribution
+
+            case 1 % Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
                 fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
+                [command, angleNew] = model.getMF2(fixationDist, 0);
 
-                if model.initMethod == 1
-                     % initMethod = 1: Calculate corresponding single muscle activity, i.e. one muscle = 0 activity
-                    [command, angleNew] = model.getMF2(fixationDist, 0);
-                else
-                    % initMethod = 2: Uniform muscle activation distribution for two muscles
-                    [command, angleNew] = model.getMFedood(fixationDist, 0);
+            case 2 % Uniform muscle activation distribution for two muscles
+                fixationDist = model.fixDistMin + (model.fixDistMax - model.fixDistMin) * rand(1, 1);
+                [command, angleNew] = model.getMFedood(fixationDist, 0);
+
+            case 3 % add a random vector to the last command
+                % the new command should lie within some boundaries, specified by angleMin and angleMax
+                dummy = true;
+                commandOld = command;
+                rangeMax = 0.02;
+
+                while dummy
+                    [relativeCommand(1, 1), relativeCommand(2, 1)] = pol2cart(rand(1) * pi * 2, rand(1) * rangeMax);
+                    command = command + relativeCommand;
+                    command = model.checkCmd(command);
+                    angleNew = model.getAngle(command) * 2;
+
+                    if (angleNew > angleMin) && (angleNew < angleMax)
+                        dummy = false;
+                    else
+                        command = commandOld;
+                        rangeMax = rangeMax + 0.005;
+                    end
                 end
-            end
-        else
-            % initMethod = 3: add a random vector to the last command
-            % the new command should lie within some boundaries, specified by angleMin and angleMax
-            dummy = true;
-            commandOld = command;
-            rangeMax = 0.02;
-
-            while dummy
-                [relativeCommand(1, 1), relativeCommand(2, 1)] = pol2cart(rand(1) * pi * 2, rand(1) * rangeMax);
-                command = command + relativeCommand;
-                command = model.checkCmd(command);
-                angleNew = model.getAngle(command) * 2;
-
-                if (angleNew > angleMin) && (angleNew < angleMax)
-                    dummy = false;
-                else
-                    command = commandOld;
-                    rangeMax = rangeMax + 0.005;
-                end
-            end
+            case 4 % draw fixation distances with laplacian distributed disparities
+                angleNew = laprnd(1, 1, angleDes, model.lapSig, [angleMin, angleMax]);
+                fixationDist = (model.baseline / 2) / tand(angleNew / 2);
+                % [command, angleNew] = model.getMFedood(fixationDist, 0);
+                [command, angleNew] = model.getMF2(fixationDist, 0);
         end
-
 
         % testing input distribution
         % nSamples = 10000;
@@ -403,6 +401,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
                     model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
                 end
             end
+
+            % imshow(imfuse(model.imgGrayLeft, model.imgGrayRight))
 
             %% Image patch generation
             for i = 1 : length(model.scModel)
@@ -624,7 +624,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     end
 
     %%% Final testing procedure
-    if (testIt == 1)
+    if (testAfter == 1)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, experimentDirName, level)
         rngState = rng; % store current state
         testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
@@ -651,9 +651,17 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % plot results
     if (plotIt(1) == 1)
         if (isempty(model.testAt))
-            model.allPlotSave([1 : 6, 9]); % no test procedure during training -> no testPerformanceVsTraintime plot
+            if clusterCall == 0
+                model.allPlotSave([1 : 6, 8, 9]); % no test procedure during training -> no testPerformanceVsTraintime plot
+            else
+                model.allPlotSave([1 : 6, 8]);
+            end
         else
-            model.allPlotSave([1 : 9]);
+            if clusterCall == 0
+                model.allPlotSave([1 : 9]);
+            else
+                model.allPlotSave([1 : 8]);
+            end
         end
     end
 
