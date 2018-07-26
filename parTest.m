@@ -12,7 +12,7 @@ function parTest(folders, nWorkers, runParallel)
     for k = 1 : length(folders) % single run tier
         folder = folders{k};
         parent = strcat('/home/aecgroup/aecdata/Results/SAB2018/', folder);
-        subfolders = dir(sprintf('%s/*initMet1_*', parent));
+        subfolders = dir(sprintf('%s/*filtBoth*', parent));
         % parent = strcat('/home/aecgroup/aecdata/Results/', folder);
         % subfolders = dir(sprintf('%s/*iter*', parent));
         
