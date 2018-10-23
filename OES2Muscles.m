@@ -81,9 +81,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % check whether given (cluster) job can/shall be continued
     % if (clusterCall == 1)
         if (isempty(experimentDirName))
-            absoluteDir = '/home/aecgroup/aecdata/Results/SAB2018/';
+            absoluteDir = '/home/aecgroup/aecdata/Results/eLifePaper/';
         else
-            absoluteDir = strcat('/home/aecgroup/aecdata/Results/SAB2018/', experimentDirName);
+            absoluteDir = strcat('/home/aecgroup/aecdata/Results/eLifePaper/', experimentDirName);
         end
 
         fullDir = dir(sprintf('%s/*%s*', absoluteDir, experimentName));
@@ -179,10 +179,10 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
 
         if (~isempty(experimentDirName))
             % folder = sprintf('../results/%s/', experimentDirName);                       % local destination
-            folder = sprintf('/home/aecgroup/aecdata/Results/SAB2018/%s/', experimentDirName);     % group folder destination
+            folder = sprintf('/home/aecgroup/aecdata/Results/eLifePaper/%s/', experimentDirName);     % group folder destination
         else
             % folder = '../results/';                       % local destination
-            folder = '/home/aecgroup/aecdata/Results/SAB2018/';     % group folder destination
+            folder = '/home/aecgroup/aecdata/Results/eLifePaper/';     % group folder destination
         end
 
         mkdir(folder, modelName);
@@ -278,7 +278,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         rngState = rng; % store current state
         if ((testDuring == 1) & find(model.testAt == t)) % have to use single & here, because the last statement is a scalar
             if (t > 0)
-                testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
+                testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 5]);
                 model.displayBasis(1, sprintf('modelAt%d/', t));
                 model.displaySelectedBasis([2,5], 1, sprintf('modelAt%d/', t));
                 close all;
@@ -399,6 +399,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
                     % model.imgGrayRight = conv2(model.imgGrayRight, model.filterRight, 'same');
                     % slightly faster version
                     model.imgGrayRight = conv2(model.filterRight{1}, model.filterRight{2}, model.imgGrayRight, 'same');
+%                     model.imgGrayRight = ones(size(model.imgGrayRight)).*mean(mean(model.imgGrayRight));
                 end
             end
 
@@ -627,7 +628,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     if (testAfter == 1)
         % testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, simulator, reinitRenderer, experimentDirName, level)
         rngState = rng; % store current state
-        testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 6]);
+        testModelContinuous(model, nStimTest, plotIt(2), 1, 0, simulator, 0, sprintf('modelAt%d', t), [1, 3 : 5]);
         model.displayBasis(1, sprintf('modelAt%d/', t));
         model.displaySelectedBasis([2,5], 1, sprintf('modelAt%d/', t));
         rng(rngState); % restore state after testing, to not mess up the experiment
