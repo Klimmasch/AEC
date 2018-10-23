@@ -469,7 +469,7 @@ classdef Model < handle
             % cut patches and store them as col vectors
             patches = im2col(img, [this.patchSize, this.patchSize], 'sliding'); % slide window of 1 px
 
-            % take patches by application of respective strides (8 px)
+            % take patches by application of respective strides
             patches = patches(:, this.columnInd{scScale});
 
             % pre-processing steps (0 mean, unit norm)
@@ -485,6 +485,63 @@ classdef Model < handle
             else
                 this.patchesRight{scScale} = patches;
             end
+        end
+
+        %%% Display the current patches
+        function displayPatches(this, nRows, nCols)
+
+            n = size(this.patchesLeft{1}, 2);
+            p = this.patchSize;
+
+            if nargin < 3
+                nRows = 3; nCols = 3;
+            elseif nargin < 4
+                nCols = floor(n/nRows);
+            end
+
+            if nRows*nCols > n
+                sprintf('Reducing the number of columns.')
+                nCols = floor(n/nRows);
+            end
+
+%             pleft = this.patchesLeft{scale};
+%             pright = this.patchesRight{scale};
+%             leftp = col2im(pleft,[p,p],[p,p*n],'distinct');
+%             rightp = col2im(pright,[p,p],[p,p*n],'distinct');
+%             left and right concatenieren und untereinander darstellen
+            figure;
+            hold on;
+%             for i = 1 : nRows*nCols
+%                 subplot(nRows,nCols,i);
+%                 pBin = horzcat(pleft(:,i), pright(:,i));
+%                 binIm = col2im(pBin, [p,p], [p*2,p], 'distinct');
+% %                 pBin = horzcat([pleft(:,i); ones(8,1)], [pright(:,i); ones(8,1)]);
+% %                 binIm = col2im(pBin, [p,p], [p*2,p+1], 'distinct');
+%                 imshow(mat2gray(binIm),'initialMagnification','fit');
+%             end
+
+            % this version is more like the basis displaying
+            for s = 1 : length(this.scModel)
+                subplot(1,2,s);
+                pBin = vertcat(this.patchesLeft{s}, this.patchesRight{s});
+                [di,~] = size(pBin);
+
+                fun1 = @(blc_struct) padarray(padarray(reshape(permute(padarray(reshape(blc_struct.data, sqrt(di / 2), ...
+                         sqrt(di / 2), 2), [1, 1], 'pre'), [1, 3, 2]), (sqrt(di / 2) + 1) * 2, sqrt(di / 2) + 1), [1, 1], ...
+                         'post') - 1, [1 1], 'pre') + 1;
+
+                A = pBin(:,1:end-1); % remove last patch to display them in a grid
+                [~,num] = size(A);
+                % B = reshape(A,di*r,c);
+                B = reshape(A, di*nRows, num/nRows);
+                B = B/max(max(abs(B))) + 0.5;
+                C = padarray(padarray(blockproc(B,[di,1],fun1)-1,[1 1],'post')+1,[2,2]);
+                imshow(mat2gray(C));
+%                 imshow(C);
+                % imshow(mat2gray(col2im(pBin,[8,16],[8*8,16*6],'distinct')'));
+                % imshow(mat2gray(col2im(pBin,[8,16],[8*8,16*10],'distinct')));
+            end
+
         end
 
         %%% Generate Feature Vector and Reward
@@ -581,7 +638,7 @@ classdef Model < handle
                     mf = [0; this.mfunction(end,1)];
                 else
                     indAngleInit = find(this.mfunctionMR(:, 1) <= angleInit + this.dAngleMR & this.mfunctionMR(:, 1) >= angleInit - this.dAngleMR);
-                    mf = this.mfunctionMR(indAngleInit, 2); 
+                    mf = this.mfunctionMR(indAngleInit, 2);
                     mf = [0; mf(ceil(length(mf) / 2))]; % take middle entry
                 end
             else
@@ -774,6 +831,15 @@ classdef Model < handle
 
         %%% Plot all gathered performance data and save graphs
         %   param level:    # of plot elem range [1, 8]
+        %   1               # vergence error
+        %   2               # reconstruction error
+        %   3               # verg angle over fix distance (outdated)
+        %   4               # muscle graphs
+        %   5               # RL weights
+        %   6               # reward composition
+        %   7               # testing performance over train time
+        %   8               # binocularity plot
+        %   9               # fitting of basis functions
         function allPlotSave(this, level)
 
             % only take the last value before the image/texture is changed
@@ -984,7 +1050,7 @@ classdef Model < handle
                                   min(cmd_hist_sma(windowSize * 2 : end, 2) - tmpSTD(windowSize * 2 : end)) * 0.9, ...
                                   max(cmd_hist_sma(windowSize * 2 : end, 2) + tmpSTD(windowSize * 2 : end)) * 1.1]);
                         end
-                        
+
                         xlabel('Iteration #', 'FontSize', 8);
                         % ylabel('Value', 'FontSize', 12);
                         % set(gca,'yaxislocation','right');
@@ -1030,7 +1096,7 @@ classdef Model < handle
                                   min(metCost_hist_sma(windowSize3 * 2 : end) - tmpSTD(windowSize3 * 2 : end)) * 0.95, ...
                                   max(metCost_hist_sma(windowSize3 * 2 : end) + tmpSTD(windowSize3 * 2 : end)) * 1.05]);
                         end
-                        
+
                         xlabel(sprintf('Iteration # (interval=%d)', this.interval), 'FontSize', 8);
                         ylabel('Value', 'FontSize', 12);
                         title('Metabolic Costs', 'FontSize', 14, 'FontWeight','normal');
@@ -1427,6 +1493,7 @@ classdef Model < handle
                 % end
             end
 
+            %% Binocularity plot
             if (~isempty(find(level == 8)))
                 for s = 1:length(this.scModel)
                     this.plotBinocularity(s, this.savePath);
@@ -1498,7 +1565,9 @@ classdef Model < handle
                        text(140, 45, strcat("N = ", num2str(length(idx))), 'FontSize', 12,'fontWeight','bold');
                        saveas(h, strcat(name_orientation_plot, "_orientations", '.png'),'png');
                     end
+                    sprintf('Eye %d done', eye)
                 end
+                sprintf('Scale %d done', s)
             end
         end
 
@@ -2004,7 +2073,7 @@ classdef Model < handle
                 for j = 1:len
                     A = basisTrack{s,j}(:,I);
                     % B = reshape(A,di*r,c);
-                    B = reshape(A,di * r,num / r); %hotfix!
+                    B = reshape(A,di * r,num / r);
                     B = B/max(max(abs(B))) + 0.5;
                     C = padarray(padarray(blockproc(B,[di,1],fun1)-1,[1 1],'post')+1,[2,2]);
                     imshow(C);
