@@ -5,7 +5,8 @@ filePath = '/home/aecgroup/aecdata/Results/SAB2018/';
 
 threshold = 0.2;
 orientation = 1; % first bin == vertical, bins =  0:15:165
-
+scale = 2;  % choose between 1 and 2
+eyes = 1;   % choose between 1 (both), 2 (left), 3 (right)
 % usage: {{model1s1, model1s2, ...},{model2s1, model2s2,..}, ...}
 models = {
     %%%% Plot: 0deg-MD-wDisp-wLearning %%%
@@ -145,25 +146,25 @@ models = {
     %%% Plot: normal condition comparison of wDisp wLearning, wDisp w/oLearning
     %%% and w/oDisp w/oLearning
 
-    % {
-    % {'/normalInput/18-03-16_500000iter_2_normal_gf33-01-01_2', 2, 1},
-    % {'/normalInput/18-03-16_500000iter_3_normal_gf33-01-01_3', 2, 1},
-    % {'/normalInput/18-03-17_500000iter_4_normal_gf33-01-01_4', 2, 1},
-    % {'/normalInput/18-03-18_500000iter_5_normal_gf33-01-01_5', 2, 1},
-    % {'/normalInput/18-03-18_500000iter_6_normal_gf33-01-01_6', 2, 1}
-    % },
-    %
-    % {
-    % {'/compareOrientedInputw-oVergence/18-05-25_500000iter_16_ActorLR=0_s16', 2, 1},
-    % {'/compareOrientedInputw-oVergence/18-05-29_500000iter_17_ActorLR=0_s17', 2, 1},
-    % {'/compareOrientedInputw-oVergence/18-05-30_500000iter_18_ActorLR=0_s18', 2, 1}
-    % },
-    %
-    % {
-    % {'/compareOrientedInputw-oVergence/18-05-25_500000iter_16_ActorLR=0_OD=3m_0disp_s16', 2, 1},
-    % {'/compareOrientedInputw-oVergence/18-05-29_500000iter_17_ActorLR=0_OD=3m_0disp_s17', 2, 1},
-    % {'/compareOrientedInputw-oVergence/18-05-30_500000iter_18_ActorLR=0_OD=3m_0disp_s18', 2, 1}
-    % },
+%     {
+%     {'/normalInput/18-03-16_500000iter_2_normal_gf33-01-01_2', 2, 1},
+%     {'/normalInput/18-03-16_500000iter_3_normal_gf33-01-01_3', 2, 1},
+%     {'/normalInput/18-03-17_500000iter_4_normal_gf33-01-01_4', 2, 1},
+%     {'/normalInput/18-03-18_500000iter_5_normal_gf33-01-01_5', 2, 1},
+%     {'/normalInput/18-03-18_500000iter_6_normal_gf33-01-01_6', 2, 1}
+%     },
+%     
+%     {
+%     {'/compareOrientedInputw-oVergence/18-05-25_500000iter_16_ActorLR=0_s16', 2, 1},
+%     {'/compareOrientedInputw-oVergence/18-05-29_500000iter_17_ActorLR=0_s17', 2, 1},
+%     {'/compareOrientedInputw-oVergence/18-05-30_500000iter_18_ActorLR=0_s18', 2, 1}
+%     },
+%     
+%     {
+%     {'/compareOrientedInputw-oVergence/18-05-25_500000iter_16_ActorLR=0_OD=3m_0disp_s16', 2, 1},
+%     {'/compareOrientedInputw-oVergence/18-05-29_500000iter_17_ActorLR=0_OD=3m_0disp_s17', 2, 1},
+%     {'/compareOrientedInputw-oVergence/18-05-30_500000iter_18_ActorLR=0_OD=3m_0disp_s18', 2, 1}
+%     },
 
 
     %%% Plot: horizontal condition comparison of wDisp wlearning, wDisp w/oLearning
@@ -186,9 +187,39 @@ models = {
     % {'/compareOrientedInputw-oVergence/18-06-02_500000iter_17_horOnly_ActorLR=0_OD=3m_0disp_s17', 2, 1},
     % {'/compareOrientedInputw-oVergence/18-06-03_500000iter_18_horOnly_ActorLR=0_OD=3m_0disp_s18', 2, 1}
     % },
-
-
+    
+    %%% Plot: Laplacian Disparity distribution, varying spread
+    {
+    {'/laplacianPolicy/18-07-26_500000iter_2_noLearning_initMethod_4_lapSigma_0.00_seed2', scale, eyes},
+    {'/laplacianPolicy/18-07-23_500000iter_3_noLearning_initMethod_4_lapSigma_0.00_seed3', scale, eyes},
+    {'/laplacianPolicy/18-07-21_500000iter_4_noLearning_initMethod_4_lapSigma_0.00_seed4', scale, eyes},
+    },
+    
+    {
+    {'/laplacianPolicy/18-07-26_500000iter_2_noLearning_initMethod_4_lapSigma_0.22_seed2', scale, eyes},
+    {'/laplacianPolicy/18-07-23_500000iter_3_noLearning_initMethod_4_lapSigma_0.22_seed3', scale, eyes},
+    {'/laplacianPolicy/18-07-21_500000iter_4_noLearning_initMethod_4_lapSigma_0.22_seed4', scale, eyes},
+    },
+    
+    {
+    {'/laplacianPolicy/18-07-26_500000iter_2_noLearning_initMethod_4_lapSigma_0.50_seed2', scale, eyes},
+    {'/laplacianPolicy/18-07-23_500000iter_3_noLearning_initMethod_4_lapSigma_0.50_seed3', scale, eyes},
+    {'/laplacianPolicy/18-07-21_500000iter_4_noLearning_initMethod_4_lapSigma_0.50_seed4', scale, eyes},
+    },
+    
+    {
+    {'/laplacianPolicy/18-07-26_500000iter_2_noLearning_initMethod_4_lapSigma_1.00_seed2', scale, eyes},
+    {'/laplacianPolicy/18-07-23_500000iter_3_noLearning_initMethod_4_lapSigma_1.00_seed3', scale, eyes};
+    {'/laplacianPolicy/18-07-21_500000iter_4_noLearning_initMethod_4_lapSigma_1.00_seed4', scale, eyes},
+    },
+    
+    {
+    {'/laplacianPolicy/18-07-26_500000iter_2_noLearning_initMethod_4_lapSigma_2.00_seed2', scale, eyes},
+    {'/laplacianPolicy/18-07-23_500000iter_3_noLearning_initMethod_4_lapSigma_2.00_seed3', scale, eyes},
+    {'/laplacianPolicy/18-07-21_500000iter_4_noLearning_initMethod_4_lapSigma_2.00_seed4', scale, eyes},
     }
+
+    };
 
 bins = 1:size(models);
 Ns = zeros(size(models, 1), 1); % mean relative nums
@@ -227,33 +258,38 @@ for i = 1:size(models)
     Ns_err(i) = std(tmp_N);
 end
 
+figure;
 hold on;
 bar(bins, Ns*100, 1);
 errorbar(bins, Ns*100, Ns_err*100, '.');
-line([1,3],[43,43], "Color", "black")
-line([1,1],[42,44], "Color", "black")
-line([3,3],[42,44], "Color", "black")
-text(3.95, 44, "*", "FontSize", 12)
+% line([1,3],[43,43], "Color", "black")
+% line([1,1],[42,44], "Color", "black")
+% line([3,3],[42,44], "Color", "black")
+% text(3.95, 44, "*", "FontSize", 12)
 hold off;
 
 grid on
 %xlabel('Normal condition')
 ylabel('Percentage of Bases [%]')
-xticks([1, 2, 3])%, 4, 5, 6, 7])
-xticklabels({"D+L+", "D+L-", "D-L-"})%, 50, 75, 90, 100})
-xlim([0.5, 3.5])
+xticks([1, 2, 3, 4, 5]);%, 6, 7])
+names = {'s=0.0', 's=0.2', 's=0.5', 's=1', 's=2'};
+xticklabels(names);
+% xticklabels({"D+L+", "D+L-", "D-L-"})%, 50, 75, 90, 100})
+% xlim([0.5, 3.5])
+xlim([0.5, length(xticks) + 0.5])
 ylim([0 50])
 
+% title({"Vertical Orienation - Horizontal Condition","w/ Disparities w/ Learning","w/ Disparities w/o Learning","w/o Disparities w/o Learning"}, "FontSize", 10)
 title({"Vertical Orienation - Horizontal Condition","w/ Disparities w/ Learning","w/ Disparities w/o Learning","w/o Disparities w/o Learning"}, "FontSize", 10)
 
 % t = text(1, 5, strcat("N_{s4}=", num2str(bf_nums(1))), 'FontSize', 12,'fontWeight','bold');
 %     set(t,'Rotation',90);
 
-[h,p] = ttest(ttest_sample1, ttest_sample2);
+% [h,p] = ttest(ttest_sample1, ttest_sample2);
 
 text(3, 45, strcat("p=", num2str(round(p, 3))),'FontSize', 10,'fontWeight','bold')
 
 set(gca,'FontSize',15,'fontWeight','bold') %,'FontName','Courier')
 %set(findall(gcf,'type','text'),'FontSize',18,'fontWeight','bold') %,'FontName','Courier')
 
-saveas(gcf, '0deg-HC-wDwL-wDwoL-woDwoL.png','png')
+% saveas(gcf, '0deg-HC-wDwL-wDwoL-woDwoL.png','png')
