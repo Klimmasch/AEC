@@ -176,16 +176,21 @@ function parOES(nWorkers)
 % numberFormatVar2 = '%d';
 % experimentDirName = 'uniformBlurrInput'
 
-% varNames = {'filterLeft', 'filterLeftProb'};
-% % var1 = {8, 9, 10, 11, 12, 13};
-% var1 = {8, 19, 20, 21, 22};
+varNames = {'filterLeft', 'filterLeftProb'};
+% var1 = {26, 27, 28};
+var1 = {29, 30, 31, 32, 33, 34, 35, 36, 37};
 % var1 = fliplr(var1);
-% % var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
-% var2 = {1};
-% varDescr = {'filtBoth', 'prob'};
-% numberFormatVar1 = '%d';
-% numberFormatVar2 = '%d';
+% var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
+var2 = {1};
+varDescr = {'filtBoth', 'prob'};
+numberFormatVar1 = '%d';
+numberFormatVar2 = '%d';
 % experimentDirName = 'edgeDeprivNew'
+experimentDirName = 'explFilterSizes'
+
+globalParams = {};
+% globalName = 'fsize240_'
+globalName = 'fsize6std_'
 
 % varNames = {'filterRight', 'filterRightProb'};
 % % var1 = {8, 9, 10, 11, 12, 13};
@@ -200,23 +205,25 @@ function parOES(nWorkers)
 %  'initMethod', 1, 'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0]};
 % globalName = 'OD3_initMet1_ALR0_Var0_weights0_'
 
-varNames = {'initMethod', 'lapSig'};
-% var1 = {8, 9, 10, 11, 12, 13};
-var1 = {4};
-var2 = {0, 0.22, 0.5, 1, 2};
-varDescr = {'initMethod', 'lapSigma'};
-numberFormatVar1 = '%d';
-numberFormatVar2 = '%0.2f';
-experimentDirName = 'laplacianPolicy'
-
-globalParams = {'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0]};
-globalName = 'noLearning_'
+% varNames = {'initMethod', 'lapSig'};
+% % var1 = {8, 9, 10, 11, 12, 13};
+% var1 = {4};
+% % var2 = {0, 0.22, 0.5, 1, 2};
+% var2 = {15, 20};
+% varDescr = {'initMethod', 'lapSigma'};
+% numberFormatVar1 = '%d';
+% numberFormatVar2 = '%0.2f';
+% experimentDirName = 'laplacianPolicy'
+%
+% globalParams = {'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0]};
+% globalName = 'noLearning_'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nIters = 500000;               % number of iterations
-% rSeeds = [2, 3, 4]     % random seeds
-rSeeds = [4, 3, 2]       % random seeds
+rSeeds = [2, 3, 4]     % random seeds
+% rSeeds = [2];
+% rSeeds = [4, 3, 2]       % random seeds
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%% staring here, the rest is done automatically and should - in gerneral - not be altered  %%%%%%%

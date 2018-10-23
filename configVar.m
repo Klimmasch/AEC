@@ -332,80 +332,201 @@ if (~found)
 elseif filterLeft == 1
     % filterLeft = orientedGaussian(9,9,0.1); % leaves only vertical edges
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(9,9,0.1); % leaves only vertical edges
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(9,9,0.1); % leaves only vertical edges
 elseif filterLeft == 2
     % filterLeft = orientedGaussian(9,0.1,9); % leaves only horizontal edges
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(9,0.1,9);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(9,0.1,9);
 elseif filterLeft == 3
     %filterLeft = orientedGaussian(240,240,240); % blurrs the whole image (monocular deprivation)
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,240,240);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(240,240,240);
 elseif filterLeft == 4
     %filterLeft = orientedGaussian(17,17,0.1);
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(17,17,0.1);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(17,17,0.1);
 elseif filterLeft == 5
     %filterLeft = orientedGaussian(17,0.1,17);
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(17,0.1,17);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(17,0.1,17);
 elseif filterLeft == 6
     % filterLeft = orientedGaussian(33,33,0.1);
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,33,0.1); % only verticals
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,33,0.1); % only verticals
 elseif filterLeft == 7
     % filterLeft = orientedGaussian(33,0.1,33);
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,33); % only horizontals
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,0.1,33); % only horizontals
 elseif filterLeft == 8
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.1,0.1);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,0.1,0.1);
 elseif filterLeft == 9
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.2,0.2);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,0.2,0.2);
 elseif filterLeft == 10
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,0.5,0.5);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,0.5,0.5);
 elseif filterLeft == 11
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,1,1);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,1,1);
 elseif filterLeft == 12
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,2,2);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,2,2);
 elseif filterLeft == 13
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(33,5,5);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,5,5);
 elseif filterLeft == 14
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,1,1);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(100,1,1);
 elseif filterLeft == 15
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,5,5);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(100,5,5);
 elseif filterLeft == 16
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,10,10);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(100,10,10);
 elseif filterLeft == 17
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,50,50);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(100,50,50);
 elseif filterLeft == 18
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(100,100,100);
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(100,100,100);
 elseif filterLeft == 19
-    % filterLeft = orientedGaussian(33,0.1,33);
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,0.1,33); % only horizontals
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(240,0.1,33); % only horizontals
 elseif filterLeft == 20
-    % filterLeft = orientedGaussian(33,0.1,33);
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,0.1,100); % only horizontals
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(240,0.1,100); % only horizontals
 elseif filterLeft == 21
-    % filterLeft = orientedGaussian(33,0.1,33);
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,0.1,240); % only horizontals
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(240,0.1,240); % only horizontals
 elseif filterLeft == 22
-    % filterLeft = orientedGaussian(33,0.1,33);
     filterLeft = {};
-    [filterLeft{1},  filterLeft{2}] = orientedGaussianVectors(240,0.1,1000); % only horizontals
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(240,0.1,1000); % only horizontals
+elseif filterLeft == 23
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,0.1,6); % only horizontals
+elseif filterLeft == 24
+      filterLeft = {};
+      [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,0.1,10); % only horizontals
+elseif filterLeft == 25
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(33,0.1,1); % only horizontals
+%%%%%%%%%%%%%%%% Journal Paper Params %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif filterLeft == 26 % vertical
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(240,240,0.1); % only verticals
+    filterRight = filterLeft;
+elseif filterLeft == 27 % horizontal
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(240,0.1,240); % only horizontals
+    filterRight = filterLeft;
+elseif filterLeft == 28 % orthogonal
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(240,240,0.1); % only verticals
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,0.1,240); % only horizontals
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif filterLeft == 29 % normal case
+    sdd = 0.1;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(10,0.1,0.1); % only verticals
+    filterRight = filterLeft;
+%%%%%%%%%%%%%%%%%%%%%%%%% vertical %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif filterLeft == 30 % vertical 33
+    sdd = 33;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+    filterRight = filterLeft;
+elseif filterLeft == 31 %vertical 100
+    sdd = 100;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+    filterRight = filterLeft;
+elseif filterLeft == 32 % vertical 240
+    sdd = 240;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+    filterRight = filterLeft;
+elseif filterLeft == 33 %vertical 500
+    sdd = 500;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+    filterRight = filterLeft;
+%%%%%%%%%%%%%%%%%%%%%%%% horizontal %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif filterLeft == 34 % horizontal 33
+    sdd = 33;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = filterLeft;
+elseif filterLeft == 35 % horizontal 100
+    sdd = 100;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = filterLeft;
+elseif filterLeft == 36 % horizontal 240
+    sdd = 240;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = filterLeft;
+elseif filterLeft == 37 % horizontal 500
+    sdd = 500;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = filterLeft;
+%%%%%%%%%%%%%%%%%%% finer grained filter size %%%%%%%%%%%%%%%%%%%%%%
+elseif filterLeft == 38 % vertical 9
+    sdd = 9;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+    filterRight = filterLeft;
+elseif filterLeft == 39 % vertical 17
+    sdd = 17;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+    filterRight = filterLeft;
+elseif filterLeft == 40 % horizontal 500
+    sdd = 9;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = filterLeft;
+elseif filterLeft == 41 % horizontal 500
+    sdd = 17;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = filterLeft;
+%%%%%%%%%%%%%%%%%%% orthogonal filters %%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif filterLeft == 42
+    sdd = 33;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+elseif filterLeft == 43
+    sdd = 17;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+elseif filterLeft == 44
+    sdd = 100;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+%%%%%%%%%%%%%%%%%% monocular filters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif filterLeft == 45
+    sdd = 33;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,0.1);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(6*sdd,sdd,sdd);
+%%%%%%%%%%%%%%%%%%% orthogonal filters %%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif filterLeft == 46
+    sdd = 33;
+    filterLeft = {};
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
+    filterRight = {};
+    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
 end
 
 [found, filterLeftProb, varParamArray] = parseparam(varParamArray, 'filterLeftProb');
@@ -418,25 +539,26 @@ end
 % filterRight = filterLeft;
 % filterRightProb = filterLeftProb;
 
-[found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
-if (~found)
-    filterRight = filterLeft;
-elseif filterRight == 1
-    % filterRight = orientedGaussian(240,240,240);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,33,33);
-    % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
-elseif filterRight == 2
-    % filterRight = orientedGaussian(240,240,240);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,240,240);
-    % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
-elseif filterRight == 3
-    % filterRight = orientedGaussian(240,240,240);
-    filterRight = {};
-    [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
-    % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
-end
+% [found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
+% if (~found)
+%     filterRight = filterLeft;
+% elseif filterRight == 1
+%     % filterRight = orientedGaussian(240,240,240);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,33,33);
+%     % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
+% elseif filterRight == 2
+%     % filterRight = orientedGaussian(240,240,240);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,240,240);
+%     % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
+% elseif filterRight == 3
+%     % filterRight = orientedGaussian(240,240,240);
+%     filterRight = {};
+%     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
+%     % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
+% end
+
 [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
 if (~found)
     filterRightProb = filterLeftProb;
