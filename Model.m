@@ -30,6 +30,11 @@ classdef Model < handle
         inputParams;        % non-default parameter vector used to generate model with configVar
         initMethod;         % string identifying the initialization of muscle commands
         lapSig;             % for drawing laplacian distributed disparities
+        strabAngle;         % fixed offset for the right eye to simulate strabism
+        objSize;            % hight and width of the stimulus plane
+        maxYaw;             % maximal yaw angle of object plane
+        maxTilt;            % maximal tilt angle of object plane
+        maxRoll;            % maximal roll angle of object plane
 
         sparseCodingType;   % type of sparse coding
 
@@ -156,6 +161,11 @@ classdef Model < handle
                 obj.fixDistMax = PARAM{1}{20};
                 obj.initMethod = PARAM{1}{24};
                 obj.lapSig = PARAM{1}{34};
+                obj.strabAngle = PARAM{1}{35};
+                obj.objSize = PARAM{1}{36};
+                obj.maxYaw = PARAM{1}{37};
+                obj.maxTilt = PARAM{1}{38};
+                obj.maxRoll = PARAM{1}{39};
 
                 obj.filterLeft = PARAM{1}{29};
                 obj.filterRight = PARAM{1}{31};
@@ -745,6 +755,7 @@ classdef Model < handle
             vergErrMax = angleCorrect - this.angleMin;
         end
 
+        %% Depricated: use refreshImagesNew instead.
         %%% Updates images during simulation by generating two new images for both eyes
         %   param simulator:    a renderer instance
         %   param texture:      file path of texture input
@@ -781,8 +792,10 @@ classdef Model < handle
         %   param eyeAngle:         angle of single eye (rotation from offspring)
         %   param objDist:          distance of stimulus
         %   param scaleImSize:      scaling factor of stimulus plane [m]
-        function refreshImagesNew(this, simulator, textureNumber, eyeAngle, objDist, scaleImSize)
-            simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
+        %   param rotatePlane:      [tilt, yaw, roll] angles for the object plane
+        function refreshImagesNew(this, simulator, textureNumber, eyeAngle, objDist, scaleImSize, rotatePlane)
+
+            simulator.set_params(textureNumber, eyeAngle, objDist, this.strabAngle, scaleImSize, rotatePlane(1), rotatePlane(2), rotatePlane(3));
 
             result1 = simulator.generate_left();
             result2 = simulator.generate_right();
@@ -825,8 +838,8 @@ classdef Model < handle
             ylim([0 100]);
             title(sprintf('Scale %d', scale));
 
-            saveas(h, [savePath, '/binocularity.png']);
-
+            saveas(h, sprintf('%s/binocularity_sc%d.png', savePath, scale));
+            % saveas(h, [savePath, '/binocularity.png']);
         end
 
         %%% Plot all gathered performance data and save graphs
@@ -1848,7 +1861,7 @@ classdef Model < handle
                         trajectory(odIndex, vergErrIndex, stimIter, 1, :) = command;
 
                         for iter = 1 : numIters
-                            this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3);
+                            this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3, [0,0,0]);
 
                             %% change left and right images to simulate altered rearing conditions
                             if ~isempty(this.filterLeft)

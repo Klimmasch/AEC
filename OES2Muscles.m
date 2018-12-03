@@ -383,8 +383,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             t = t + 1;
 
             %% Update retinal images
-            % refreshImages(currentTexture, angleNew / 2, objDist, 3); % stable renderer
-            model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3); % experimental renderer
+            % try to introduce a distribution of slant angles to increase
+            % number of non-binocular cells
+            yaw = randi([-model.maxYaw model.maxYaw], 1, 1);
+            tilt = randi([-model.maxTilt model.maxTilt], 1, 1);
+            roll = model.maxRoll; % take a fixed roll angle for now
+            model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, model.objSize, [tilt, yaw, roll]);
 
             %% change left and right images to simulate altered rearing conditions
             if ~isempty(model.filterLeft)

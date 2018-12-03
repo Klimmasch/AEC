@@ -185,11 +185,11 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         [command, angleNew] = model.getMFedood(objRange(odIndex), vseRange(vseIndex));
                         randForLeftFilt = rand(1,1);
                         randForRightFilt = rand(1,1);
-                         
+
                         for iter = 2 : model.testInterval + 1
                             % update stimuli
                             % refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);                    % stable renderer
-                            model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3);  % experimental renderer
+                            model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3, [0,0,0]);  % experimental renderer
 
                             %% change left and right images to simulate altered rearing conditions
                             % if ~isempty(model.filterLeft)
@@ -377,7 +377,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         % currentTexture = texture{stimulusIndex};                              % stable renderer
                         % refreshImages(currentTexture, angleNew / 2, objRange(odIndex), 3);
                         currentTexture = stimulusIndex;                                         % experimental renderer
-                        model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3);
+                        model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange(odIndex), 3, [0,0,0]);
 
                         %% change left and right images to simulate altered rearing conditions
                         % if ~isempty(model.filterLeft)
@@ -495,7 +495,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 randForRightFilt = rand(1,1);
 
                 for iter = 1 : model.testInterval
-                    model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange2(odIndex), 3);
+                    model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objRange2(odIndex), 3, [0,0,0]);
 
                     %% change left and right images to simulate altered rearing conditions
                     % if ~isempty(model.filterLeft)
@@ -707,7 +707,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                             command = [lat; med];
                             angleNew = model.getAngle(command);
 
-                            model.refreshImagesNew(simulator, stim, angleNew, objDist, 3);
+                            model.refreshImagesNew(simulator, stim, angleNew, objDist, 3, [0,0,0]);
 
                             %% change left and right images to simulate altered rearing conditions
                             % if ~isempty(model.filterLeft)
@@ -1627,7 +1627,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 axis([0, model.testInterval + 1, ...
                       min(arrayfun(@(x) x.YData(1), lowWi)) + min(arrayfun(@(x) x.YData(1), lowWi)) * 0.1, ...
                       max(arrayfun(@(x) x.YData(2), upWi)) * 1.1]);
-            catch 
+            catch
                 sprintf('Axis at desired verg err approach have not be set.')
             end
 
@@ -1889,7 +1889,7 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                        sqrt(mean(model.testResult7(:, model.testInterval) .^ 2)), ...
                        mean(abs(model.testResult7(:, model.testInterval) .^ 2)), ...
                        std(abs(model.testResult7(:, model.testInterval) .^ 2))];
-                   
+
         if (saveTestResults == 1)
             save(strcat(imageSavePath, '/model'), 'model');
         end

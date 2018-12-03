@@ -191,6 +191,30 @@ if (~found)
     fixDistMax = 10; % 3.2219 for objDistMax = 2m
 end
 
+% object plane size where the stimuli are projected on
+[found, objSize, varParamArray] = parseparam(varParamArray, 'objSize');
+if (~found)
+    objSize = 3; % 3 m fills coarse and fine scale at 6 m
+end
+
+% maximal yaw angle of object plane
+[found, maxYaw, varParamArray] = parseparam(varParamArray, 'maxYaw');
+if (~found)
+    maxYaw = 0;
+end
+
+% maximal tilt angle of object plane
+[found, maxTilt, varParamArray] = parseparam(varParamArray, 'maxTilt');
+if (~found)
+    maxTilt = 0;
+end
+
+% maximal roll angle of object plane
+[found, maxRoll, varParamArray] = parseparam(varParamArray, 'maxRoll');
+if (~found)
+    maxRoll = 0;
+end
+
 % Muscle initialization [%]: correspond now to the minimum and maximum distance
 % the eyes should be looking at. [lateral rectus, medial rectus]
 % some correspondances (distance: [lateral, medial] activation):
@@ -297,12 +321,6 @@ if (~found)
     initMethod = 2;
 end
 
-[found, lapSig, varParamArray] = parseparam(varParamArray, 'lapSig');
-if (~found)
-    lapSig = 1;     % if initMethod == 4, this produces disparities mostly between -2 and 2 deg
-    % lapSig = 0.5;   % mostly between [-1, 1]
-end
-
 % Keep(0) or normalize(1) feature fector by z-transform
 [found, normFeatVect, varParamArray] = parseparam(varParamArray, 'normFeatVect');
 if (~found)
@@ -321,6 +339,17 @@ end
 
 if (desiredStdZT <= 0)
     error('desiredStdZT must be a scalar in ]0, inf[');
+end
+
+[found, lapSig, varParamArray] = parseparam(varParamArray, 'lapSig');
+if (~found)
+    lapSig = 1;     % if initMethod == 4, this produces disparities mostly between -2 and 2 deg
+    % lapSig = 0.5;   % mostly between [-1, 1]
+end
+
+[found, strabAngle, varParamArray] = parseparam(varParamArray, 'strabAngle');
+if (~found)
+    strabAngle = 0;
 end
 
 %%% filters for left and right images to simulate altered rearing conditions
@@ -539,9 +568,9 @@ end
 % filterRight = filterLeft;
 % filterRightProb = filterLeftProb;
 
-% [found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
-% if (~found)
-%     filterRight = filterLeft;
+[found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
+if (~found)
+    filterRight = filterLeft;
 % elseif filterRight == 1
 %     % filterRight = orientedGaussian(240,240,240);
 %     filterRight = {};
@@ -557,7 +586,7 @@ end
 %     filterRight = {};
 %     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
 %     % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
-% end
+end
 
 [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
 if (~found)
@@ -612,7 +641,7 @@ PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, bas
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
               initMethod, inputParams, normFeatVect, desiredStdZT, testInterval, ...
               filterLeft, filterLeftProb, filterRight, filterRightProb, ...
-              whitening, lapSig};
+              whitening, lapSig, strabAngle, objSize, maxYaw, maxTilt, maxRoll};
 
 % ------------------------
 % Sparse Coding parameters
