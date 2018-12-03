@@ -30,6 +30,8 @@ classdef Model < handle
         inputParams;        % non-default parameter vector used to generate model with configVar
         initMethod;         % string identifying the initialization of muscle commands
         lapSig;             % for drawing laplacian distributed disparities
+        strabAngle;         % fixed offset for the right eye to simulate strabism
+        objSize;            % hight and width of the stimulus plane
 
         sparseCodingType;   % type of sparse coding
 
@@ -156,6 +158,8 @@ classdef Model < handle
                 obj.fixDistMax = PARAM{1}{20};
                 obj.initMethod = PARAM{1}{24};
                 obj.lapSig = PARAM{1}{34};
+                obj.strabAngle = PARAM{1}{35};
+                obj.objSize = PARAM{1}{36};
 
                 obj.filterLeft = PARAM{1}{29};
                 obj.filterRight = PARAM{1}{31};
@@ -745,6 +749,7 @@ classdef Model < handle
             vergErrMax = angleCorrect - this.angleMin;
         end
 
+        %% Depricated: use refreshImagesNew instead.
         %%% Updates images during simulation by generating two new images for both eyes
         %   param simulator:    a renderer instance
         %   param texture:      file path of texture input
@@ -782,7 +787,12 @@ classdef Model < handle
         %   param objDist:          distance of stimulus
         %   param scaleImSize:      scaling factor of stimulus plane [m]
         function refreshImagesNew(this, simulator, textureNumber, eyeAngle, objDist, scaleImSize)
-            simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize); % scaling of obj plane size
+
+            if isempty(this.strabAngle)
+                simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize);
+            else
+                simulator.set_params(textureNumber, eyeAngle, objDist, this.strabAngle, scaleImSize);
+            end
 
             result1 = simulator.generate_left();
             result2 = simulator.generate_right();
@@ -814,19 +824,21 @@ classdef Model < handle
             binocularity = squeeze(binocularity(1, :));
 
             bins = [-1, -0.85, -0.5, -0.15, 0.15, 0.5, 0.85, 1];
+%             bins = [-1 : 2/7 : 1];
             [N, ~] = histcounts(binocularity, bins);
+%             [N, ~] = histcounts(binocularity, 21);
 
             h = figure;
             bar((N./sum(N))*100, 1);
             grid on;
             xlabel('Binocularity');
             ylabel('Percentage of Bases [%]');
-            xlim([0.5 7.5]);
+%             xlim([0.5 7.5]);
             ylim([0 100]);
             title(sprintf('Scale %d', scale));
 
-            saveas(h, [savePath, '/binocularity.png']);
-
+            saveas(h, sprintf('%s/binocularity_sc%d.png', savePath, scale));
+            % saveas(h, [savePath, '/binocularity.png']);
         end
 
         %%% Plot all gathered performance data and save graphs
@@ -1848,7 +1860,7 @@ classdef Model < handle
                         trajectory(odIndex, vergErrIndex, stimIter, 1, :) = command;
 
                         for iter = 1 : numIters
-                            this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3);
+                            this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), this.objSize);
 
                             %% change left and right images to simulate altered rearing conditions
                             if ~isempty(this.filterLeft)

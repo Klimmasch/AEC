@@ -383,8 +383,12 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             t = t + 1;
 
             %% Update retinal images
-            % refreshImages(currentTexture, angleNew / 2, objDist, 3); % stable renderer
-            model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3); % experimental renderer
+            if ~isempty(model.objSize)
+                model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, model.objSize);
+            else
+                % refreshImages(currentTexture, angleNew / 2, objDist, 3); % old renderer
+                model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, 3); % new renderer
+            end
 
             %% change left and right images to simulate altered rearing conditions
             if ~isempty(model.filterLeft)

@@ -44,9 +44,10 @@ function parTest(folders, nWorkers, runParallel)
         end
     end
 
-    % testpaths = fliplr(testpaths); % change order to run on different nodes
-    testpaths = testpaths(3:end);
-    testpaths = testpaths(randperm(length(testpaths)));
+    testpaths = testpaths(3:end); % remove '.' and '..
+    testpaths = fliplr(testpaths); % change order to run on different nodes
+
+    % testpaths = testpaths(randperm(length(testpaths)));
 
     % only for BF fitting
     myCluster = parcluster('local');
