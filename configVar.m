@@ -197,6 +197,27 @@ if (~found)
     objSize = 3; % 3 m fills coarse and fine scale at 6 m
 end
 
+<<<<<<< HEAD
+=======
+% maximal yaw angle of object plane
+[found, maxYaw, varParamArray] = parseparam(varParamArray, 'maxYaw');
+if (~found)
+    maxYaw = 0;
+end
+
+% maximal tilt angle of object plane
+[found, maxTilt, varParamArray] = parseparam(varParamArray, 'maxTilt');
+if (~found)
+    maxTilt = 0;
+end
+
+% maximal roll angle of object plane
+[found, maxRoll, varParamArray] = parseparam(varParamArray, 'maxRoll');
+if (~found)
+    maxRoll = 0;
+end
+
+>>>>>>> 085546f3bc6c9725b930d3372a4813730fc3f416
 % Muscle initialization [%]: correspond now to the minimum and maximum distance
 % the eyes should be looking at. [lateral rectus, medial rectus]
 % some correspondances (distance: [lateral, medial] activation):
@@ -623,8 +644,8 @@ PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, bas
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
               initMethod, inputParams, normFeatVect, desiredStdZT, testInterval, ...
               filterLeft, filterLeftProb, filterRight, filterRightProb, ...
-              whitening, lapSig, strabAngle, objSize};
-
+              whitening, lapSig, strabAngle, objSize, maxYaw, maxTilt, maxRoll};
+              
 % ------------------------
 % Sparse Coding parameters
 % ------------------------

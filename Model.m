@@ -32,6 +32,9 @@ classdef Model < handle
         lapSig;             % for drawing laplacian distributed disparities
         strabAngle;         % fixed offset for the right eye to simulate strabism
         objSize;            % hight and width of the stimulus plane
+        maxYaw;             % maximal yaw angle of object plane
+        maxTilt;            % maximal tilt angle of object plane
+        maxRoll;            % maximal roll angle of object plane
 
         sparseCodingType;   % type of sparse coding
 
@@ -160,6 +163,9 @@ classdef Model < handle
                 obj.lapSig = PARAM{1}{34};
                 obj.strabAngle = PARAM{1}{35};
                 obj.objSize = PARAM{1}{36};
+                obj.maxYaw = PARAM{1}{37};
+                obj.maxTilt = PARAM{1}{38};
+                obj.maxRoll = PARAM{1}{39};
 
                 obj.filterLeft = PARAM{1}{29};
                 obj.filterRight = PARAM{1}{31};
@@ -786,13 +792,10 @@ classdef Model < handle
         %   param eyeAngle:         angle of single eye (rotation from offspring)
         %   param objDist:          distance of stimulus
         %   param scaleImSize:      scaling factor of stimulus plane [m]
-        function refreshImagesNew(this, simulator, textureNumber, eyeAngle, objDist, scaleImSize)
+        %   param rotatePlane:      [tilt, yaw, roll] angles for the object plane
+        function refreshImagesNew(this, simulator, textureNumber, eyeAngle, objDist, scaleImSize, rotatePlane)
 
-            if isempty(this.strabAngle)
-                simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize);
-            else
-                simulator.set_params(textureNumber, eyeAngle, objDist, this.strabAngle, scaleImSize);
-            end
+            simulator.set_params(textureNumber, eyeAngle, objDist, this.strabAngle, scaleImSize, rotatePlane(1), rotatePlane(2), rotatePlane(3));
 
             result1 = simulator.generate_left();
             result2 = simulator.generate_right();
@@ -1860,7 +1863,7 @@ classdef Model < handle
                         trajectory(odIndex, vergErrIndex, stimIter, 1, :) = command;
 
                         for iter = 1 : numIters
-                            this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), this.objSize);
+                            this.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist(odIndex), 3, [0,0,0]);
 
                             %% change left and right images to simulate altered rearing conditions
                             if ~isempty(this.filterLeft)

@@ -77,13 +77,16 @@ public:
 
     // Set texture,angle and distance
     void
-    set_params(int texture_number, double angle_input, double distance_input, double strabismusAngle, float planeScaling)
+    set_params(int texture_number, double angle_input, double distance_input, double strabismusAngle, float planeScaling, double anglePlaneX, double anglePlaneY, double anglePlaneZ)
     {
         this->angle = angle_input;
         this->distance = distance_input;
         this->texture_number = texture_number;
         this->strangle = strabismusAngle;
         this->planeScale = planeScaling;
+        this->planeAngleX = anglePlaneX;
+        this->planeAngleY = anglePlaneY;
+        this->planeAngleZ = anglePlaneZ;
     }
 
     void
@@ -403,8 +406,10 @@ public:
     drawBox(void)
     {
         glPushMatrix();
-        //glRotatef(angle, 0.0, 1.0, 0.0);
-        glTranslated(0.0, 1.578, 2.0 - this->distance);
+        glTranslatef(0.0, 1.578, 2.0 - this->distance);
+	glRotatef(this->planeAngleX, 1.0, 0.0, 0.0);        
+	glRotatef(this->planeAngleY, 0.0, 1.0, 0.0);
+	glRotatef(this->planeAngleZ, 0.0, 0.0, 1.0);
         glScaled(this->planeScale, this->planeScale, this->planeScale);
         applyTexture();
 
@@ -654,6 +659,9 @@ private:
     bool init;
     double strangle;
     float planeScale;
+    double planeAngleX;
+    double planeAngleY;
+    double planeAngleZ;
 };
 
 // Instance manager for OpenEyeSim.
@@ -683,10 +691,10 @@ MEX_DEFINE(delete) (int nlhs, mxArray* plhs[],
 MEX_DEFINE(set_params) (int nlhs, mxArray* plhs[],
                         int nrhs, const mxArray* prhs[])
 {
-    InputArguments input(nrhs, prhs, 6);
+    InputArguments input(nrhs, prhs, 9);
     OutputArguments output(nlhs, plhs, 0);
     OpenEyeSim* osim = Session<OpenEyeSim>::get(input.get(0));
-    osim->set_params(input.get<int>(1), input.get<double>(2), input.get<double>(3), input.get<double>(4), input.get<float>(5));
+    osim->set_params(input.get<int>(1), input.get<double>(2), input.get<double>(3), input.get<double>(4), input.get<float>(5),input.get<double>(6),input.get<double>(7),input.get<double>(8));
 }
 
 // Defines MEX API for set_params (non const method).
