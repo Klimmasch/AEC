@@ -271,6 +271,7 @@ classdef Model < handle
                     for i = 1 : length(PARAM{2}{1})
                         % pick respective parameters from PARAM cell array for ith SC model constructor
                         obj.scModel{end + 1} = SparseCoding2(cellfun(@(x) x(i), PARAM{2}, 'UniformOutput', true));
+                        % obj.scModel{end + 1} = SparseCoding2(cellfun(@(x) x(i), PARAM{2}, 'UniformOutput', false));
                     end
                 else
                     %TODO: update depricated SparseCodingHomeo class
@@ -497,7 +498,22 @@ classdef Model < handle
             end
         end
 
-        %%% Display the current patches
+        %% update and display patches
+        function updatePatches(this, simulator, stimulus, objDist, disp, nRows, nCols)
+            
+            angleDes = 2 * atand(this.baseline / (2 * objDist))
+            angle = angleDes - disp %TODO: check not plus?
+            this.refreshImagesNew(simulator, stimulus, angle/2, objDist, 3, [0, 0, 0]);
+            
+            for s = 1:length(this.scModel)
+                this.preprocessImage(s, 1)
+                this.preprocessImage(s, 2)
+            end
+            
+            this.displayPatches(nRows, nCols);
+        end
+        
+        %% Display the current patches
         function displayPatches(this, nRows, nCols)
 
             n = size(this.patchesLeft{1}, 2);
@@ -547,7 +563,6 @@ classdef Model < handle
                 B = B/max(max(abs(B))) + 0.5;
                 C = padarray(padarray(blockproc(B,[di,1],fun1)-1,[1 1],'post')+1,[2,2]);
                 imshow(mat2gray(C));
-%                 imshow(C);
                 % imshow(mat2gray(col2im(pBin,[8,16],[8*8,16*6],'distinct')'));
                 % imshow(mat2gray(col2im(pBin,[8,16],[8*8,16*10],'distinct')));
             end
@@ -795,7 +810,11 @@ classdef Model < handle
         %   param rotatePlane:      [tilt, yaw, roll] angles for the object plane
         function refreshImagesNew(this, simulator, textureNumber, eyeAngle, objDist, scaleImSize, rotatePlane)
 
-            simulator.set_params(textureNumber, eyeAngle, objDist, this.strabAngle, scaleImSize, rotatePlane(1), rotatePlane(2), rotatePlane(3));
+            if isempty(this.strabAngle)
+                simulator.set_params(textureNumber, eyeAngle, objDist, 0, scaleImSize, rotatePlane(1), rotatePlane(2), rotatePlane(3));
+            else
+                simulator.set_params(textureNumber, eyeAngle, objDist, this.strabAngle, scaleImSize, rotatePlane(1), rotatePlane(2), rotatePlane(3));
+            end
 
             result1 = simulator.generate_left();
             result2 = simulator.generate_right();
@@ -1518,19 +1537,29 @@ classdef Model < handle
             % Fit Gabors to BFs and plot histogram of orientations and
             % disparities
             if (~isempty(find(level == 9)))
+                fname = strcat(this.savePath, '/modelAt', num2str(this.trainedUntil));
+                mkdir(fname);
 
-                % Thresfold used to exculde gabor fits with high residual
-                % error
+                % Thresfold used to exculde gabor fits with high residual error
                 Threshold = 0.2;
-
                 for s = 1:length(this.scModel)
+                    % if isempty(this.scModel{s}.BFfitFreq)
+                    %     fitFreq = 0; % for older models, use former procedure
+                    % else
+                    %     fitFreq = this.scModel{s}.BFfitFreq;
+                    % end
+                    fitFreq = 1;
 
-                    name = strcat(this.savePath, "/scModel", num2str(s));
+                    name = strcat(fname, '/scModel', num2str(s));
 
                     for eye = 1:3
-                       name_orientation_plot = strcat(name, "eyes", num2str(eye));
+                        if fitFreq == 1
+                            name_orientation_plot = strcat(name, 'eyes', num2str(eye), '_freq');
+                        else
+                            name_orientation_plot = strcat(name, 'eyes', num2str(eye)); % for fitting wavelength instead of frequency
+                        end
 
-                       [Fitted_Gabor_Filter_Parameters, Error] = Gabor_Fitting_for_Basis(this.scModel{s}.basis, eye);
+                       [Fitted_Gabor_Filter_Parameters, Error] = Gabor_Fitting_for_Basis(this.scModel{s}.basis, eye, fitFreq);
 
                        % Save fit parameters and errors
                        save(name_orientation_plot, 'Fitted_Gabor_Filter_Parameters', 'Error')
@@ -1545,7 +1574,8 @@ classdef Model < handle
 
                            res = [];
                            for i=1:length(idx)
-                               res(end+1) = (Fitted_Gabor_Filter_Parameters(i,3)/(2*pi)*cos(Fitted_Gabor_Filter_Parameters(i,2)))*(Fitted_Gabor_Filter_Parameters(i,5)-Fitted_Gabor_Filter_Parameters(i,6));
+%                                res(end+1) = (Fitted_Gabor_Filter_Parameters(i,3)/(2*pi)*cos(Fitted_Gabor_Filter_Parameters(i,2)))*(Fitted_Gabor_Filter_Parameters(i,5)-Fitted_Gabor_Filter_Parameters(i,6));
+                               res(end+1) = (Fitted_Gabor_Filter_Parameters(i,3)/(2*pi*cos(Fitted_Gabor_Filter_Parameters(i,2))))*(Fitted_Gabor_Filter_Parameters(i,5)-Fitted_Gabor_Filter_Parameters(i,6));
                            end
 
                            N = histcounts(res, bins_disp);
@@ -1558,8 +1588,8 @@ classdef Model < handle
                            % ylim([0 60]);
                            set(gca,'FontSize',12,'fontWeight','bold'); %,'FontName','Courier')
                            set(findall(hh,'type','text'),'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
-                           text(5, 50, strcat("N = ", num2str(length(idx))), 'FontSize', 12,'fontWeight','bold');
-                           saveas(hh, strcat(strcat(name, "_disparities"), '.png'),'png');
+                           text(5, 50, strcat('N = ', num2str(length(idx))), 'FontSize', 12,'fontWeight','bold');
+                           saveas(hh, strcat(strcat(name, '_disparities'), '.png'),'png');
                        end
 
                        % Histogram of Thetas
@@ -1577,12 +1607,13 @@ classdef Model < handle
                        ylim([0 50]);
                        set(gca,'FontSize',12,'fontWeight','bold'); %,'FontName','Courier')
                        set(findall(h,'type','text'),'FontSize',15,'fontWeight','bold'); %,'FontName','Courier')
-                       text(140, 45, strcat("N = ", num2str(length(idx))), 'FontSize', 12,'fontWeight','bold');
-                       saveas(h, strcat(name_orientation_plot, "_orientations", '.png'),'png');
+                       text(140, 45, strcat('N = ', num2str(length(idx))), 'FontSize', 12,'fontWeight','bold');
+                       saveas(h, strcat(name_orientation_plot, '_orientations', '.png'),'png');
+
+                       sprintf('Eye %d done', eye)
                     end
-                    sprintf('Eye %d done', eye)
+                    sprintf('Scale %d done', s)
                 end
-                sprintf('Scale %d done', s)
             end
         end
 
@@ -1655,7 +1686,9 @@ classdef Model < handle
                     windowStart = [fix(w / 2 + 1 - scaleSizeOrigImg / 2), fix(h / 2 + 1 - scaleSizeOrigImg / 2)];
 
                     % indexMatrix = [x, y, scaleWindow, scaleWindow; x, y, patchSize, patchSize]
-                    indexMatrix = [windowStart(1), windowStart(2), scaleSizeOrigImg, scaleSizeOrigImg; windowStart(1), windowStart(2), patchSizeOrigImg, patchSizeOrigImg];
+%                     indexMatrix = [windowStart(1), windowStart(2), scaleSizeOrigImg, scaleSizeOrigImg; windowStart(1), windowStart(2), patchSizeOrigImg, patchSizeOrigImg];
+                    % try on other side
+                    indexMatrix = [windowStart(1), windowStart(2), scaleSizeOrigImg, scaleSizeOrigImg; windowStart(1)+scaleSizeOrigImg-patchSizeOrigImg, windowStart(2), patchSizeOrigImg, patchSizeOrigImg];
                     anaglyph = insertShape(anaglyph, 'rectangle', indexMatrix, 'Color', scalingColors(scale)); % whole region of scale
                 end
             end
@@ -1711,19 +1744,30 @@ classdef Model < handle
 %             fig = figure('Position', [0, 0, 960, 640]); % create a figure with a specific size
             % subplot(2,3,[1,2,4,5]);
             % title(sprintf('Object distance: %d,\titeration: %d,\tvergence error: %d', infos(1), infos(2), infos(3)));
-            subplot('Position', [0.05, 0.12, 0.6, 0.8]);
+%             subplot('Position', [0.05, 0.12, 0.6, 0.8]); % figure('Position', [0, 0, 960, 640]);
+
+            goldenRatio = 1 / ((1 +sqrt(5))/2);
+            goldenRatio = 0.7273;%0.65;
+            subplot('Position', [0, 0, goldenRatio, 1]);
+
             imshow(anaglyph, 'initialMagnification', 'fit');
+
+            %% add text description --> removed for RDS video
             text(xPos, yPos, insert, 'color', textColor); % these numbers resemble white, but white will appear black after saving ;P
-            % text(10, 20, num2str(size(anaglyph)), 'color', 'yellow'); %[1-eps, 1-eps, 1-eps]
+            text(10, 20, num2str(size(anaglyph)), 'color', 'yellow'); %[1-eps, 1-eps, 1-eps]
+%             text(230, 10, sprintf('Object distance: %.2f', infos{2}), 'color', 'yellow');
+
             % title('Anaglyph');
             % subplot(2,3,3);
             % positionVector = [left, bottom, width, height], all between 0 and 1
             sizeScaleImg = 0.6 / numberScales;
             for sp = 1:numberScales
                 if (sp == 1)
-                    subplot('Position', [0.7, 0.9 - sizeScaleImg, sizeScaleImg, sizeScaleImg])
+%                     subplot('Position', [0.7, 0.9 - sizeScaleImg, sizeScaleImg, sizeScaleImg]);% figure('Position', [0, 0, 960, 640]);
+                    subplot('Position', [goldenRatio, 0.5, 1-goldenRatio, 0.5])
                 else
-                    subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg])
+%                     subplot('Position', [0.7, 0.9 - ((sizeScaleImg + 0.05) * sp), sizeScaleImg, sizeScaleImg]);% figure('Position', [0, 0, 960, 640]);
+                    subplot('Position', [goldenRatio, 0, 1-goldenRatio, 0.5])
                 end
                 imshow(scaleImages{sp});
                 % descr = {sprintf('Scale %d', sp), sprintf('Reconstruction Error: %.3f', infos{9}(sp))};
@@ -1732,8 +1776,11 @@ classdef Model < handle
                 % for more than 2 scales, also the size of the letters,
                 text(0.03, 0.1, descr, 'color', textColor, 'Units', 'normalized')
             end
-            % saveas(fig, sprintf('%s/anaglyph.png', this.savePath), 'png');
-            saveas(gcf, sprintf('%s/movies/anaglyphs%s_%03d.png', this.savePath, saveTag, identifier), 'png');
+
+            if ~isempty(saveTag)
+                % saveas(fig, sprintf('%s/anaglyph.png', this.savePath), 'png');
+                saveas(gcf, sprintf('%s/movies/anaglyphs%s_%03d.png', this.savePath, saveTag, identifier), 'png');
+            end
 %             fig.delete();
         end
         %%% Saturation function that keeps motor commands in [0, 1]

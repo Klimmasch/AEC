@@ -11,6 +11,8 @@ classdef SparseCoding2 < handle
         currentError;   % current reconstruction error
         sizeBatch;      % image batch size's 2nd dimension
         selectedBasis;  % indicates for each basis how often it has been selected
+        BFinit;         % describes the initialization of basis functions
+        BFfitFreq;      % fit frequencies to BFs or wavelengths?
     end
 
     methods
@@ -23,14 +25,29 @@ classdef SparseCoding2 < handle
             obj.basisSize = PARAM(3);
             obj.eta = PARAM(4);
             obj.temperature = PARAM(5);
-            obj.sizeBatch = PARAM(6);
+            obj.BFinit = PARAM(6);
+            obj.BFfitFreq = PARAM(7);
+            obj.sizeBatch = PARAM(8);     % is always in the last entry of the inout array
 
-            % obj.basis = rand(obj.basisSize, obj.nBasis) - 0.5;
-            % obj.basis = obj.basis * diag(1 ./ sqrt(sum(obj.basis .* obj.basis)));
-            % tmpNorm = ones(obj.basisSize, 1) * sqrt(sum(obj.basis .* obj.basis, 1));
-            % obj.basis = obj.basis ./ tmpNorm;
+            if obj.BFinit == 1     % white noise BF init
+                obj.basis = rand(obj.basisSize, obj.nBasis) - 0.5;
+                obj.basis = obj.basis * diag(1 ./ sqrt(sum(obj.basis .* obj.basis)));
+                tmpNorm = ones(obj.basisSize, 1) * sqrt(sum(obj.basis .* obj.basis, 1));
+                obj.basis = obj.basis ./ tmpNorm;
+            elseif obj.BFinit == 2    % non-aligned Gabor wavelets
+                obj.basis = BaseGenerator(0, 0, sqrt(PARAM(3)/2), PARAM(1));
+            elseif obj.BFinit == 3   % monocular Gabor wavelets
+                obj.basis = BaseGenerator(0, 0, sqrt(PARAM(3)/2), PARAM(1));
+                x = randperm(obj.nBasis);
+                for b = 1 : obj.nBasis/2
+                    obj.basis(1:end/2, x(b)) = 0; % monocular right
+                    obj.basis(end/2+1:end, x(b+(obj.nBasis/2))) = 0; % monocular left
+                end
+                obj.basis = bsxfun(@rdivide,obj.basis, sqrt(sum(obj.basis .^ 2)));
+            else
+                error('Unrecognized basis function initialization')
+            end
 
-            obj.basis = BaseGenerator(0, 0, sqrt(PARAM(3)/2), PARAM(1));
             obj.basisHist = [];
 
             obj.currentCoef = zeros(obj.nBasis, obj.sizeBatch);     %288x81
@@ -101,7 +118,7 @@ classdef SparseCoding2 < handle
             deltaBases = this.currentError * this.currentCoef' / size(this.currentError, 2);
             this.basis = this.basis + this.eta * deltaBases;
             this.basis = bsxfun(@rdivide, this.basis, sqrt(sum(this.basis .^ 2)));
-            
+
             % also update the selected basis functions
             usedBasis = zeros(size(this.currentCoef));
             usedBasis(find(this.currentCoef)) = 1;

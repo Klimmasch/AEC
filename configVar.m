@@ -197,8 +197,6 @@ if (~found)
     objSize = 3; % 3 m fills coarse and fine scale at 6 m
 end
 
-<<<<<<< HEAD
-=======
 % maximal yaw angle of object plane
 [found, maxYaw, varParamArray] = parseparam(varParamArray, 'maxYaw');
 if (~found)
@@ -217,7 +215,6 @@ if (~found)
     maxRoll = 0;
 end
 
->>>>>>> 085546f3bc6c9725b930d3372a4813730fc3f416
 % Muscle initialization [%]: correspond now to the minimum and maximum distance
 % the eyes should be looking at. [lateral rectus, medial rectus]
 % some correspondances (distance: [lateral, medial] activation):
@@ -361,6 +358,7 @@ end
 [found, filterLeft, varParamArray] = parseparam(varParamArray, 'filterLeft');
 if (~found)
     filterLeft = [];
+    filterRight = []; % hotfix for certain parameters
 elseif filterLeft == 1
     % filterLeft = orientedGaussian(9,9,0.1); % leaves only vertical edges
     filterLeft = {};
@@ -459,9 +457,11 @@ elseif filterLeft == 28 % orthogonal
     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,0.1,240); % only horizontals
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif filterLeft == 29 % normal case
+    % add a little blurr in both eyes to make up for the non-zero distortion
+    % in the other cases
     sdd = 0.1;
     filterLeft = {};
-    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(10,0.1,0.1); % only verticals
+    [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(10,0.1,0.1);
     filterRight = filterLeft;
 %%%%%%%%%%%%%%%%%%%%%%%%% vertical %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif filterLeft == 30 % vertical 33
@@ -516,12 +516,12 @@ elseif filterLeft == 39 % vertical 17
     filterLeft = {};
     [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,sdd,0.1);
     filterRight = filterLeft;
-elseif filterLeft == 40 % horizontal 500
+elseif filterLeft == 40 % horizontal 9
     sdd = 9;
     filterLeft = {};
     [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
     filterRight = filterLeft;
-elseif filterLeft == 41 % horizontal 500
+elseif filterLeft == 41 % horizontal 17
     sdd = 17;
     filterLeft = {};
     [filterLeft{1}, filterLeft{2}] = orientedGaussianVectors(6*sdd,0.1,sdd);
@@ -571,9 +571,9 @@ end
 % filterRight = filterLeft;
 % filterRightProb = filterLeftProb;
 
-[found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
-if (~found)
-    filterRight = filterLeft;
+% [found, filterRight, varParamArray] = parseparam(varParamArray, 'filterRight');
+% if (~found)
+%     filterRight = filterLeft;
 % elseif filterRight == 1
 %     % filterRight = orientedGaussian(240,240,240);
 %     filterRight = {};
@@ -589,7 +589,7 @@ if (~found)
 %     filterRight = {};
 %     [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
 %     % [filterRight{1}, filterRight{2}] = orientedGaussianVectors(240,1000,1000);
-end
+% end
 
 [found, filterRightProb, varParamArray] = parseparam(varParamArray, 'filterRightProb');
 if (~found)
@@ -645,7 +645,7 @@ PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, bas
               initMethod, inputParams, normFeatVect, desiredStdZT, testInterval, ...
               filterLeft, filterLeftProb, filterRight, filterRightProb, ...
               whitening, lapSig, strabAngle, objSize, maxYaw, maxTilt, maxRoll};
-              
+
 % ------------------------
 % Sparse Coding parameters
 % ------------------------
@@ -683,6 +683,19 @@ if (~found)
     temperature = [0.01, 0.01];
 end
 
+% initialization of basis functions
+[found, BFinit, varParamArray] = parseparam(varParamArray, 'BFinit');
+if (~found)
+    BFinit = [2, 2];     % initialization with non-aligned Gabor wavelets
+    % BFinit = [1, 1];   % initialization with random white noise
+end
+
+% fitting of basis functions
+[found, fitFreq, varParamArray] = parseparam(varParamArray, 'BFfitFreq');
+if (~found)
+    BFfitFreq = 1;     % fitting of basis functions uses frequency instead of wavelength
+end
+
 if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
  || (length(stride) ~= length(dsRatio)) ...
  || (length(nBasis) ~= length(dsRatio)) ...
@@ -694,7 +707,7 @@ if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
           length(dsRatio), length(dsRatio));
 end
 
-PARAMSC = {nBasis, nBasisUsed, basisSize, sc_eta, temperature};
+PARAMSC = {nBasis, nBasisUsed, basisSize, sc_eta, temperature, BFinit, [BFfitFreq, BFfitFreq]};
 
 % ---------------------------------
 % Reinforcement Learning parameters
