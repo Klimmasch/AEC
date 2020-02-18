@@ -178,7 +178,7 @@ function parOES(nWorkers)
 
 varNames = {'filterLeft', 'filterLeftProb'};
 % var1 = {26, 27, 28};
-var1 = {29, 30, 31, 32, 33, 34, 35, 36, 37};
+var1 = {34};% {45, 46};%, 30, 31, 32, 33, 34, 35, 36, 37};
 % var1 = fliplr(var1);
 % var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
 var2 = {1};
@@ -187,10 +187,8 @@ numberFormatVar1 = '%d';
 numberFormatVar2 = '%d';
 % experimentDirName = 'edgeDeprivNew'
 experimentDirName = 'explFilterSizes'
-
 globalParams = {};
-% globalName = 'fsize240_'
-globalName = 'fsize6std_'
+globalName = 'fsize6std_longer_'
 
 % varNames = {'filterRight', 'filterRightProb'};
 % % var1 = {8, 9, 10, 11, 12, 13};
@@ -209,21 +207,34 @@ globalName = 'fsize6std_'
 % % var1 = {8, 9, 10, 11, 12, 13};
 % var1 = {4};
 % % var2 = {0, 0.22, 0.5, 1, 2};
-% var2 = {15, 20};
+% var2 = {200};%, 200};
 % varDescr = {'initMethod', 'lapSigma'};
 % numberFormatVar1 = '%d';
 % numberFormatVar2 = '%0.2f';
 % experimentDirName = 'laplacianPolicy'
 %
-% globalParams = {'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0]};
+% globalParams = {'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0], ...
+%                 'nBasis', [400], 'nBasisUsed', [10], 'basisSize', [128], ...
+%                 'sc_eta', [0.2], 'temperature', [0.01], 'dsRatio', [1], ...
+%                 'pxFieldOfViewOrig', [40], 'pxFieldOfView', [40], 'stride', [4]};
+% globalName = 'noLearn_fineScOnly_'
+
+% varNames = {'initMethod', 'lapSig'};
+% var1 = {4};%, 4};
+% var2 = {0};
+% varDescr = {'initMethod', 'lapSigma'};
+% numberFormatVar1 = '%d';
+% numberFormatVar2 = '%d';
+% experimentDirName = 'vergenceInfluence'
+% globalParams = {'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0], 'filterLeft', 29};
 % globalName = 'noLearning_'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-nIters = 500000;               % number of iterations
-rSeeds = [2, 3, 4]     % random seeds
+nIters = 2000000;               % number of iterations
+rSeeds = [1, 2, 3]     % random seeds
 % rSeeds = [2];
-% rSeeds = [4, 3, 2]       % random seeds
+% rSeeds = [1, 5]       % random seeds
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%% staring here, the rest is done automatically and should - in gerneral - not be altered  %%%%%%%
@@ -272,8 +283,8 @@ if length(rSeeds) == 1
                     experimentDirName, sprintf('%s%s_%s_%s_%s_seed%d', globalName, varDescr{1}, paramStrings{ind, 1}, varDescr{2}, paramStrings{ind, 2}, rSeeds(1)));
     end
 else
-    for ind1 = 1 : length(rSeeds)
-        parfor ind2 = 1 : nParams
+    parfor ind1 = 1 : length(rSeeds)
+        for ind2 = 1 : nParams
         % for ind2 = 1 : length(rSeeds)
             sprintf('%s_%s_%s_%s', varDescr{1}, paramStrings{ind2, 1}, varDescr{2}, paramStrings{ind2, 2})
             OES2Muscles(nIters, rSeeds(ind1), 1, ...

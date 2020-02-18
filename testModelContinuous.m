@@ -91,17 +91,20 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
     end
 
     % fixation interval at testing procedure
-
     if (isempty(model.testInterval))
         model.testInterval = model.interval * 2;
         % model.testInterval = 200;
     end
-
+    
+    strabAng = model.strabAngle; % copy for saving
+    model.strabAngle = 0; % remove strabismic angle for testing only
+    
     command = [0; 0];
-    objRange = [model.objDistMin : 0.5 : model.objDistMax];
-    if (model.objDistMin == 0.5 && model.objDistMax == 6)
-        objRange = [0.5, 1 : 6];
-    end
+%     objRange = [model.objDistMin : 0.5 : model.objDistMax];
+%     if (model.objDistMin == 0.5 && model.objDistMax == 6)
+%         objRange = [0.5, 1 : 6];
+%     end
+    objRange = [0.5, 1 : 6]; % same conditions for all the models during testing
 
     tmpResult1 = zeros(nStim, model.testInterval + 1);
     tmpResult2 = zeros(nStim, model.testInterval + 1);
@@ -807,7 +810,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
             model.metCostsApproach = metCostsApproach;
             model.musclePlaneResponse = musclePlaneResponse;
             if (saveTestResults == 1)
+                model.strabAngle = strabAng;
                 save(strcat(imageSavePath, '/model'), 'model');
+                model.strabAngle = 0;
             end
         catch
             % catch non-existing variables error, occuring in non-up-to-date models
@@ -827,7 +832,9 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                 model.metCostsApproach = metCostsApproach;
                 model.musclePlaneResponse = musclePlaneResponse;
                 if (saveTestResults == 1)
+                    model.strabAngle = strabAng;
                     save(strcat(imageSavePath, '/model'), 'model');
+                    model.strabAngle = 0;
                 end
                 clear clone;                                            % delete obsolete handle/pointer
             catch
@@ -1595,7 +1602,10 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                         model = clone;
                         model.vergenceAngleApproach = vergenceAngleApproach;
                         model.metCostsApproach = metCostsApproach;
+                        
+                        model.strabAngle = strabAng;
                         save(strcat(imageSavePath, '/model'), 'model');
+                        model.strabAngle = 0;
                         clear clone;
                     catch
                         % catch when new model property isn't present in Model class yet
@@ -1891,13 +1901,17 @@ function testModelContinuous(model, nStim, plotIt, saveTestResults, verbose, sim
                        std(abs(model.testResult7(:, model.testInterval) .^ 2))];
 
         if (saveTestResults == 1)
+            model.strabAngle = strabAng;
             save(strcat(imageSavePath, '/model'), 'model');
+            model.strabAngle = 0;
         end
     catch
         warning('Current model has no \"testHist\" field. Performance history will not be stored.');
     end
     if (saveTestResults == 1)
+        model.strabAngle = strabAng;
         save(strcat(imageSavePath, '/model'), 'model');
+        model.strabAngle = 0;
     end
     sprintf('Testing procedure at iter = %s finished. Graph generation finished. Model saved.', folderName(9 : end))
 end

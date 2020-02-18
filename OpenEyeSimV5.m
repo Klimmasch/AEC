@@ -15,7 +15,7 @@ methods
     OpenEyeSimV5_('delete', this.id_);
   end
 
-  function set_params(this, texture, angle, distance, strabismusAngle, planeScale, anglePlaneX,anglePlaneY,anglePlaneZ)
+  function set_params(this, texture, angle, distance, strabismusAngle, planeScale, anglePlaneX, anglePlaneY, anglePlaneZ)
   %PUT parameters to the simulator
     assert(isscalar(this));
     OpenEyeSimV5_('set_params', this.id_, texture, angle, distance, strabismusAngle, planeScale, anglePlaneX, anglePlaneY, anglePlaneZ);

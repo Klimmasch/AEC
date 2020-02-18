@@ -180,6 +180,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
         if (~isempty(experimentDirName))
             % folder = sprintf('../results/%s/', experimentDirName);                       % local destination
             folder = sprintf('/home/aecgroup/aecdata/Results/eLifePaper/%s/', experimentDirName);     % group folder destination
+            % folder = sprintf('/home/mrklim/fiasAECGroup/aecdata/Results/eLifePaper/%s/', experimentDirName);
+
         else
             % folder = '../results/';                       % local destination
             folder = '/home/aecgroup/aecdata/Results/eLifePaper/';     % group folder destination
@@ -505,7 +507,7 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             % angleNew = getAngle2(command);
 
             %%% Save statistics
-            % compute desitestModelred vergence command, disparity and vergence error
+            % compute desired vergence command, disparity and vergence error
             fixDepth = (model.baseline / 2) / tand(angleNew / 2);       % fixation depth [m]
             anglerr = angleDes - angleNew;                              % vergence error [deg]
             % disparity = 2 * model.focalLength * tand(anglerr / 2);    % current disp [px]

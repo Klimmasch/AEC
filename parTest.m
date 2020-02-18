@@ -13,8 +13,12 @@ function parTest(folders, nWorkers, runParallel)
         folder = folders{k};
         % parent = strcat('/home/aecgroup/aecdata/Results/SAB2018/', folder);
         parent = strcat('/home/aecgroup/aecdata/Results/eLifePaper/', folder);
-        subfolders = dir(sprintf('%s/*', parent));
-        % subfolders = dir(sprintf('%s/*hor*', parent));
+        % subfolders = dir(sprintf('%s/*fixAllAt*', parent));
+        % subfolders = dir(sprintf('%s/*strabAngle_10*', parent));
+        % subfolders = dir(sprintf('%s/*lapSigma_200.00*', parent));
+        % subfolders = dir(sprintf('%s/*rotatePlane*', parent));
+        % subfolders = dir(sprintf('%s/*filtBoth_46*', parent)); %45, 46
+        subfolders = dir(sprintf('%s/*yaw+tilt*', parent));
         % parent = strcat('/home/aecgroup/aecdata/Results/', folder);
         % subfolders = dir(sprintf('%s/*iter*', parent));
 
@@ -22,30 +26,35 @@ function parTest(folders, nWorkers, runParallel)
         for s = 1 : length(subfolders) % test folder tier
             subfolder = subfolders(s);
 
+            subsubfolders = dir(sprintf('%s/%s/modelAt*', subfolder.folder,subfolder.name));
 %             if subfolder.isdir
 %                 testpaths{iter} = sprintf('%s/%s/model.mat', parent, subfolder.name);
 %                 iter = iter + 1;
 %             end
-            % if ~isfile(sprintf('%s/%s/scModel2eyes3.mat', parent, subfolder.name))
-            if ~isfile(sprintf('%s/%s/scModel1eyes1.mat', parent, subfolder.name))
-                fpath = sprintf('%s/%s/model.mat', parent, subfolder.name)
-                testpaths{iter} = fpath;
-                iter = iter + 1;
-            end
+            for ss = 1:length(subsubfolders)
+                subsubfolder = subsubfolders(ss);
 
-%             testfolders = dir(sprintf('%s/%s/*modelAt*0',parent, subfolder.name));
-%             % testfolders = dir(sprintf('%s/%s/*modelAt*',parent, subfolder.name));
-%
-%             for t = 1 : length(testfolders)
-%                 testfolder = testfolders(t);
-%                 testpaths{iter} = sprintf('%s/%s/%s/model.mat', parent, subfolder.name, testfolder.name);
-%                 iter = iter + 1;
-%             end
+                    if ~isfile(sprintf('%s/%s/scModel2eyes3_freq.mat', parent, subfolder.name))
+%                     if ~isfile(sprintf('%s/%s/scModel2eyes3.mat', subsubfolder.folder, subsubfolder.name))
+                        fpath = sprintf('%s/%s/model.mat', subsubfolder.folder, subsubfolder.name)
+                        testpaths{iter} = fpath;
+                        iter = iter + 1;
+                    end
+
+        %             testfolders = dir(sprintf('%s/%s/*modelAt*0',parent, subfolder.name));
+        %             % testfolders = dir(sprintf('%s/%s/*modelAt*',parent, subfolder.name));
+        %
+        %             for t = 1 : length(testfolders)
+        %                 testfolder = testfolders(t);
+        %                 testpaths{iter} = sprintf('%s/%s/%s/model.mat', parent, subfolder.name, testfolder.name);
+        %                 iter = iter + 1;
+        %             end
+            end
         end
     end
 
-    testpaths = testpaths(3:end); % remove '.' and '..
-    testpaths = fliplr(testpaths); % change order to run on different nodes
+%     testpaths = testpaths(3:end); % remove '.' and '..
+%     testpaths = fliplr(testpaths); % change order to run on different nodes
 
     % testpaths = testpaths(randperm(length(testpaths)));
 
@@ -131,9 +140,11 @@ function parTest(folders, nWorkers, runParallel)
             % sprintf('trainedUntil: %d', model.trainedUntil
             % if ~exist(sprintf('%s/modelAt%d/muscleActivityTrajectory.png', model.savePath, model.trainedUntil), 'file') % if the last image from the test procedure does not exists ...
             if model.trainedUntil == 500000
+%             if model.trainedUntil == 0%250000
                 % if ~isfile(sprintf('%s/%s/scModel2eyes3.mat', parent, subfolder.name))
+                    % model.allPlotSave([1 : 8, 9]);
                     model.allPlotSave(9);   % fitting of basis functions
-                % end
+            end
 
                 % if ~exist(sprintf('%s/modelAt%d/muscleActivityTrajectory.png', model.savePath, 500000), 'file')
                 %     testModelContinuous(model, nStim, 1, 1, 2, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 5]);
@@ -151,7 +162,7 @@ function parTest(folders, nWorkers, runParallel)
                 % if ~exist(sprintf('%s/binocularity.png', model.savePath, model.trainedUntil), 'file')
                 %     model.allPlotSave([1, 2, 5, 8]);
                 % end
-            end
+            % end
             close all
         end
     end
