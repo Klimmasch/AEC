@@ -297,7 +297,8 @@ function eLifeOrientations(scale, saveTag)
 %         if (i == 1) || (i == 2) || (i == 5) % only for presentations
         if (j == 1) || (j == 4)
 %             ylabel('Number of Bases [%]')
-            ylabel('number of bases [%]')
+%             ylabel('number of bases [%]')
+            ylabel('number of RFs [%]')
         end
         xticks([1, 7])
         xticklabels({'0', '90'});

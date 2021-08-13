@@ -273,7 +273,50 @@ function eLifeBinocularities(saveName, bins)
 %     }
 %     labelz = {'normal', 'no RL', 'no RL & no disp.'};
 
-    colors = [[77,175,74]; [55,126,184]; [152,78,163]; [255,127,0]; [228,26,28]; [166,86,40]; [118,42,131]]./256;
+    %% Modes for aniseikonia (increasing image size)
+    models = {
+        { % normal case
+            {'eLifePaper/explFilterSizes/19-05-18_500000iter_1_fsize6std_filtBoth_29_prob_1_seed1'};
+            {'eLifePaper/explFilterSizes/18-09-28_500000iter_2_fsize6std_filtBoth_29_prob_1_seed2'};
+            {'eLifePaper/explFilterSizes/18-09-28_500000iter_3_fsize6std_filtBoth_29_prob_1_seed3'};
+            {'eLifePaper/explFilterSizes/18-10-02_500000iter_4_fsize6std_filtBoth_29_prob_1_seed4'};
+            {'eLifePaper/explFilterSizes/19-05-18_500000iter_5_fsize6std_filtBoth_29_prob_1_seed5'};
+%         },{ % ani 0.03
+%             {'eLifePaper/aniseikonia/'},
+%             {'eLifePaper/aniseikonia/'}
+%         },{ % ani 0.05
+%             {'eLifePaper/aniseikonia/'},
+%             {'eLifePaper/aniseikonia/'}
+        },{ % ani 0.1
+            {'eLifePaper/aniseikonia/20-10-16_500000iter_1_aniseikonia+_aniLR_[0-+0.10]_scLR_[0.2,+0.2]_seed1'};
+            {'eLifePaper/aniseikonia/20-11-08_500000iter_2_aniseikonia+_aniLR_[0-+0.10]_scLR_[0.2,+0.2]_seed2'};
+            {'eLifePaper/aniseikonia/20-11-08_500000iter_3_aniseikonia+_aniLR_[0-+0.10]_scLR_[0.2,+0.2]_seed3'};
+            {'eLifePaper/aniseikonia/20-11-08_500000iter_4_aniseikonia+_aniLR_[0-+0.10]_scLR_[0.2,+0.2]_seed4'};
+            {'eLifePaper/aniseikonia/20-11-08_500000iter_5_aniseikonia+_aniLR_[0-+0.10]_scLR_[0.2,+0.2]_seed5'};
+        },{ % ani 0.15
+            {'eLifePaper/aniseikonia/20-10-16_500000iter_1_aniseikonia+_aniLR_[0-+0.15]_scLR_[0.2,+0.2]_seed1'};
+            {'eLifePaper/aniseikonia/20-11-11_500000iter_2_aniseikonia+_aniLR_[0-+0.15]_scLR_[0.2,+0.2]_seed2'};
+            {'eLifePaper/aniseikonia/20-11-11_500000iter_3_aniseikonia+_aniLR_[0-+0.15]_scLR_[0.2,+0.2]_seed3'};
+            {'eLifePaper/aniseikonia/20-11-10_500000iter_4_aniseikonia+_aniLR_[0-+0.15]_scLR_[0.2,+0.2]_seed4'};
+            {'eLifePaper/aniseikonia/20-11-11_500000iter_5_aniseikonia+_aniLR_[0-+0.15]_scLR_[0.2,+0.2]_seed5'};
+        },{ % ani 0.25
+            {'eLifePaper/aniseikonia/20-10-16_500000iter_1_aniseikonia+_aniLR_[0-+0.25]_scLR_[0.2,+0.2]_seed1'};
+            {'eLifePaper/aniseikonia/20-11-11_500000iter_2_aniseikonia+_aniLR_[0-+0.25]_scLR_[0.2,+0.2]_seed2'};
+            {'eLifePaper/aniseikonia/20-11-11_500000iter_3_aniseikonia+_aniLR_[0-+0.25]_scLR_[0.2,+0.2]_seed3'};
+            {'eLifePaper/aniseikonia/20-11-10_500000iter_4_aniseikonia+_aniLR_[0-+0.25]_scLR_[0.2,+0.2]_seed4'};
+            {'eLifePaper/aniseikonia/20-11-13_500000iter_5_aniseikonia+_aniLR_[0-+0.25]_scLR_[0.2,+0.2]_seed5'};
+%         },{ % ani 0.5
+%             {'eLifePaper/aniseikonia/20-10-16_500000iter_1_aniseikonia+_aniLR_[0-+0.50]_scLR_[0.2,+0.2]_seed1'};
+%             {'eLifePaper/aniseikonia/20-11-10_500000iter_4_aniseikonia+_aniLR_[0-+0.50]_scLR_[0.2,+0.2]_seed4'};
+%         },{ % ani 1
+%             {'eLifePaper/aniseikonia/20-10-16_500000iter_1_aniseikonia+_aniLR_[0-+1.00]_scLR_[0.2,+0.2]_seed1'},
+%             {'eLifePaper/aniseikonia/'}
+        }}
+    labelz = {'0%', '10%', '15%', '25%'}%, 'ani 0.5', 'ani 1'};
+    
+%     colors = [[77,175,74]; [55,126,184]; [152,78,163]; [255,127,0]; [228,26,28]; [166,86,40]; [118,42,131]]./256;
+%     colors = [[0,104,55]; [49,163,84]; [120,198,121]; [173,221,142]; [217,240,163]; [255,255,204]]./256; % single hue
+    colors = [[35,132,67]; [120,198,121]; [194,230,153]; [255,255,204]]./256; % single hue
     
     %% first plot: compare all coarse scales
 %     h = figure('position', [300 400 1400 400]);
@@ -398,9 +441,9 @@ function eLifeBinocularities(saveName, bins)
             bar(meanBinocs, 0.8);
             errorbar(meanBinocs, stdBinocs, '.black', 'CapSize', 4);
             grid minor;
-            xlabel('Binocularity');
+            xlabel('binocularity');
             if m == 1
-                ylabel('Number of Bases [%]');
+                ylabel('number of bases [%]');
             end
             
             if scale == 1
@@ -466,8 +509,8 @@ function eLifeBinocularities(saveName, bins)
         xticklabels({-1,0,1});
         xlim([0.5, 7.5]);
         if m == 1 || m == 4
-%             ylabel('Number of Bases [%]');
-            ylabel('number of bases [%]');
+%             ylabel('number of bases [%]');
+            ylabel('number of RFs [%]');
         end
         if m == 5
 %             xlabel('Binocularity Index');

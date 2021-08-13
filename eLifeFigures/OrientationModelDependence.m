@@ -9,7 +9,7 @@ function OrientationModelDependence(saveTag)
 
     threshold = 0.2;
     orientation = 1; % first bin == vertical, bins =  0:15:165
-    
+
     for subPlt = 1:2
         if subPlt == 1
             scale = 2;  % choose between 1 and 2, exept for Laplacian Case where there is only one scale
@@ -54,7 +54,10 @@ function OrientationModelDependence(saveTag)
     %         names = {'normal case', 'no RL', {'no RL','no disp'}};
     %         names = {'normal case', 'no RL', 'no RL\nno disp'};
     %         names = {'normal case', 'no RL', '\begin{tabular}{c}no RL\\no disp\end{tabular}'};
+%             names = {'normal', 'random disp.', 'zero disp.'};
             names = {'normal', 'random disp.', 'zero disp.'};
+            names = cellfun(@(x) strrep(x,' ','\newline'), names,'UniformOutput',false);
+
             % nc baseline = 33.4
 
         elseif subPlt == 2 % Laplacian plot
@@ -96,7 +99,7 @@ function OrientationModelDependence(saveTag)
                         {'laplacianPolicy/18-11-22_500000iter_3_noLearn_FineScOnly_initMethod_4_lapSigma_0.00_seed3', 1, eyes},
                         {'laplacianPolicy/18-11-26_500000iter_4_noLearn_FineScOnly_initMethod_4_lapSigma_0.00_seed4', 1, eyes},
                         {'laplacianPolicy/19-06-06_500000iter_5_noLearn_fineScOnly_initMethod_4_lapSigma_0.00_seed5', 1, eyes},
-                    },{% 
+                    },{%
                         {'laplacianPolicy/19-06-06_500000iter_1_noLearn_fineScOnly_initMethod_4_lapSigma_0.22_seed1', 1, eyes},
                         {'laplacianPolicy/18-11-21_500000iter_2_noLearn_FineScOnly_initMethod_4_lapSigma_0.22_seed2', 1, eyes},
                         {'laplacianPolicy/18-11-22_500000iter_3_noLearn_FineScOnly_initMethod_4_lapSigma_0.22_seed3', 1, eyes},
@@ -178,11 +181,11 @@ function OrientationModelDependence(saveTag)
         if subPlt == 1
     %         figure('Position', [675 545 277 349]); % for different vergenc regimes
 %             figure('Position', [660 569 368 323]);
-            figure('Position', [660 569 1000 350]); % maybe not high enough to display the xlabel fully...
+            figure('Position', [660 569 1000 360]);
             subplot(1,30,1:9);
         elseif subPlt == 2
     %         figure('Position', [680 556 560 420]); % for different laplace distributions
-    %         figure('Position', [1009 543 551 349]); % for different laplace distributions
+    %         figure('Position', [1009 543 551 349]);
 %             figure('Position', [1008 569 730 323]);
             subplot(1,30,12:30);
         end
@@ -198,11 +201,11 @@ function OrientationModelDependence(saveTag)
 
     %     grid on
         %xlabel('Normal condition')
-    %     ylabel('Vertically Tuned Bases [%]')
         if subPlt == 1
-            ylabel('vertically tuned bases [%]')
+%             ylabel('vertically tuned bases [%]')
+            ylabel('vertically tuned RFs [%]')
         end
-        
+
         if subPlt == 2
     %         xlabel('Std. of Laplacian Disparity Distribution');
             xlabel('std. of Laplacian disparity distribution');
@@ -211,6 +214,7 @@ function OrientationModelDependence(saveTag)
         % xticks([1, 2, 3, 4, 5]);%, 6, 7])
         xticks(1:length(names))
         xticklabels(names);
+%         xtickangle(45)
         % workaround for linebreak in xticklabels
     %     x = '\begin{tabular}{c} line1 \\ line2 \end{tabular}';
     %     set(gca,'xtick',1:3,'XTickLabel', x, 'TickLabelInterpreter','latex');
