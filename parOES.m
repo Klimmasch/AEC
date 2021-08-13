@@ -229,10 +229,22 @@ globalName = 'fsize6std_longer_'
 % globalParams = {'actorLRRange', [0], 'varianceRange', [0], 'weight_range', [0,0,0], 'filterLeft', 29};
 % globalName = 'noLearning_'
 
+varNames = {'hiddenDim', 'actorLRRange'};
+% var1 = {26, 27, 28};
+var1 = {1, 2};% {45, 46};%, 30, 31, 32, 33, 34, 35, 36, 37};
+% var1 = fliplr(var1);
+% var2 = {0.1, 0.25, 0.5, 0.75, 0.9, 1};
+var2 = {[0.5,0]};
+varDescr = {'hdim', 'actorLR'};
+numberFormatVar1 = '%d';
+numberFormatVar2 = '[%1.2f-%1.2f]';
+experimentDirName = 'stability'
+globalParams = {};
+globalName = 'actor_hidden_dim_'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% general parameter section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-nIters = 2000000;               % number of iterations
-rSeeds = [1, 2, 3]     % random seeds
+nIters = 500000;               % number of iterations
+rSeeds = [1]     % random seeds
 % rSeeds = [2];
 % rSeeds = [1, 5]       % random seeds
 

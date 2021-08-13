@@ -13,13 +13,20 @@ function parTest(folders, nWorkers, runParallel)
         folder = folders{k};
         % parent = strcat('/home/aecgroup/aecdata/Results/SAB2018/', folder);
         parent = strcat('/home/aecgroup/aecdata/Results/eLifePaper/', folder);
-        % subfolders = dir(sprintf('%s/*fixAllAt*', parent));
+        % subfolders = dir(sprintf('%s/*fixVergAngleAt6m_filtB_29_strabAngle_5*', parent));
         % subfolders = dir(sprintf('%s/*strabAngle_10*', parent));
         % subfolders = dir(sprintf('%s/*lapSigma_200.00*', parent));
         % subfolders = dir(sprintf('%s/*rotatePlane*', parent));
         % subfolders = dir(sprintf('%s/*filtBoth_46*', parent)); %45, 46
-        subfolders = dir(sprintf('%s/*yaw+tilt*', parent));
+        % subfolders = dir(sprintf('%s/*yaw+tilt*', parent));
+        % subfolders = dir(sprintf('%s/*twoScales*', parent));
         % parent = strcat('/home/aecgroup/aecdata/Results/', folder);
+        % subfolders = dir(sprintf('%s/*prelearnedBF*', parent));
+        % subfolders = dir(sprintf('%s/*aniseikonia+*', parent));
+        % subfolders = dir(sprintf('%s/*MGRandomTextures2*', parent));
+        subfolders = dir(sprintf('%s/*_randomMcGillImages_*', parent));
+        % subfolders = dir(sprintf('%s/*aniseikonia+_aniLR_[0-+0.10]*', parent));
+        
         % subfolders = dir(sprintf('%s/*iter*', parent));
 
 
@@ -34,6 +41,7 @@ function parTest(folders, nWorkers, runParallel)
             for ss = 1:length(subsubfolders)
                 subsubfolder = subsubfolders(ss);
 
+                    % if ~isfile(sprintf('%s/%s/vergenceAngleApproach.png', parent, subfolder.name))
                     if ~isfile(sprintf('%s/%s/scModel2eyes3_freq.mat', parent, subfolder.name))
 %                     if ~isfile(sprintf('%s/%s/scModel2eyes3.mat', subsubfolder.folder, subsubfolder.name))
                         fpath = sprintf('%s/%s/model.mat', subsubfolder.folder, subsubfolder.name)
@@ -58,14 +66,14 @@ function parTest(folders, nWorkers, runParallel)
 
     % testpaths = testpaths(randperm(length(testpaths)));
 
-    % only for BF fitting
-    myCluster = parcluster('local');
-    myCluster.NumWorkers = nWorkers;
-    % saveProfile(myCluster);
+    % % only for BF fitting
+    % myCluster = parcluster('local');
+    % myCluster.NumWorkers = nWorkers;
+    % % saveProfile(myCluster);
 
-    if (isempty(gcp('nocreate')))
-        mPool = parpool(nWorkers);
-    end
+    % if (isempty(gcp('nocreate')))
+    %     mPool = parpool(nWorkers);
+    % end
 
     if runParallel
         myCluster = parcluster('local');
@@ -100,17 +108,17 @@ function parTest(folders, nWorkers, runParallel)
         end
 
     else
-%         textureFile = 'Textures_mcgillManMade40.mat';
-%         simulator = OpenEyeSimV5('create'); % latest renderer
-%
-%         simulator.initRenderer();
-%
-%         texture = load(sprintf('config/%s', textureFile));
-%         texture = texture.texture;
-%         for i = 1 : nStim
-%             simulator.add_texture(i, texture{i});
-%         end
-%         sprintf('%d textures added to the testing simulator', nStim)
+        % textureFile = 'Textures_mcgillManMade40.mat';
+        % simulator = OpenEyeSimV5('create'); % latest renderer
+
+        % simulator.initRenderer();
+
+        % texture = load(sprintf('config/%s', textureFile));
+        % texture = texture.texture;
+        % for i = 1 : nStim
+        %     simulator.add_texture(i, texture{i});
+        % end
+        % sprintf('%d textures added to the testing simulator', nStim)
 
         for tp = 1 : length(testpaths)
             savePath = testpaths{tp}
@@ -142,8 +150,10 @@ function parTest(folders, nWorkers, runParallel)
             if model.trainedUntil == 500000
 %             if model.trainedUntil == 0%250000
                 % if ~isfile(sprintf('%s/%s/scModel2eyes3.mat', parent, subfolder.name))
-                    % model.allPlotSave([1 : 8, 9]);
+                    % model.allPlotSave([1 : 8]);
                     model.allPlotSave(9);   % fitting of basis functions
+                    % testModelContinuous(model, nStim, 1, 1, 1, simulator, 0, sprintf('modelAt%d', model.trainedUntil), [1, 3 : 6]);
+
             end
 
                 % if ~exist(sprintf('%s/modelAt%d/muscleActivityTrajectory.png', model.savePath, 500000), 'file')

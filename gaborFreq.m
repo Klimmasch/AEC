@@ -2,7 +2,7 @@
 % f : Frequency of the sinusoidal factor
 % Theta: Orientation of the normal to the parallel stripes of the Gabor
 % Psi : Phase offset
-% Sigma: Std of the Gaussain envelope
+% Sigma: Std of the Gaussian envelope
 % Gamma: Spatial aspect ratio
 
 

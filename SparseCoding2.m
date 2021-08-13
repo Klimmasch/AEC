@@ -13,6 +13,7 @@ classdef SparseCoding2 < handle
         selectedBasis;  % indicates for each basis how often it has been selected
         BFinit;         % describes the initialization of basis functions
         BFfitFreq;      % fit frequencies to BFs or wavelengths?
+        BFIdent;        % helps identifying the scale inside the scarse coder
     end
 
     methods
@@ -27,7 +28,8 @@ classdef SparseCoding2 < handle
             obj.temperature = PARAM(5);
             obj.BFinit = PARAM(6);
             obj.BFfitFreq = PARAM(7);
-            obj.sizeBatch = PARAM(8);     % is always in the last entry of the inout array
+            obj.BFIdent = PARAM(8);
+            obj.sizeBatch = PARAM(9);     % is always in the last entry of the inout array
 
             if obj.BFinit == 1     % white noise BF init
                 obj.basis = rand(obj.basisSize, obj.nBasis) - 0.5;
@@ -44,6 +46,35 @@ classdef SparseCoding2 < handle
                     obj.basis(end/2+1:end, x(b+(obj.nBasis/2))) = 0; % monocular left
                 end
                 obj.basis = bsxfun(@rdivide,obj.basis, sqrt(sum(obj.basis .^ 2)));
+            elseif obj.BFinit == 4 % take preloaded BFs
+                % fixed 3 deg strabism
+%                 model = load('/home/aecgroup/aecdata/Results/eLifePaper/strabism/19-02-18_500000iter_2_AllfixAt6m_filtB_29_strabAngle_3_seed2/model.mat');
+                % laplacian 3 deg strabism
+%                 model = load('/home/aecgroup/aecdata/Results/eLifePaper/inducedStrabism/20-09-22_500000iter_2_inducedStrab_3deg_lapSig02_od05-1m/model.mat'); 
+                % monocular deprivation
+                model = load('/home/aecgroup/aecdata/Results/eLifePaper/explFilterSizes/19-06-04_500000iter_1_fsize6std_filtBoth_45_prob_1_seed1/model.mat');
+                model = model.model;
+                obj.basis = model.scModel{obj.BFIdent}.basis;
+            elseif obj.BFinit == 41 % take preloaded BFs
+                model = load('/home/aecgroup/aecdata/Results/eLifePaper/explFilterSizes/19-06-04_500000iter_1_fsize6std_filtBoth_45_prob_1_seed1/model.mat');
+                model = model.model;
+                obj.basis = model.scModel{obj.BFIdent}.basis;
+            elseif obj.BFinit == 42 % take preloaded BFs
+                model = load('/home/aecgroup/aecdata/Results/eLifePaper/explFilterSizes/18-10-18_500000iter_2_fsize6std_filtBoth_45_prob_1_seed2/model.mat');
+                model = model.model;
+                obj.basis = model.scModel{obj.BFIdent}.basis;
+            elseif obj.BFinit == 43 % take preloaded BFs
+                model = load('/home/aecgroup/aecdata/Results/eLifePaper/explFilterSizes/18-10-19_500000iter_3_fsize6std_filtBoth_45_prob_1_seed3/model.mat');
+                model = model.model;
+                obj.basis = model.scModel{obj.BFIdent}.basis;
+            elseif obj.BFinit == 44 % take preloaded BFs
+                model = load('/home/aecgroup/aecdata/Results/eLifePaper/explFilterSizes/18-10-18_500000iter_4_fsize6std_filtBoth_45_prob_1_seed4/model.mat');
+                model = model.model;
+                obj.basis = model.scModel{obj.BFIdent}.basis;
+            elseif obj.BFinit == 45 % take preloaded BFs
+                model = load('/home/aecgroup/aecdata/Results/eLifePaper/explFilterSizes/19-06-05_500000iter_5_fsize6std_filtBoth_45_prob_1_seed5/model.mat');
+                model = model.model;
+                obj.basis = model.scModel{obj.BFIdent}.basis;
             else
                 error('Unrecognized basis function initialization')
             end

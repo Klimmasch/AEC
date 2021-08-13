@@ -638,13 +638,19 @@ end
 %     filterRightProb = 1;
 % end
 
+[found, aniseikonia, varParamArray] = parseparam(varParamArray, 'aniseikonia');
+if (~found)
+    aniseikonia = [0, 0]; % "zoom" factor for left and right eye (0.1 = 10%)
+end
+
 PARAMModel = {textureFile, trainTime, testAt, sparseCodingType, focalLength, baseline, ...
               objDistMin, objDistMax, muscleInitMin, muscleInitMax, interval, ...
               lambdaMuscleFB, lambdaRec, metCostRange, patchSize, pxFieldOfView, ...
               dsRatio, stride, fixDistMin, fixDistMax, overlap, cutout, metCostDec, ...
               initMethod, inputParams, normFeatVect, desiredStdZT, testInterval, ...
               filterLeft, filterLeftProb, filterRight, filterRightProb, ...
-              whitening, lapSig, strabAngle, objSize, maxYaw, maxTilt, maxRoll};
+              whitening, lapSig, strabAngle, objSize, maxYaw, maxTilt, maxRoll,...
+              aniseikonia};
 
 % ------------------------
 % Sparse Coding parameters
@@ -691,9 +697,15 @@ if (~found)
 end
 
 % fitting of basis functions
-[found, fitFreq, varParamArray] = parseparam(varParamArray, 'BFfitFreq');
+[found, BFfitFreq, varParamArray] = parseparam(varParamArray, 'BFfitFreq');
 if (~found)
     BFfitFreq = 1;     % fitting of basis functions uses frequency instead of wavelength
+end
+
+% auxiliary variable for scale identification
+[found, scaleIdent, varParamArray] = parseparam(varParamArray, 'scaleIdent');
+if (~found)
+    scaleIdent = [1, 2];
 end
 
 if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
@@ -707,7 +719,7 @@ if ((length(pxFieldOfViewOrig) ~= length(dsRatio)) ...
           length(dsRatio), length(dsRatio));
 end
 
-PARAMSC = {nBasis, nBasisUsed, basisSize, sc_eta, temperature, BFinit, [BFfitFreq, BFfitFreq]};
+PARAMSC = {nBasis, nBasisUsed, basisSize, sc_eta, temperature, BFinit, [BFfitFreq, BFfitFreq], scaleIdent};
 
 % ---------------------------------
 % Reinforcement Learning parameters
@@ -799,14 +811,14 @@ if (~found)
     alpha_n = 0.025;
 end
 
-% % Actor learning rate of Gaussean policy
+% % Actor learning rate of Gaussian policy
 % % origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 % [found, alpha_p, varParamArray] = parseparam(varParamArray, 'alpha_p');
 % if (~found)
 %     alpha_p = 0.5;
 % end
 
-% Actor learning rate of Gaussean policy
+% Actor learning rate of Gaussian policy
 % origin 1 | Chong 0.002 | Lukas 0.01 | Alex P 0.4 | linear 0.002
 [found, actorLRRange, varParamArray] = parseparam(varParamArray, 'actorLRRange');
 if (~found)
@@ -941,6 +953,7 @@ end
 PARAM = {PARAMModel, PARAMSC, PARAMRL};
 model = Model(PARAM);
 
+end
 % -------------------------
 % Parameter vector handling
 % -------------------------
@@ -969,4 +982,6 @@ if (any(isvar))
 else
     found = false;
     val = [];
+end
+
 end

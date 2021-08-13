@@ -35,6 +35,7 @@ classdef Model < handle
         maxYaw;             % maximal yaw angle of object plane
         maxTilt;            % maximal tilt angle of object plane
         maxRoll;            % maximal roll angle of object plane
+        aniseikonia;        % different magnification values for the images
 
         sparseCodingType;   % type of sparse coding
 
@@ -166,6 +167,7 @@ classdef Model < handle
                 obj.maxYaw = PARAM{1}{37};
                 obj.maxTilt = PARAM{1}{38};
                 obj.maxRoll = PARAM{1}{39};
+                obj.aniseikonia = PARAM{1}{40};
 
                 obj.filterLeft = PARAM{1}{29};
                 obj.filterRight = PARAM{1}{31};
@@ -500,19 +502,19 @@ classdef Model < handle
 
         %% update and display patches
         function updatePatches(this, simulator, stimulus, objDist, disp, nRows, nCols)
-            
+
             angleDes = 2 * atand(this.baseline / (2 * objDist))
             angle = angleDes - disp %TODO: check not plus?
             this.refreshImagesNew(simulator, stimulus, angle/2, objDist, 3, [0, 0, 0]);
-            
+
             for s = 1:length(this.scModel)
                 this.preprocessImage(s, 1)
                 this.preprocessImage(s, 2)
             end
-            
+
             this.displayPatches(nRows, nCols);
         end
-        
+
         %% Display the current patches
         function displayPatches(this, nRows, nCols)
 
@@ -588,6 +590,7 @@ classdef Model < handle
                 end
                 this.scModel{i}.sparseEncode(tmpImages);
                 errorArray(i) = sum(sum(this.scModel{i}.currentError .^ 2)) / sum(sum(tmpImages .^ 2));
+                % note that division by norm of patches can be omitted if patches are normalized
                 rewardArray(i) = -errorArray(i);
                 % feature vector, i.e. average activation, Eq. 3.1
                 featureArray{i} = mean(this.scModel{i}.currentCoef(:, imPind) .^ 2, 2);

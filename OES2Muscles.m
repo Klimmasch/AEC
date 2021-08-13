@@ -37,10 +37,11 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % testing have to be loaded into the buffer at the beginning
     % per convention, the testing images are given in the first entry!!
     % textureFiles = {'mcGillTest2.mat', 'mcGillTest1.mat'}; % test files containing less images
-    textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
+    % textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_mcgillManMade100.mat'};
     % textureFiles = {'40RandomDots.mat', '100img_80pcMCGill_20pcRandomDots.mat'};
     % textureFiles = {'40RandomDots.mat', '100RandomDots.mat'};
     % textureFiles = {'Textures_mcgillManMade40.mat', 'Textures_HH_small.mat'};
+    % textureFiles = {'Textures_McGillRandomSelectionTest.mat', 'Textures_McGillRandomSelectionTrain'};
 
     %%% Execute intermediate test procedure during training
     % testAt = [500000 : 500000 : trainTime]; % contained in configVar from now on
@@ -229,8 +230,8 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
     % load all stimuli into memory for experimental renderer
     nTextures = 0;
     tmpTexInd = 1;
-    for i = 1 : length(textureFiles)
-        texture = load(sprintf('config/%s', textureFiles{i}));
+    for i = 1 : length(model.textureFile)
+        texture = load(sprintf('config/%s', model.textureFile{i}));
         texture = texture.texture;
         textureCnt = length(texture);
 
@@ -393,6 +394,13 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             model.refreshImagesNew(simulator, currentTexture, angleNew / 2, objDist, model.objSize, [tilt, yaw, roll]);
 
             %% change left and right images to simulate altered rearing conditions
+            % for aniseikonia: resize image according to zoom factor
+            if model.aniseikonia(1)
+                model.imgGrayLeft = zoomImgKeepSize(model.imgGrayLeft, 1 + model.aniseikonia(1));
+            end
+            if model.aniseikonia(2)
+                model.imgGrayRight = zoomImgKeepSize(model.imgGrayRight, 1 + model.aniseikonia(2));
+            end
             if ~isempty(model.filterLeft)
                 if randForLeftFilt < model.filterLeftProb
                     % model.imgGrayLeft = conv2(model.imgGrayLeft, model.filterLeft, 'same');
@@ -415,6 +423,9 @@ function OES2Muscles(trainTime, randomizationSeed, clusterCall, inputParams, exp
             for i = 1 : length(model.scModel)
                 model.preprocessImage(i, 1);
                 model.preprocessImage(i, 2);
+                %% if model.scModel{i}.BFinit == 4
+                %%     model.patchesRight{i} = model.patchesRight{i} .* 2; % increase contrast
+                %% end
                 currentView{i} = vertcat(model.patchesLeft{i}, model.patchesRight{i});
             end
 
